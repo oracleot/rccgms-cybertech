@@ -2,6 +2,34 @@
 
 **The reasoning engine family powering AcronIQ Veritus**
 
+## 🚀 Quick Start
+
+### Development
+
+```bash
+# Clone repository
+git clone https://github.com/Dars2307/PIC-Core.git
+cd PIC-Core
+
+# Install dependencies
+npm install
+
+# Start all services
+npm run dev          # PIC-Core (3001)
+npm run dev:mini      # PIC-Mini (3002)  
+npm run dev:dashboard # Dashboard (3003)
+```
+
+### Production Deployment (Railway)
+
+```bash
+# Deploy to Railway
+# 1. Connect GitHub repository to Railway
+# 2. Railway will auto-detect railway.toml configuration
+# 3. Set environment variables in Railway dashboard
+# 4. Deploy all three services as separate Railway services
+```
+
 ## Overview
 
 The Polaris Intelligence Core (PIC) is a family of AI reasoning engines designed to provide strategic business intelligence with increasing sophistication across versions.
@@ -17,6 +45,7 @@ Backend Models (GPT, Claude, etc.)
 ```
 
 PIC is **not a model** - it's a **reasoning system layer** that defines:
+
 - Tone and personality
 - Strategic thinking patterns
 - Output formatting rules
@@ -24,37 +53,43 @@ PIC is **not a model** - it's a **reasoning system layer** that defines:
 
 ## PIC Family Roadmap
 
-### 🟢 **PIC-mini** (v1.0.0 - Active)
+### 🟢 PIC-mini (v1.0.0 - Active)
+
 - **Focus**: Foundational reasoning for founders
 - **Capabilities**: Strategic business analysis, founder-friendly communication
 - **Backend**: GPT-4o-mini
 - **Status**: Production ready
 
-### 🟡 **PIC-1** (v2.0.0 - Planned Mid 2026)
+### 🟡 PIC-1 (v2.0.0 - Planned Mid 2026)
+
 - **Focus**: Enhanced structured strategic reasoning
 - **Capabilities**: Multi-layered analysis, predictive insights
 - **Backend**: GPT-4o, Claude-3.5
 - **Status**: In planning
 
-### 🔵 **PIC-2** (v3.0.0 - Future)
+### 🔵 PIC-2 (v3.0.0 - Future)
+
 - **Focus**: Predictive analytics and scenario planning
 - **Capabilities**: Market forecasting, risk modeling
 - **Backend**: GPT-5, Claude-4
 - **Status**: Conceptual
 
-### 🟣 **PIC-3** (v4.0.0 - Future)
+### 🟣 PIC-3 (v4.0.0 - Future)
+
 - **Focus**: Multi-agent collaboration
 - **Capabilities**: Team-based analysis, collaborative intelligence
 - **Backend**: Advanced multi-modal models
 - **Status**: Conceptual
 
-### 🔴 **PIC-4** (v5.0.0 - Future)
+### 🔴 PIC-4 (v5.0.0 - Future)
+
 - **Focus**: Enterprise intelligence
 - **Capabilities**: Large-scale analysis, enterprise integration
 - **Backend**: Enterprise AI models
 - **Status**: Conceptual
 
-### ⚫ **PIC-5** (v6.0.0 - Future)
+### ⚫ PIC-5 (v6.0.0 - Future)
+
 - **Focus**: Autonomous strategic planning
 - **Capabilities**: Self-directed analysis, autonomous recommendations
 - **Backend**: AGI-level models
@@ -79,16 +114,20 @@ pic-core/
 
 ## Development Principles
 
-### **Modular Design**
+### Modular Design
+
 Each PIC version is self-contained with its own configuration, reasoning logic, and tests.
 
-### **Backward Compatibility**
+### Backward Compatibility
+
 New PIC versions maintain compatibility with previous versions for smooth transitions.
 
-### **Progressive Enhancement**
+### Progressive Enhancement
+
 Each version builds upon the previous, adding capabilities without breaking existing functionality.
 
-### **Configuration-Driven**
+### Configuration-Driven
+
 All PIC behaviour is defined through JSON configuration files, allowing dynamic switching between versions.
 
 ## Integration
