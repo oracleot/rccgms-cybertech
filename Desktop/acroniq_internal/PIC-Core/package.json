@@ -1,0 +1,60 @@
+{
+  "name": "pic-core",
+  "version": "1.0.0",
+  "description": "Polaris Intelligence Core - Central reasoning engine for AcronIQ applications",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start:mini": "node dist/mini.index.js",
+    "dev:mini": "ts-node-dev --respawn --transpile-only src/mini.index.ts",
+    "start:dashboard": "node dist/dashboard.index.js",
+    "dev:dashboard": "ts-node-dev --respawn --transpile-only src/dashboard.index.ts",
+    "build": "tsc",
+    "build:mini": "tsc src/mini.index.ts --outDir dist",
+    "build:dashboard": "tsc src/dashboard.index.ts --outDir dist",
+    "cli": "ts-node src/cli/pic.cli.ts",
+    "build:cli": "tsc src/cli/pic.cli.ts --outDir dist",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  },
+  "keywords": [
+    "ai",
+    "intelligence",
+    "reasoning",
+    "acroniq",
+    "pic",
+    "strategic"
+  ],
+  "author": "AcronIQ",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "openai": "^6.9.1",
+    "openapi-types": "^12.1.3",
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.10.5",
+    "@types/inquirer": "^9.0.7",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

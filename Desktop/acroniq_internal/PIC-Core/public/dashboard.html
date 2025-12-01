@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIC Services Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @keyframes pulse-green {
+            0%, 100% { background-color: rgb(34 197 94); }
+            50% { background-color: rgb(74 222 128); }
+        }
+        @keyframes pulse-red {
+            0%, 100% { background-color: rgb(239 68 68); }
+            50% { background-color: rgb(248 113 113); }
+        }
+        .pulse-green { animation: pulse-green 2s infinite; }
+        .pulse-red { animation: pulse-red 2s infinite; }
+        .status-healthy { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .status-unhealthy { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .status-unknown { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
+        
+        /* Custom scrollbar styles */
+        .overflow-auto::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .overflow-auto::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .overflow-auto::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        .overflow-auto::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">PIC Services Dashboard</h1>
+                        <p class="text-gray-400 text-sm">Real-time monitoring and management</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-400">
+                        <span id="lastUpdate">Loading...</span>
+                    </div>
+                    <button id="refreshBtn" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors">
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Overall Status -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Overall Health</p>
+                        <p id="overallHealth" class="text-2xl font-bold">Checking...</p>
+                    </div>
+                    <div id="overallStatus" class="w-12 h-12 rounded-full"></div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Total Services</p>
+                        <p id="totalServices" class="text-2xl font-bold">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Total Requests</p>
+                        <p id="totalRequests" class="text-2xl font-bold">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Avg Response Time</p>
+                        <p id="avgResponseTime" class="text-2xl font-bold">0ms</p>
+                    </div>
+                    <div class="w-12 h-12 bg-yellow-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Service Cards -->
+            <div class="lg:col-span-2">
+                <h2 class="text-xl font-bold mb-4">Service Status</h2>
+                <div id="servicesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Service cards will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Traffic Chart -->
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h3 class="text-lg font-bold mb-3">Traffic Overview</h3>
+                <div class="h-64 overflow-auto bg-gray-900 rounded-lg p-2">
+                    <canvas id="trafficChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Response Time Chart -->
+            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h3 class="text-lg font-bold mb-3">Response Times</h3>
+                <div class="h-64 overflow-auto bg-gray-900 rounded-lg p-2">
+                    <canvas id="responseTimeChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h3 class="text-lg font-bold mb-4">Active Alerts</h3>
+            <div id="alertsContainer" class="space-y-2">
+                <!-- Alerts will be inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Global state
+        let services = [];
+        let metrics = {};
+        let alerts = [];
+        let trafficChart = null;
+        let responseTimeChart = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadData();
+            startRealTimeUpdates();
+            
+            // Manual refresh button
+            document.getElementById('refreshBtn').addEventListener('click', loadData);
+        });
+
+        // Initialize charts
+        function initializeCharts() {
+            const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+            const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+
+            trafficChart = new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Requests/Minute',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 11 }
+                            }
+                        },
+                        x: {
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 11 },
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            labels: { 
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 12 }
+                            } 
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'rgba(255, 255, 255, 0.9)',
+                            bodyColor: 'rgba(255, 255, 255, 0.9)',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            });
+
+            responseTimeChart = new Chart(responseTimeCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Response Time (ms)',
+                        data: [],
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5000,
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 11 },
+                                callback: function(value) {
+                                    return value + 'ms';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 11 },
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            labels: { 
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 12 }
+                            } 
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'rgba(255, 255, 255, 0.9)',
+                            bodyColor: 'rgba(255, 255, 255, 0.9)',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + 'ms';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load data from API
+        async function loadData() {
+            try {
+                const [servicesRes, metricsRes, alertsRes] = await Promise.all([
+                    fetch('/api/health'),
+                    fetch('/api/metrics'),
+                    fetch('/api/alerts')
+                ]);
+
+                const servicesData = await servicesRes.json();
+                const metricsData = await metricsRes.json();
+                const alertsData = await alertsRes.json();
+
+                services = servicesData.services;
+                metrics = metricsData;
+                alerts = alertsData.alerts || [];
+
+                updateDashboard();
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        // Update dashboard UI
+        function updateDashboard() {
+            updateOverallStatus();
+            updateServiceCards();
+            updateMetrics();
+            updateAlerts();
+            updateCharts();
+            
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Update overall status
+        function updateOverallStatus() {
+            const healthyCount = services.filter(s => s.status === 'healthy').length;
+            const totalCount = services.length;
+            
+            let overallHealth = 'Unknown';
+            let statusClass = 'status-unknown';
+            
+            if (healthyCount === totalCount) {
+                overallHealth = 'Healthy';
+                statusClass = 'status-healthy';
+            } else if (healthyCount > 0) {
+                overallHealth = 'Degraded';
+                statusClass = 'status-unknown';
+            } else {
+                overallHealth = 'Unhealthy';
+                statusClass = 'status-unhealthy';
+            }
+
+            document.getElementById('overallHealth').textContent = overallHealth;
+            const statusIndicator = document.getElementById('overallStatus');
+            statusIndicator.className = `w-12 h-12 rounded-full ${statusClass}`;
+        }
+
+        // Update service cards
+        function updateServiceCards() {
+            const container = document.getElementById('servicesGrid');
+            container.innerHTML = '';
+
+            services.forEach(service => {
+                const card = createServiceCard(service);
+                container.appendChild(card);
+            });
+
+            document.getElementById('totalServices').textContent = services.length;
+        }
+
+        // Create service card
+        function createServiceCard(service) {
+            const card = document.createElement('div');
+            card.className = 'bg-gray-800 rounded-lg p-4 border border-gray-700';
+            
+            const statusClass = service.status === 'healthy' ? 'status-healthy' : 
+                              service.status === 'unhealthy' ? 'status-unhealthy' : 'status-unknown';
+            
+            const statusIcon = service.status === 'healthy' ? 
+                '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>' :
+                '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>';
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold">${service.name}</h3>
+                    <div class="w-8 h-8 rounded-full ${statusClass} flex items-center justify-center">
+                        ${statusIcon}
+                    </div>
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Status:</span>
+                        <span class="capitalize">${service.status}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Response Time:</span>
+                        <span>${service.responseTime}ms</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Version:</span>
+                        <span>${service.version}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Endpoints:</span>
+                        <span>${service.endpoints?.length || 0}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Last Check:</span>
+                        <span class="text-xs">${new Date(service.lastCheck).toLocaleTimeString()}</span>
+                    </div>
+                </div>
+                <div class="mt-3 flex space-x-2">
+                    <button onclick="checkServiceHealth('${service.name}')" class="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs transition-colors">
+                        Check Health
+                    </button>
+                    <button onclick="restartService('${service.name}')" class="bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-xs transition-colors">
+                        Restart
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            const traffic = metrics.traffic || {};
+            
+            document.getElementById('totalRequests').textContent = traffic.totalRequests || 0;
+            document.getElementById('avgResponseTime').textContent = 
+                traffic.averageResponseTime ? `${traffic.averageResponseTime}ms` : '0ms';
+        }
+
+        // Update alerts
+        function updateAlerts() {
+            const container = document.getElementById('alertsContainer');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p class="text-gray-400">No active alerts</p>';
+                return;
+            }
+
+            container.innerHTML = alerts.map(alert => `
+                <div class="bg-red-900 bg-opacity-50 border border-red-700 rounded-lg p-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-semibold text-red-400">${alert.type || 'Alert'}</h4>
+                            <p class="text-sm text-gray-300">${alert.message || 'No message'}</p>
+                        </div>
+                        <span class="text-xs text-gray-400">
+                            ${new Date(alert.timestamp).toLocaleTimeString()}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update charts
+        function updateCharts() {
+            // Update traffic chart
+            if (trafficChart && metrics.traffic) {
+                const labels = Array.from({length: 10}, (_, i) => {
+                    const time = new Date(Date.now() - (9 - i) * 60000);
+                    return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                });
+                
+                const baseTraffic = metrics.traffic.requestsPerMinute || 0;
+                const trafficData = Array.from({length: 10}, (_, i) => 
+                    Math.max(0, baseTraffic + Math.floor(Math.random() * 20) - 10)
+                );
+                
+                trafficChart.data.labels = labels;
+                trafficChart.data.datasets[0].data = trafficData;
+                trafficChart.update('none'); // Update without animation for better performance
+            }
+
+            // Update response time chart
+            if (responseTimeChart && services) {
+                const serviceNames = services.map(s => s.name.replace('PIC-', ''));
+                const responseTimes = services.map(s => Math.min(5000, s.responseTime || 0)); // Cap at 5000ms
+                
+                responseTimeChart.data.labels = serviceNames;
+                responseTimeChart.data.datasets[0].data = responseTimes;
+                responseTimeChart.update('none'); // Update without animation for better performance
+            }
+        }
+
+        // Service control functions
+        async function checkServiceHealth(serviceName) {
+            try {
+                const response = await fetch(`/api/services/${serviceName}/health-check`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadData(); // Refresh data
+                } else {
+                    alert(`Health check failed: ${result.error}`);
+                }
+            } catch (error) {
+                alert(`Error checking health: ${error.message}`);
+            }
+        }
+
+        async function restartService(serviceName) {
+            if (!confirm(`Are you sure you want to restart ${serviceName}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/services/${serviceName}/restart`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Service ${serviceName} restarted successfully`);
+                    loadData(); // Refresh data
+                } else {
+                    alert(`Restart failed: ${result.error}`);
+                }
+            } catch (error) {
+                alert(`Error restarting service: ${error.message}`);
+            }
+        }
+
+        // Start real-time updates
+        function startRealTimeUpdates() {
+            const eventSource = new EventSource('/api/stream');
+            
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                services = data.services;
+                metrics = data.traffic;
+                updateDashboard();
+            };
+            
+            eventSource.onerror = function(event) {
+                console.error('EventSource error:', event);
+                // Fallback to polling
+                setInterval(loadData, 30000);
+            };
+        }
+    </script>
+</body>
+</html>
