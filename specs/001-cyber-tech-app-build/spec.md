@@ -251,7 +251,7 @@ As a new Volunteer, I want to complete a structured training program for my role
 **Service Rundown Builder**
 - **FR-034**: Leaders MUST be able to create rundowns for specific service dates
 - **FR-035**: System MUST support drag-drop reordering of rundown items
-- **FR-036**: System MUST support item types: Song, Sermon, Announcement, Video, Prayer, Transition, Offering
+- **FR-036**: System MUST support item types: Song (worship), Sermon, Announcement, Video, Prayer, Transition, Offering, Scripture Reading, Special Item, Other
 - **FR-037**: System MUST track per-item duration and running total
 - **FR-038**: Leaders MUST be able to assign personnel to rundown items
 - **FR-039**: System MUST support notes and technical cues per item
@@ -282,11 +282,11 @@ As a new Volunteer, I want to complete a structured training program for my role
 - **FR-058**: Dashboard MUST display countdown to next service
 
 **Non-Functional Requirements**
-- **FR-059**: Application MUST load pages in under 2 seconds
+- **FR-059**: Application MUST load pages in under 2 seconds on 3G mobile connections (target: < 2s Time to First Contentful Paint)
 - **FR-060**: Application MUST support installability as a Progressive Web App
 - **FR-061**: Application MUST be accessible via keyboard navigation
 - **FR-062**: Application MUST work offline for critical views (viewing schedule, rundowns)
-- **FR-066**: Admins MUST be able to configure data retention period (default: 1 year); system auto-archives or deletes data older than configured period
+- **FR-066**: Admins MUST be able to configure data retention period (default: 1 year); system auto-archives data older than configured period (soft delete with `archived_at` timestamp); Admins MAY trigger permanent deletion of archived data via explicit action
 
 ### Key Entities
 
