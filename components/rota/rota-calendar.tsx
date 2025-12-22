@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import { useUser } from "@/hooks/use-user"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -34,10 +35,13 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 export function RotaCalendar() {
   const router = useRouter()
+  const { user } = useUser()
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [events, setEvents] = useState<RotaEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  const canCreateRota = user?.role === "admin" || user?.role === "leader"
 
   const fetchRotas = useCallback(async (month: Date) => {
     setIsLoading(true)
@@ -262,17 +266,19 @@ export function RotaCalendar() {
               ) : (
                 <div className="text-center py-6">
                   <p className="text-muted-foreground mb-4">No rotas scheduled</p>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      router.push(
-                        `/rota/new?date=${format(selectedDate, "yyyy-MM-dd")}`
-                      )
-                    }
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Rota
-                  </Button>
+                  {canCreateRota && (
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        router.push(
+                          `/rota/new?date=${format(selectedDate, "yyyy-MM-dd")}`
+                        )
+                      }
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Rota
+                    </Button>
+                  )}
                 </div>
               )
             ) : (
