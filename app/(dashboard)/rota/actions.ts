@@ -133,7 +133,7 @@ export async function updateRotaAssignments(input: UpdateAssignmentsInput): Prom
 
     if (deleteError) {
       console.error("Error deleting existing assignments:", deleteError)
-      return { success: false, error: "Failed to update assignments" }
+      return { success: false, error: `Failed to clear assignments: ${deleteError.message}` }
     }
 
     // Insert new assignments
@@ -151,7 +151,7 @@ export async function updateRotaAssignments(input: UpdateAssignmentsInput): Prom
 
       if (insertError) {
         console.error("Error inserting assignments:", insertError)
-        return { success: false, error: "Failed to create assignments" }
+        return { success: false, error: `Failed to create assignments: ${insertError.message}` }
       }
     }
 

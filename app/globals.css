@@ -1,6 +1,89 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* FullCalendar Styles */
+:root {
+  --fc-border-color: var(--border);
+  --fc-button-bg-color: var(--primary);
+  --fc-button-border-color: var(--primary);
+  --fc-button-hover-bg-color: var(--primary);
+  --fc-button-hover-border-color: var(--primary);
+  --fc-button-active-bg-color: var(--primary);
+  --fc-button-active-border-color: var(--primary);
+  --fc-today-bg-color: var(--accent);
+  --fc-neutral-bg-color: var(--muted);
+  --fc-page-bg-color: var(--background);
+}
+
+.fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-today-bg-color: hsl(var(--accent) / 0.3);
+}
+
+.fc .fc-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.fc .fc-button:hover {
+  background-color: hsl(var(--primary) / 0.9);
+  border-color: hsl(var(--primary) / 0.9);
+}
+
+.fc .fc-button:disabled {
+  opacity: 0.5;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.fc .fc-col-header-cell {
+  padding: 0.75rem 0;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.fc .fc-daygrid-day-number {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.fc .fc-daygrid-event {
+  border-radius: calc(var(--radius) - 4px);
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: hsl(var(--accent) / 0.3);
+}
+
+.dark .fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-page-bg-color: hsl(var(--background));
+  --fc-neutral-bg-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.dark .fc .fc-col-header-cell-cushion,
+.dark .fc .fc-daygrid-day-number {
+  color: hsl(var(--foreground));
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

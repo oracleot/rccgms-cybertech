@@ -151,6 +151,7 @@ Based on plan.md structure:
 - [X] T075 [P] [US2] Create rota list view component in components/rota/rota-list.tsx
 - [X] T076 [US2] Create single rota detail page in app/(dashboard)/rota/[id]/page.tsx
 - [X] T077 [P] [US2] Create new rota form page in app/(dashboard)/rota/new/page.tsx
+- [X] T077b [US2] Create rota edit page in app/(dashboard)/rota/[id]/edit/page.tsx
 - [X] T078 [US2] Create position assignment component with drag-drop in components/rota/position-assignment.tsx
 - [X] T079 [P] [US2] Create volunteer selector dropdown in components/rota/volunteer-selector.tsx
 - [X] T080 [P] [US2] Create rota status badge component in components/rota/rota-status-badge.tsx
