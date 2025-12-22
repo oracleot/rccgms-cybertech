@@ -1,5 +1,6 @@
 import { format } from "date-fns"
-import { Calendar, MapPin, Clock } from "lucide-react"
+import { Calendar, MapPin, Clock, ChevronRight } from "lucide-react"
+import Link from "next/link"
 
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -108,6 +109,15 @@ export default async function MySchedulePage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+        <Link href="/rota" className="hover:text-foreground transition-colors">
+          Rota
+        </Link>
+        <ChevronRight className="h-4 w-4" />
+        <span className="text-foreground font-medium">My Schedule</span>
+      </nav>
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Schedule</h1>
         <p className="text-muted-foreground">

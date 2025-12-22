@@ -215,9 +215,8 @@ export async function publishRota(input: PublishRotaInput): Promise<ActionResult
 
     // Send notifications if requested
     if (parsed.data.notifyVolunteers) {
-      // Notifications will be handled separately via lib/notifications
-      // For now, just log that we should notify
-      console.log("Should notify volunteers for rota:", parsed.data.rotaId)
+      // TODO: Implement notification sending via lib/notifications
+      // This will be implemented in a future phase
     }
 
     revalidatePath(`/rota/${parsed.data.rotaId}`)

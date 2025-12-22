@@ -184,7 +184,6 @@ export default function EditRotaPage() {
           positionId: a.positionId,
           userId: a.userId!,
         }))
-        console.log("Saving assignments:", assignmentsPayload)
         
         const result = await updateRotaAssignments({
           rotaId: rota.id,

@@ -223,6 +223,162 @@ If you're having trouble with the app:
 
 ---
 
+## 📅 Availability Management
+
+Setting your availability helps leaders know when you're able to serve. By marking dates as available or unavailable in advance, you help the team create better schedules.
+
+### What You Can Do
+
+**👤 Volunteers:**
+- View your availability calendar
+- Mark specific dates as available or unavailable
+- Add notes explaining why you're unavailable
+- Bulk-select multiple dates (like all Sundays in a month)
+
+**👥 Leaders & 🔧 Admins:**
+- Everything volunteers can do, plus:
+- View team availability across all volunteers
+- Filter by department to see specific team availability
+- Use availability info when assigning volunteers to rotas
+
+---
+
+### Setting Your Availability
+
+1. Go to **Rota** from the main menu
+2. Click **My Schedule** in the navigation
+3. Click the **Set Availability** button, or go directly to **Rota → Availability**
+
+You'll see a calendar where you can mark your availability.
+
+---
+
+### How to Mark Dates
+
+#### Selecting Dates
+
+1. **Click on dates** in the calendar to select them
+   - Selected dates will have a blue highlight
+   - Click again to deselect
+2. You can select multiple dates at once
+3. The number of selected dates shows at the top
+
+#### Quick Selection Options
+
+Save time with these quick actions:
+
+- **Select All Sundays** – Selects every Sunday in the current month
+- **Next 4 Sundays** – Selects the upcoming four Sundays
+
+#### Marking as Available or Unavailable
+
+Once you've selected dates:
+
+1. Click **Mark Available** (green button) to indicate you can serve
+2. Click **Mark Unavailable** (red button) to indicate you cannot serve
+3. If marking unavailable, you can add an optional note (e.g., "Family holiday", "Traveling")
+4. Click **Confirm** to save
+
+#### Understanding the Calendar
+
+The calendar uses color coding:
+- 🟢 **Green dot** = You're available on this date
+- 🔴 **Red dot** = You're unavailable on this date
+- **No dot** = You haven't set your availability yet
+
+---
+
+### Clearing Your Availability
+
+Changed your plans? You can clear your availability:
+
+1. Go to **Rota → Availability**
+2. Select the date(s) you want to change
+3. Click **Clear** to remove your availability setting
+4. The date will return to "not set" status
+
+---
+
+### 👥 Viewing Team Availability (Leaders & Admins)
+
+Leaders can see everyone's availability when planning rotas:
+
+1. Go to **Rota** from the main menu
+2. Click **View Team Availability** (or go to **Rota → Team Availability**)
+
+You'll see a grid showing:
+- All team members in rows
+- Days of the week in columns
+- ✅ Green = Available
+- ❌ Red = Unavailable
+- ➖ Gray = Not set
+
+#### Features
+
+- **Week Navigation** – Use arrows to move between weeks
+- **Today Button** – Jump back to the current week
+- **Department Filter** – Show only specific teams (Sound, Cameras, etc.)
+- **Summary Row** – Shows counts of available/unavailable per day
+- **Hover for Details** – Hover over any cell to see notes
+
+#### Sunday Summary
+
+At the bottom, you'll see a quick summary for Sundays showing:
+- Number of available volunteers
+- Percentage of team available
+- Color-coded badges (green = 75%+, yellow = 50-75%, red = <50%)
+
+---
+
+### Availability in Volunteer Selection
+
+When leaders assign volunteers to positions, they'll see availability:
+
+- **"Available" badge** (green) – Volunteer has marked themselves available
+- **"Unavailable" badge** (red) – Volunteer has marked themselves unavailable
+- **No badge** – Volunteer hasn't set availability for this date
+
+> ⚠️ **Note for Leaders**: Volunteers marked as unavailable appear dimmed but can still be selected if absolutely necessary. Try to respect availability preferences when possible!
+
+---
+
+### Availability Tips & Best Practices
+
+**For Volunteers:**
+- ✅ Set your availability at least 2 weeks in advance
+- ✅ Use the "Next 4 Sundays" quick action for easy planning
+- ✅ Add notes when you're unavailable – it helps leaders understand
+- ✅ Update immediately if your plans change
+- ❌ Don't mark yourself unavailable just to avoid serving – your team needs you!
+
+**For Leaders:**
+- ✅ Check team availability before creating rotas
+- ✅ Use the department filter to see relevant team members
+- ✅ Hover over "Unavailable" cells to see notes
+- ✅ Contact volunteers with no availability set to remind them
+- ✅ Respect unavailability when possible – it builds team trust
+
+---
+
+### Common Questions
+
+**Q: Do I need to mark every date?**  
+A: No, you only need to mark dates where you know you're unavailable. If you don't mark a date, leaders will assume you might be available.
+
+**Q: Can leaders still schedule me if I'm marked unavailable?**  
+A: Technically yes, but leaders should respect your availability. If you're scheduled on a day you marked unavailable, contact your leader to discuss.
+
+**Q: How far in advance can I set availability?**  
+A: You can set availability for any future date. We recommend setting at least a month ahead when you know your schedule.
+
+**Q: Can I add notes when marking myself available?**  
+A: Currently, notes are only available when marking unavailable. For available dates, no note is needed.
+
+**Q: Will I get a reminder to update my availability?**  
+A: Not yet, but this feature is coming soon! For now, set a personal reminder to update your availability each month.
+
+---
+
 ## 📅 Rota Management
 
 The rota is your service schedule – it shows who's serving in which position for each service. This is where you'll find out when you're on duty.
@@ -427,8 +583,7 @@ A: Yes! Use the calendar arrows to navigate to previous months, or check the lis
 
 We're working on adding more features to Cyber Tech:
 
-- 🔄 **Availability Submission** – Mark dates when you can or can't serve
-- 🔀 **Duty Swap Requests** – Request to swap duties with another volunteer
+-  **Duty Swap Requests** – Request to swap duties with another volunteer
 - 🎥 **Livestream Tools** – Generate descriptions for YouTube and Facebook
 - 📋 **Service Rundowns** – Create and manage service order of events
 - 📦 **Equipment Tracking** – Check out and manage tech equipment

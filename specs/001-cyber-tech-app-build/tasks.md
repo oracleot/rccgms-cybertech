@@ -168,7 +168,7 @@ Based on plan.md structure:
 
 ---
 
-## Phase 5: User Story 3 - Volunteer Availability Submission (Priority: P1)
+## Phase 5: User Story 3 - Volunteer Availability Submission (Priority: P1) ✅
 
 **Goal**: Enable volunteers to submit their availability for upcoming Sundays so Leaders can schedule appropriately
 
@@ -176,16 +176,16 @@ Based on plan.md structure:
 
 ### Implementation for User Story 3
 
-- [ ] T089 [US3] Create availability calendar page in app/(dashboard)/rota/availability/page.tsx
-- [ ] T090 [P] [US3] Create React DayPicker wrapper for availability in components/rota/availability-calendar.tsx
-- [ ] T091 [P] [US3] Create availability status toggle component in components/rota/availability-toggle.tsx
-- [ ] T092 [US3] Implement setAvailability server action in app/(dashboard)/rota/availability/actions.ts
-- [ ] T093 [P] [US3] Implement getMyAvailability server action in app/(dashboard)/rota/availability/actions.ts
-- [ ] T094 [US3] Create team availability view for Leaders in app/(dashboard)/rota/team-availability/page.tsx
-- [ ] T095 [P] [US3] Create availability grid component showing team member availability in components/rota/team-availability-grid.tsx
-- [ ] T096 [US3] Integrate availability data into volunteer selector in components/rota/volunteer-selector.tsx (update)
+- [X] T089 [US3] Create availability calendar page in app/(dashboard)/rota/availability/page.tsx
+- [X] T090 [P] [US3] Create React DayPicker wrapper for availability in components/rota/availability-calendar.tsx
+- [X] T091 [P] [US3] Create availability status toggle component in components/rota/availability-toggle.tsx
+- [X] T092 [US3] Implement setAvailability server action in app/(dashboard)/rota/availability/actions.ts
+- [X] T093 [P] [US3] Implement getMyAvailability server action in app/(dashboard)/rota/availability/actions.ts
+- [X] T094 [US3] Create team availability view for Leaders in app/(dashboard)/rota/team-availability/page.tsx
+- [X] T095 [P] [US3] Create availability grid component showing team member availability in components/rota/team-availability-grid.tsx
+- [X] T096 [US3] Integrate availability data into volunteer selector in components/rota/volunteer-selector.tsx (update)
 
-**Checkpoint**: User Story 3 (Availability) is fully functional and testable independently
+**Checkpoint**: User Story 3 (Availability) is fully functional and testable independently ✅
 
 ---
 

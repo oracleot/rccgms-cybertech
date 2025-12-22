@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { ArrowLeft, CalendarIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, Loader2, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 
 import { createClient } from "@/lib/supabase/client"
@@ -201,19 +201,21 @@ function NewRotaForm() {
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+        <Link href="/rota" className="hover:text-foreground transition-colors">
+          Rota
+        </Link>
+        <ChevronRight className="h-4 w-4" />
+        <span className="text-foreground font-medium">New Rota</span>
+      </nav>
+
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/rota">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Create New Rota</h1>
-          <p className="text-muted-foreground">
-            Schedule a new service and assign volunteers
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold">Create New Rota</h1>
+        <p className="text-muted-foreground">
+          Schedule a new service and assign volunteers
+        </p>
       </div>
 
       <Form {...form}>

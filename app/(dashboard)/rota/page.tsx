@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, List, Plus } from "lucide-react"
+import { Calendar, List, Plus, User, CalendarDays, Users } from "lucide-react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ export default function RotaPage() {
   const { user } = useUser()
 
   const canCreateRota = user?.role === "admin" || user?.role === "leader"
+  const isLeaderOrAdmin = user?.role === "admin" || user?.role === "leader"
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,14 +26,36 @@ export default function RotaPage() {
             View and manage service schedules
           </p>
         </div>
-        {canCreateRota && (
-          <Button asChild>
-            <Link href="/rota/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Rota
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/rota/my-schedule">
+              <User className="mr-2 h-4 w-4" />
+              My Schedule
             </Link>
           </Button>
-        )}
+          <Button variant="outline" asChild>
+            <Link href="/rota/availability">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Set Availability
+            </Link>
+          </Button>
+          {isLeaderOrAdmin && (
+            <Button variant="outline" asChild>
+              <Link href="/rota/team-availability">
+                <Users className="mr-2 h-4 w-4" />
+                Team Availability
+              </Link>
+            </Button>
+          )}
+          {canCreateRota && (
+            <Button asChild>
+              <Link href="/rota/new">
+                <Plus className="mr-2 h-4 w-4" />
+                New Rota
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs value={view} onValueChange={(v) => setView(v as "calendar" | "list")}>
