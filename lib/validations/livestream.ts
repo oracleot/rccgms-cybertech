@@ -5,33 +5,40 @@
 import { z } from "zod"
 
 // Platform enum
-const platformSchema = z.enum(["youtube", "facebook"])
+export const platformSchema = z.enum(["youtube", "facebook"])
+export type Platform = z.infer<typeof platformSchema>
 
-// Generate description schema
+// Service type enum
+export const serviceTypeSchema = z.enum(["sunday", "special", "midweek"])
+export type ServiceType = z.infer<typeof serviceTypeSchema>
+
+// Generate description schema (aligned with API contract)
 export const generateDescriptionSchema = z.object({
+  serviceDate: z.string().date("Please enter a valid date"),
+  serviceType: serviceTypeSchema,
   title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
-  date: z.string().date("Please enter a valid date"),
-  speaker: z.string().max(100).optional(),
+  speaker: z.string().min(1, "Speaker is required").max(100, "Speaker name must be less than 100 characters"),
   scripture: z.string().max(200).optional(),
-  keyPoints: z.array(z.string()).max(10, "Maximum 10 key points").optional(),
+  keyPoints: z.array(z.string().max(200)).max(10, "Maximum 10 key points").optional(),
+  specialNotes: z.string().max(500).optional(),
   platform: platformSchema,
 })
 
 export type GenerateDescriptionInput = z.infer<typeof generateDescriptionSchema>
 
-// Save description schema
+// Save description schema (aligned with API contract)
 export const saveDescriptionSchema = z.object({
   rotaId: z.string().uuid().optional(),
   title: z.string().min(1, "Title is required").max(200),
-  youtubeDescription: z.string().max(5000, "Description must be less than 5000 characters").optional(),
-  facebookDescription: z.string().max(2000, "Description must be less than 2000 characters").optional(),
+  platform: platformSchema,
+  content: z.string().min(1, "Content is required").max(10000),
   speaker: z.string().max(100).optional(),
   scripture: z.string().max(200).optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-}).refine(
-  (data) => data.youtubeDescription || data.facebookDescription,
-  { message: "At least one description is required" }
-)
+  metadata: z.object({
+    keyPoints: z.array(z.string()).optional(),
+    specialNotes: z.string().optional(),
+  }).optional(),
+})
 
 export type SaveDescriptionInput = z.infer<typeof saveDescriptionSchema>
 

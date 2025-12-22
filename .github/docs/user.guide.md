@@ -739,12 +739,316 @@ A: "Return item" is for returning checked-out equipment back to church inventory
 **Q: Can I delete equipment that's currently checked out?**
 A: Yes, but all checkout history will be permanently deleted. Make sure the item is returned first if you need to keep records.
 
+## 🏠 Dashboard & Quick Actions
+
+Your dashboard is the central hub when you sign in to Cyber Tech. It gives you a personalized view of what's happening and quick access to common tasks.
+
+### What You See
+
+The dashboard adapts based on your role:
+
+**👤 All Users See:**
+- **Welcome message** with your name
+- **Service Countdown** – Time remaining until the next Sunday service
+- **Upcoming Duties** – Your next scheduled assignments
+- **Quick Actions** – Shortcuts to common tasks
+- **Notifications** – Recent updates and alerts
+
+**👥 Leaders & 🔧 Admins Also See:**
+- **Team Overview** – Volunteer counts and department availability
+- **Pending Swap Requests** – Swaps waiting for your approval
+- **Equipment Alerts** – Overdue items and upcoming maintenance
+
+---
+
+### Service Countdown Widget
+
+The countdown shows exactly how long until the next Sunday service:
+
+- Displays **days**, **hours**, and **minutes** remaining
+- Updates automatically every minute
+- Shows "Today" if it's Sunday before service time
+- Highlights in primary color when less than 24 hours remain
+
+> 💡 **Tip**: When you see "Less than 24 hours until service!" – it's time to prepare!
+
+---
+
+### Upcoming Duties Widget
+
+See your next scheduled assignments at a glance:
+
+- Shows your **position** (e.g., Camera 1, Sound Desk)
+- Shows the **department** badge
+- Shows the **service name** and **date**
+- Click any assignment to view the full rota details
+- Click **View All** to see your complete schedule
+
+If you have no upcoming duties, you'll see a prompt to set your availability.
+
+---
+
+### Quick Actions Panel
+
+Common tasks are just one click away. The actions shown depend on your role:
+
+| Action | Available To | What It Does |
+|--------|-------------|--------------|
+| View Rota | Everyone | Opens the rota calendar |
+| Update Availability | Everyone | Set when you can serve |
+| Checkout Equipment | Everyone | Reserve gear for service |
+| View Rundowns | Everyone | See service order & timing |
+| Create Rota | Leaders, Admins | Start a new service schedule |
+| Create Rundown | Leaders, Admins | Plan a new service order |
+| Livestream Generator | Leaders, Admins | Generate video descriptions |
+| Team Availability | Leaders, Admins | View who's available |
+| Add Equipment | Leaders, Admins | Register new gear |
+| Admin Settings | Admins only | System configuration |
+
+---
+
+### 👥 Team Overview Widget (Leaders & Admins)
+
+Get a quick pulse on your team:
+
+- **Total volunteers** in the system
+- **Available volunteers** for this Sunday
+- **Upcoming services** with published rotas
+- **Department breakdown** showing:
+  - Number of members per department
+  - Availability percentage for each
+  - Color-coded warnings for low availability (< 50%)
+
+Click **View Details** to see the full team availability grid.
+
+---
+
+### 👥 Pending Swap Requests Widget (Leaders & Admins)
+
+Stay on top of duty swaps:
+
+- Shows count of pending requests
+- Lists requesters with their avatar/initials
+- Shows position and service date
+- **"Needs Approval"** badge for swaps accepted by volunteers
+- Click **Manage** to approve or reject swaps
+
+---
+
+### 👥 Equipment Alerts Widget (Leaders & Admins)
+
+Keep track of your gear:
+
+**Overdue Returns** (red section):
+- Items past their expected return date
+- Shows who has the item and days overdue
+- Click to open the equipment details
+
+**Upcoming Maintenance** (below):
+- Items with maintenance scheduled in the next 7 days
+- Shows maintenance type and equipment name
+
+---
+
+### Notification Feed
+
+Stay informed about activity:
+
+- **Unread count** badge shows new notifications
+- Notifications are color-coded by type:
+  - 🔵 Blue – Rota reminders and updates
+  - 🟢 Green – Approved swaps, completed training
+  - 🟠 Amber – Swap requests
+  - 🔴 Red – Rejected swaps, overdue equipment
+- Click any notification to mark it as read
+- Click **Settings** to manage notification preferences
+
+---
+
+### Dashboard Tips
+
+- ✅ Check your dashboard at the start of each week
+- ✅ Use Quick Actions for faster navigation
+- ✅ Leaders: Review pending swaps and equipment alerts daily
+- ✅ Keep an eye on the countdown as Sunday approaches
+
+---
+
+## 🎥 Livestream Description Generator
+
+Create professional YouTube and Facebook descriptions for your services in under 2 minutes using AI assistance.
+
+### What You Can Do
+
+**👥 Leaders & 🔧 Admins:**
+- Generate descriptions for YouTube and Facebook
+- Customize with service details, key points, and special notes
+- Preview in realistic platform-specific layouts
+- See both title and description formatted correctly
+- Copy both title and description with one click
+- Save descriptions for future reference
+- View history of past descriptions
+- Manage prompt templates (Admins only)
+
+---
+
+### Generating a Description
+
+1. Go to **Livestream** from the main menu
+2. Select the **platform** (YouTube or Facebook) using the toggle
+3. Choose the **Service Type** (e.g., Sunday Service, Special Event)
+4. Select the **Service Date**
+5. Enter the **Service Title** (e.g., "Walking in Divine Favor")
+6. Enter the **Speaker** name
+7. Add **Scripture Reference** (optional)
+8. Add **Key Points** to include (optional, up to 10)
+9. Add any **Special Notes** (optional)
+10. Click **Generate Description**
+
+The AI will stream the description in real-time. Watch it appear word by word!
+
+---
+
+### Platform-Specific Previews
+
+The preview shows your content exactly as it will appear on each platform:
+
+#### YouTube Preview
+- **Dark theme** matching YouTube's interface
+- **Video title** displayed prominently at the top
+- **Meta row** showing views and timestamp
+- **Action buttons** (Like, Share) for realistic preview
+- **Description box** with formatted text (bold, links, hashtags)
+
+#### Facebook Preview  
+- **Light theme** with Facebook's signature blue accents
+- **Page header** showing your church name and avatar
+- **Post title** with 🎥 emoji prefix
+- **Post content** with formatted text
+- **Engagement row** and action buttons (Like, Comment, Share)
+
+> 💡 **Tip**: Toggle between platforms to see how the same content looks on each. The AI tailors the style for each platform!
+
+---
+
+### Editing and Using Your Description
+
+Once generated:
+
+1. **Review** the description in the platform preview
+2. **Edit** the content if needed (coming soon: inline editing)
+3. Click **Copy All** to copy both title and description
+4. Paste into YouTube Studio or Facebook
+
+The copy format includes:
+```
+Title:
+[Your service title]
+
+Description:
+[The generated description]
+```
+
+> 💡 **Tip**: Always review AI-generated content before posting. Add personal touches to make it authentic to your church.
+
+---
+
+### Text Formatting
+
+The preview renders markdown formatting automatically:
+- **Bold text** appears in bold (not as \*\*text\*\*)
+- *Italic text* appears italicized
+- #Hashtags appear in blue
+- Links are clickable
+- Emojis display correctly
+
+---
+
+### Saving Descriptions
+
+Want to keep a record of your descriptions?
+
+1. After generating (or editing), click **Save to History**
+2. The description is saved to your history
+3. Access past descriptions from **Livestream → History**
+
+---
+
+### Viewing History
+
+To see previously generated descriptions:
+
+1. Go to **Livestream** from the main menu
+2. Click **History** in the navigation
+3. Browse past descriptions by date
+4. Click any entry to view the full content
+5. Copy or use as a starting point for new descriptions
+
+---
+
+### Platform Differences
+
+The AI tailors content based on your selected platform:
+
+| Platform | Optimized For |
+|----------|--------------|
+| **YouTube** | SEO-friendly titles, chapters, timestamps, hashtags, subscribe CTAs |
+| **Facebook** | Conversational tone, engagement prompts, share-friendly format |
+
+Toggle between platforms to see different styles for the same service details.
+
+---
+
+### 🔧 Managing Templates (Admins Only)
+
+Admins can customize the AI prompts:
+
+1. Go to **Admin → Livestream Templates**
+2. View current templates for YouTube and Facebook
+3. Edit the system prompts to match your church's voice
+4. Save changes to update how descriptions are generated
+
+> ⚠️ **Caution**: Changing templates affects all future generations. Test changes carefully.
+
+---
+
+### Livestream Tips
+
+- ✅ Generate descriptions a day before the service
+- ✅ Include specific details (sermon title, speaker name, scripture)
+- ✅ Review the platform preview to see how it will look
+- ✅ Use "Copy All" to get both title and description together
+- ✅ Save descriptions for consistency across weeks
+- ❌ Don't post AI content without reviewing it first
+
+---
+
+### Common Questions
+
+**Q: Can volunteers use the livestream generator?**  
+A: No, this feature is for Leaders and Admins only.
+
+**Q: Does it post directly to YouTube/Facebook?**  
+A: No, it generates the description text. You copy and paste it into your platform.
+
+**Q: Can I regenerate if I don't like the result?**  
+A: Yes! Adjust your key points or notes and click Generate again.
+
+**Q: Is my content saved automatically?**  
+A: Generated descriptions are not saved until you click Save to History.
+
+**Q: What if the AI makes a mistake?**  
+A: Review the preview and copy the content. You can edit in YouTube/Facebook before posting.
+
+**Q: Why do YouTube and Facebook previews look different?**  
+A: Each preview mimics the actual platform's design so you can see exactly how your content will appear.
+
+---
+
 ## Coming Soon
 
-- 🎥 **Livestream Tools** – Generate descriptions for YouTube and Facebook
 - 📚 **Training** – Complete onboarding and training modules
-- 📱 **Social Media Hub** – Create and schedule social media content
-- 🏠 **Dashboard Quick Actions** – Personalized widgets for upcoming duties
+- 📱 **Social Media Hub** – Create and schedule social media content with AI captions
 
 
 ## 🔄 Duty Swap Requests
