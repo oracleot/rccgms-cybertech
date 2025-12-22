@@ -583,13 +583,165 @@ A: Yes! Use the calendar arrows to navigate to previous months, or check the lis
 
 We're working on adding more features to Cyber Tech:
 
--  **Duty Swap Requests** – Request to swap duties with another volunteer
 - 🎥 **Livestream Tools** – Generate descriptions for YouTube and Facebook
 - 📋 **Service Rundowns** – Create and manage service order of events
 - 📦 **Equipment Tracking** – Check out and manage tech equipment
 - 📚 **Training** – Complete onboarding and training modules
+- 📱 **Social Media Hub** – Create and schedule social media content
 
 Stay tuned for updates!
+
+---
+
+## 🔄 Duty Swap Requests
+
+Sometimes life happens and you can't serve on a day you're scheduled. The Duty Swap feature lets you request someone else to take your duty, with leader approval to ensure smooth transitions.
+
+### What You Can Do
+
+**👤 Volunteers:**
+- Request to swap your assigned duty with another volunteer
+- Accept or decline swap requests from other volunteers
+- View all your pending swap requests
+- Track the status of your requests
+
+**👥 Leaders & 🔧 Admins:**
+- Everything volunteers can do, plus:
+- Approve or reject swap requests after volunteers agree
+- View all pending swaps needing approval
+
+---
+
+### How Duty Swaps Work
+
+The swap process has three steps to ensure everyone is on the same page:
+
+1. **Request**: You request a swap, optionally targeting a specific volunteer
+2. **Accept**: Another volunteer accepts your request
+3. **Approve**: A leader reviews and approves the swap
+
+Once approved, the duty is officially transferred and both volunteers are notified.
+
+---
+
+### Requesting a Duty Swap
+
+When you can't serve on a scheduled day:
+
+1. Go to **Rota** from the main menu
+2. Click **Swaps** in the navigation, or go to **My Schedule**
+3. Find the assignment you want to swap
+4. Click **Request Swap** (or the swap icon)
+5. In the modal that appears:
+   - **Select a volunteer** to request the swap from, OR
+   - Choose **Open Request** to let anyone accept it
+   - Optionally add a **reason** (e.g., "Family commitment")
+6. Click **Send Request**
+
+The targeted volunteer (or all volunteers if open) will be notified.
+
+> 💡 **Tip**: It's good practice to add a reason for your swap request. It helps others understand your situation.
+
+---
+
+### Accepting a Swap Request
+
+When someone asks you to swap duties:
+
+1. Go to **Rota → Swaps**
+2. Click the **Incoming** tab
+3. You'll see requests waiting for your response
+4. Review the details:
+   - Who's requesting
+   - What date and position
+   - Their reason for swapping
+5. Click **Accept** to agree to take over the duty
+6. Or click **Decline** if you can't help
+
+If you accept, the request moves to leaders for final approval.
+
+> ⚠️ **Note**: Make sure you're actually available on that date before accepting!
+
+---
+
+### Tracking Your Swap Requests
+
+To see all your swap activity:
+
+1. Go to **Rota → Swaps**
+2. Use the tabs to view:
+   - **Incoming** – Requests from others asking you to swap
+   - **Outgoing** – Requests you've made
+
+Each request shows its current status:
+
+| Status | What it means |
+|--------|--------------|
+| 🟡 **Pending** | Waiting for volunteer to accept/decline |
+| 🔵 **Accepted** | Volunteer accepted, waiting for leader approval |
+| ✅ **Approved** | Swap completed – duty has been transferred |
+| ❌ **Declined** | Volunteer declined the request |
+| 🚫 **Rejected** | Leader rejected the swap |
+
+---
+
+### 👥 Approving Swaps (Leaders & Admins)
+
+Leaders have the final say on swap requests:
+
+1. Go to **Rota → Swaps**
+2. Or check the **Leader Swap Dashboard** on your dashboard
+3. Review swaps with "Accepted" status
+4. For each request, you'll see:
+   - Who's swapping with whom
+   - The position and date
+   - The reason for the swap
+5. Click **Approve** to complete the swap
+6. Or click **Reject** if there's a problem
+
+When you approve:
+- ✅ The duty is transferred to the new volunteer
+- 📧 Both volunteers receive confirmation emails
+- 📅 The rota is automatically updated
+
+---
+
+### Swap Request Tips & Best Practices
+
+**For Volunteers:**
+- ✅ Request swaps as early as possible – don't wait until the last minute
+- ✅ Always add a reason for your request
+- ✅ Target a specific person if you know they're available
+- ✅ Check your availability before accepting someone else's request
+- ❌ Don't request swaps just to avoid serving – your team counts on you!
+
+**For Leaders:**
+- ✅ Review swap requests promptly so volunteers aren't left waiting
+- ✅ Check that the accepting volunteer is qualified for the position
+- ✅ Approve swaps before the service date whenever possible
+- ✅ Communicate if you need to reject a swap and explain why
+
+---
+
+### Common Questions
+
+**Q: Can I request a swap for any assignment?**  
+A: You can only request swaps for published rotas. Draft rotas can be edited directly by leaders.
+
+**Q: What happens if no one accepts my open request?**  
+A: The request remains pending. You should follow up with your team leader if the service date is approaching.
+
+**Q: Can I cancel a swap request I've made?**  
+A: Once submitted, you'll need to contact your team leader to cancel the request.
+
+**Q: What if I accepted a swap but my plans changed?**  
+A: Contact your team leader immediately. They may be able to reassign the duty.
+
+**Q: How will I know when my swap is approved?**  
+A: You'll receive an email notification when a leader approves or rejects your swap.
+
+**Q: Can leaders swap duties for volunteers directly?**  
+A: Leaders can edit the rota directly if needed. The swap system is designed for volunteer-initiated changes.
 
 ---
 

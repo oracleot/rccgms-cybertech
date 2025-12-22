@@ -1,10 +1,11 @@
 import { format } from "date-fns"
-import { Calendar, MapPin, Clock, ChevronRight } from "lucide-react"
+import { Calendar, MapPin, Clock, ChevronRight, ArrowRightLeft } from "lucide-react"
 import Link from "next/link"
 
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/shared/empty-state"
 
 interface ScheduleItem {
@@ -118,11 +119,19 @@ export default async function MySchedulePage() {
         <span className="text-foreground font-medium">My Schedule</span>
       </nav>
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">My Schedule</h1>
-        <p className="text-muted-foreground">
-          View your upcoming service assignments
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">My Schedule</h1>
+          <p className="text-muted-foreground">
+            View your upcoming service assignments
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link href="/rota/swaps">
+            <ArrowRightLeft className="mr-2 h-4 w-4" />
+            View Swaps
+          </Link>
+        </Button>
       </div>
 
       {scheduleItems.length === 0 ? (
@@ -189,6 +198,18 @@ export default async function MySchedulePage() {
                     </div>
                   )}
                 </div>
+                
+                {/* Swap Request Button */}
+                {item.status !== "declined" && (
+                  <div className="mt-4 pt-4 border-t">
+                    <Link href={`/rota/swaps?request=${item.id}`}>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <ArrowRightLeft className="h-4 w-4" />
+                        Request Swap
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

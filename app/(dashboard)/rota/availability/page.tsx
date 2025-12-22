@@ -19,13 +19,16 @@ export default async function AvailabilityPage() {
   
   let isLeaderOrAdmin = false
   if (user) {
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from("profiles")
       .select("role")
       .eq("auth_user_id", user.id)
       .single()
     
-    isLeaderOrAdmin = profile?.role === "admin" || profile?.role === "leader"
+    const profile = profileData as { role: string } | null
+    if (profile) {
+      isLeaderOrAdmin = profile.role === "admin" || profile.role === "leader"
+    }
   }
 
   return (

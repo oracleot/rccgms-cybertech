@@ -189,7 +189,7 @@ Based on plan.md structure:
 
 ---
 
-## Phase 6: User Story 4 - Duty Swap Requests (Priority: P2)
+## Phase 6: User Story 4 - Duty Swap Requests (Priority: P2) ✅
 
 **Goal**: Enable volunteers to request duty swaps with other team members when they can no longer serve on their assigned date
 
@@ -197,20 +197,20 @@ Based on plan.md structure:
 
 ### Implementation for User Story 4
 
-- [ ] T097 [US4] Create swap request modal component in components/rota/swap-request-modal.tsx
-- [ ] T098 [P] [US4] Create pending swap requests list component in components/rota/pending-swaps.tsx
-- [ ] T099 [P] [US4] Create swap request card component in components/rota/swap-request-card.tsx
-- [ ] T100 [US4] Implement createSwapRequest server action in app/(dashboard)/rota/swaps/actions.ts
-- [ ] T101 [P] [US4] Implement acceptSwapRequest server action in app/(dashboard)/rota/swaps/actions.ts
-- [ ] T102 [P] [US4] Implement declineSwapRequest server action in app/(dashboard)/rota/swaps/actions.ts
-- [ ] T103 [P] [US4] Implement approveSwapRequest server action (leader) in app/(dashboard)/rota/swaps/actions.ts
-- [ ] T104 [P] [US4] Implement rejectSwapRequest server action (leader) in app/(dashboard)/rota/swaps/actions.ts
-- [ ] T105 [US4] Create my swap requests page for volunteers in app/(dashboard)/rota/swaps/page.tsx
-- [ ] T106 [P] [US4] Create Leader swap approval dashboard section in components/rota/leader-swap-dashboard.tsx
-- [ ] T107 [US4] Create email template for swap request notification in emails/swap-request.tsx
-- [ ] T108 [P] [US4] Create email template for swap approval notification in emails/swap-approved.tsx
+- [X] T097 [US4] Create swap request modal component in components/rota/swap-request-modal.tsx
+- [X] T098 [P] [US4] Create pending swap requests list component in components/rota/pending-swaps.tsx
+- [X] T099 [P] [US4] Create swap request card component in components/rota/swap-request-card.tsx
+- [X] T100 [US4] Implement createSwapRequest server action in app/(dashboard)/rota/swaps/actions.ts
+- [X] T101 [P] [US4] Implement acceptSwapRequest server action in app/(dashboard)/rota/swaps/actions.ts
+- [X] T102 [P] [US4] Implement declineSwapRequest server action in app/(dashboard)/rota/swaps/actions.ts
+- [X] T103 [P] [US4] Implement approveSwapRequest server action (leader) in app/(dashboard)/rota/swaps/actions.ts
+- [X] T104 [P] [US4] Implement rejectSwapRequest server action (leader) in app/(dashboard)/rota/swaps/actions.ts
+- [X] T105 [US4] Create my swap requests page for volunteers in app/(dashboard)/rota/swaps/page.tsx
+- [X] T106 [P] [US4] Create Leader swap approval dashboard section in components/rota/leader-swap-dashboard.tsx
+- [X] T107 [US4] Create email template for swap request notification in emails/swap-request.tsx
+- [X] T108 [P] [US4] Create email template for swap approval notification in emails/swap-approved.tsx
 
-**Checkpoint**: User Story 4 (Swap Requests) is fully functional and testable independently
+**Checkpoint**: User Story 4 (Swap Requests) is fully functional and testable independently ✅
 
 ---
 

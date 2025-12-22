@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, List, Plus, User, CalendarDays, Users } from "lucide-react"
+import { Calendar, List, Plus, User, CalendarDays, Users, ArrowRightLeft } from "lucide-react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -31,6 +31,12 @@ export default function RotaPage() {
             <Link href="/rota/my-schedule">
               <User className="mr-2 h-4 w-4" />
               My Schedule
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/rota/swaps">
+              <ArrowRightLeft className="mr-2 h-4 w-4" />
+              Swaps
             </Link>
           </Button>
           <Button variant="outline" asChild>

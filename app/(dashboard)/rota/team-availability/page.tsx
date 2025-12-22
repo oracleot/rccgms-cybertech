@@ -22,12 +22,13 @@ export default async function TeamAvailabilityPage() {
   }
 
   // Check if user is admin or leader
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
     .select("role")
     .eq("auth_user_id", user.id)
     .single()
 
+  const profile = profileData as { role: string } | null
   if (!profile || (profile.role !== "admin" && profile.role !== "leader")) {
     redirect("/rota/availability")
   }

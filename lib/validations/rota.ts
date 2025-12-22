@@ -55,7 +55,12 @@ export type BulkSetAvailabilityInput = z.infer<typeof bulkSetAvailabilitySchema>
 // Create swap request schema
 export const createSwapRequestSchema = z.object({
   assignmentId: z.string().uuid("Invalid assignment"),
-  targetUserId: z.string().uuid("Invalid target user").optional(),
+  // targetUserId can be a UUID, "open" for open requests, or undefined
+  targetUserId: z.union([
+    z.string().uuid("Invalid target user"),
+    z.literal("open"),
+    z.undefined(),
+  ]).optional(),
   reason: z.string().max(500, "Reason must be less than 500 characters").optional(),
 })
 
@@ -65,6 +70,7 @@ export type CreateSwapRequestInput = z.infer<typeof createSwapRequestSchema>
 export const updateSwapRequestSchema = z.object({
   id: z.string().uuid(),
   action: z.enum(["accept", "decline", "approve", "reject"]),
+  reason: z.string().max(500, "Reason must be less than 500 characters").optional(),
 })
 
 export type UpdateSwapRequestInput = z.infer<typeof updateSwapRequestSchema>
