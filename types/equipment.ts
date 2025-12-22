@@ -100,7 +100,7 @@ export interface OverdueCheckout {
   id: string
   equipmentId: string
   equipmentName: string
-  checkedOutBy: Profile
+  checkedOutBy: Pick<Profile, "id" | "name">
   expectedReturn: string
   daysOverdue: number
 }

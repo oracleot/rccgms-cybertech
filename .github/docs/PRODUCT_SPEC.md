@@ -236,7 +236,7 @@ Track all tech department equipment, manage checkouts, schedule maintenance, and
 | Available | Ready for use | Green |
 | In Use | Currently checked out | Blue |
 | Maintenance | Under repair/service | Yellow |
-| Retired | No longer in service | Gray |
+| Returned | No longer in service | Gray |
 
 ---
 

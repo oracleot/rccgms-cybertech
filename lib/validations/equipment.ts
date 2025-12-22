@@ -5,7 +5,7 @@
 import { z } from "zod"
 
 // Equipment status enum
-const equipmentStatusSchema = z.enum(["available", "in_use", "maintenance", "retired"])
+const equipmentStatusSchema = z.enum(["available", "in_use", "maintenance", "returned"])
 
 // Maintenance type enum
 const maintenanceTypeSchema = z.enum(["repair", "cleaning", "calibration", "inspection"])
@@ -22,6 +22,7 @@ export const createEquipmentSchema = z.object({
   warrantyExpires: z.string().date().optional(),
   location: z.string().max(200).optional(),
   notes: z.string().max(1000).optional(),
+  isBorrowed: z.boolean().optional(),
 })
 
 export type CreateEquipmentInput = z.infer<typeof createEquipmentSchema>
@@ -40,6 +41,7 @@ export const updateEquipmentSchema = z.object({
   location: z.string().max(200).optional().nullable(),
   notes: z.string().max(1000).optional().nullable(),
   status: equipmentStatusSchema.optional(),
+  isBorrowed: z.boolean().optional(),
 })
 
 export type UpdateEquipmentInput = z.infer<typeof updateEquipmentSchema>
@@ -47,7 +49,10 @@ export type UpdateEquipmentInput = z.infer<typeof updateEquipmentSchema>
 // Checkout equipment schema
 export const checkoutEquipmentSchema = z.object({
   equipmentId: z.string().uuid("Invalid equipment"),
-  expectedReturn: z.string().datetime("Please enter a valid return date and time"),
+  expectedReturn: z.string().min(1, "Please enter a return date and time").refine(
+    (val) => !isNaN(Date.parse(val)),
+    { message: "Please enter a valid return date and time" }
+  ),
   notes: z.string().max(500).optional(),
 })
 
@@ -92,3 +97,18 @@ export const reportIssueSchema = z.object({
 })
 
 export type ReportIssueInput = z.infer<typeof reportIssueSchema>
+
+// Complete maintenance schema
+export const completeMaintenanceSchema = z.object({
+  equipmentId: z.string().uuid("Invalid equipment"),
+  notes: z.string().max(500).optional(),
+})
+
+export type CompleteMaintenanceInput = z.infer<typeof completeMaintenanceSchema>
+
+// Delete equipment schema
+export const deleteEquipmentSchema = z.object({
+  equipmentId: z.string().uuid("Invalid equipment"),
+})
+
+export type DeleteEquipmentInput = z.infer<typeof deleteEquipmentSchema>

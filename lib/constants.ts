@@ -85,7 +85,7 @@ export const EQUIPMENT_STATUS = {
   AVAILABLE: "available",
   IN_USE: "in_use",
   MAINTENANCE: "maintenance",
-  RETIRED: "retired",
+  RETURNED: "returned",
 } as const
 
 export type EquipmentStatus = (typeof EQUIPMENT_STATUS)[keyof typeof EQUIPMENT_STATUS]
@@ -94,14 +94,14 @@ export const EQUIPMENT_STATUS_LABELS: Record<EquipmentStatus, string> = {
   available: "Available",
   in_use: "In Use",
   maintenance: "Maintenance",
-  retired: "Retired",
+  returned: "Returned",
 }
 
 export const EQUIPMENT_STATUS_COLORS: Record<EquipmentStatus, string> = {
   available: "bg-green-100 text-green-800",
   in_use: "bg-blue-100 text-blue-800",
   maintenance: "bg-yellow-100 text-yellow-800",
-  retired: "bg-gray-100 text-gray-800",
+  returned: "bg-purple-100 text-purple-800",
 }
 
 // ===================

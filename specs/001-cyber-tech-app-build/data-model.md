@@ -259,11 +259,16 @@ Physical inventory items.
 | purchase_price | decimal(10,2) | nullable | Cost |
 | warranty_expires | date | nullable | Warranty end |
 | location | text | nullable | Storage location |
-| status | enum('available', 'in_use', 'maintenance', 'retired') | default 'available' | Current status |
+| status | enum('available', 'in_use', 'maintenance', 'returned') | default 'available' | Current status |
+| is_borrowed | boolean | default false | Whether equipment is borrowed (not church-owned) |
 | qr_code | text | nullable | Generated QR data URL |
 | created_at | timestamptz | default now() | Created timestamp |
 
 **Indexes**: `status`, `category_id`, `serial_number`
+
+**Notes**:
+- `is_borrowed = true` indicates equipment borrowed from external source
+- `status = 'returned'` is used when borrowed equipment is returned to its owner
 
 ---
 
@@ -507,7 +512,7 @@ CREATE TYPE user_role AS ENUM ('admin', 'leader', 'volunteer');
 CREATE TYPE rota_status AS ENUM ('draft', 'published');
 CREATE TYPE assignment_status AS ENUM ('pending', 'confirmed', 'declined');
 CREATE TYPE swap_status AS ENUM ('pending', 'accepted', 'declined', 'approved', 'rejected');
-CREATE TYPE equipment_status AS ENUM ('available', 'in_use', 'maintenance', 'retired');
+CREATE TYPE equipment_status AS ENUM ('available', 'in_use', 'maintenance', 'returned');
 CREATE TYPE maintenance_type AS ENUM ('repair', 'cleaning', 'calibration', 'inspection');
 CREATE TYPE rundown_status AS ENUM ('draft', 'published', 'archived');
 CREATE TYPE rundown_item_type AS ENUM ('song', 'sermon', 'announcement', 'video', 'prayer', 'transition', 'offering');

@@ -246,7 +246,7 @@ As a new Volunteer, I want to complete a structured training program for my role
 - **FR-030**: System MUST track checkout/return with expected return dates
 - **FR-031**: System MUST support issue reporting with severity levels
 - **FR-032**: System MUST maintain equipment checkout and maintenance history
-- **FR-033**: Equipment MUST have status: Available, In Use, Maintenance, or Retired
+- **FR-033**: Equipment MUST have status: Available, In Use, Maintenance, or Returned (for borrowed items returned to owner)
 
 **Service Rundown Builder**
 - **FR-034**: Leaders MUST be able to create rundowns for specific service dates

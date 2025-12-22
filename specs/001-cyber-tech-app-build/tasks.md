@@ -242,7 +242,7 @@ Based on plan.md structure:
 
 ---
 
-## Phase 8: User Story 6 - Service Rundown Builder (Priority: P2)
+## Phase 8: User Story 6 - Service Rundown Builder (Priority: P2) ✅
 
 **Goal**: Enable Leaders to create and manage service rundowns with timing and cues for coordinated service execution
 
@@ -271,11 +271,11 @@ Based on plan.md structure:
 - [x] T142 [P] [US6] Create template save/load functionality in components/rundown/template-selector.tsx
 - [x] T143 [US6] Enable real-time updates via Supabase subscription in components/rundown/rundown-editor.tsx (update)
 
-**Checkpoint**: User Story 6 (Rundown Builder) is fully functional and testable independently
+**Checkpoint**: User Story 6 (Rundown Builder) is fully functional and testable independently ✅
 
 ---
 
-## Phase 9: User Story 7 - Equipment Inventory Management (Priority: P2)
+## Phase 9: User Story 7 - Equipment Inventory Management (Priority: P2) ✅
 
 **Goal**: Enable Leaders to track all tech department equipment, manage checkouts, and report issues
 
@@ -283,32 +283,40 @@ Based on plan.md structure:
 
 ### Implementation for User Story 7
 
-- [ ] T144 [US7] Create equipment list page in app/(dashboard)/equipment/page.tsx
-- [ ] T145 [P] [US7] Create equipment grid/list view component in components/equipment/equipment-list.tsx
-- [ ] T146 [P] [US7] Create equipment card component in components/equipment/equipment-card.tsx
-- [ ] T147 [P] [US7] Create equipment status badge component in components/equipment/status-badge.tsx
-- [ ] T148 [US7] Create add equipment form page in app/(dashboard)/equipment/new/page.tsx
-- [ ] T149 [P] [US7] Create equipment form component in components/equipment/equipment-form.tsx
-- [ ] T150 [US7] Create equipment detail page in app/(dashboard)/equipment/[id]/page.tsx
-- [ ] T151 [P] [US7] Create equipment detail component with history in components/equipment/equipment-detail.tsx
-- [ ] T152 [P] [US7] Create checkout history table component in components/equipment/checkout-history.tsx
-- [ ] T153 [P] [US7] Create maintenance history component in components/equipment/maintenance-history.tsx
-- [ ] T154 [US7] Implement createEquipment server action in app/(dashboard)/equipment/actions.ts
-- [ ] T155 [P] [US7] Implement updateEquipment server action in app/(dashboard)/equipment/actions.ts
-- [ ] T156 [P] [US7] Implement checkoutEquipment server action in app/(dashboard)/equipment/actions.ts
-- [ ] T157 [P] [US7] Implement returnEquipment server action in app/(dashboard)/equipment/actions.ts
-- [ ] T158 [P] [US7] Implement logMaintenance server action in app/(dashboard)/equipment/actions.ts
-- [ ] T159 [US7] Create POST /api/equipment/qr/:id endpoint for QR generation in app/api/equipment/qr/[id]/route.ts
-- [ ] T160 [P] [US7] Create QR code generator utility using qrcode library in lib/equipment/qr.ts
-- [ ] T161 [P] [US7] Create printable QR label page in app/api/equipment/qr/[id]/print/route.ts
-- [ ] T162 [US7] Create QR scanner component using html5-qrcode in components/equipment/qr-scanner.tsx
-- [ ] T163 [P] [US7] Create scan page for mobile in app/(dashboard)/equipment/scan/page.tsx
-- [ ] T164 [P] [US7] Create checkout modal component in components/equipment/checkout-modal.tsx
-- [ ] T165 [P] [US7] Create return modal component in components/equipment/return-modal.tsx
-- [ ] T166 [US7] Create issue report modal in components/equipment/issue-report-modal.tsx
-- [ ] T167 [P] [US7] Create overdue items dashboard widget in components/equipment/overdue-widget.tsx
+- [x] T144 [US7] Create equipment list page in app/(dashboard)/equipment/page.tsx
+- [x] T145 [P] [US7] Create equipment grid/list view component in components/equipment/equipment-list.tsx
+- [x] T146 [P] [US7] Create equipment card component in components/equipment/equipment-card.tsx
+- [x] T147 [P] [US7] Create equipment status badge component in components/equipment/status-badge.tsx
+- [x] T148 [US7] Create add equipment form page in app/(dashboard)/equipment/new/page.tsx
+- [x] T149 [P] [US7] Create equipment form component in components/equipment/equipment-form.tsx
+- [x] T150 [US7] Create equipment detail page in app/(dashboard)/equipment/[id]/page.tsx
+- [x] T151 [P] [US7] Create equipment detail component with history in components/equipment/equipment-detail.tsx
+- [x] T152 [P] [US7] Create checkout history table component in components/equipment/checkout-history.tsx
+- [x] T153 [P] [US7] Create maintenance history component in components/equipment/maintenance-history.tsx
+- [x] T154 [US7] Implement createEquipment server action in app/(dashboard)/equipment/actions.ts
+- [x] T155 [P] [US7] Implement updateEquipment server action in app/(dashboard)/equipment/actions.ts
+- [x] T156 [P] [US7] Implement checkoutEquipment server action in app/(dashboard)/equipment/actions.ts
+- [x] T157 [P] [US7] Implement returnEquipment server action in app/(dashboard)/equipment/actions.ts
+- [x] T158 [P] [US7] Implement logMaintenance server action in app/(dashboard)/equipment/actions.ts
+- [x] T159 [US7] Create POST /api/equipment/qr/:id endpoint for QR generation in app/api/equipment/qr/[id]/route.ts
+- [x] T160 [P] [US7] Create QR code generator utility using qrcode library in lib/equipment/qr.ts
+- [x] T161 [P] [US7] Create printable QR label page in app/api/equipment/qr/[id]/print/route.ts
+- [x] T162 [US7] Create QR scanner component using html5-qrcode in components/equipment/qr-scanner.tsx
+- [x] T163 [P] [US7] Create scan page for mobile in app/(dashboard)/equipment/scan/page.tsx
+- [x] T164 [P] [US7] Create checkout modal component in components/equipment/checkout-modal.tsx
+- [x] T165 [P] [US7] Create return modal component in components/equipment/return-modal.tsx
+- [x] T166 [US7] Create issue report modal in components/equipment/issue-report-modal.tsx
+- [x] T167 [P] [US7] Create overdue items dashboard widget in components/equipment/overdue-widget.tsx
+- [x] T167a [US7] Implement deleteEquipment server action with cascade delete in app/(dashboard)/equipment/actions.ts
+- [x] T167b [P] [US7] Create delete confirmation modal in components/equipment/delete-equipment-modal.tsx
+- [x] T167c [P] [US7] Add isBorrowed field to equipment form and validation schemas
+- [x] T167d [P] [US7] Create return borrowed modal for returning items to owner in components/equipment/return-borrowed-modal.tsx
+- [x] T167e [P] [US7] Add breadcrumb navigation to equipment detail page
+- [x] T167f [US7] Create migration for is_borrowed column in supabase/migrations/015_equipment_is_borrowed.sql
+- [x] T167g [US7] Create migration for equipment_status 'returned' enum value in supabase/migrations/016_equipment_status_returned.sql
+- [x] T167h [P] [US7] Add complete maintenance modal in components/equipment/complete-maintenance-modal.tsx
 
-**Checkpoint**: User Story 7 (Equipment Inventory) is fully functional and testable independently
+**Checkpoint**: User Story 7 (Equipment Inventory) is fully functional and testable independently ✅
 
 ---
 
@@ -557,7 +565,7 @@ With multiple developers:
 
 | Metric | Count |
 |--------|-------|
-| **Total Tasks** | 246 |
+| **Total Tasks** | 255 |
 | **Phase 1 (Setup)** | 14 tasks |
 | **Phase 2 (Foundational)** | 40 tasks |
 | **US1 - Authentication (P1)** | 18 tasks |
@@ -565,8 +573,8 @@ With multiple developers:
 | **US3 - Availability (P1)** | 8 tasks |
 | **US4 - Swap Requests (P2)** | 12 tasks |
 | **US5 - Livestream (P1)** | 15 tasks |
-| **US6 - Rundown (P2)** | 20 tasks |
-| **US7 - Equipment (P2)** | 24 tasks |
+| **US6 - Rundown (P2)** | 20 tasks ✅ |
+| **US7 - Equipment (P2)** | 33 tasks ✅ |
 | **US8 - Dashboard (P2)** | 9 tasks |
 | **US9 - Social Media (P3)** | 19 tasks |
 | **US10 - Training (P3)** | 23 tasks |

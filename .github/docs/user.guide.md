@@ -637,19 +637,115 @@ A: Add items first; Live View will show a placeholder until a rundown has items.
 
 ---
 
+## 📦 Equipment Inventory & QR Codes
+
+Track where gear is, who has it, and when it is due back.
+
+### What You Can Do
+- 👥 **Leaders**: Add new equipment, check items out/in, log maintenance, print QR labels, delete equipment, return borrowed items to owners.
+- 👤 **Volunteers**: Scan a QR to open an item, view details, and return what you borrowed.
+
+### Adding New Equipment (Leaders)
+1. Go to **Equipment** in the dashboard.
+2. Click **Add equipment**.
+3. Fill in the basics: name, category, serial, location, purchase info (optional).
+4. Check **Borrowed Item** if the equipment is borrowed from someone else (not church-owned).
+5. Click **Save equipment**. You will land on the item detail page.
+
+### Viewing Details
+1. Open **Equipment** and select an item.
+2. See status, location, serial, purchase info, borrowed status, checkouts, and maintenance history.
+3. Use the buttons to print a label, copy a QR, report an issue, check out, return, or delete.
+4. For borrowed items that are available, you'll see a **Return to owner** button to mark the item as returned.
+
+### Checking Out Gear
+1. On an item page, click **Check out**.
+2. Set **Expected return** date/time and optional notes.
+3. Confirm. The item status moves to **In use** and appears in history.
+
+### Returning Gear
+1. On an item page with an active checkout, click **Return item**.
+2. Add condition notes if needed (e.g., "good", "needs repair").
+3. Confirm. Status moves back to **Available**.
+
+### Returning Borrowed Items to Owner (Leaders)
+If equipment was borrowed from someone outside the church:
+1. On the item page, check that **Borrowed Item** is shown under Equipment Details.
+2. When the item is available (not checked out), click **Return to owner**.
+3. Confirm the return. Status changes to **Returned** and the item is archived.
+
+> 💡 **Note**: The "Return to owner" button only appears for borrowed items that are currently available.
+
+### Deleting Equipment (Leaders)
+1. On the item page, click the **Delete** button (trash icon).
+2. A confirmation dialog will appear.
+3. Click **Delete** to permanently remove the equipment and all its checkout/maintenance history.
+
+> ⚠️ **Warning**: Deleting equipment is permanent and cannot be undone.
+
+### Reporting an Issue
+1. On the item page, click **Report issue**.
+2. Describe the problem and set severity (low/medium/high/critical).
+3. Submit. Severe issues automatically move the item to **Maintenance**.
+
+### Logging Maintenance (Leaders)
+1. On the item page, click **Report issue** for quick logging, or use maintenance tools.
+2. Add what was done, who performed it, cost/vendor, and next due date if applicable.
+3. Save to keep a trail of work.
+
+### QR Codes
+- **Copy QR**: Copies a data URL you can paste into docs or print tools.
+- **Print label**: Opens a printable page with QR, name, status, location, and serial.
+
+### Scanning a QR
+1. Go to **Equipment → Scan**.
+2. Allow camera access and point at the QR.
+3. The app opens the matching item automatically. You can also paste/scan a raw ID.
+
+### Overdue Items (Leaders)
+- On the Equipment page, see **Overdue checkouts** with who has the item and how long it is late.
+
+### Tips & Best Practices
+- ✅ Add expected return dates for every checkout.
+- ✅ Print and stick QR labels on gear cases.
+- ✅ Log issues as soon as they are noticed; mark critical issues to pull gear from use.
+- ❌ Avoid checking out without a return time—overdues are tracked.
+
+### Equipment Status Guide
+
+| Status | Meaning |
+|--------|--------|
+| 🟢 **Available** | Ready to be checked out |
+| 🔵 **In Use** | Currently checked out |
+| 🟡 **Maintenance** | Under repair or inspection |
+| 🟣 **Returned** | Borrowed item returned to owner (archived) |
+
+### Common Questions
+**Q: Who can add or edit equipment?**
+A: Leaders and Admins. Volunteers can view and return their own checkouts.
+
+**Q: Do I need to scan the QR to check out?**
+A: No. QR is optional. You can open the item from the list and check out there.
+
+**Q: I scanned a code but it did not open.**
+A: Ensure camera permission is granted and the QR points to the Cyber Tech app. You can also paste the ID into the scan page input.
+
+**Q: How do I see what is overdue?**
+A: Check the **Overdue checkouts** widget on the Equipment page. Items show who has them and days overdue.
+
+**Q: What's the difference between "Return item" and "Return to owner"?**
+A: "Return item" is for returning checked-out equipment back to church inventory. "Return to owner" is for borrowed equipment that needs to go back to its original owner outside the church.
+
+**Q: Can I delete equipment that's currently checked out?**
+A: Yes, but all checkout history will be permanently deleted. Make sure the item is returned first if you need to keep records.
+
 ## Coming Soon
 
-We're working on adding more features to Cyber Tech:
-
 - 🎥 **Livestream Tools** – Generate descriptions for YouTube and Facebook
-- 📦 **Equipment Tracking** – Check out and manage tech equipment
 - 📚 **Training** – Complete onboarding and training modules
 - 📱 **Social Media Hub** – Create and schedule social media content
 - 🏠 **Dashboard Quick Actions** – Personalized widgets for upcoming duties
 
-Stay tuned for updates!
-
----
 
 ## 🔄 Duty Swap Requests
 
