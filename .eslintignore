@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+dist
+coverage
+*.min.js
+.vercel
+.cache
+.DS_Store
+*.log

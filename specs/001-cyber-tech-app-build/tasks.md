@@ -250,26 +250,26 @@ Based on plan.md structure:
 
 ### Implementation for User Story 6
 
-- [ ] T124 [US6] Create rundowns list page in app/(dashboard)/rundown/page.tsx
-- [ ] T125 [P] [US6] Create rundown card component in components/rundown/rundown-card.tsx
-- [ ] T126 [US6] Create new rundown page in app/(dashboard)/rundown/new/page.tsx
-- [ ] T127 [P] [US6] Create rundown form component in components/rundown/rundown-form.tsx
-- [ ] T128 [US6] Create rundown editor page in app/(dashboard)/rundown/[id]/page.tsx
-- [ ] T129 [P] [US6] Create @dnd-kit sortable rundown editor in components/rundown/rundown-editor.tsx
-- [ ] T130 [P] [US6] Create sortable rundown item component in components/rundown/sortable-item.tsx
-- [ ] T131 [P] [US6] Create add rundown item modal in components/rundown/add-item-modal.tsx
-- [ ] T132 [P] [US6] Create rundown item type selector in components/rundown/item-type-selector.tsx
-- [ ] T133 [US6] Implement createRundown server action in app/(dashboard)/rundown/actions.ts
-- [ ] T134 [P] [US6] Implement addRundownItem server action in app/(dashboard)/rundown/actions.ts
-- [ ] T135 [P] [US6] Implement updateRundownItem server action in app/(dashboard)/rundown/actions.ts
-- [ ] T136 [P] [US6] Implement deleteRundownItem server action in app/(dashboard)/rundown/actions.ts
-- [ ] T137 [P] [US6] Implement reorderRundownItems server action in app/(dashboard)/rundown/actions.ts
-- [ ] T138 [US6] Create live view mode page in app/(dashboard)/rundown/[id]/live/page.tsx
-- [ ] T139 [P] [US6] Create live view component with current/next item in components/rundown/live-view.tsx
-- [ ] T140 [P] [US6] Create rundown timer component in components/rundown/rundown-timer.tsx
-- [ ] T141 [US6] Create POST /api/rundowns/:id/duplicate endpoint in app/api/rundowns/[id]/duplicate/route.ts
-- [ ] T142 [P] [US6] Create template save/load functionality in components/rundown/template-selector.tsx
-- [ ] T143 [US6] Enable real-time updates via Supabase subscription in components/rundown/rundown-editor.tsx (update)
+- [x] T124 [US6] Create rundowns list page in app/(dashboard)/rundown/page.tsx
+- [x] T125 [P] [US6] Create rundown card component in components/rundown/rundown-card.tsx
+- [x] T126 [US6] Create new rundown page in app/(dashboard)/rundown/new/page.tsx
+- [x] T127 [P] [US6] Create rundown form component in components/rundown/rundown-form.tsx
+- [x] T128 [US6] Create rundown editor page in app/(dashboard)/rundown/[id]/page.tsx
+- [x] T129 [P] [US6] Create @dnd-kit sortable rundown editor in components/rundown/rundown-editor.tsx
+- [x] T130 [P] [US6] Create sortable rundown item component in components/rundown/sortable-item.tsx
+- [x] T131 [P] [US6] Create add rundown item modal in components/rundown/add-item-modal.tsx
+- [x] T132 [P] [US6] Create rundown item type selector in components/rundown/item-type-selector.tsx
+- [x] T133 [US6] Implement createRundown server action in app/(dashboard)/rundown/actions.ts
+- [x] T134 [P] [US6] Implement addRundownItem server action in app/(dashboard)/rundown/actions.ts
+- [x] T135 [P] [US6] Implement updateRundownItem server action in app/(dashboard)/rundown/actions.ts
+- [x] T136 [P] [US6] Implement deleteRundownItem server action in app/(dashboard)/rundown/actions.ts
+- [x] T137 [P] [US6] Implement reorderRundownItems server action in app/(dashboard)/rundown/actions.ts
+- [x] T138 [US6] Create live view mode page in app/(dashboard)/rundown/[id]/live/page.tsx
+- [x] T139 [P] [US6] Create live view component with current/next item in components/rundown/live-view.tsx
+- [x] T140 [P] [US6] Create rundown timer component in components/rundown/rundown-timer.tsx
+- [x] T141 [US6] Create POST /api/rundowns/:id/duplicate endpoint in app/api/rundowns/[id]/duplicate/route.ts
+- [x] T142 [P] [US6] Create template save/load functionality in components/rundown/template-selector.tsx
+- [x] T143 [US6] Enable real-time updates via Supabase subscription in components/rundown/rundown-editor.tsx (update)
 
 **Checkpoint**: User Story 6 (Rundown Builder) is fully functional and testable independently
 

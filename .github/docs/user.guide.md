@@ -579,15 +579,73 @@ A: Yes! Use the calendar arrows to navigate to previous months, or check the lis
 
 ---
 
+## 🎬 Service Rundowns
+
+Plan the order of service, timing, and cues so everyone knows what is happening next.
+
+### What You Can Do
+- 👤 **Volunteers**: View rundowns and follow along in Live View on service day
+- 👥 **Leaders**: Create rundowns, add items with durations and notes, reorder items, and run Live View
+- 🔧 **Admins**: Everything leaders can do, plus oversight across all services
+
+### Creating a Rundown (Leaders & Admins)
+1. Go to **Rundowns** from the main menu
+2. Click **New rundown** (top right)
+3. Pick the **Service** (e.g., Sunday Service)
+4. Choose the **Date**
+5. Enter a **Title** (e.g., "Christmas Service Rundown")
+6. Click **Create** to open the rundown
+
+### Adding or Editing Items
+1. In the rundown, click **Add item**
+2. Choose an **Item type** (song, sermon, announcement, video, prayer, transition, offering)
+3. Add a **Title** and **Duration** (minutes:seconds)
+4. Optionally add **Notes** or assign a person
+5. Click **Save**
+6. To edit later, click the **pencil** on an item; to remove it, click the **trash** icon
+
+### Reordering Items
+- Drag the **grip icon** on any item to reorder; changes save automatically
+- The total service time updates as you reorder items
+
+### Using Live View
+1. Open a rundown and click **Live view** (top right)
+2. Click **Start service** to begin the first item (timer won’t run until you start)
+3. The timer auto-advances to the next item when its planned time ends
+4. A loud alert loops ~1 minute before an item ends; choose the sound, preview it, and stop it with the **Stop alert** button
+5. The timer shows elapsed vs planned time for the active item
+6. See **Up next** and the full list so the team stays in sync
+7. 👤 **Volunteers** are sent straight to Live View (builder is leader/admin only)
+
+> Note: Alerts loop until you tap **Stop alert**. Some browsers require a click/tap before playing audio—hit **Preview** to unlock audio if you don't hear it.
+
+### Tips & Tricks
+- ✅ Create rundowns a few days before service so the team can review
+- ✅ Keep item notes concise (e.g., lighting cues, scripture references)
+- ✅ Use Live View on a tablet at FOH to keep everyone aligned
+
+### Common Questions
+
+**Q: Can volunteers edit rundowns?**  
+A: Volunteers can view; only Leaders and Admins can add, edit, or delete items.
+
+**Q: Do changes save automatically?**  
+A: Yes—reordering and edits are saved as soon as you make them.
+
+**Q: What if there are no items yet?**  
+A: Add items first; Live View will show a placeholder until a rundown has items.
+
+---
+
 ## Coming Soon
 
 We're working on adding more features to Cyber Tech:
 
 - 🎥 **Livestream Tools** – Generate descriptions for YouTube and Facebook
-- 📋 **Service Rundowns** – Create and manage service order of events
 - 📦 **Equipment Tracking** – Check out and manage tech equipment
 - 📚 **Training** – Complete onboarding and training modules
 - 📱 **Social Media Hub** – Create and schedule social media content
+- 🏠 **Dashboard Quick Actions** – Personalized widgets for upcoming duties
 
 Stay tuned for updates!
 
@@ -745,4 +803,4 @@ A: Leaders can edit the rota directly if needed. The swap system is designed for
 
 ---
 
-*Last updated: December 2025*
+*Last updated: December 22, 2025*
