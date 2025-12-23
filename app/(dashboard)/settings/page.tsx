@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { ROUTES } from "@/lib/constants"
 import { ProfileForm } from "./_components/profile-form"
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
+import { ChangePassword } from "@/components/settings/change-password"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 
@@ -105,6 +106,19 @@ export default async function SettingsPage() {
               profile={profileFormData}
               departments={(departments as { id: string; name: string }[]) || []}
             />
+          </CardContent>
+        </Card>
+
+        {/* Security Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Security</CardTitle>
+            <CardDescription>
+              Update your password to keep your account secure
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChangePassword />
           </CardContent>
         </Card>
 

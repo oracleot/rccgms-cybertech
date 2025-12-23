@@ -103,21 +103,44 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Task details**: ID, description, file paths, parallel markers [P]
    - **Execution flow**: Order and dependency requirements
 
-6. Execute implementation following the task plan:
+6. **Update User Guide** (`.github/docs/user.guide.md`):
+   - **Purpose**: Document user-facing functionality BEFORE implementation to validate task completeness
+   - **Read the existing user guide** to understand the established format and style
+   - **Add/update section for the feature being implemented**, following the existing patterns:
+     - Use the same heading hierarchy (## for main sections, ### for subsections)
+     - Include "What You Can Do" section with role-based permissions (👤 Volunteer, 👥 Leader, 🔧 Admin)
+     - Document step-by-step workflows with numbered lists
+     - Add tables for status guides, notification types, or feature comparisons
+     - Include "Tips & Best Practices" with ✅ and ❌ bullets
+     - Add "Common Questions" Q&A section at the end
+     - Use emoji indicators consistently (💡 for tips, ⚠️ for warnings, etc.)
+   - **Match the tone**: Friendly, conversational, direct instructions
+   - **Validation checkpoint**: Review the updated user guide to identify:
+     - Missing task details (incomplete documentation)
+     - Unclear user flows (needs spec clarification)
+     - Gaps between tasks and user expectations
+   - If issues found, report them before proceeding and ask user whether to continue
+
+7. Execute implementation following the task plan:
    - **Phase-by-phase execution**: Complete each phase before moving to the next
    - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together  
    - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
+   - **IMPORTANT**: Use the user guide (step 6) as the authoritative reference for:
+     - Expected user interactions and workflows
+     - Form fields, validation rules, and error messages
+     - UI component behavior and states
+     - Success/failure scenarios to handle
 
-7. Implementation execution rules:
+8. Implementation execution rules:
    - **Setup first**: Initialize project structure, dependencies, configuration
    - **Tests before code**: If you need to write tests for contracts, entities, and integration scenarios
    - **Core development**: Implement models, services, CLI commands, endpoints
    - **Integration work**: Database connections, middleware, logging, external services
    - **Polish and validation**: Unit tests, performance optimization, documentation
 
-8. Progress tracking and error handling:
+9. Progress tracking and error handling:
    - Report progress after each completed task
    - Halt execution if any non-parallel task fails
    - For parallel tasks [P], continue with successful tasks, report failed ones
@@ -125,11 +148,32 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Suggest next steps if implementation cannot proceed
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
-9. Completion validation:
+10. **Post-Implementation Testing** (using user guide):
+   - **Test against user guide**: Validate implementation matches documented user flows
+   - **Authentication**: For auth-protected apps, use test credentials from `.github/copilot-instructions.md`
+     - Look for "Test Credentials" section in copilot-instructions.md
+     - Use provided email/password to authenticate before testing protected routes
+   - **Manual testing workflow**:
+     1. Start the development server if not running
+     2. Login using test credentials from copilot-instructions.md
+     3. Walk through each workflow documented in user-guide.md
+     4. Verify each step produces expected behavior
+     5. Test error states and edge cases documented in the guide
+   - **Issue tracking**:
+     - Document any discrepancies between user guide and actual behavior
+     - Fix issues immediately when found
+     - Re-test after fixes to confirm resolution
+   - **Browser/API testing**:
+     - Use available browser tools or curl for API endpoints
+     - Capture screenshots or response data as evidence
+     - Note any console errors or warnings
+
+11. Completion validation:
    - Verify all required tasks are completed
    - Check that implemented features match the original specification
    - Validate that tests pass and coverage meets requirements
    - Confirm the implementation follows the technical plan
+   - **Verify user guide accuracy**: Update user-guide.md if implementation differs from initial documentation
    - Report final status with summary of completed work
 
 Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.

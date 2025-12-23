@@ -52,3 +52,6 @@ supabase/.branches/
 
 # IDE
 .idea/
+
+# Misc
+.github/docs/test-credentials

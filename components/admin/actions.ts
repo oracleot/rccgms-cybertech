@@ -272,3 +272,55 @@ export async function retryAllFailedNotifications(): Promise<{
     return { success: false, error: "Failed to retry notifications" }
   }
 }
+
+export async function deleteUser(
+  userId: string,
+  authUserId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin()
+    const supabase = createAdminClient()
+
+    // Prevent deleting yourself
+    const { data: currentUser } = await supabase.auth.getUser()
+    if (currentUser?.user?.id === authUserId) {
+      return { success: false, error: "You cannot delete your own account" }
+    }
+
+    // Check if this is the last admin
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single()
+
+    if ((profile as { role: string } | null)?.role === "admin") {
+      const { count } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin")
+
+      if (count && count <= 1) {
+        return { success: false, error: "Cannot delete the last admin user" }
+      }
+    }
+
+    // Delete from Supabase Auth first (this will cascade to profiles via trigger if set up,
+    // but we'll delete explicitly to be safe)
+    const { error: authError } = await supabase.auth.admin.deleteUser(authUserId)
+
+    if (authError) {
+      console.error("Auth delete error:", authError)
+      return { success: false, error: authError.message }
+    }
+
+    // Delete the profile (in case cascade didn't work)
+    await supabase.from("profiles").delete().eq("id", userId)
+
+    revalidatePath("/admin/users")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting user:", error)
+    return { success: false, error: "Failed to delete user" }
+  }
+}

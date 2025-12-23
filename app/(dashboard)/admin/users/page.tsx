@@ -5,6 +5,8 @@ import { requireAdmin } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 import { UserTable } from "@/components/admin/user-table"
 import { RoleEditorModal } from "@/components/admin/role-editor"
+import { InviteUserModal } from "@/components/admin/invite-user-modal"
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import type { Profile, Department } from "@/types/auth"
 
@@ -24,7 +26,7 @@ async function getUsers(): Promise<UserWithDepartment[]> {
     .from("profiles")
     .select(`
       *,
-      department:departments(*)
+      department:departments!fk_profiles_department(*)
     `)
     .order("name", { ascending: true })
 
@@ -64,6 +66,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
   return (
     <div className="space-y-6">
+      <AdminBreadcrumb items={[{ label: "User Management" }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
@@ -71,11 +74,9 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             Manage team members, roles, and permissions
           </p>
         </div>
-        <Button asChild>
-          <a href="/admin/users?invite=true">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Invite User
-          </a>
+        <Button disabled title="Invite functionality temporarily disabled">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Invite User
         </Button>
       </div>
 
@@ -91,6 +92,9 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           departments={departments}
         />
       )}
+
+      {/* Invite User Modal - shown when invite param is present */}
+      <InviteUserModal departments={departments} />
     </div>
   )
 }

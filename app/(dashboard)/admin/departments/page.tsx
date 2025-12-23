@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 import { PositionManager } from "@/components/admin/position-manager"
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import type { Profile, Department, Position } from "@/types/auth"
 
 export const metadata = {
@@ -65,6 +66,7 @@ export default async function DepartmentsPage({ searchParams }: DepartmentsPageP
 
   return (
     <div className="space-y-6">
+      <AdminBreadcrumb items={[{ label: "Departments" }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Departments</h1>

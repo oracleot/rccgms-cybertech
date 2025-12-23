@@ -122,6 +122,10 @@ pnpm db:generate      # Generate types from database schema
 pnpm dlx shadcn@latest add {component}  # Add shadcn component
 ```
 
+## Test Credentials
+
+When testing the app (auth-protected routes), use the accounts inside `.github/docs/test-credentials`
+
 ## Critical Implementation Notes
 
 1. **Auth is Supabase-managed**: Use `@supabase/ssr` for session handling. Profiles auto-created via database trigger on `auth.users` insert.

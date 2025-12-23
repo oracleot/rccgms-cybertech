@@ -58,7 +58,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is logged in and trying to access auth routes
-  if (user && isAuthRoute && !request.nextUrl.pathname.startsWith("/auth/callback")) {
+  // Exception: accept-invite needs to stay accessible so users can set their password
+  if (user && isAuthRoute && 
+      !request.nextUrl.pathname.startsWith("/auth/callback") &&
+      !request.nextUrl.pathname.startsWith("/accept-invite")) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
@@ -88,7 +91,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - manifest files
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 }

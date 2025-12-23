@@ -459,6 +459,41 @@ Based on plan.md structure:
 
 ---
 
+## Phase 15: Multi-Department User Assignment
+
+**Purpose**: Enable users to be assigned to multiple departments (e.g., a volunteer serving in both Sound and Media)
+
+**⚠️ Schema Change Required**: This requires a database migration to create a junction table
+
+### Database Changes
+
+- [ ] T245 Create migration for user_departments junction table in supabase/migrations/020_user_departments.sql
+  - Junction table: user_departments (user_id, department_id, is_primary, assigned_at)
+  - Add RLS policies for read (authenticated) and write (admin/leader)
+  - Migrate existing profiles.department_id data to junction table
+  - Keep profiles.department_id as primary department for backwards compatibility
+
+### Backend Updates
+
+- [ ] T246 Update types/auth.ts to add UserDepartment type and extend Profile with departments array
+- [ ] T247 [P] Update lib/validations/auth.ts with assignUserDepartments schema
+- [ ] T248 Create API endpoint app/api/admin/user-departments/route.ts for managing user department assignments
+- [ ] T249 Update user queries in admin pages to include department assignments via junction table
+
+### UI Updates
+
+- [ ] T250 Create components/admin/user-departments-modal.tsx for assigning multiple departments to a user
+- [ ] T251 [P] Update components/admin/user-table.tsx to show all assigned departments as badges
+- [ ] T252 Update components/admin/role-editor.tsx to support multi-department selection with checkboxes
+- [ ] T253 [P] Add "Manage Departments" button to user table actions dropdown
+
+### Documentation
+
+- [ ] T254 Update data-model.md with user_departments table schema and relationships
+- [ ] T255 Update user.guide.md with multi-department assignment instructions
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -582,6 +617,7 @@ With multiple developers:
 | **US10 - Training (P3)** | 23 tasks |
 | **Phase 13 (Admin/Notifications)** | 16 tasks |
 | **Phase 14 (Polish)** | 12 tasks |
+| **Phase 15 (Multi-Dept)** | 11 tasks |
 | **Parallel Opportunities** | ~65% of tasks marked [P] |
 
 ### MVP Scope (Recommended)

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { requireAdmin } from "@/lib/auth/guards"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NotificationLogTable } from "@/components/admin/notification-log"
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import type { NotificationLogEntry } from "@/types/notification"
 
@@ -99,6 +100,7 @@ export default async function NotificationsPage({
 
   return (
     <div className="space-y-6">
+      <AdminBreadcrumb items={[{ label: "Notification Logs" }]} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Notification Logs</h1>

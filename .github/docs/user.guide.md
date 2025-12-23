@@ -27,14 +27,16 @@ Most users will receive an invitation email from a team leader or admin. Here's 
 
 1. Look for an email with the subject "You're invited to Cyber Tech"
 2. Click the **Accept Invitation** button in the email
-3. You'll be taken to a page to create your password
+3. You'll be automatically redirected to the password setup page
 4. Enter a strong password (at least 8 characters)
 5. Confirm your password by typing it again
-6. Click **Set Password**
+6. Click **Complete setup**
 
 You'll be automatically signed in and taken to your dashboard.
 
 > 💡 **Tip**: Use a password you'll remember, but make sure it's secure. A mix of letters, numbers, and symbols works best.
+
+> 📧 **Note**: If the invitation email lands in your spam folder, mark it as "Not Spam" to ensure future emails arrive correctly. The email comes from your church's configured email domain.
 
 ### Signing Up (If Self-Registration is Enabled)
 
@@ -201,15 +203,255 @@ Cyber Tech has three user roles with different levels of access:
 
 As an admin, you can invite new members to join Cyber Tech:
 
-1. The invite feature is accessed through your admin panel
-2. Enter the new user's email address
-3. Select their role (Volunteer, Leader, or Admin)
-4. Choose their department
-5. Click **Send Invitation**
+1. Go to **Admin** from the sidebar
+2. Click **Users** to open User Management
+3. Click **Invite User** (top right)
+4. Enter the new user's email address
+5. Select their role (Volunteer, Leader, or Admin)
+6. Choose their department (optional)
+7. Click **Send Invitation**
 
-The new user will receive an email with instructions to set up their account.
+The new user will receive an email with a secure invitation link. When they click the link, they'll be taken through a two-step process:
+1. First, the link verifies their invitation (handled automatically)
+2. Then they're redirected to set their password
 
 > 💡 **Tip**: Most new users should start as Volunteers. You can always upgrade their role later.
+
+> 📧 **Email Delivery Note**: Invitation emails are sent from your configured email service. If users report emails going to spam, consider setting up a custom SMTP provider like Resend or SendGrid for better deliverability.
+
+---
+
+## 🔧 Admin Dashboard
+
+The Admin Dashboard is your central hub for managing the system. Access it by clicking **Admin** in the sidebar (visible to Admins only).
+
+### Admin Overview
+
+The main Admin page shows quick stats and links to management areas:
+
+- **User Management** – Total users and pending invites
+- **Departments** – Number of configured departments
+- **Notifications** – Pending and failed notification counts
+- **System Settings** – Coming soon
+
+If there are failed notifications, you'll see an alert banner prompting you to review and retry them.
+
+---
+
+## 🔧 User Management
+
+Manage all team members, their roles, and department assignments.
+
+### Accessing User Management
+
+1. Go to **Admin** from the sidebar
+2. Click **Users** in the sub-menu
+
+### Viewing Users
+
+The user table shows all team members with:
+
+- **Name and email** with profile picture
+- **Role** badge (Admin, Leader, or Volunteer)
+- **Department** assignment
+- **Phone number** (if provided)
+
+Use the filters to narrow down the list:
+- **Search box** – Find users by name or email
+- **Role filter** – Show only Admins, Leaders, or Volunteers
+- **Department filter** – Show only users in a specific department
+
+### Editing a User's Role
+
+1. Find the user in the table
+2. Click the **⋮** menu on the right
+3. Select **Edit Role**
+4. In the modal, update:
+   - **Role** – Volunteer, Leader, or Admin
+   - **Department** – Their assigned department (or "No Department")
+5. Click **Save Changes**
+
+> ⚠️ **Note**: Changing roles takes effect immediately. Be careful when promoting users to Admin.
+
+### User Actions
+
+From the user menu (⋮), you can:
+
+| Action | Description |
+|--------|-------------|
+| **Edit Role** | Change role and department |
+| **Delete User** | Permanently remove user from the system |
+
+> ⚠️ **Delete User Warning**: Deleting a user is permanent and cannot be undone. You cannot delete yourself or the last remaining admin.
+
+---
+
+## 🔧 Troubleshooting User Invitations
+
+If invited users are having trouble:
+
+**Invitation link not working:**
+- Links expire after 7 days – send a new invitation if expired
+- Ensure the user clicks the link from their email (don't copy/paste partial URLs)
+- The link should redirect through `/auth/callback` before landing on the password page
+
+**Email went to spam:**
+- Ask users to check spam/junk folders
+- Have them mark the email as "Not Spam" to improve future delivery
+- Consider configuring a custom SMTP provider (Resend, SendGrid) in your Supabase project
+
+**"Invalid or expired invitation" error:**
+- The invitation link has expired or was already used
+- Send a fresh invitation from Admin → Users → Invite User
+
+**User stuck on password page:**
+- Ensure they're using a supported browser (Chrome, Firefox, Safari, Edge)
+- Try clearing browser cookies and clicking the invitation link again
+
+---
+
+## 🔧 Department Management
+
+Departments group volunteers by team (Sound, Cameras, Streaming, etc.). Each department has positions that volunteers can be assigned to on rotas.
+
+### Accessing Departments
+
+1. Go to **Admin** from the sidebar
+2. Click **Departments** in the sub-menu
+
+### Viewing Departments
+
+Each department card shows:
+- **Department name** with color badge
+- **Number of positions** defined
+- **Department leader** (if assigned)
+- **Description** (if provided)
+
+Click on a department to expand and see its positions.
+
+### Creating a Department
+
+1. Click **Add Department** (top right)
+2. Fill in the details:
+   - **Name** – e.g., "Sound Department"
+   - **Description** – Optional description
+   - **Color** – Choose a color for visual identification (or "No Color")
+   - **Department Leader** – Assign a leader (or "No Leader")
+3. Click **Create**
+
+### Editing a Department
+
+1. Find the department in the list
+2. Click the **pencil icon** (Edit button)
+3. Update any details
+4. Click **Update**
+
+### Deleting a Department
+
+1. Find the department in the list
+2. Click the **trash icon** (Delete button)
+3. Confirm deletion
+
+> ⚠️ **Warning**: Deleting a department removes all its positions. Users in that department will be unassigned.
+
+### Managing Positions
+
+Positions are roles within a department (e.g., "Camera 1", "Sound Desk", "Stream Lead").
+
+#### Adding a Position
+
+1. Expand a department by clicking on it
+2. Click **Add Position**
+3. Enter the position name
+4. Press Enter or click **Add**
+
+#### Deleting a Position
+
+1. Expand the department
+2. Find the position
+3. Click the **trash icon** next to it
+4. Confirm deletion
+
+---
+
+## 🔧 Notification Logs
+
+Monitor all system notifications (emails and SMS) sent to users.
+
+### Accessing Notification Logs
+
+1. Go to **Admin** from the sidebar
+2. Click **Notifications** in the sub-menu
+
+### Viewing Notifications
+
+The log table shows:
+- **Recipient** – User name and email
+- **Type** – What triggered the notification (rota reminder, swap request, etc.)
+- **Channel** – Email or SMS
+- **Status** – Pending, Sent, or Failed
+- **Sent at** – When it was delivered (or attempted)
+- **Error message** – Why it failed (if applicable)
+
+### Filtering Notifications
+
+Use the status filter buttons to show:
+- **All** – Every notification
+- **Pending** – Waiting to be sent
+- **Sent** – Successfully delivered
+- **Failed** – Delivery failed
+
+### Stats Summary
+
+At the top, you'll see counts for:
+- Total notifications
+- Pending
+- Sent  
+- Failed
+
+### Retrying Failed Notifications
+
+If a notification failed (e.g., email bounced, SMS quota exceeded):
+
+1. Find the failed notification in the list
+2. Click **Retry** on that row
+3. The system will reset it to "Pending" and attempt delivery again
+
+For bulk retries:
+1. Click **Retry All Failed** button
+2. All failed notifications will be queued for retry
+
+---
+
+## 🔧 Admin Breadcrumb Navigation
+
+All admin sub-pages include breadcrumb navigation at the top:
+
+**🏠 Admin > [Current Page]**
+
+- Click **Admin** to return to the Admin Dashboard
+- The current page name is shown but not clickable
+
+This helps you navigate between admin sections quickly.
+
+---
+
+## 🔧 Admin Tips & Best Practices
+
+**User Management:**
+- ✅ Start new users as Volunteers and promote as needed
+- ✅ Assign users to departments so they appear in the right rota positions
+- ✅ Review user roles periodically
+
+**Department Management:**
+- ✅ Create positions that match your actual service needs
+- ✅ Assign department leaders for accountability
+- ✅ Use colors to visually distinguish departments on the rota
+
+**Notifications:**
+- ✅ Check failed notifications regularly
+- ✅ Retry failed notifications promptly
+- ✅ Investigate repeated failures (invalid emails, SMS issues)
 
 ---
 
@@ -1203,4 +1445,4 @@ A: Leaders can edit the rota directly if needed. The swap system is designed for
 
 ---
 
-*Last updated: December 22, 2025*
+*Last updated: December 23, 2025*

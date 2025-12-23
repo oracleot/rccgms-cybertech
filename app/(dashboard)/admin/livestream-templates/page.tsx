@@ -1,9 +1,8 @@
-import { Settings, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { Settings } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { TemplateEditor } from "@/components/admin/template-editor"
+import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 
 export const metadata = {
   title: "Livestream Templates | Admin | Cyber Tech",
@@ -34,25 +33,18 @@ export default async function LivestreamTemplatesPage() {
 
   return (
     <div className="space-y-6">
+      <AdminBreadcrumb items={[{ label: "Livestream Templates" }]} />
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Settings className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold tracking-tight">
-              Livestream Templates
-            </h1>
-          </div>
-          <p className="text-muted-foreground">
-            Customize the AI prompts used to generate livestream descriptions
-          </p>
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <Settings className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold tracking-tight">
+            Livestream Templates
+          </h1>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/admin">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Admin
-          </Link>
-        </Button>
+        <p className="text-muted-foreground">
+          Customize the AI prompts used to generate livestream descriptions
+        </p>
       </div>
 
       {/* Template Editor */}

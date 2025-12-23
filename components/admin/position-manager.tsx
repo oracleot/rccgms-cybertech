@@ -278,13 +278,14 @@ export function PositionManager({
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
               <Select
-                value={deptColor || editDept?.color || ""}
-                onValueChange={setDeptColor}
+                value={deptColor || editDept?.color || "none"}
+                onValueChange={(value) => setDeptColor(value === "none" ? "" : value)}
               >
                 <SelectTrigger id="color">
                   <SelectValue placeholder="Select a color" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">No Color</SelectItem>
                   {colorOptions.map((color) => (
                     <SelectItem key={color.value} value={color.value}>
                       <div className="flex items-center gap-2">
@@ -303,14 +304,14 @@ export function PositionManager({
             <div className="space-y-2">
               <Label htmlFor="leader">Department Leader</Label>
               <Select
-                value={deptLeader || editDept?.leader_id || ""}
-                onValueChange={setDeptLeader}
+                value={deptLeader || editDept?.leader_id || "none"}
+                onValueChange={(value) => setDeptLeader(value === "none" ? "" : value)}
               >
                 <SelectTrigger id="leader">
                   <SelectValue placeholder="Select a leader" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Leader</SelectItem>
+                  <SelectItem value="none">No Leader</SelectItem>
                   {leaders.map((leader) => (
                     <SelectItem key={leader.id} value={leader.id}>
                       {leader.name}

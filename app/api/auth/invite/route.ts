@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { email, name, role, departmentId } = parsed.data
+  const { email, role, department_id } = parsed.data
 
   // Check if user already exists
   const adminClient = createAdminClient()
@@ -79,15 +79,16 @@ export async function POST(request: NextRequest) {
   }
 
   // Create invitation using Supabase admin
+  // Supabase will append auth hash fragments to this URL
+  // The home page handles parsing the hash and redirecting appropriately
   const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     email,
     {
       data: {
-        name,
         role,
-        department_id: departmentId,
+        department_id,
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/verify?type=invite`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/`,
     }
   )
 

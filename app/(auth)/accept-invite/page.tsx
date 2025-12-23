@@ -52,7 +52,7 @@ function AcceptInviteContent() {
       const supabase = createClient()
       
       if (code) {
-        // Exchange code for session
+        // Exchange code for session (legacy flow - code in URL)
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         
         if (error) {
@@ -62,7 +62,7 @@ function AcceptInviteContent() {
         }
       }
 
-      // Check session
+      // Check session - either from code exchange above or from callback redirect
       const { data: { session } } = await supabase.auth.getSession()
       
       if (session) {

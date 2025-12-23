@@ -1,8 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import Link from "next/link"
-import { MoreHorizontal, Edit, Trash2, Mail, Search } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { MoreHorizontal, Edit, Trash2, Search, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -30,6 +32,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { deleteUser } from "./actions"
 import type { Profile, Department } from "@/types/auth"
 
 interface UserWithDepartment extends Profile {
@@ -57,9 +70,31 @@ function getInitials(name: string): string {
 }
 
 export function UserTable({ users, departments }: UserTableProps) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [departmentFilter, setDepartmentFilter] = useState<string>("all")
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string
+    authUserId: string
+    name: string
+  } | null>(null)
+
+  const handleDeleteUser = () => {
+    if (!deleteConfirm) return
+
+    startTransition(async () => {
+      const result = await deleteUser(deleteConfirm.id, deleteConfirm.authUserId)
+      if (result.success) {
+        toast.success("User deleted successfully")
+        router.refresh()
+      } else {
+        toast.error(result.error || "Failed to delete user")
+      }
+      setDeleteConfirm(null)
+    })
+  }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -179,16 +214,16 @@ export function UserTable({ users, departments }: UserTableProps) {
                             Edit Role
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`mailto:${user.email}`}>
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send Email
-                          </Link>
-                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"
-                          disabled
+                          onClick={() =>
+                            setDeleteConfirm({
+                              id: user.id,
+                              authUserId: user.auth_user_id,
+                              name: user.name,
+                            })
+                          }
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete User
@@ -202,6 +237,34 @@ export function UserTable({ users, departments }: UserTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{deleteConfirm?.name}</strong> and
+              remove all their data including assignments, availability, and history.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDeleteUser}
+              disabled={isPending}
+            >
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Summary */}
       <div className="text-sm text-muted-foreground">

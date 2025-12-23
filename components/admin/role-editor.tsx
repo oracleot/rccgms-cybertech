@@ -61,7 +61,7 @@ export function RoleEditorModal({
   const [isPending, startTransition] = useTransition()
   const [role, setRole] = useState<UserRole>(user?.role as UserRole || "volunteer")
   const [departmentId, setDepartmentId] = useState<string>(
-    user?.department_id || ""
+    user?.department_id || "none"
   )
 
   if (!user) {
@@ -77,7 +77,7 @@ export function RoleEditorModal({
       const result = await updateUserRole({
         userId: user.id,
         role,
-        departmentId: departmentId || null,
+        departmentId: departmentId === "none" ? null : departmentId,
       })
 
       if (result.success) {
@@ -142,7 +142,7 @@ export function RoleEditorModal({
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No Department</SelectItem>
+                <SelectItem value="none">No Department</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}

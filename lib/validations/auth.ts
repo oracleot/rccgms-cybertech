@@ -56,9 +56,8 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
 // Invite user schema (admin only)
 export const inviteUserSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["admin", "leader", "volunteer"]).default("volunteer"),
-  departmentId: z.string().uuid().optional(),
+  role: z.enum(["admin", "leader", "volunteer"]),
+  department_id: z.string().uuid().optional(),
 })
 
 export type InviteUserInput = z.infer<typeof inviteUserSchema>
