@@ -12,7 +12,7 @@ interface EmptyStateProps {
   action?: {
     label: string
     onClick: () => void
-  }
+  } | React.ReactNode
   className?: string
 }
 
@@ -32,6 +32,8 @@ export function EmptyState({
 }: EmptyStateProps) {
   const Icon = variantIcons[variant]
 
+  const isActionObject = action && typeof action === "object" && "label" in action && "onClick" in action
+
   return (
     <div
       className={cn(
@@ -49,9 +51,15 @@ export function EmptyState({
         </p>
       )}
       {action && (
-        <Button className="mt-6" onClick={action.onClick}>
-          {action.label}
-        </Button>
+        <div className="mt-6">
+          {isActionObject ? (
+            <Button onClick={(action as { label: string; onClick: () => void }).onClick}>
+              {(action as { label: string; onClick: () => void }).label}
+            </Button>
+          ) : (
+            action
+          )}
+        </div>
       )}
     </div>
   )

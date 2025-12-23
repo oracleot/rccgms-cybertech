@@ -74,9 +74,11 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             Manage team members, roles, and permissions
           </p>
         </div>
-        <Button disabled title="Invite functionality temporarily disabled">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Invite User
+        <Button asChild>
+          <a href="/admin/users?invite=true">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Invite User
+          </a>
         </Button>
       </div>
 

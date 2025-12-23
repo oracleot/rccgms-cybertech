@@ -62,7 +62,7 @@ export default async function AdminPage() {
         { label: "Pending Invites", value: stats.pendingInvites },
       ],
       actions: [
-        { label: "Invite User", icon: UserPlus, href: "/admin/users", disabled: true },
+        { label: "Invite User", icon: UserPlus, href: "/admin/users?invite=true" },
       ],
     },
     {
@@ -155,19 +155,12 @@ export default async function AdminPage() {
 
               <div className="flex items-center gap-2">
                 {section.actions?.map((action) => (
-                  (action as { disabled?: boolean }).disabled ? (
-                    <Button key={action.label} variant="outline" size="sm" disabled>
+                  <Button key={action.label} variant="outline" size="sm" asChild>
+                    <Link href={action.href}>
                       <action.icon className="mr-2 h-4 w-4" />
                       {action.label}
-                    </Button>
-                  ) : (
-                    <Button key={action.label} variant="outline" size="sm" asChild>
-                      <Link href={action.href}>
-                        <action.icon className="mr-2 h-4 w-4" />
-                        {action.label}
-                      </Link>
-                    </Button>
-                  )
+                    </Link>
+                  </Button>
                 ))}
                 {!section.disabled && (
                   <Button variant="ghost" size="sm" asChild className="ml-auto">

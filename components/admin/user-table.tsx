@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, Edit, Trash2, Search, Loader2 } from "lucide-react"
+import { MoreHorizontal, Edit, Trash2, Mail, Search, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import {
   Table,
@@ -212,6 +212,12 @@ export function UserTable({ users, departments }: UserTableProps) {
                           <Link href={`/admin/users?edit=${user.id}`}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Role
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`mailto:${user.email}`}>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Send Email
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
