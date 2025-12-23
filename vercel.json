@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/process-notifications",
+      "schedule": "*/15 * * * *",
+      "comment": "Runs every 15 minutes to balance timely delivery of notifications with external provider API rate limits and Supabase load."
+    }
+  ]
+}

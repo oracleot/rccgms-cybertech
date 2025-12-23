@@ -1,7 +1,7 @@
 # Quickstart Guide
 
 **Project**: Cyber Tech - Church Tech Department Management  
-**Date**: 2025-12-21
+**Date**: 2025-12-23
 
 ## Prerequisites
 
@@ -51,12 +51,11 @@ RESEND_FROM_EMAIL=notifications@yourdomain.com
 
 # Telnyx (SMS notifications)
 TELNYX_API_KEY=KEY...
-TELNYX_PHONE_NUMBER=+1234567890
+TELNYX_FROM_NUMBER=+1234567890
+TELNYX_MESSAGING_PROFILE_ID=...
 
-# Google Drive (social media module)
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/social/callback/google
+# Cron Security
+CRON_SECRET=generate-a-random-secret-here
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -121,6 +120,99 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
+## Testing the Application
+
+### User Roles
+
+The app has three roles with different permissions:
+- **Admin**: Full access to everything including user management
+- **Leader**: Can manage rotas, approve swaps, manage equipment
+- **Volunteer**: Can view schedules, submit availability, request swaps
+
+### Testing by Feature
+
+#### 1. Authentication
+- **Login**: Go to `/login` and sign in with your credentials
+- **Register**: Go to `/register` to create a new account (if enabled)
+- **Password Reset**: Go to `/forgot-password` to test password reset flow
+
+#### 2. Dashboard (`/dashboard`)
+- View your upcoming duties
+- See pending swap requests
+- Quick access to all features
+
+#### 3. Rota Management (`/rota`)
+- **View Rotas**: Browse all scheduled rotas
+- **Create Rota** (Leader/Admin): Click "New Rota" to create a service rota
+- **My Schedule** (`/rota/my-schedule`): View your personal assignments
+- **Availability** (`/rota/availability`): Mark dates you're available/unavailable
+- **Swap Requests** (`/rota/swaps`): Request to swap duties with another volunteer
+
+#### 4. Equipment Management (`/equipment`)
+- **Browse Equipment**: View all equipment in inventory
+- **Add Equipment** (Leader/Admin): Click "Add Equipment" to register new items
+- **Scan QR** (`/equipment/scan`): Use camera to scan equipment QR codes
+- **Checkout/Return**: Check equipment in/out from detail page
+
+#### 5. Rundowns (`/rundown`)
+- **View Rundowns**: Browse service rundowns
+- **Create Rundown** (Leader/Admin): Click "New Rundown" to create a service order
+- **Live View**: Open a rundown and click "Go Live" to see the live presentation view
+- **AI Generation**: Use AI to generate item descriptions
+
+#### 6. Admin Panel (`/admin`) - Admin Only
+- **Dashboard**: View system statistics and alerts
+- **Users** (`/admin/users`): Manage users, change roles, assign departments
+- **Departments** (`/admin/departments`): Create/edit departments and positions
+- **Notifications** (`/admin/notifications`): View notification logs, retry failed sends
+
+### Testing Admin Features
+
+1. **User Management**:
+   - Go to `/admin/users`
+   - Click on a user's action menu to edit their role
+   - Filter users by role or department
+
+2. **Department Management**:
+   - Go to `/admin/departments`
+   - Click "Add Department" to create a new department
+   - Expand a department to manage its positions
+   - Assign a department leader
+
+3. **Notification Logs**:
+   - Go to `/admin/notifications`
+   - View all notification attempts (pending/sent/failed)
+   - Click "Retry" on failed notifications to resend
+   - Filter by status to see only failed notifications
+
+### Testing Notifications (Dev Mode)
+
+Without Resend/Telnyx API keys, notifications will be logged but not sent:
+
+1. Create a rota assignment or swap request
+2. Check the console for "RESEND_API_KEY not configured" warnings
+3. Notifications are still logged in the database
+4. View them at `/admin/notifications`
+
+To test with real email delivery:
+1. Sign up at [resend.com](https://resend.com)
+2. Add your API key to `.env.local`
+3. Trigger a notification (e.g., create a rota assignment)
+
+### Testing Cron Jobs Manually
+
+```bash
+# Test duty reminder cron (sends upcoming assignment reminders)
+curl -X GET http://localhost:3000/api/cron/send-reminders \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+
+# Test notification processor (sends queued notifications)
+curl -X GET http://localhost:3000/api/cron/process-notifications \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -144,17 +236,20 @@ cyber-tech/
 │   └── layout.tsx         # Root layout
 ├── components/
 │   ├── ui/                # shadcn/ui components
-│   ├── forms/             # Form components
-│   ├── layouts/           # Layout components
-│   └── features/          # Feature-specific components
+│   ├── admin/             # Admin-specific components
+│   ├── rota/              # Rota components
+│   ├── equipment/         # Equipment components
+│   ├── rundown/           # Rundown components
+│   └── shared/            # Shared components
 ├── lib/
 │   ├── supabase/          # Supabase clients
 │   │   ├── client.ts      # Browser client
 │   │   ├── server.ts      # Server client
 │   │   └── admin.ts       # Admin client (service role)
+│   ├── notifications/     # Email/SMS services
 │   ├── validations/       # Zod schemas
-│   ├── hooks/             # React hooks
 │   └── utils.ts           # Utility functions
+├── emails/                 # React Email templates
 ├── types/                  # TypeScript types
 ├── public/                 # Static assets
 ├── supabase/
@@ -197,9 +292,9 @@ cyber-tech/
 
 ```bash
 # Using shadcn CLI
-pnpm dlx shadcn-ui@latest add button
-pnpm dlx shadcn-ui@latest add card
-pnpm dlx shadcn-ui@latest add dialog
+pnpm dlx shadcn@latest add button
+pnpm dlx shadcn@latest add card
+pnpm dlx shadcn@latest add dialog
 ```
 
 ### Database Changes
@@ -236,7 +331,7 @@ supabase gen types typescript --local > types/database.ts
    - Automatic refresh token handling
 
 3. **Role-Based Access**:
-   - Roles: `admin`, `leader`, `member`
+   - Roles: `admin`, `leader`, `volunteer`
    - Checked via `profiles.role` column
    - RLS policies enforce access at database level
 
@@ -317,6 +412,15 @@ pnpm install
 pnpm db:generate
 ```
 
+**"Missing Supabase admin credentials"**
+- Ensure `SUPABASE_SERVICE_ROLE_KEY` is set in `.env.local`
+- This is different from the anon key
+
+**Notifications not sending**
+- Check if `RESEND_API_KEY` is configured
+- View `/admin/notifications` for error messages
+- Check console for warning messages
+
 ### Debug Mode
 
 Enable debug logging:
@@ -338,6 +442,7 @@ Access local dashboard at: http://localhost:54323
 - [shadcn/ui Components](https://ui.shadcn.com)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [Vercel AI SDK](https://sdk.vercel.ai/docs)
+- [Resend Docs](https://resend.com/docs)
 
 ---
 

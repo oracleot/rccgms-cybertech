@@ -12,6 +12,9 @@ import {
   Share2,
   GraduationCap,
   Users,
+  Building2,
+  Bell,
+  Shield,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
@@ -66,16 +69,34 @@ const navItems = [
   },
 ]
 
-const adminItems = [
-  {
-    title: "Team",
-    href: ROUTES.TEAM,
-    icon: Users,
-  },
+const leaderItems = [
   {
     title: "Settings",
     href: ROUTES.SETTINGS,
     icon: Settings,
+  },
+]
+
+const adminItems = [
+  {
+    title: "Admin",
+    href: ROUTES.ADMIN,
+    icon: Shield,
+  },
+  {
+    title: "Users",
+    href: ROUTES.ADMIN_USERS,
+    icon: Users,
+  },
+  {
+    title: "Departments",
+    href: ROUTES.ADMIN_DEPARTMENTS,
+    icon: Building2,
+  },
+  {
+    title: "Notifications",
+    href: ROUTES.ADMIN_NOTIFICATIONS,
+    icon: Bell,
   },
 ]
 
@@ -127,6 +148,29 @@ export function AppSidebar({ userRole = "volunteer" }: AppSidebarProps) {
         </SidebarGroup>
 
         {(userRole === "admin" || userRole === "leader") && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {leaderItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                    >
+                      <Link href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {userRole === "admin" && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
