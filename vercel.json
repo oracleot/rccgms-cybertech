@@ -7,8 +7,7 @@
     },
     {
       "path": "/api/cron/process-notifications",
-      "schedule": "0 7 * * *",
-      "comment": "Runs daily at 7 AM UTC. Upgrade to Vercel Pro for more frequent scheduling."
+      "schedule": "0 7 * * *"
     }
   ]
 }
