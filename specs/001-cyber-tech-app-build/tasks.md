@@ -410,31 +410,33 @@ Based on plan.md structure:
 
 ---
 
-## Phase 13: Admin & Notifications
+## Phase 13: Admin & Notifications ✅
 
 **Purpose**: Admin-specific features and notification system infrastructure
 
 ### Admin Features
 
-- [ ] T217 Create admin dashboard page in app/(dashboard)/admin/page.tsx
-- [ ] T218 [P] Create user management page in app/(dashboard)/admin/users/page.tsx
-- [ ] T219 [P] Create user table component in components/admin/user-table.tsx
-- [ ] T220 [P] Create role editor modal in components/admin/role-editor.tsx
-- [ ] T221 Create department management page in app/(dashboard)/admin/departments/page.tsx
-- [ ] T222 [P] Create position management component in components/admin/position-manager.tsx
-- [ ] T223 Create notification logs page in app/(dashboard)/admin/notifications/page.tsx
-- [ ] T224 [P] Create notification log table component in components/admin/notification-log.tsx
-- [ ] T225 [P] Create retry notification action in app/(dashboard)/admin/notifications/actions.ts
+- [x] T217 Create admin dashboard page in app/(dashboard)/admin/page.tsx
+- [x] T218 [P] Create user management page in app/(dashboard)/admin/users/page.tsx
+- [x] T219 [P] Create user table component in components/admin/user-table.tsx
+- [x] T220 [P] Create role editor modal in components/admin/role-editor.tsx
+- [x] T221 Create department management page in app/(dashboard)/admin/departments/page.tsx
+- [x] T222 [P] Create position management component in components/admin/position-manager.tsx
+- [x] T223 Create notification logs page in app/(dashboard)/admin/notifications/page.tsx
+- [x] T224 [P] Create notification log table component in components/admin/notification-log.tsx
+- [x] T225 [P] Create retry notification action in app/(dashboard)/admin/notifications/actions.ts
 
 ### Notification Infrastructure
 
-- [ ] T226 Create email client wrapper using Resend in lib/notifications/email.ts
-- [ ] T227 [P] Create SMS client wrapper using Telnyx in lib/notifications/sms.ts
-- [ ] T228 Create notification service with failure logging in lib/notifications/notification-service.ts
-- [ ] T229 [P] Create email template for duty reminders in emails/duty-reminder.tsx
-- [ ] T230 [P] Create email template for swap notifications in emails/swap-notification.tsx
-- [ ] T231 Create POST /api/cron/send-reminders cron endpoint in app/api/cron/send-reminders/route.ts
-- [ ] T232 [P] Create vercel.json cron configuration for daily reminders
+- [x] T226 Create email client wrapper using Resend in lib/notifications/email.ts
+- [x] T227 [P] Create SMS client wrapper using Telnyx in lib/notifications/sms.ts
+- [x] T228 Create notification service with failure logging in lib/notifications/notification-service.ts
+- [x] T229 [P] Create email template for duty reminders in emails/duty-reminder.tsx
+- [x] T230 [P] Create email template for swap notifications in emails/swap-notification.tsx
+- [x] T231 Create POST /api/cron/send-reminders cron endpoint in app/api/cron/send-reminders/route.ts
+- [x] T232 [P] Create vercel.json cron configuration for daily reminders
+
+**Checkpoint**: Phase 13 (Admin & Notifications) is fully functional ✅
 
 ---
 
