@@ -104,12 +104,66 @@ Three roles with distinct permissions: `admin` > `leader` > `volunteer`
 ### RLS Policy Pattern
 All tables use RLS. Policies check `profiles.role` via `auth.uid()`:
 ```sql
--- Typical pattern: volunteers see published only, leaders see all
+-- ⚠️ CRITICAL: Always wrap auth.uid() in a subquery for performance
+-- This prevents re-evaluation per row at scale
 CREATE POLICY "view_rotas" ON rotas FOR SELECT USING (
   status = 'published' 
-  OR EXISTS (SELECT 1 FROM profiles WHERE auth_user_id = auth.uid() AND role IN ('admin', 'leader'))
+  OR EXISTS (SELECT 1 FROM profiles WHERE auth_user_id = (SELECT auth.uid()) AND role IN ('admin', 'leader'))
 );
 ```
+
+## Database Migrations
+
+### Migration File Naming
+- Use sequential 3-digit prefixes: `001_`, `002_`, `003_`, etc.
+- **NEVER reuse or duplicate a prefix number** - check existing migrations first
+- Format: `{NNN}_{descriptive_name}.sql` (e.g., `022_rls_performance_optimization.sql`)
+
+### Creating New Migrations
+```bash
+# 1. First, check the current migration status
+npx supabase migration list
+
+# 2. Find the next available number
+ls supabase/migrations/
+
+# 3. Create your migration file with the next sequential number
+# Example: if last is 022, create 023_your_migration.sql
+```
+
+### Applying Migrations
+```bash
+# Check current migration status (local vs remote)
+npx supabase migration list
+
+# Push pending migrations to remote database
+npx supabase db push
+
+# If migrations were applied outside of CLI (e.g., via Supabase dashboard),
+# mark them as applied to sync the migration history:
+npx supabase migration repair --status applied {VERSION_NUMBER}
+
+# Example: npx supabase migration repair --status applied 022
+```
+
+### Troubleshooting Migration Conflicts
+If you see "Found local migration files to be inserted before the last migration":
+1. This means migrations exist locally that aren't in the remote history
+2. If the schema changes already exist in the database:
+   ```bash
+   # Mark each missing migration as applied
+   npx supabase migration repair --status applied {VERSION}
+   ```
+3. If you need to apply them:
+   ```bash
+   npx supabase db push --include-all
+   ```
+
+### ⚠️ Important Migration Rules
+1. **Never apply migrations directly via Supabase Dashboard SQL Editor** without also creating the local migration file
+2. **Always run `npx supabase migration list`** before creating new migrations to check sync status
+3. **Never edit already-applied migrations** - create a new migration instead
+4. **Test migrations locally first** using `npx supabase db reset` if you have a local Supabase instance
 
 ## Development Commands
 
