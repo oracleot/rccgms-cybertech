@@ -268,10 +268,52 @@ Use the filters to narrow down the list:
 3. Select **Edit Role**
 4. In the modal, update:
    - **Role** – Volunteer, Leader, or Admin
-   - **Department** – Their assigned department (or "No Department")
+   - **Departments** – Select one or more departments (see below)
 5. Click **Save Changes**
 
 > ⚠️ **Note**: Changing roles takes effect immediately. Be careful when promoting users to Admin.
+
+---
+
+### Assigning Multiple Departments
+
+Users can belong to multiple departments, which is perfect for volunteers who serve across teams (e.g., someone who helps with both Sound and Cameras).
+
+#### From the Edit Role Modal
+
+1. Find the user and click **⋮** → **Edit Role**
+2. In the **Departments** section, you'll see all available departments
+3. **Check the boxes** next to each department the user belongs to
+4. **Set a primary department** by clicking the **star icon** next to one department
+   - The primary department appears in the user table and is used for scheduling
+   - Only one department can be primary
+5. Click **Save Changes**
+
+#### From the Dedicated Departments Modal
+
+For quicker department management:
+
+1. Find the user in the table
+2. Click the **⋮** menu on the right
+3. Select **Manage Departments**
+4. Check/uncheck departments as needed
+5. Click the **star** to set the primary department
+6. Click **Save Changes**
+
+#### Understanding Department Badges
+
+In the user table, you'll see department badges:
+
+- **Primary department** – Shows with a ⭐ star icon
+- **Additional departments** – Shows as secondary badges
+- **+N more** – If a user has more than 3 departments, hover to see all
+
+#### Tips for Multi-Department Assignment
+
+- ✅ Set the most relevant department as primary
+- ✅ Use for volunteers who help across multiple teams
+- ✅ Leaders can be assigned to departments they oversee
+- ✅ Primary department syncs with legacy features for compatibility
 
 ### User Actions
 
