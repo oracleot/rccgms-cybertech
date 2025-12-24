@@ -42,7 +42,6 @@ import {
   Facebook,
   Instagram,
   Youtube,
-  Twitter,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -63,7 +62,7 @@ function getPlatforms(post: SocialPost): SocialPlatform[] {
   if (!post.platforms) return []
   if (Array.isArray(post.platforms)) {
     return post.platforms.filter((p): p is SocialPlatform =>
-      ["facebook", "instagram", "youtube", "twitter"].includes(p as string)
+      ["facebook", "instagram", "youtube"].includes(p as string)
     )
   }
   return []
@@ -77,7 +76,6 @@ const platformIcons: Record<SocialPlatform, React.ReactNode> = {
   facebook: <Facebook className="h-3.5 w-3.5" />,
   instagram: <Instagram className="h-3.5 w-3.5" />,
   youtube: <Youtube className="h-3.5 w-3.5" />,
-  twitter: <Twitter className="h-3.5 w-3.5" />,
 }
 
 const statusColors: Record<PostStatus, string> = {

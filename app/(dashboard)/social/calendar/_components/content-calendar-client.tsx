@@ -31,7 +31,6 @@ import {
   Facebook,
   Instagram,
   Youtube,
-  Twitter,
   ImageIcon,
 } from "lucide-react"
 import { format, isSameDay, startOfMonth, endOfMonth } from "date-fns"
@@ -43,7 +42,6 @@ const platformIcons: Record<SocialPlatform, React.ReactNode> = {
   facebook: <Facebook className="h-3.5 w-3.5" />,
   instagram: <Instagram className="h-3.5 w-3.5" />,
   youtube: <Youtube className="h-3.5 w-3.5" />,
-  twitter: <Twitter className="h-3.5 w-3.5" />,
 }
 
 const statusColors: Record<PostStatus, string> = {

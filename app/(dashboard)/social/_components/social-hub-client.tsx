@@ -63,7 +63,7 @@ export function SocialHubClient() {
                 <PlatformPreview
                   content={caption}
                   mediaUrls={uploadedMedia.map((m) => m.url)}
-                  platforms={["facebook", "instagram", "twitter", "youtube"]}
+                  platforms={["facebook", "instagram", "youtube"]}
                 />
               )}
             </div>

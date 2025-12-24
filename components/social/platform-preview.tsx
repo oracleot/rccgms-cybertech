@@ -32,7 +32,6 @@ const platformLimits: Record<SocialPlatform, number> = {
   facebook: 2000,
   instagram: 2200,
   youtube: 5000,
-  twitter: 280,
 }
 
 export function PlatformPreview({
@@ -88,9 +87,6 @@ export function PlatformPreview({
         {platforms.includes("youtube") && (
           <TabsTrigger value="youtube">YouTube</TabsTrigger>
         )}
-        {platforms.includes("twitter") && (
-          <TabsTrigger value="twitter">Twitter/X</TabsTrigger>
-        )}
       </TabsList>
 
       {platforms.includes("facebook") && (
@@ -128,19 +124,6 @@ export function PlatformPreview({
             churchAvatar={churchAvatar}
             formatContent={formatContent}
             warnings={getWarnings(content, "youtube")}
-          />
-        </TabsContent>
-      )}
-
-      {platforms.includes("twitter") && (
-        <TabsContent value="twitter">
-          <TwitterPreview
-            content={content}
-            mediaUrls={mediaUrls}
-            churchName={churchName}
-            churchAvatar={churchAvatar}
-            formatContent={formatContent}
-            warnings={getWarnings(content, "twitter")}
           />
         </TabsContent>
       )}
@@ -342,68 +325,6 @@ function YouTubePreview({
 
       {warnings.length > 0 && (
         <div className="px-3 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs">
-          {warnings.map((w, i) => (
-            <p key={i}>⚠️ {w}</p>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function TwitterPreview({
-  content,
-  mediaUrls,
-  churchName,
-  churchAvatar,
-  formatContent,
-  warnings,
-}: PreviewProps) {
-  return (
-    <div className="border rounded-lg overflow-hidden bg-white dark:bg-black p-4">
-      <div className="flex gap-3">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={churchAvatar} />
-          <AvatarFallback className="bg-blue-400 text-white">MS</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <div className="flex items-center gap-1">
-            <span className="font-bold text-sm">{churchName}</span>
-            <span className="text-muted-foreground text-sm">@rccgmorningstar · 1m</span>
-          </div>
-          <p className="text-sm mt-1 whitespace-pre-wrap">{formatContent(content)}</p>
-
-          {/* Media */}
-          {mediaUrls.length > 0 && (
-            <div className="mt-3 rounded-xl overflow-hidden border">
-              <img
-                src={mediaUrls[0]}
-                alt="Tweet media"
-                className="w-full aspect-video object-cover"
-              />
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex items-center justify-between mt-3 text-muted-foreground max-w-sm">
-            <button className="hover:text-blue-500">
-              <MessageCircle className="h-4 w-4" />
-            </button>
-            <button className="hover:text-green-500">
-              <Share2 className="h-4 w-4" />
-            </button>
-            <button className="hover:text-red-500">
-              <Heart className="h-4 w-4" />
-            </button>
-            <button className="hover:text-blue-500">
-              <Bookmark className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {warnings.length > 0 && (
-        <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs rounded">
           {warnings.map((w, i) => (
             <p key={i}>⚠️ {w}</p>
           ))}

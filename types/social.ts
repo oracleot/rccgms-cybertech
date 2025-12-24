@@ -13,7 +13,7 @@ export type SocialIntegration = Tables<"social_integrations">
 export type PostStatus = Enums<"post_status">
 
 // Platform types
-export type SocialPlatform = "facebook" | "instagram" | "youtube" | "twitter"
+export type SocialPlatform = "facebook" | "instagram" | "youtube"
 
 // Post with creator info
 export interface SocialPostWithDetails extends SocialPost {

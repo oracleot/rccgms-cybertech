@@ -5,7 +5,7 @@
 import { z } from "zod"
 
 // Platform enum
-const socialPlatformSchema = z.enum(["facebook", "instagram", "youtube", "twitter"])
+const socialPlatformSchema = z.enum(["facebook", "instagram", "youtube"])
 
 // Post status enum
 const postStatusSchema = z.enum(["draft", "scheduled", "published", "failed"])

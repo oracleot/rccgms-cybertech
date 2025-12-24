@@ -46,6 +46,7 @@ export function CaptionGenerator({
 
   const { completion, complete, isLoading } = useCompletion({
     api: "/api/ai/generate-caption",
+    streamProtocol: "text",
     onError: (error) => {
       console.error("Caption generation error:", error)
       toast.error("Failed to generate caption. Please try again.")
@@ -109,7 +110,6 @@ export function CaptionGenerator({
                 <SelectItem value="facebook">Facebook</SelectItem>
                 <SelectItem value="instagram">Instagram</SelectItem>
                 <SelectItem value="youtube">YouTube</SelectItem>
-                <SelectItem value="twitter">Twitter/X</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -207,13 +207,8 @@ export function CaptionGenerator({
               )}
             </div>
             {completion && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 <span>{completion.length} characters</span>
-                {platform === "twitter" && completion.length > 280 && (
-                  <span className="text-destructive">
-                    (exceeds 280 character limit)
-                  </span>
-                )}
               </div>
             )}
           </div>

@@ -4,7 +4,7 @@
  * Content Composer Component for Social Posts
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -50,7 +50,6 @@ const platforms: { value: SocialPlatform; label: string }[] = [
   { value: "facebook", label: "Facebook" },
   { value: "instagram", label: "Instagram" },
   { value: "youtube", label: "YouTube" },
-  { value: "twitter", label: "Twitter/X" },
 ]
 
 export function ContentComposer({
@@ -64,6 +63,13 @@ export function ContentComposer({
   const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatform[]>([
     "facebook",
   ])
+
+  // Sync content when initialCaption changes (e.g., from caption generator)
+  useEffect(() => {
+    if (initialCaption) {
+      setContent(initialCaption)
+    }
+  }, [initialCaption])
   const [scheduleDate, setScheduleDate] = useState<Date>()
   const [scheduleTime, setScheduleTime] = useState("09:00")
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
@@ -171,14 +177,9 @@ export function ContentComposer({
             onChange={(e) => handleContentChange(e.target.value)}
             rows={5}
           />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{content.length} characters</span>
-            {content.length > 280 && (
-              <span className="text-amber-500">
-                Twitter limit exceeded
-              </span>
-            )}
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {content.length} characters
+          </p>
         </div>
 
         {/* Platform selection */}
