@@ -1,0 +1,2816 @@
+### Open tabs
+- 0: (current) [Edit Page “Main Home” ‹ RCCG Morningstar Kirknewton — WordPress] (https://rccgmorningstaredinburgh.org/wp-admin/post.php?post=19&action=edit)
+- 1: [Main Home - RCCG Morningstar Kirknewton] (https://rccgmorningstaredinburgh.org/)
+
+### Page state
+- Page URL: https://rccgmorningstaredinburgh.org/wp-admin/post.php?post=19&action=edit
+- Page Title: Edit Page “Main Home” ‹ RCCG Morningstar Kirknewton — WordPress
+- Page Snapshot:
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation "Main menu":
+      - link "Skip to main content" [ref=e3] [cursor=pointer]:
+        - /url: "#wpbody-content"
+      - link "Skip to toolbar" [ref=e4] [cursor=pointer]:
+        - /url: "#wp-toolbar"
+      - list [ref=e7]:
+        - listitem [ref=e8]:
+          - link "MOJO" [ref=e9] [cursor=pointer]:
+            - /url: admin.php?page=mojo
+            - generic [ref=e11]: MOJO
+          - list [ref=e12]:
+            - listitem [ref=e13]: MOJO
+            - listitem [ref=e14]:
+              - link "Home" [ref=e15] [cursor=pointer]:
+                - /url: admin.php?page=mojo#/home
+            - listitem [ref=e16]:
+              - link "Marketplace" [ref=e17] [cursor=pointer]:
+                - /url: admin.php?page=mojo#/marketplace
+            - listitem [ref=e18]:
+              - link "Performance" [ref=e19] [cursor=pointer]:
+                - /url: admin.php?page=mojo#/performance
+            - listitem [ref=e20]:
+              - link "Settings" [ref=e21] [cursor=pointer]:
+                - /url: admin.php?page=mojo#/settings
+            - listitem [ref=e22]:
+              - link "Help" [ref=e23] [cursor=pointer]:
+                - /url: admin.php?page=mojo#/help
+        - listitem [ref=e24]:
+          - link "Dashboard" [ref=e25] [cursor=pointer]:
+            - /url: index.php
+            - generic [ref=e26]: 
+            - generic [ref=e27]: Dashboard
+          - list [ref=e28]:
+            - listitem [ref=e29]: Dashboard
+            - listitem [ref=e30]:
+              - link "Home" [ref=e31] [cursor=pointer]:
+                - /url: index.php
+            - listitem [ref=e32]:
+              - link "Updates 1" [ref=e33] [cursor=pointer]:
+                - /url: update-core.php
+                - text: Updates
+                - generic [ref=e34]: "1"
+            - listitem [ref=e35]:
+              - link "Insights" [ref=e36] [cursor=pointer]:
+                - /url: admin.php?page=monsterinsights_reports
+            - listitem [ref=e37]:
+              - link "Marketing Education" [ref=e38] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=optin-monster-university
+        - listitem [ref=e39]:
+          - link "Jetpack" [ref=e40] [cursor=pointer]:
+            - /url: admin.php?page=my-jetpack
+            - generic [ref=e42]: Jetpack
+          - list [ref=e43]:
+            - listitem [ref=e44]: Jetpack
+            - listitem [ref=e45]:
+              - link "My Jetpack" [ref=e46] [cursor=pointer]:
+                - /url: admin.php?page=my-jetpack
+        - listitem [ref=e47]
+        - listitem [ref=e49]:
+          - link "Posts" [ref=e50] [cursor=pointer]:
+            - /url: edit.php
+            - generic [ref=e51]: 
+            - generic [ref=e52]: Posts
+          - list [ref=e53]:
+            - listitem [ref=e54]: Posts
+            - listitem [ref=e55]:
+              - link "All Posts" [ref=e56] [cursor=pointer]:
+                - /url: edit.php
+            - listitem [ref=e57]:
+              - link "Add Post" [ref=e58] [cursor=pointer]:
+                - /url: post-new.php
+            - listitem [ref=e59]:
+              - link "Categories" [ref=e60] [cursor=pointer]:
+                - /url: edit-tags.php?taxonomy=category
+            - listitem [ref=e61]:
+              - link "Tags" [ref=e62] [cursor=pointer]:
+                - /url: edit-tags.php?taxonomy=post_tag
+        - listitem [ref=e63]:
+          - link "Chapel Portfolio" [ref=e64] [cursor=pointer]:
+            - /url: edit.php?post_type=portfolio-item
+            - generic [ref=e65]: 
+            - generic [ref=e66]: Chapel Portfolio
+          - list [ref=e67]:
+            - listitem [ref=e68]: Chapel Portfolio
+            - listitem [ref=e69]:
+              - link "Chapel Portfolio" [ref=e70] [cursor=pointer]:
+                - /url: edit.php?post_type=portfolio-item
+            - listitem [ref=e71]:
+              - link "Add New Portfolio Item" [ref=e72] [cursor=pointer]:
+                - /url: post-new.php?post_type=portfolio-item
+            - listitem [ref=e73]:
+              - link "Portfolio Categories" [ref=e74] [cursor=pointer]:
+                - /url: edit-tags.php?taxonomy=portfolio-category&post_type=portfolio-item
+            - listitem [ref=e75]:
+              - link "Portfolio Tags" [ref=e76] [cursor=pointer]:
+                - /url: edit-tags.php?taxonomy=portfolio-tag&post_type=portfolio-item
+        - listitem [ref=e77]:
+          - link "Chapel Testimonials" [ref=e78] [cursor=pointer]:
+            - /url: edit.php?post_type=testimonials
+            - generic [ref=e79]: 
+            - generic [ref=e80]: Chapel Testimonials
+          - list [ref=e81]:
+            - listitem [ref=e82]: Chapel Testimonials
+            - listitem [ref=e83]:
+              - link "Chapel Testimonials" [ref=e84] [cursor=pointer]:
+                - /url: edit.php?post_type=testimonials
+            - listitem [ref=e85]:
+              - link "Add New Testimonial" [ref=e86] [cursor=pointer]:
+                - /url: post-new.php?post_type=testimonials
+            - listitem [ref=e87]:
+              - link "Testimonials Categories" [ref=e88] [cursor=pointer]:
+                - /url: edit-tags.php?taxonomy=testimonials-category&post_type=testimonials
+        - listitem [ref=e89]:
+          - link "Events" [ref=e90] [cursor=pointer]:
+            - /url: edit.php?post_type=tribe_events
+            - generic [ref=e92]: Events
+          - list [ref=e93]:
+            - listitem [ref=e94]: Events
+            - listitem [ref=e95]:
+              - link "Events" [ref=e96] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_events
+            - listitem [ref=e97]:
+              - link "Add New Event" [ref=e98] [cursor=pointer]:
+                - /url: post-new.php?post_type=tribe_events
+            - listitem [ref=e99]:
+              - link "Tags" [ref=e100] [cursor=pointer]:
+                - /url: edit-tags.php?taxonomy=post_tag&post_type=tribe_events
+            - listitem [ref=e101]:
+              - link "Event Categories" [ref=e102] [cursor=pointer]:
+                - /url: edit-tags.php?taxonomy=tribe_events_cat&post_type=tribe_events
+            - listitem [ref=e103]:
+              - link "Venues" [ref=e104] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_venue
+            - listitem [ref=e105]:
+              - link "Organizers" [ref=e106] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_organizer
+            - listitem [ref=e107]:
+              - link "Import" [ref=e108] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_events&page=aggregator
+            - listitem [ref=e109]:
+              - link "Calendar Embeds" [ref=e110] [cursor=pointer]:
+                - /url: edit.php?post_type=tec_calendar_embed
+            - listitem [ref=e111]:
+              - link "Settings" [ref=e112] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_events&page=tec-events-settings
+            - listitem [ref=e113]:
+              - link "Help" [ref=e114] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_events&page=tec-events-help-hub
+            - listitem [ref=e115]:
+              - link "Troubleshooting" [ref=e116] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_events&page=tec-troubleshooting
+            - listitem [ref=e117]:
+              - link "Event Add-Ons" [ref=e118] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_events&page=tribe-app-shop
+            - listitem [ref=e119]:
+              - link "Setup Guide" [ref=e120] [cursor=pointer]:
+                - /url: edit.php?post_type=tribe_events&page=first-time-setup
+        - listitem [ref=e121]:
+          - link "Media" [ref=e122] [cursor=pointer]:
+            - /url: upload.php
+            - generic [ref=e123]: 
+            - generic [ref=e124]: Media
+          - list [ref=e125]:
+            - listitem [ref=e126]: Media
+            - listitem [ref=e127]:
+              - link "Library" [ref=e128] [cursor=pointer]:
+                - /url: upload.php
+            - listitem [ref=e129]:
+              - link "Add Media File" [ref=e130] [cursor=pointer]:
+                - /url: media-new.php
+        - listitem [ref=e131]:
+          - link "Pages" [ref=e132] [cursor=pointer]:
+            - /url: edit.php?post_type=page
+            - generic [ref=e133]: 
+            - generic [ref=e134]: Pages
+          - list [ref=e135]:
+            - listitem [ref=e136]: Pages
+            - listitem [ref=e137]:
+              - link "All Pages" [ref=e138] [cursor=pointer]:
+                - /url: edit.php?post_type=page
+            - listitem [ref=e139]:
+              - link "Add Page" [ref=e140] [cursor=pointer]:
+                - /url: post-new.php?post_type=page
+        - listitem [ref=e141]:
+          - link "Comments" [ref=e142] [cursor=pointer]:
+            - /url: edit-comments.php
+            - generic [ref=e143]: 
+            - generic [ref=e144]: Comments
+        - listitem [ref=e145]:
+          - link "GiveWP" [ref=e146] [cursor=pointer]:
+            - /url: admin.php?page=give-campaigns
+            - generic [ref=e147]: 
+            - generic [ref=e148]: GiveWP
+          - list [ref=e149]:
+            - listitem [ref=e150]: GiveWP
+            - listitem [ref=e151]:
+              - link "Campaigns" [ref=e152] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-campaigns
+            - listitem [ref=e153]:
+              - link "Donations" [ref=e154] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-payment-history
+            - listitem [ref=e155]:
+              - link "Donors" [ref=e156] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-donors
+            - listitem [ref=e157]:
+              - link "Reports" [ref=e158] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-reports
+            - listitem [ref=e159]:
+              - link "Settings" [ref=e160] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-settings
+            - listitem [ref=e161]:
+              - link "Tools" [ref=e162] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-tools
+            - listitem [ref=e163]:
+              - link " Add-ons" [ref=e164] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-add-ons
+                - generic [ref=e165]: 
+                - text: Add-ons
+            - listitem [ref=e166]:
+              - link "Setup" [ref=e167] [cursor=pointer]:
+                - /url: edit.php?post_type=give_forms&page=give-setup
+        - listitem [ref=e168]:
+          - link "OptinMonster 2" [ref=e169] [cursor=pointer]:
+            - /url: admin.php?page=optin-monster-dashboard
+            - generic [ref=e171]:
+              - text: OptinMonster
+              - generic [ref=e172]: "2"
+          - list [ref=e173]:
+            - listitem [ref=e174]:
+              - text: OptinMonster
+              - generic [ref=e175]: "2"
+            - listitem [ref=e176]:
+              - link "Dashboard" [ref=e177] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-dashboard
+            - listitem [ref=e178]:
+              - link "Campaigns" [ref=e179] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-campaigns
+            - listitem [ref=e180]:
+              - link "Templates" [ref=e181] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-templates
+            - listitem [ref=e182]:
+              - link "Playbooks" [ref=e183] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-playbooks
+            - listitem [ref=e184]:
+              - link "Subscribers" [ref=e185] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-monsterleads
+            - listitem [ref=e186]:
+              - link "Integrations" [ref=e187] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-integrations
+            - listitem [ref=e188]:
+              - link "Settings" [ref=e189] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-settings
+            - listitem [ref=e190]:
+              - link "Personalization" [ref=e191] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-personalization
+            - listitem [ref=e192]:
+              - link "University" [ref=e193] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-university
+            - listitem [ref=e194]:
+              - link "Social Proof Widget" [ref=e195] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-trustpulse
+            - listitem [ref=e196]:
+              - link "Landing Pages" [ref=e197] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-seedprod
+            - listitem [ref=e198]:
+              - link "About Us" [ref=e199] [cursor=pointer]:
+                - /url: admin.php?page=optin-monster-about
+            - listitem [ref=e200]:
+              - link "Upgrade to Pro" [ref=e201] [cursor=pointer]:
+                - /url: https://app.optinmonster.com/?redirect_to=https%3A%2F%2Fapp.optinmonster.com%2Faccount%2Fwp-upgrade%2F%3Futm_source%3DWordPress%26utm_medium%3DpluginMenu%26utm_campaign%3DPlugin%26feature%3Dnone%26return%3Dhttps%253A%252F%252Frccgmorningstaredinburgh.org%252Fwp-admin%252Fadmin.php%253Fpage%253Doptin-monster-dashboard
+        - listitem [ref=e202]:
+          - link "Contact" [ref=e203] [cursor=pointer]:
+            - /url: admin.php?page=wpcf7
+            - generic [ref=e204]: 
+            - generic [ref=e205]: Contact
+          - list [ref=e206]:
+            - listitem [ref=e207]: Contact
+            - listitem [ref=e208]:
+              - link "Contact Forms" [ref=e209] [cursor=pointer]:
+                - /url: admin.php?page=wpcf7
+            - listitem [ref=e210]:
+              - link "Add Contact Form" [ref=e211] [cursor=pointer]:
+                - /url: admin.php?page=wpcf7-new
+            - listitem [ref=e212]:
+              - link "Integration" [ref=e213] [cursor=pointer]:
+                - /url: admin.php?page=wpcf7-integration
+        - listitem [ref=e214]:
+          - link "RafflePress" [ref=e215] [cursor=pointer]:
+            - /url: admin.php?page=rafflepress_lite
+            - generic [ref=e217]: RafflePress
+          - list [ref=e218]:
+            - listitem [ref=e219]: RafflePress
+            - listitem [ref=e220]:
+              - link "Giveaways" [ref=e221] [cursor=pointer]:
+                - /url: admin.php?page=rafflepress_lite
+            - listitem [ref=e222]:
+              - link "Add New" [ref=e223] [cursor=pointer]:
+                - /url: admin.php?page=rafflepress_lite_add_new&_wpnonce=181f592921
+            - listitem [ref=e224]:
+              - link "Settings" [ref=e225] [cursor=pointer]:
+                - /url: admin.php?page=rafflepress_lite_settings
+            - listitem [ref=e226]:
+              - link "About Us" [ref=e227] [cursor=pointer]:
+                - /url: admin.php?page=rafflepress_lite_about_us
+            - listitem [ref=e228]:
+              - link "Get Pro" [ref=e229] [cursor=pointer]:
+                - /url: admin.php?page=rafflepress_lite_get_pro
+        - listitem [ref=e230]:
+          - link "WPForms" [ref=e231] [cursor=pointer]:
+            - /url: admin.php?page=wpforms-overview
+            - generic [ref=e233]: WPForms
+          - list [ref=e234]:
+            - listitem [ref=e235]: WPForms
+            - listitem [ref=e236]:
+              - link "All Forms" [ref=e237] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-overview
+            - listitem [ref=e238]:
+              - link "Add New Form" [ref=e239] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-builder
+            - listitem [ref=e240]:
+              - link "Entries" [ref=e241] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-entries
+            - listitem [ref=e242]:
+              - link "Payments NEW!" [ref=e243] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-payments
+                - text: Payments
+                - generic [ref=e244]: NEW!
+            - listitem [ref=e245]:
+              - link "Form Templates" [ref=e246] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-templates
+            - listitem [ref=e247]:
+              - link "Settings" [ref=e248] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-settings
+            - listitem [ref=e249]:
+              - link "Tools" [ref=e250] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-tools
+            - listitem [ref=e251]:
+              - link "Addons" [ref=e252] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-addons
+            - listitem [ref=e253]:
+              - link "Privacy Compliance" [ref=e254] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-wpconsent
+            - listitem [ref=e255]:
+              - link "SMTP" [ref=e256] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-smtp
+            - listitem [ref=e257]:
+              - link "About Us" [ref=e258] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-about
+            - listitem [ref=e259]:
+              - link "Community" [ref=e260] [cursor=pointer]:
+                - /url: admin.php?page=wpforms-community
+            - listitem [ref=e261]:
+              - link "Upgrade to Pro" [ref=e262] [cursor=pointer]:
+                - /url: http://www.shareasale.com/r.cfm?B=837827&U=1258907&M=64312&urllink=https%3A%2F%2Fwpforms.com%2Flite-upgrade%2F%3Futm_campaign%3Dliteplugin%26utm_source%3DWordPress%26utm_medium%3Dadmin-menu%26utm_locale%3Den_US&utm_content=Upgrade%20to%20Pro%20-%20post
+        - listitem [ref=e263]:
+          - link "SeedProd" [ref=e264] [cursor=pointer]:
+            - /url: admin.php?page=seedprod_lite
+            - generic [ref=e266]: SeedProd
+          - list [ref=e267]:
+            - listitem [ref=e268]: SeedProd
+            - listitem [ref=e269]:
+              - link "Dashboard" [ref=e270] [cursor=pointer]:
+                - /url: admin.php?page=seedprod_lite
+            - listitem [ref=e271]:
+              - link "AI Theme Builder FREE" [ref=e272] [cursor=pointer]:
+                - /url: admin.php?page=seedprod_lite_ai_themes
+                - text: AI Theme Builder
+                - generic [ref=e273]: FREE
+            - listitem [ref=e274]:
+              - link "Website Builder" [ref=e275] [cursor=pointer]:
+                - /url: admin.php?page=seedprod_lite_website_builder
+            - listitem [ref=e276]:
+              - link "Landing Pages" [ref=e277] [cursor=pointer]:
+                - /url: admin.php?page=seedprod_lite_landing_pages
+            - listitem [ref=e278]:
+              - link "Settings" [ref=e279] [cursor=pointer]:
+                - /url: admin.php?page=seedprod_lite_settings
+            - listitem [ref=e280]:
+              - link "Cookie Consent" [ref=e281] [cursor=pointer]:
+                - /url: admin.php?page=seedprod_lite_cookie_consent
+            - listitem [ref=e282]:
+              - link "Upgrade to Pro" [ref=e283] [cursor=pointer]:
+                - /url: admin.php?page=seedprod_lite_get_pro
+        - listitem [ref=e284]
+        - listitem [ref=e286]:
+          - link "Appearance" [ref=e287] [cursor=pointer]:
+            - /url: themes.php
+            - generic [ref=e288]: 
+            - generic [ref=e289]: Appearance
+          - list [ref=e290]:
+            - listitem [ref=e291]: Appearance
+            - listitem [ref=e292]:
+              - link "Themes" [ref=e293] [cursor=pointer]:
+                - /url: themes.php
+            - listitem [ref=e294]:
+              - link "Premium Themes" [ref=e295] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=mojo#/marketplace/themes
+            - listitem [ref=e296]:
+              - link "Patterns" [ref=e297] [cursor=pointer]:
+                - /url: site-editor.php?p=/pattern
+            - listitem [ref=e298]:
+              - link "Customize" [ref=e299] [cursor=pointer]:
+                - /url: customize.php?return=%2Fwp-admin%2Fpost.php%3Fpost%3D19%26action%3Dedit
+            - listitem [ref=e300]:
+              - link "Widgets" [ref=e301] [cursor=pointer]:
+                - /url: widgets.php
+            - listitem [ref=e302]:
+              - link "Menus" [ref=e303] [cursor=pointer]:
+                - /url: nav-menus.php
+            - listitem [ref=e304]:
+              - link "Popup Builder" [ref=e305] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=optin-monster-templates
+            - listitem [ref=e306]:
+              - link "Install Plugins" [ref=e307] [cursor=pointer]:
+                - /url: themes.php?page=install-required-plugins
+            - listitem [ref=e308]:
+              - link "Upload Theme" [ref=e309] [cursor=pointer]:
+                - /url: themes.php?page=upload-theme
+            - listitem [ref=e310]:
+              - link "Theme File Editor" [ref=e311] [cursor=pointer]:
+                - /url: theme-editor.php
+        - listitem [ref=e312]:
+          - link "Plugins 1" [ref=e313] [cursor=pointer]:
+            - /url: plugins.php
+            - generic [ref=e314]: 
+            - generic [ref=e315]:
+              - text: Plugins
+              - generic [ref=e316]: "1"
+          - list [ref=e317]:
+            - listitem [ref=e318]:
+              - text: Plugins
+              - generic [ref=e319]: "1"
+            - listitem [ref=e320]:
+              - link "Installed Plugins" [ref=e321] [cursor=pointer]:
+                - /url: plugins.php
+            - listitem [ref=e322]:
+              - link "Add Plugin" [ref=e323] [cursor=pointer]:
+                - /url: plugin-install.php
+            - listitem [ref=e324]:
+              - link "Plugin File Editor" [ref=e325] [cursor=pointer]:
+                - /url: plugin-editor.php
+            - listitem [ref=e326]:
+              - link "Premium" [ref=e327] [cursor=pointer]:
+                - /url: plugin-install.php?tab=premium-marketplace
+                - text: Premium
+                - img [ref=e328]
+        - listitem [ref=e330]:
+          - link "Users" [ref=e331] [cursor=pointer]:
+            - /url: users.php
+            - generic [ref=e332]: 
+            - generic [ref=e333]: Users
+          - list [ref=e334]:
+            - listitem [ref=e335]: Users
+            - listitem [ref=e336]:
+              - link "All Users" [ref=e337] [cursor=pointer]:
+                - /url: users.php
+            - listitem [ref=e338]:
+              - link "Add User" [ref=e339] [cursor=pointer]:
+                - /url: user-new.php
+            - listitem [ref=e340]:
+              - link "Profile" [ref=e341] [cursor=pointer]:
+                - /url: profile.php
+            - listitem [ref=e342]:
+              - link "Author SEO" [ref=e343] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=aioseo-search-appearance/#author-seo
+        - listitem [ref=e344]:
+          - link "Tools" [ref=e345] [cursor=pointer]:
+            - /url: tools.php
+            - generic [ref=e346]: 
+            - generic [ref=e347]: Tools
+          - list [ref=e348]:
+            - listitem [ref=e349]: Tools
+            - listitem [ref=e350]:
+              - link "Available Tools" [ref=e351] [cursor=pointer]:
+                - /url: tools.php
+            - listitem [ref=e352]:
+              - link "Import" [ref=e353] [cursor=pointer]:
+                - /url: import.php
+            - listitem [ref=e354]:
+              - link "Export" [ref=e355] [cursor=pointer]:
+                - /url: export.php
+            - listitem [ref=e356]:
+              - link "Site Health 2" [ref=e357] [cursor=pointer]:
+                - /url: site-health.php
+                - text: Site Health
+                - generic [ref=e358]: "2"
+            - listitem [ref=e359]:
+              - link "Export Personal Data" [ref=e360] [cursor=pointer]:
+                - /url: export-personal-data.php
+            - listitem [ref=e361]:
+              - link "Performance" [ref=e362] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=mojo#/performance
+            - listitem [ref=e363]:
+              - link "Erase Personal Data" [ref=e364] [cursor=pointer]:
+                - /url: erase-personal-data.php
+            - listitem [ref=e365]:
+              - link "Redirection Manager" [ref=e366] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=aioseo-redirects
+        - listitem [ref=e367]:
+          - link "WPBakery Page Builder" [ref=e368] [cursor=pointer]:
+            - /url: admin.php?page=vc-general
+            - generic [ref=e370]: WPBakery Page Builder
+          - list [ref=e371]:
+            - listitem [ref=e372]: WPBakery Page Builder
+            - listitem [ref=e373]:
+              - link "General Settings" [ref=e374] [cursor=pointer]:
+                - /url: admin.php?page=vc-general
+            - listitem [ref=e375]:
+              - link "Role Manager" [ref=e376] [cursor=pointer]:
+                - /url: admin.php?page=vc-roles
+            - listitem [ref=e377]:
+              - link "Product License" [ref=e378] [cursor=pointer]:
+                - /url: admin.php?page=vc-updater
+            - listitem [ref=e379]:
+              - link "Shortcode Mapper" [ref=e380] [cursor=pointer]:
+                - /url: admin.php?page=vc-automapper
+            - listitem [ref=e381]:
+              - link "Grid Builder" [ref=e382] [cursor=pointer]:
+                - /url: edit.php?post_type=vc_grid_item
+            - listitem [ref=e383]:
+              - link "About" [ref=e384] [cursor=pointer]:
+                - /url: admin.php?page=vc-welcome
+        - listitem [ref=e385]:
+          - link "Settings" [ref=e386] [cursor=pointer]:
+            - /url: options-general.php
+            - generic [ref=e387]: 
+            - generic [ref=e388]: Settings
+          - list [ref=e389]:
+            - listitem [ref=e390]: Settings
+            - listitem [ref=e391]:
+              - link "General" [ref=e392] [cursor=pointer]:
+                - /url: options-general.php
+            - listitem [ref=e393]:
+              - link "Writing" [ref=e394] [cursor=pointer]:
+                - /url: options-writing.php
+            - listitem [ref=e395]:
+              - link "Reading" [ref=e396] [cursor=pointer]:
+                - /url: options-reading.php
+            - listitem [ref=e397]:
+              - link "Discussion" [ref=e398] [cursor=pointer]:
+                - /url: options-discussion.php
+            - listitem [ref=e399]:
+              - link "Media" [ref=e400] [cursor=pointer]:
+                - /url: options-media.php
+            - listitem [ref=e401]:
+              - link "Permalinks" [ref=e402] [cursor=pointer]:
+                - /url: options-permalink.php
+            - listitem [ref=e403]:
+              - link "Privacy" [ref=e404] [cursor=pointer]:
+                - /url: options-privacy.php
+        - listitem [ref=e405]:
+          - link "All in One SEO" [ref=e406] [cursor=pointer]:
+            - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=aioseo&notifications=true
+            - generic [ref=e408]: All in One SEO
+          - list [ref=e409]:
+            - listitem [ref=e410]: All in One SEO
+            - listitem [ref=e411]:
+              - link "Notifications" [ref=e412] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=aioseo&notifications=true
+                - text: Notifications
+            - listitem [ref=e414]:
+              - link "Dashboard" [ref=e415] [cursor=pointer]:
+                - /url: admin.php?page=aioseo
+            - listitem [ref=e416]:
+              - link "General Settings" [ref=e417] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-settings
+            - listitem [ref=e418]:
+              - link "Search Appearance" [ref=e419] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-search-appearance
+            - listitem [ref=e420]:
+              - link "Social Networks" [ref=e421] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-social-networks
+            - listitem [ref=e422]:
+              - link "Sitemaps" [ref=e423] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-sitemaps
+            - listitem [ref=e424]:
+              - link "Link Assistant" [ref=e425] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-link-assistant
+            - listitem [ref=e426]:
+              - link "Redirects" [ref=e427] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-redirects
+            - listitem [ref=e428]:
+              - link "AI Insights NEW!" [ref=e429] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-ai-insights
+                - text: AI Insights
+                - generic [ref=e430]: NEW!
+            - listitem [ref=e431]:
+              - link "Local SEO" [ref=e432] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-local-seo
+            - listitem [ref=e433]:
+              - link "SEO Analysis" [ref=e434] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-seo-analysis
+            - listitem [ref=e435]:
+              - link "Search Statistics" [ref=e436] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-search-statistics
+            - listitem [ref=e437]:
+              - link "Tools" [ref=e438] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-tools
+            - listitem [ref=e439]:
+              - link "Feature Manager" [ref=e440] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-feature-manager
+            - listitem [ref=e441]:
+              - link "About Us" [ref=e442] [cursor=pointer]:
+                - /url: admin.php?page=aioseo-about
+            - listitem [ref=e443]:
+              - link "Upgrade to Pro" [ref=e444] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=aioseo-tools&aioseo-redirect-upgrade=1
+        - listitem [ref=e445]
+        - listitem [ref=e447]:
+          - link "Chapel Options" [ref=e448] [cursor=pointer]:
+            - /url: admin.php?page=chapel_elated_theme_menu
+            - generic [ref=e450]: Chapel Options
+          - list [ref=e451]:
+            - listitem [ref=e452]: Chapel Options
+            - listitem [ref=e453]:
+              - link "General" [ref=e454] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu
+            - listitem [ref=e455]:
+              - link "Logo" [ref=e456] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_logo_page
+            - listitem [ref=e457]:
+              - link "Header" [ref=e458] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_header_page
+            - listitem [ref=e459]:
+              - link "Title" [ref=e460] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_title_page
+            - listitem [ref=e461]:
+              - link "Mobile Header" [ref=e462] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_mobile_header
+            - listitem [ref=e463]:
+              - link "Page" [ref=e464] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_page_page
+            - listitem [ref=e465]:
+              - link "Sidebar Area" [ref=e466] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_sidebar_page
+            - listitem [ref=e467]:
+              - link "Search" [ref=e468] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_search_page
+            - listitem [ref=e469]:
+              - link "Side Area" [ref=e470] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_side_area_page
+            - listitem [ref=e471]:
+              - link "Footer" [ref=e472] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_footer_page
+            - listitem [ref=e473]:
+              - link "Fonts" [ref=e474] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_fonts_page
+            - listitem [ref=e475]:
+              - link "Portfolio" [ref=e476] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_portfolio
+            - listitem [ref=e477]:
+              - link "Blog" [ref=e478] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_blog_page
+            - listitem [ref=e479]:
+              - link "Skewed Section" [ref=e480] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_skewed_section_page
+            - listitem [ref=e481]:
+              - link "Events" [ref=e482] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_events_page
+            - listitem [ref=e483]:
+              - link "Give" [ref=e484] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_give_page
+            - listitem [ref=e485]:
+              - link "Subscribe Pop-up" [ref=e486] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_subscribe_popup_page
+            - listitem [ref=e487]:
+              - link "Social Networks" [ref=e488] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_social_page
+            - listitem [ref=e489]:
+              - link "404 Error Page" [ref=e490] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab__404_error_page
+            - listitem [ref=e491]:
+              - link "Contact Form 7" [ref=e492] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_contact_form7_page
+            - listitem [ref=e493]:
+              - link "Reset" [ref=e494] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tab_reset_page
+            - listitem [ref=e495]:
+              - link "Backup Options" [ref=e496] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_backup_options
+            - listitem [ref=e497]:
+              - link "Import" [ref=e498] [cursor=pointer]:
+                - /url: admin.php?page=chapel_elated_theme_menu_tabimport
+        - listitem [ref=e499]:
+          - link "Insights 5" [ref=e500] [cursor=pointer]:
+            - /url: admin.php?page=monsterinsights_settings#/setup-checklist
+            - generic [ref=e502]:
+              - text: Insights
+              - generic [ref=e503]: "5"
+          - list [ref=e504]:
+            - listitem [ref=e505]:
+              - text: Insights
+              - generic [ref=e506]: "5"
+            - listitem [ref=e507]:
+              - link "Setup Checklist 15" [ref=e508] [cursor=pointer]:
+                - /url: admin.php?page=monsterinsights_settings#/setup-checklist
+                - text: Setup Checklist
+                - generic [ref=e509]: "15"
+            - listitem [ref=e510]:
+              - link "Reports" [ref=e511] [cursor=pointer]:
+                - /url: admin.php?page=monsterinsights_reports
+            - listitem [ref=e512]:
+              - link "Settings" [ref=e513] [cursor=pointer]:
+                - /url: admin.php?page=monsterinsights_settings
+            - listitem [ref=e514]:
+              - link "Site Notes" [ref=e515] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/site-notes
+            - listitem [ref=e516]:
+              - link "AI Insights" [ref=e517] [cursor=pointer]:
+                - /url: admin.php?page=monsterinsights_reports#/ai-insights
+                - img [ref=e519]
+                - text: AI Insights
+            - listitem [ref=e521]:
+              - link "Conversations AI" [ref=e522] [cursor=pointer]:
+                - /url: admin.php?page=monsterinsights_reports#/ai-insights/chat
+                - img [ref=e524]
+                - text: Conversations AI
+            - listitem [ref=e526]:
+              - link "Popular Posts" [ref=e527] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/popular-posts
+            - listitem [ref=e528]:
+              - link "User Journey" [ref=e529] [cursor=pointer]:
+                - /url: admin.php?page=monsterinsights_reports#/user-journey-report
+            - listitem [ref=e530]:
+              - link "SEO" [ref=e531] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=aioseo
+            - listitem [ref=e532]:
+              - link "Google Ads" [ref=e533] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/google-ads
+            - listitem [ref=e534]:
+              - link "Tools" [ref=e535] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/tools
+            - listitem [ref=e536]:
+              - link "Addons" [ref=e537] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/addons
+                - generic [ref=e538]: Addons
+            - listitem [ref=e539]:
+              - link "UserFeedback NEW" [ref=e540] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/userfeedback
+                - text: UserFeedback
+                - generic [ref=e541]: NEW
+            - listitem [ref=e542]:
+              - link "Privacy Compliance NEW" [ref=e543] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/wpconsent
+                - generic [ref=e544]: Privacy Compliance
+                - generic [ref=e545]: NEW
+            - listitem [ref=e546]:
+              - link "About Us" [ref=e547] [cursor=pointer]:
+                - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=monsterinsights_settings#/about
+            - listitem [ref=e548]:
+              - link "Upgrade to Pro" [ref=e549] [cursor=pointer]:
+                - /url: https://www.monsterinsights.com/lite/?utm_source=liteplugin&utm_medium=admin-menu&utm_campaign=submenu&utm_content=9.11.0
+                - generic [ref=e550]: Upgrade to Pro
+        - listitem [ref=e551]:
+          - link "Twitter Feeds 1" [ref=e552] [cursor=pointer]:
+            - /url: admin.php?page=ctf-feed-builder
+            - generic [ref=e554]:
+              - text: Twitter Feeds
+              - generic [ref=e555]: "1"
+          - list [ref=e556]:
+            - listitem [ref=e557]:
+              - text: Twitter Feeds
+              - generic [ref=e558]: "1"
+            - listitem [ref=e559]:
+              - link "All Feeds" [ref=e560] [cursor=pointer]:
+                - /url: admin.php?page=ctf-feed-builder
+            - listitem [ref=e561]:
+              - link "Settings" [ref=e562] [cursor=pointer]:
+                - /url: admin.php?page=ctf-settings
+            - listitem
+            - listitem
+            - listitem [ref=e563]:
+              - link "About Us" [ref=e564] [cursor=pointer]:
+                - /url: admin.php?page=ctf-about-us
+            - listitem [ref=e565]:
+              - link "Upgrade to Pro" [ref=e566] [cursor=pointer]:
+                - /url: https://smashballoon.com/custom-twitter-feeds/demo/?utm_campaign=twitter-free&utm_source=menu-link&utm_medium=upgrade-link
+            - listitem [ref=e567]:
+              - link "Instagram Feed" [ref=e568] [cursor=pointer]:
+                - /url: admin.php?page=custom-twitter-feeds&tab=more
+            - listitem [ref=e569]:
+              - link "Facebook Feed" [ref=e570] [cursor=pointer]:
+                - /url: admin.php?page=custom-twitter-feeds&tab=more
+            - listitem [ref=e571]:
+              - link "YouTube Feed" [ref=e572] [cursor=pointer]:
+                - /url: admin.php?page=custom-twitter-feeds&tab=more
+        - listitem [ref=e573]:
+          - link "Slider Revolution" [ref=e574] [cursor=pointer]:
+            - /url: admin.php?page=revslider
+            - generic [ref=e575]: 
+            - generic [ref=e576]: Slider Revolution
+          - list [ref=e577]:
+            - listitem [ref=e578]: Slider Revolution
+            - listitem [ref=e579]:
+              - link "Overview" [ref=e580] [cursor=pointer]:
+                - /url: admin.php?page=revslider
+            - listitem [ref=e581]:
+              - link "Getting Started" [ref=e582] [cursor=pointer]:
+                - /url: admin.php?page=revslider-documentation
+                - generic [ref=e583]: Getting Started
+            - listitem [ref=e584]:
+              - link "Help Center" [ref=e585] [cursor=pointer]:
+                - /url: admin.php?page=revslider-help-center
+                - generic [ref=e586]: Help Center
+            - listitem [ref=e587]:
+              - link "Templates" [ref=e588] [cursor=pointer]:
+                - /url: admin.php?page=revslider-templates
+                - generic [ref=e589]: Templates
+            - listitem [ref=e590]:
+              - link "Premium Support" [ref=e591] [cursor=pointer]:
+                - /url: admin.php?page=revslider-ticket
+                - generic [ref=e592]: Premium Support
+            - listitem [ref=e593]:
+              - link " Go Premium" [ref=e594] [cursor=pointer]:
+                - /url: admin.php?page=revslider-buy-license
+                - generic [ref=e595]:
+                  - generic [ref=e596]: 
+                  - text: Go Premium
+        - listitem [ref=e597]:
+          - button "Expand Main menu" [ref=e598] [cursor=pointer]
+    - generic [ref=e600]:
+      - generic [ref=e601]:
+        - navigation "Toolbar":
+          - menu:
+            - group [ref=e602]:
+              - menuitem "About WordPress" [ref=e603] [cursor=pointer]:
+                - generic [ref=e605]: About WordPress
+            - group [ref=e606]:
+              - menuitem "RCCG Morningstar Kirknewton" [ref=e607] [cursor=pointer]
+            - group [ref=e608]:
+              - menuitem "1 update available" [ref=e609] [cursor=pointer]:
+                - generic [ref=e611]: "1"
+                - generic [ref=e612]: 1 update available
+            - group [ref=e613]:
+              - menuitem "0 Comments in moderation" [ref=e614] [cursor=pointer]:
+                - generic [ref=e616]: "0"
+                - generic [ref=e617]: 0 Comments in moderation
+            - group [ref=e618]:
+              - menuitem "New" [ref=e619] [cursor=pointer]:
+                - generic [ref=e621]: New
+            - group [ref=e622]:
+              - menuitem "View Page" [ref=e623] [cursor=pointer]
+            - group [ref=e624]:
+              - menuitem "Caching" [ref=e625]
+            - group [ref=e626]:
+              - menuitem " Chapel Options" [ref=e627] [cursor=pointer]:
+                - generic [ref=e628]: 
+                - text: Chapel Options
+            - listitem [ref=e629]:
+              - generic [ref=e630] [cursor=pointer]:
+                - generic [ref=e631]: 
+                - text: Insights
+            - group [ref=e632]:
+              - menuitem "WPForms" [ref=e633] [cursor=pointer]
+            - group [ref=e634]:
+              - menuitem "SEO !" [ref=e635] [cursor=pointer]:
+                - text: SEO
+                - generic [ref=e637]: "!"
+            - group [ref=e638]:
+              - menuitem "Need help?" [ref=e639] [cursor=pointer]
+            - group [ref=e640]:
+              - menuitem "Events" [ref=e641] [cursor=pointer]: Events
+          - menu [ref=e643]:
+            - group [ref=e644]:
+              - menuitem "GiveWP Test Mode Active" [ref=e645] [cursor=pointer]
+            - group [ref=e646]:
+              - menuitem "Howdy, admin" [ref=e647] [cursor=pointer]
+      - main [ref=e648]:
+        - generic [ref=e649]:
+          - generic [ref=e650]:
+            - button "Screen Options" [ref=e652] [cursor=pointer]
+            - button "Help" [ref=e654] [cursor=pointer]
+          - generic [ref=e655]:
+            - heading "Edit Page" [level=1] [ref=e656]
+            - link "Add Page" [ref=e657] [cursor=pointer]:
+              - /url: https://rccgmorningstaredinburgh.org/wp-admin/post-new.php?post_type=page
+            - generic [ref=e658]:
+              - paragraph [ref=e659]:
+                - text: Hola! Would you like to receive automatic updates and unlock premium support? Please
+                - link "activate your copy" [ref=e660] [cursor=pointer]:
+                  - /url: https://rccgmorningstaredinburgh.org/wp-admin/admin.php?page=vc-updater&_wpnonce=4c099c5b44
+                - text: of WPBakery Page Builder.
+              - button "Dismiss this notice." [ref=e661] [cursor=pointer]:
+                - generic [ref=e662]: Dismiss this notice.
+            - generic [ref=e663]:
+              - 'img "💚 #WPGivesAHand: Make a difference this holiday season." [ref=e665] [cursor=pointer]'
+              - generic [ref=e666]:
+                - paragraph [ref=e667]: "💚 #WPGivesAHand: Make a difference this holiday season."
+                - generic [ref=e668]: From December 22nd to 28th, we’re donating $6 for every license sold to charity.
+                - button "Learn more" [ref=e669] [cursor=pointer]
+              - button "Dismiss this notice" [ref=e670] [cursor=pointer]:
+                - generic [ref=e671]: Dismiss this notice
+            - generic [ref=e672]:
+              - paragraph [ref=e673]:
+                - text: When using The Events Calendar, we recommend that you use a geographic timezone such as "America/Los_Angeles" and avoid using a UTC timezone offset such as “UTC+0”.
+                - text: Choosing a UTC timezone for your site or individual events may cause problems when importing events or with Daylight Saving Time.
+                - link "Read more" [ref=e674] [cursor=pointer]:
+                  - /url: http://evnt.is/1ad3
+              - button "Dismiss this notice." [ref=e675] [cursor=pointer]:
+                - generic [ref=e676]: Dismiss this notice.
+            - generic [ref=e678]:
+              - generic:
+                - generic [ref=e679]:
+                  - generic [ref=e680]:
+                    - generic [ref=e681]:
+                      - generic: Add title
+                      - textbox "Add title" [ref=e682]: Main Home
+                      - link "Skip to Editor" [ref=e683] [cursor=pointer]:
+                        - /url: "#content"
+                    - generic [ref=e685]:
+                      - strong [ref=e686]: "Permalink:"
+                      - link "https://rccgmorningstaredinburgh.org/" [ref=e687] [cursor=pointer]:
+                        - /url: https://rccgmorningstaredinburgh.org/
+                  - generic [ref=e688]:
+                    - link "Classic Mode" [ref=e691] [cursor=pointer]:
+                      - /url: javascript:;
+                    - link "Gutenberg Editor" [ref=e692] [cursor=pointer]:
+                      - /url: https://rccgmorningstaredinburgh.org/wp-admin/post.php?post=19&action=edit&vcv-gutenberg-editor
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - button "Add Media": Add Media
+                          - generic:
+                            - button "GiveWP Shortcodes": GiveWP Shortcodes
+                          - link "Add Giveaway":
+                            - /url: "#"
+                            - generic:
+                              - img
+                            - text: Add Giveaway
+                          - button "Add Form":
+                            - generic:
+                              - img
+                            - text: Add Form
+                          - button "Add OptinMonster":
+                            - generic:
+                              - img
+                            - text: Add OptinMonster
+                        - generic:
+                          - button "Visual"
+                          - button "Code" [pressed]
+                      - generic:
+                        - generic:
+                          - button "Bold": b
+                          - button "Italic": i
+                          - button "Insert link": link
+                          - button "Blockquote": b-quote
+                          - button "Deleted text (strikethrough)": del
+                          - button "Inserted text": ins
+                          - button "Insert image": img
+                          - button "Bulleted list": ul
+                          - button "Numbered list": ol
+                          - button "List item": li
+                          - button "Code": code
+                          - button "Insert Read More tag": more
+                          - button "close tags"
+                          - button "Slider Revolution"
+                          - button "Distraction-free writing mode"
+                        - textbox: "<p>[vc_row css=\".vc_custom_1568638163303{padding-right: 25px !important;padding-left: 25px !important;}\"][vc_column][eltdf_elements_holder holder_full_height=\"no\" number_of_columns=\"three-columns\" switch_to_one_column=\"\" alignment_one_column=\"\"][eltdf_elements_holder_item item_padding=\"50px 25px\" item_padding_680=\"30px 5px\"][eltdf_banner hover_behavior=\"eltdf-visible-on-default\" info_position=\"centered\" subtitle_tag=\"\" title_tag=\"\" subtitle=\"Listen to our audio sermons and teachings\" title=\"Listen\" image=\"2375\" link=\"#\"][/eltdf_elements_holder_item][eltdf_elements_holder_item item_padding=\"50px 25px\" item_padding_681_768=\"0px 25px\" item_padding_680=\"0px 5px\"][eltdf_banner hover_behavior=\"eltdf-visible-on-default\" info_position=\"centered\" subtitle_tag=\"\" title_tag=\"\" title=\"Watch On The Go\" image=\"2376\" link=\"https://www.youtube.com/@RCCGMorningStarcityofLove\" subtitle=\"Watch Live Services or catch-up on previous sermons\"][/eltdf_elements_holder_item][eltdf_elements_holder_item item_padding=\"50px 25px\" item_padding_680=\"30px 5px\"][eltdf_banner hover_behavior=\"eltdf-visible-on-default\" info_position=\"centered\" subtitle_tag=\"\" title_tag=\"\" title=\"Give\" image=\"2378\" link=\"#\" subtitle=\"Your Love and Support is Highly Appreciated\"][/eltdf_elements_holder_item][/eltdf_elements_holder][/vc_column][/vc_row][vc_row][vc_column][eltdf_dual_stack_showcase layout=\"left\" type=\"video\" video_type=\"social-networks\" content_width=\"41%\" content_padding_1025_1366=\"131px 11% 120px\" content_padding_480=\"131px 10% 120px\" video_link=\"https://www.youtube.com/@RCCGMorningStarcityofLove\" bg_image=\"2389\" content_padding_1025_1440=\"131px 11% 120px\"][eltdf_section_title position=\"\" tagline_tag=\"\" title_tag=\"\" disable_break_words=\"no\" subtitle_tag=\"\" text_tag=\"\" text_font_weight=\"\" tagline=\"Dear Brethren\" title=\"Shalom!\" subtitle=\"Welcome to RCCG Morningstar Kirknewton – a place where love, faith, and purpose come alive through the power of Jesus Christ.\" text=\"We are delighted to have you visit our online home. Whether you are searching for a vibrant church family, seeking answers, or simply curious about who we are, know that you are not here by accident – you are divinely led.</p> <p>We invite you to explore our site, connect with us, and more importantly – join us in person as we experience God’s presence together. Come as you are, and expect a warm welcome, powerful prayers, and a transforming Word.</p> <p>Thank you for stopping by. We love you, and we are praying for you.</p> <p>Remain blessed,\"][vc_empty_space height=\"25px\"][eltdf_custom_font title_tag=\"h6\" font_weight=\"\" font_style=\"\" text_transform=\"\" text_decoration=\"\" text_align=\"\" font_family=\"Montserrat\" title=\"PASTOR KASSIM ADEBAMBO\" margin=\"0px\"][vc_empty_space height=\"16px\"][eltdf_custom_font title_tag=\"\" font_weight=\"400\" font_style=\"italic\" text_transform=\"capitalize\" text_decoration=\"\" text_align=\"\" font_family=\"Noto Serif\" font_size=\"13px\" title=\"Lead Pastor\" color=\"#c59a8e\" letter_spacing=\"-.01em\" margin=\"-25px 0 0 0\"][/eltdf_dual_stack_showcase][/vc_column][/vc_row][vc_row css=\".vc_custom_1566896783246{padding-top: 81px !important;padding-bottom: 96px !important;}\"][vc_column][eltdf_section_title position=\"center\" tagline_tag=\"\" title_tag=\"\" disable_break_words=\"no\" tagline=\"How to Join Us\" title=\"Our Services\"][vc_row_inner gap=\"25\" row_content_width=\"grid\" css=\".vc_custom_1568120794503{padding-top: 8px !important;}\"][vc_column_inner width=\"1/2\" offset=\"vc_col-lg-offset-0 vc_col-lg-4 vc_col-sm-offset-3\"][eltdf_icon_with_text type=\"icon-top\" icon_pack=\"font_elegant\" fe_icon=\"\" title_tag=\"\" dripicon=\"\" custom_icon=\"1667\" title=\"Sunday Service\" text=\"Join us for our Sunday services from 10:00am to 1:30pm\" link=\"#\"][/vc_column_inner][vc_column_inner width=\"1/2\" offset=\"vc_col-lg-offset-0 vc_col-lg-4 vc_col-sm-offset-3\"][eltdf_icon_with_text type=\"icon-top\" icon_pack=\"font_elegant\" fe_icon=\"\" title_tag=\"\" dripicon=\"\" custom_icon=\"1668\" title=\"Bible Study\" text=\"Join us for our bible exposition and communion service on Wednesdays between 7:30pm to 9:00pm\" link=\"#\"][vc_empty_space height=\"25px\"][/vc_column_inner][vc_column_inner width=\"1/2\" offset=\"vc_col-lg-offset-0 vc_col-lg-4 vc_col-sm-offset-3\"][eltdf_icon_with_text type=\"icon-top\" icon_pack=\"font_elegant\" fe_icon=\"\" title_tag=\"\" dripicon=\"\" custom_icon=\"1679\" title=\"Special Events\" text=\"We organise special events that help us come together to enlighten, share love, etc\" link=\"#\"][vc_empty_space height=\"25px\"][/vc_column_inner][/vc_row_inner][/vc_column][/vc_row][vc_row background_image_size=\"\" disable_background_image=\"\" css=\".vc_custom_1567668182429{padding-top: 109px !important;padding-bottom: 63px !important;background-position: center !important;background-repeat: no-repeat !important;background-size: cover !important;}\" simple_background_image=\"390\"][vc_column css=\".vc_custom_1566902941587{padding-top: 0px !important;}\" offset=\"vc_col-lg-6\"][eltdf_elements_holder holder_full_height=\"no\" number_of_columns=\"one-column\" switch_to_one_column=\"\" alignment_one_column=\"\"][eltdf_elements_holder_item item_padding=\"22px 16% 0 26.6%\" item_padding_1367_1600=\"22px 12% 0 8.8%\" item_padding_1025_1366=\"22px 3% 0 18.6%\" item_padding_769_1024=\"22px 39% 0 11.6%\" item_padding_681_768=\"22px 85px 0\" item_padding_680=\"22px 38px 0\"][eltdf_section_title position=\"\" tagline_tag=\"\" title_tag=\"\" disable_break_words=\"no\" subtitle_tag=\"\" tagline=\"New here?\" title=\"YOU ARE WELCOME\" subtitle=\"RCCG is dedicated to spreading the message of Christ globally, promoting holiness, and impacting lives through its teachings, outreach, and community development programs\"][vc_empty_space height=\"33px\"][/eltdf_elements_holder_item][/eltdf_elements_holder][eltdf_elements_holder holder_full_height=\"no\" number_of_columns=\"one-column\" switch_to_one_column=\"\" alignment_one_column=\"\"][eltdf_elements_holder_item item_padding=\"0 0 0 26.6%\" item_padding_1025_1366=\"0 0 67px 18.6%\" item_padding_1367_1600=\"0 0% 67px 8.8%\" item_padding_769_1024=\"0 28% 70px 11.6%\" item_padding_681_768=\"0 85px 70px\" item_padding_680=\"0 38px 70px\"][eltdf_accordion][eltdf_accordion_tab title=\"Vision and Mission\"][vc_column_text]<span style=\"font-weight: 400;\">RCCG's vision emphasizes spreading the gospel of Jesus Christ to all parts of the world. The church focuses on evangelism, charity, and promoting holiness in both its members' spiritual and daily lives. Their mission is to make heaven, take as many people with them, and to have a member of RCCG in every family of all nations</span>[/vc_column_text][/eltdf_accordion_tab][eltdf_accordion_tab title=\"Doctrinal Beliefs\"][vc_column_text]<span style=\"font-weight: 400;\">RCCG follows the core beliefs of Christianity, including the authority of the Bible, the Trinity, salvation through Jesus Christ, and the power of the Holy Spirit. The church emphasizes holiness, righteousness, and living according to the teachings of Jesus Christ</span>[/vc_column_text][/eltdf_accordion_tab][eltdf_accordion_tab title=\"Key Events\"][vc_column_text]<span style=\"font-weight: 400;\">RCCG hosts notable spiritual programs like the </span><b>Holy Ghost Service</b><span style=\"font-weight: 400;\">, </span><b>Holy Ghost Congress</b><span style=\"font-weight: 400;\">, and </span><b>Convention</b><span style=\"font-weight: 400;\"> held annually, drawing millions of worshippers for prayer, worship, and spiritual revival</span>[/vc_column_text][/eltdf_accordion_tab][/eltdf_accordion][/eltdf_elements_holder_item][/eltdf_elements_holder][/vc_column][vc_column css=\".vc_custom_1566902947830{padding-top: 0px !important;}\" offset=\"vc_col-lg-6\"][eltdf_elements_holder holder_full_height=\"no\" number_of_columns=\"one-column\" switch_to_one_column=\"\" alignment_one_column=\"\"][eltdf_elements_holder_item item_padding=\"0 0 0 17%\" item_padding_1025_1366=\"10.5% 0 0 2%\" item_padding_1367_1600=\"45px 0 0 7%\" item_padding_681_768=\"0 0 12px 15%\" item_padding_680=\"0 0 40px 9.5%\"][vc_single_image image=\"2394\" img_size=\"full\"][/eltdf_elements_holder_item][/eltdf_elements_holder][/vc_column][/vc_row][vc_row css=\".vc_custom_1567783020067{padding-top: 130px !important;padding-bottom: 110px !important;}\"][vc_column css=\".vc_custom_1567668225193{padding-top: 0px !important;}\"][eltdf_section_title position=\"center\" tagline_tag=\"\" title_tag=\"\" disable_break_words=\"no\" tagline=\"Catch up on the word of God\" title=\"Latest Sermons\"][vc_empty_space height=\"61px\"][eltdf_portfolio_slider number_of_columns=\"three\" space_between_items=\"large\" image_proportions=\"full\" orderby=\"date\" order=\"ASC\" item_style=\"standard-zoom\" enable_loop=\"yes\" enable_autoplay=\"yes\" slider_navigation=\"yes\" slider_navigation_position=\"outside\" slider_pagination=\"no\" number_of_items=\"6\" category=\"sermons\"][/vc_column][/vc_row]</p>"
+                    - text: "Word count: 124 Last edited by admin on December 23, 2025 at 2:06 pm"
+                - generic [ref=e694]:
+                  - generic [ref=e695]:
+                    - generic [ref=e696]:
+                      - heading "Publish" [level=2] [ref=e697]
+                      - generic [ref=e698]:
+                        - button "Move up" [disabled] [ref=e699]:
+                          - generic [ref=e700]: Move up
+                        - button "Move down" [ref=e702] [cursor=pointer]:
+                          - generic [ref=e703]: Move down
+                        - 'button "Toggle panel: Publish" [expanded] [ref=e705] [cursor=pointer]':
+                          - generic [ref=e706]: "Toggle panel: Publish"
+                    - generic [ref=e709]:
+                      - generic [ref=e710]:
+                        - link "Preview Changes (opens in a new tab)" [ref=e712] [cursor=pointer]:
+                          - /url: https://rccgmorningstaredinburgh.org/?preview=true
+                          - text: Preview Changes
+                          - generic [ref=e713]: (opens in a new tab)
+                        - generic [ref=e714]:
+                          - generic [ref=e715]:
+                            - text: "Status: Published"
+                            - button "Edit status" [ref=e716] [cursor=pointer]:
+                              - text: Edit
+                              - generic [ref=e717]: Edit status
+                          - generic [ref=e718]:
+                            - text: "Visibility: Public"
+                            - button "Edit visibility" [ref=e719] [cursor=pointer]:
+                              - text: Edit
+                              - generic [ref=e720]: Edit visibility
+                          - generic [ref=e721]:
+                            - text: "Revisions: 5"
+                            - link "Browse revisions" [ref=e722] [cursor=pointer]:
+                              - /url: https://rccgmorningstaredinburgh.org/wp-admin/revision.php?revision=2432
+                              - text: Browse
+                              - generic [ref=e723]: Browse revisions
+                          - generic [ref=e724]:
+                            - generic [ref=e725]: "Published on: Aug 16, 2019 at 13:39"
+                            - button "Edit date and time" [ref=e726] [cursor=pointer]:
+                              - text: Edit
+                              - generic [ref=e727]: Edit date and time
+                          - generic [ref=e730]:
+                            - checkbox "Don't update the modified date" [ref=e732] [cursor=pointer]
+                            - generic [ref=e733] [cursor=pointer]: Don't update the modified date
+                          - generic [ref=e734]:
+                            - img [ref=e735]
+                            - generic [ref=e737]: AIOSEO Score
+                            - generic [ref=e738]: 79/100
+                      - generic [ref=e739]:
+                        - link "Move to Trash" [ref=e741] [cursor=pointer]:
+                          - /url: https://rccgmorningstaredinburgh.org/wp-admin/post.php?post=19&action=trash&_wpnonce=cf5dae8886
+                        - button "Update" [ref=e743] [cursor=pointer]
+                  - generic [ref=e744]:
+                    - generic [ref=e745]:
+                      - heading "Slider Revolution" [level=2] [ref=e746]
+                      - generic [ref=e747]:
+                        - button "Move up" [ref=e748] [cursor=pointer]:
+                          - generic [ref=e749]: Move up
+                        - button "Move down" [ref=e751] [cursor=pointer]:
+                          - generic [ref=e752]: Move down
+                        - 'button "Toggle panel: Slider Revolution" [expanded] [ref=e754] [cursor=pointer]':
+                          - generic [ref=e755]: "Toggle panel: Slider Revolution"
+                    - list [ref=e758]:
+                      - listitem [ref=e759]:
+                        - generic [ref=e760]: Blank Template
+                        - generic [ref=e762] [cursor=pointer]:
+                          - generic [ref=e763]: "Off"
+                          - generic [ref=e764]: "On"
+                      - listitem
+                      - listitem [ref=e765]:
+                        - generic [ref=e766]: Slide Template
+                        - combobox [ref=e767] [cursor=pointer]:
+                          - text: selected='selected'
+                          - option "default" [selected]
+                      - listitem [ref=e768]:
+                        - generic [ref=e770]: flag
+                        - generic [ref=e771]:
+                          - generic [ref=e772]: Installed Version
+                          - generic [ref=e773]: 6.6.20
+                        - generic [ref=e776]: cloud_download
+                        - generic [ref=e777]:
+                          - generic [ref=e778]: Available Version
+                          - generic [ref=e779]: 6.7.40
+                      - listitem [ref=e780]:
+                        - generic [ref=e782] [cursor=pointer]: Unlock All Features
+                  - generic [ref=e783]:
+                    - generic [ref=e784]:
+                      - heading "Page Attributes" [level=2] [ref=e785]
+                      - generic [ref=e786]:
+                        - button "Move up" [ref=e787] [cursor=pointer]:
+                          - generic [ref=e788]: Move up
+                        - button "Move down" [ref=e790] [cursor=pointer]:
+                          - generic [ref=e791]: Move down
+                        - 'button "Toggle panel: Page Attributes" [expanded] [ref=e793] [cursor=pointer]':
+                          - generic [ref=e794]: "Toggle panel: Page Attributes"
+                    - generic [ref=e796]:
+                      - paragraph [ref=e797]: Parent
+                      - combobox "Parent" [ref=e798] [cursor=pointer]:
+                        - option "(no parent)" [selected]
+                        - option "About Me"
+                        - option "Blog Left Sidebar"
+                        - option "Blog Masonry"
+                        - option "Blog No Sidebar"
+                        - option "Blog Right Sidebar"
+                        - option "Cart"
+                        - option "Checkout"
+                        - option "Church Home"
+                        - option "Donation Carousel"
+                        - option "Donation Confirmation"
+                        - option "Donation Confirmation"
+                        - option "Donation Failed"
+                        - option "Donation Failed"
+                        - option "Donation History"
+                        - option "Donation List"
+                        - option "Donor Dashboard"
+                        - option "Events Home"
+                        - option "Five Columns Grid"
+                        - option "Five Columns Wide"
+                        - option "Four Columns Grid"
+                        - option "Four Columns Wide"
+                        - option "Get In Touch"
+                        - option "Landing"
+                        - option "My account"
+                        - option "Our Beliefs"
+                        - option "Our Community"
+                        - option "Our Locations"
+                        - option "Our Team"
+                        - option "Plan A Visit"
+                        - option "Privacy Policy"
+                        - option "Sample Page"
+                        - option "Sample Page"
+                        - option "Sermon Home"
+                        - option "Sermons"
+                        - option "Five Columns Wide"
+                        - option "Four Columns"
+                        - option "Four Columns Wide"
+                        - option "Gallery"
+                        - option "Gallery Joined"
+                        - option "Standard"
+                        - option "Three Columns"
+                        - option "Three Columns Wide"
+                        - option "Two Columns"
+                        - option "Shop"
+                        - option "Three Columns Grid"
+                        - option "Three Columns Wide"
+                      - paragraph [ref=e799]: Template
+                      - combobox "Template" [ref=e800] [cursor=pointer]:
+                        - option "Default template"
+                        - 'option "Blog: Masonry"'
+                        - 'option "Blog: Standard"'
+                        - option "Coming Soon Page"
+                        - option "Full Width Template" [selected]
+                        - option "Slider Revolution Blank Template"
+                        - option "WooCommerce"
+                      - paragraph [ref=e801]: Order
+                      - textbox "Order" [ref=e802]: "0"
+                      - paragraph [ref=e803]: Need help? Use the Help tab above the screen title.
+                  - generic [ref=e804]:
+                    - generic [ref=e805]:
+                      - heading "OptinMonster Settings" [level=2] [ref=e806]
+                      - generic [ref=e807]:
+                        - button "Move up" [ref=e808] [cursor=pointer]:
+                          - generic [ref=e809]: Move up
+                        - button "Move down" [ref=e811] [cursor=pointer]:
+                          - generic [ref=e812]: Move down
+                        - 'button "Toggle panel: OptinMonster Settings" [expanded] [ref=e814] [cursor=pointer]':
+                          - generic [ref=e815]: "Toggle panel: OptinMonster Settings"
+                    - paragraph [ref=e818]:
+                      - generic [ref=e819]:
+                        - checkbox "Disable all OptinMonster campaigns." [ref=e820] [cursor=pointer]
+                        - text: Disable all OptinMonster campaigns.
+                  - generic [ref=e821]:
+                    - generic [ref=e822]:
+                      - heading "Featured image" [level=2] [ref=e823]
+                      - generic [ref=e824]:
+                        - button "Move up" [ref=e825] [cursor=pointer]:
+                          - generic [ref=e826]: Move up
+                        - button "Move down" [ref=e828] [cursor=pointer]:
+                          - generic [ref=e829]: Move down
+                        - 'button "Toggle panel: Featured image" [expanded] [ref=e831] [cursor=pointer]':
+                          - generic [ref=e832]: "Toggle panel: Featured image"
+                    - paragraph [ref=e835]:
+                      - link "Set featured image" [ref=e836] [cursor=pointer]:
+                        - /url: https://rccgmorningstaredinburgh.org/wp-admin/media-upload.php?post_id=19&type=image&TB_iframe=1
+                - generic [ref=e837]:
+                  - generic [ref=e838]:
+                    - generic [ref=e839]:
+                      - generic [ref=e840]:
+                        - heading "AIOSEO Settings" [level=2] [ref=e841]
+                        - generic [ref=e842]:
+                          - button "Move up" [ref=e843] [cursor=pointer]:
+                            - generic [ref=e844]: Move up
+                          - button "Move down" [ref=e846] [cursor=pointer]:
+                            - generic [ref=e847]: Move down
+                          - 'button "Toggle panel: AIOSEO Settings" [expanded] [ref=e849] [cursor=pointer]':
+                            - generic [ref=e850]: "Toggle panel: AIOSEO Settings"
+                      - generic [ref=e855]:
+                        - generic [ref=e859]:
+                          - generic [ref=e861] [cursor=pointer]: General
+                          - generic [ref=e863] [cursor=pointer]: Social
+                          - generic [ref=e865] [cursor=pointer]: Schema
+                          - generic [ref=e866] [cursor=pointer]:
+                            - generic [ref=e867]: AI Content
+                            - generic [ref=e868]: NEW!
+                          - generic [ref=e870] [cursor=pointer]: Redirects
+                          - generic [ref=e872] [cursor=pointer]: SEO Revisions
+                          - generic [ref=e874] [cursor=pointer]: Advanced
+                        - generic [ref=e878]:
+                          - generic [ref=e879]:
+                            - generic [ref=e882]:
+                              - generic [ref=e883]:
+                                - text: SERP Preview
+                                - img [ref=e886]
+                              - generic [ref=e888]:
+                                - generic [ref=e889]:
+                                  - radio [checked] [ref=e890] [cursor=pointer]
+                                  - img [ref=e892]
+                                - generic [ref=e894]:
+                                  - radio [ref=e895] [cursor=pointer]
+                                  - img [ref=e897]
+                            - generic [ref=e902]:
+                              - img "Favicon" [ref=e905]
+                              - generic [ref=e906]:
+                                - generic [ref=e907]: RCCG Morningstar Kirknewton
+                                - generic [ref=e2701]: https://rccgmorningstaredinburgh.org › main-home
+                              - generic [ref=e908]: Main Home - RCCG Morningstar Kirknewton
+                              - generic [ref=e2702]: Listen to our audio sermons and teachings ...
+                          - generic [ref=e909]:
+                            - generic [ref=e912]: Page Title
+                            - generic [ref=e914]:
+                              - generic [ref=e915]:
+                                - generic [ref=e916]:
+                                  - generic [ref=e917]: Click on the tags below to insert variables into your title.
+                                  - generic [ref=e918]:
+                                    - generic [ref=e919] [cursor=pointer]:
+                                      - img [ref=e920]
+                                      - text: Page Title
+                                    - generic [ref=e922] [cursor=pointer]:
+                                      - img [ref=e923]
+                                      - text: Separator
+                                    - generic [ref=e925] [cursor=pointer]:
+                                      - img [ref=e926]
+                                      - text: Site Title
+                                    - button "😀" [ref=e929] [cursor=pointer]
+                                    - link "View all tags →" [ref=e930] [cursor=pointer]:
+                                      - /url: "#"
+                                - generic [ref=e931]:
+                                  - generic [ref=e932]:
+                                    - paragraph [ref=e934]:
+                                      - generic [ref=e937] [cursor=pointer]:
+                                        - generic [ref=e938]: Page Title
+                                        - img [ref=e940]
+                                      - generic [ref=e944] [cursor=pointer]:
+                                        - generic [ref=e945]: Separator
+                                        - img [ref=e947]
+                                      - generic [ref=e951] [cursor=pointer]:
+                                        - generic [ref=e952]: Site Title
+                                        - img [ref=e954]
+                                    - text: "Visit URL: EditRemove"
+                                  - button [ref=e959] [cursor=pointer]:
+                                    - img [ref=e960]
+                              - generic [ref=e964]:
+                                - strong [ref=e965]: "39"
+                                - text: out of
+                                - strong [ref=e966]: "60"
+                                - text: max recommended characters.
+                          - generic [ref=e967]:
+                            - generic [ref=e970]: Meta Description
+                            - generic [ref=e972]:
+                              - generic [ref=e973]:
+                                - generic [ref=e974]:
+                                  - generic [ref=e975]: Click on the tags below to insert variables into your meta description.
+                                  - generic [ref=e976]:
+                                    - generic [ref=e977] [cursor=pointer]:
+                                      - img [ref=e978]
+                                      - text: Page Content
+                                    - generic [ref=e980] [cursor=pointer]:
+                                      - img [ref=e981]
+                                      - text: Separator
+                                    - button "😀" [ref=e984] [cursor=pointer]
+                                    - link "View all tags →" [ref=e985] [cursor=pointer]:
+                                      - /url: "#"
+                                - generic [ref=e986]:
+                                  - generic [ref=e987]:
+                                    - paragraph [ref=e989]:
+                                      - generic [ref=e993] [cursor=pointer]:
+                                        - generic [ref=e994]: Page Content
+                                        - img [ref=e996]
+                                    - text: "Visit URL: EditRemove"
+                                  - button [ref=e1001] [cursor=pointer]:
+                                    - img [ref=e1002]
+                              - generic [ref=e1006]:
+                                - strong [ref=e2703]: "4036"
+                                - text: out of
+                                - strong [ref=e2704]: "160"
+                                - text: max recommended characters.
+                          - generic [ref=e1009]:
+                            - generic [ref=e1012]:
+                              - generic [ref=e1013]: Focus Keyword
+                              - img [ref=e1016]
+                            - generic [ref=e1021]:
+                              - textbox [ref=e1024]
+                              - generic [ref=e1025]:
+                                - button "Add Focus Keyword" [ref=e1026] [cursor=pointer]:
+                                  - img [ref=e1027]
+                                  - text: Add Focus Keyword
+                                - generic [ref=e1031]:
+                                  - img [ref=e1032]
+                                  - text: Get Additional Keywords
+                          - generic [ref=e1034]:
+                            - generic [ref=e1037]: Additional Keywords
+                            - generic [ref=e1041]:
+                              - generic [ref=e1042]: Improve your SEO rankings with additional keywords.
+                              - generic [ref=e1044]:
+                                - text: Additional Keywords are a PRO feature.
+                                - link "Learn More" [ref=e1045] [cursor=pointer]:
+                                  - /url: http://www.shareasale.com/r.cfm?B=1491200&U=1258907&M=94778&urllink=https%3A%2F%2Faioseo.com%2Flite-upgrade%2F%3Futm_source%3DWordPress%26utm_campaign%3Dliteplugin%26utm_medium%3Dpost-settings%26utm_content%3Dadditional-keywords
+                                - link "→" [ref=e1046] [cursor=pointer]:
+                                  - /url: http://www.shareasale.com/r.cfm?B=1491200&U=1258907&M=94778&urllink=https%3A%2F%2Faioseo.com%2Flite-upgrade%2F%3Futm_source%3DWordPress%26utm_campaign%3Dliteplugin%26utm_medium%3Dpost-settings%26utm_content%3Dadditional-keywords
+                          - generic [ref=e1047]:
+                            - generic [ref=e1050]: Page Analysis
+                            - generic [ref=e1053]:
+                              - generic [ref=e1057]:
+                                - generic [ref=e1058] [cursor=pointer]:
+                                  - generic [ref=e1059]: Basic SEO
+                                  - generic [ref=e1060]:
+                                    - img [ref=e1061]
+                                    - text: 1 Error
+                                - generic [ref=e1063] [cursor=pointer]:
+                                  - generic [ref=e1064]: Title
+                                  - generic [ref=e1065]:
+                                    - img [ref=e1066]
+                                    - text: 1 Error
+                                - generic [ref=e1068] [cursor=pointer]:
+                                  - generic [ref=e1069]: Readability
+                                  - generic [ref=e1070]:
+                                    - img [ref=e1071]
+                                    - text: 2 Errors
+                              - list [ref=e2705]:
+                                - listitem [ref=e2706]:
+                                  - paragraph [ref=e2707]:
+                                    - img [ref=e2708]
+                                    - generic [ref=e2710]: Meta description length
+                                    - button [ref=e2711] [cursor=pointer]
+                                  - paragraph [ref=e2713]: The meta description is over 160 characters.
+                                - listitem [ref=e2714]:
+                                  - paragraph [ref=e2715]:
+                                    - img [ref=e2716]
+                                    - generic [ref=e2718]: Content length
+                                    - button [ref=e2719] [cursor=pointer]
+                                  - paragraph: The content length is ok. Good job!
+                                - listitem [ref=e2721]:
+                                  - paragraph [ref=e2722]:
+                                    - img [ref=e2723]
+                                    - generic [ref=e2725]: Internal links
+                                    - button [ref=e2726] [cursor=pointer]
+                                  - paragraph: You are linking to other resources on your website which is great.
+                                - listitem [ref=e2728]:
+                                  - paragraph [ref=e2729]:
+                                    - img [ref=e2730]
+                                    - generic [ref=e2732]: External links
+                                    - button [ref=e2733] [cursor=pointer]
+                                  - paragraph: Great! You are linking to external resources.
+                    - generic [ref=e1075]:
+                      - generic [ref=e1076]:
+                        - heading "WPBakery Page Builder" [level=2] [ref=e1077]
+                        - generic [ref=e1078]:
+                          - button "Move up" [ref=e1079] [cursor=pointer]:
+                            - generic [ref=e1080]: Move up
+                          - button "Move down" [ref=e1082] [cursor=pointer]:
+                            - generic [ref=e1083]: Move down
+                          - 'button "Toggle panel: WPBakery Page Builder" [expanded] [ref=e1085] [cursor=pointer]':
+                            - generic [ref=e1086]: "Toggle panel: WPBakery Page Builder"
+                      - generic [ref=e1088]:
+                        - navigation [ref=e1089]:
+                          - link "WPBakery Page Builder" [ref=e1091] [cursor=pointer]:
+                            - /url: https://wpbakery.com?utm_source=wpb-plugin&utm_medium=backend-editor&utm_campaign=info&utm_content=logo
+                          - list:
+                            - listitem [ref=e1092]:
+                              - link "" [ref=e1093] [cursor=pointer]:
+                                - /url: javascript:;
+                                - generic [ref=e1094]: 
+                            - listitem [ref=e1095]:
+                              - link "" [ref=e1096] [cursor=pointer]:
+                                - /url: javascript:;
+                                - generic [ref=e1097]: 
+                            - listitem [ref=e1098]:
+                              - link "" [ref=e1099] [cursor=pointer]:
+                                - /url: javascript:;
+                                - generic [ref=e1100]: 
+                            - listitem [ref=e1101]:
+                              - link "" [ref=e1102] [cursor=pointer]:
+                                - /url: javascript:;
+                                - generic [ref=e1103]: 
+                            - listitem [ref=e1104]:
+                              - generic "Full screen" [ref=e1105] [cursor=pointer]:
+                                - generic [ref=e1106]: 
+                            - listitem: 
+                            - listitem [ref=e1107]:
+                              - img [ref=e1111] [cursor=pointer]
+                            - listitem [ref=e1113]:
+                              - link "" [ref=e1114] [cursor=pointer]:
+                                - /url: javascript:;
+                                - generic [ref=e1115]: 
+                            - listitem [ref=e1116]:
+                              - link "" [ref=e1117] [cursor=pointer]:
+                                - /url: javascript:;
+                                - generic [ref=e1118]: 
+                        - generic [ref=e1119]:
+                          - generic [ref=e1120]:
+                            - generic [ref=e1121]:
+                              - generic [ref=e1122]:
+                                - generic [ref=e1123]:
+                                  - link "" [ref=e1124]:
+                                    - /url: "#"
+                                    - generic [ref=e1125]: 
+                                  - generic [ref=e1126] [cursor=pointer]:
+                                    - generic "1/1" [ref=e1127]:
+                                      - generic [ref=e1128]: 
+                                    - text:           
+                                  - link "" [ref=e1129] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1130]: 
+                                - generic:
+                                  - link "" [ref=e1131] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1132]: 
+                                  - link "" [ref=e1133] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1134]: 
+                                  - link "" [ref=e1135] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1136]: 
+                                  - link "" [ref=e1137] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1138]: 
+                                  - link "" [ref=e1139] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1140]: 
+                                  - link "" [ref=e1141] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1142]: 
+                              - generic [ref=e1145]:
+                                - generic [ref=e1146]:
+                                  - link "" [ref=e1147] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1148]: 
+                                  - link "" [ref=e1149] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1150]: 
+                                  - link "" [ref=e1151] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1152]: 
+                                  - link "" [ref=e1153] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1154]: 
+                                - generic [ref=e1157]:
+                                  - generic [ref=e1158]:
+                                    - link "" [ref=e1159]:
+                                      - /url: "#"
+                                      - generic [ref=e1160]: 
+                                    - link "" [ref=e1161] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1162]: 
+                                    - link "" [ref=e1163] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1164]: 
+                                    - link "" [ref=e1165] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1166]: 
+                                    - link "" [ref=e1167] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1168]: 
+                                  - generic [ref=e1169]:
+                                    - heading "Elements Holder" [level=4] [ref=e1170]:
+                                      - generic "Elements Holder" [ref=e1171]
+                                    - generic [ref=e1172]:
+                                      - generic [ref=e1173]:
+                                        - generic [ref=e1174]:
+                                          - link "" [ref=e1175]:
+                                            - /url: "#"
+                                            - generic [ref=e1176]: 
+                                          - link "" [ref=e1177] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1178]: 
+                                          - link "" [ref=e1179] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1180]: 
+                                          - link "" [ref=e1181] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1182]: 
+                                          - link "" [ref=e1183] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1184]: 
+                                        - generic [ref=e1185]:
+                                          - heading "Elements Holder Item" [level=4] [ref=e1186]:
+                                            - generic "Elements Holder Item" [ref=e1187]
+                                          - heading "Banner" [level=4] [ref=e1191]: Banner
+                                        - link "" [ref=e1194] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1195]: 
+                                      - generic [ref=e1196]:
+                                        - generic [ref=e1197]:
+                                          - link "" [ref=e1198]:
+                                            - /url: "#"
+                                            - generic [ref=e1199]: 
+                                          - link "" [ref=e1200] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1201]: 
+                                          - link "" [ref=e1202] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1203]: 
+                                          - link "" [ref=e1204] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1205]: 
+                                          - link "" [ref=e1206] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1207]: 
+                                        - generic [ref=e1208]:
+                                          - heading "Elements Holder Item" [level=4] [ref=e1209]:
+                                            - generic "Elements Holder Item" [ref=e1210]
+                                          - heading "Banner" [level=4] [ref=e1214]: Banner
+                                        - link "" [ref=e1217] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1218]: 
+                                      - generic [ref=e1219]:
+                                        - generic [ref=e1220]:
+                                          - link "" [ref=e1221]:
+                                            - /url: "#"
+                                            - generic [ref=e1222]: 
+                                          - link "" [ref=e1223] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1224]: 
+                                          - link "" [ref=e1225] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1226]: 
+                                          - link "" [ref=e1227] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1228]: 
+                                          - link "" [ref=e1229] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1230]: 
+                                        - generic [ref=e1231]:
+                                          - heading "Elements Holder Item" [level=4] [ref=e1232]:
+                                            - generic "Elements Holder Item" [ref=e1233]
+                                          - heading "Banner" [level=4] [ref=e1237]: Banner
+                                        - link "" [ref=e1240] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1241]: 
+                                  - link "" [ref=e1243] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1244]: 
+                                - link "" [ref=e1246] [cursor=pointer]:
+                                  - /url: "#"
+                                  - generic [ref=e1247]: 
+                            - generic [ref=e1248]:
+                              - generic [ref=e1249]:
+                                - generic [ref=e1250]:
+                                  - link "" [ref=e1251]:
+                                    - /url: "#"
+                                    - generic [ref=e1252]: 
+                                  - generic [ref=e1253] [cursor=pointer]:
+                                    - generic "1/1" [ref=e1254]:
+                                      - generic [ref=e1255]: 
+                                    - text:           
+                                  - link "" [ref=e1256] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1257]: 
+                                - generic:
+                                  - link "" [ref=e1258] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1259]: 
+                                  - link "" [ref=e1260] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1261]: 
+                                  - link "" [ref=e1262] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1263]: 
+                                  - link "" [ref=e1264] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1265]: 
+                                  - link "" [ref=e1266] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1267]: 
+                                  - link "" [ref=e1268] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1269]: 
+                              - generic [ref=e1272]:
+                                - generic [ref=e1273]:
+                                  - link "" [ref=e1274] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1275]: 
+                                  - link "" [ref=e1276] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1277]: 
+                                  - link "" [ref=e1278] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1279]: 
+                                  - link "" [ref=e1280] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1281]: 
+                                - generic [ref=e1284]:
+                                  - generic [ref=e1285]:
+                                    - link "" [ref=e1286]:
+                                      - /url: "#"
+                                      - generic [ref=e1287]: 
+                                    - link "" [ref=e1288] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1289]: 
+                                    - link "" [ref=e1290] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1291]: 
+                                    - link "" [ref=e1292] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1293]: 
+                                    - link "" [ref=e1294] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1295]: 
+                                  - generic [ref=e1296]:
+                                    - heading "Dual Stack Showcase" [level=4] [ref=e1297]:
+                                      - generic "Dual Stack Showcase" [ref=e1298]
+                                    - generic [ref=e1299]:
+                                      - generic [ref=e1301]:
+                                        - heading "Section Title" [level=4] [ref=e1302]: Section Title
+                                        - generic [ref=e1304]: "Tagline: Dear Brethren"
+                                        - generic [ref=e1305]: "Title: Shalom!"
+                                        - generic [ref=e1306]: "Subtitle: Welcome to RCCG Morningstar Kirknewton – a place where love, faith, and purpose come alive through the power of Jesus Christ."
+                                      - generic [ref=e1308]:
+                                        - heading "Empty Space" [level=4] [ref=e1309]: Empty Space
+                                        - generic [ref=e1311]: "Height: 25px"
+                                      - heading "Custom Font" [level=4] [ref=e1314]: Custom Font
+                                      - generic [ref=e1317]:
+                                        - heading "Empty Space" [level=4] [ref=e1318]: Empty Space
+                                        - generic [ref=e1320]: "Height: 16px"
+                                      - heading "Custom Font" [level=4] [ref=e1323]: Custom Font
+                                    - generic [ref=e1325]: "Layout: Left"
+                                    - generic [ref=e1326]: "Type: Video + Content"
+                                  - link "" [ref=e1328] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1329]: 
+                                - link "" [ref=e1331] [cursor=pointer]:
+                                  - /url: "#"
+                                  - generic [ref=e1332]: 
+                            - generic [ref=e1333]:
+                              - generic [ref=e1334]:
+                                - generic [ref=e1335]:
+                                  - link "" [ref=e1336]:
+                                    - /url: "#"
+                                    - generic [ref=e1337]: 
+                                  - generic [ref=e1338] [cursor=pointer]:
+                                    - generic "1/1" [ref=e1339]:
+                                      - generic [ref=e1340]: 
+                                    - text:           
+                                  - link "" [ref=e1341] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1342]: 
+                                - generic:
+                                  - link "" [ref=e1343] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1344]: 
+                                  - link "" [ref=e1345] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1346]: 
+                                  - link "" [ref=e1347] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1348]: 
+                                  - link "" [ref=e1349] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1350]: 
+                                  - link "" [ref=e1351] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1352]: 
+                                  - link "" [ref=e1353] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1354]: 
+                              - generic [ref=e1357]:
+                                - generic [ref=e1358]:
+                                  - link "" [ref=e1359] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1360]: 
+                                  - link "" [ref=e1361] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1362]: 
+                                  - link "" [ref=e1363] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1364]: 
+                                  - link "" [ref=e1365] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1366]: 
+                                - generic [ref=e1368]:
+                                  - generic [ref=e1370]:
+                                    - heading "Section Title" [level=4] [ref=e1371]: Section Title
+                                    - generic [ref=e1373]: "Tagline: How to Join Us"
+                                    - generic [ref=e1374]: "Title: Our Services"
+                                  - generic [ref=e1375]:
+                                    - generic [ref=e1376]:
+                                      - generic [ref=e1377]:
+                                        - link "" [ref=e1378]:
+                                          - /url: "#"
+                                          - generic [ref=e1379]: 
+                                        - generic [ref=e1380] [cursor=pointer]:
+                                          - text:            
+                                          - generic "Custom layout" [ref=e1381]: Custom
+                                        - link "" [ref=e1382] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1383]: 
+                                      - generic:
+                                        - link "" [ref=e1384] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1385]: 
+                                        - link "" [ref=e1386] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1387]: 
+                                        - link "" [ref=e1388] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1389]: 
+                                        - link "" [ref=e1390] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1391]: 
+                                        - link "" [ref=e1392] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1393]: 
+                                        - link "" [ref=e1394] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1395]: 
+                                    - generic [ref=e1397]:
+                                      - generic [ref=e1398]:
+                                        - generic [ref=e1399]:
+                                          - link "" [ref=e1400] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1401]: 
+                                          - link "" [ref=e1402] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1403]: 
+                                          - link "" [ref=e1404] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1405]: 
+                                          - link "" [ref=e1406] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1407]: 
+                                        - heading "Icon With Text" [level=4] [ref=e1412]: Icon With Text
+                                        - link "" [ref=e1415] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1416]: 
+                                      - generic [ref=e1417]:
+                                        - generic [ref=e1418]:
+                                          - link "" [ref=e1419] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1420]: 
+                                          - link "" [ref=e1421] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1422]: 
+                                          - link "" [ref=e1423] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1424]: 
+                                          - link "" [ref=e1425] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1426]: 
+                                        - generic [ref=e1428]:
+                                          - heading "Icon With Text" [level=4] [ref=e1431]: Icon With Text
+                                          - generic [ref=e1434]:
+                                            - heading "Empty Space" [level=4] [ref=e1435]: Empty Space
+                                            - generic [ref=e1437]: "Height: 25px"
+                                        - link "" [ref=e1439] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1440]: 
+                                      - generic [ref=e1441]:
+                                        - generic [ref=e1442]:
+                                          - link "" [ref=e1443] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1444]: 
+                                          - link "" [ref=e1445] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1446]: 
+                                          - link "" [ref=e1447] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1448]: 
+                                          - link "" [ref=e1449] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1450]: 
+                                        - generic [ref=e1452]:
+                                          - heading "Icon With Text" [level=4] [ref=e1455]: Icon With Text
+                                          - generic [ref=e1458]:
+                                            - heading "Empty Space" [level=4] [ref=e1459]: Empty Space
+                                            - generic [ref=e1461]: "Height: 25px"
+                                        - link "" [ref=e1463] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1464]: 
+                                - link "" [ref=e1466] [cursor=pointer]:
+                                  - /url: "#"
+                                  - generic [ref=e1467]: 
+                            - generic [ref=e1468]:
+                              - generic [ref=e1469]:
+                                - generic [ref=e1470]:
+                                  - link "" [ref=e1471]:
+                                    - /url: "#"
+                                    - generic [ref=e1472]: 
+                                  - generic [ref=e1473] [cursor=pointer]:
+                                    - text:            
+                                    - generic "Custom layout" [ref=e1474]: Custom
+                                  - link "" [ref=e1475] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1476]: 
+                                - generic:
+                                  - link "" [ref=e1477] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1478]: 
+                                  - link "" [ref=e1479] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1480]: 
+                                  - link "" [ref=e1481] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1482]: 
+                                  - link "" [ref=e1483] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1484]: 
+                                  - link "" [ref=e1485] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1486]: 
+                                  - link "" [ref=e1487] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1488]: 
+                              - generic [ref=e1490]:
+                                - generic [ref=e1491]:
+                                  - generic [ref=e1492]:
+                                    - link "" [ref=e1493] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1494]: 
+                                    - link "" [ref=e1495] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1496]: 
+                                    - link "" [ref=e1497] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1498]: 
+                                    - link "" [ref=e1499] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1500]: 
+                                  - generic [ref=e1502]:
+                                    - generic [ref=e1503]:
+                                      - generic [ref=e1504]:
+                                        - link "" [ref=e1505]:
+                                          - /url: "#"
+                                          - generic [ref=e1506]: 
+                                        - link "" [ref=e1507] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1508]: 
+                                        - link "" [ref=e1509] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1510]: 
+                                        - link "" [ref=e1511] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1512]: 
+                                        - link "" [ref=e1513] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1514]: 
+                                      - generic [ref=e1515]:
+                                        - heading "Elements Holder" [level=4] [ref=e1516]:
+                                          - generic "Elements Holder" [ref=e1517]
+                                        - generic [ref=e1519]:
+                                          - generic [ref=e1520]:
+                                            - link "" [ref=e1521]:
+                                              - /url: "#"
+                                              - generic [ref=e1522]: 
+                                            - link "" [ref=e1523] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1524]: 
+                                            - link "" [ref=e1525] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1526]: 
+                                            - link "" [ref=e1527] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1528]: 
+                                            - link "" [ref=e1529] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1530]: 
+                                          - generic [ref=e1531]:
+                                            - heading "Elements Holder Item" [level=4] [ref=e1532]:
+                                              - generic "Elements Holder Item" [ref=e1533]
+                                            - generic [ref=e1534]:
+                                              - generic [ref=e1536]:
+                                                - heading "Section Title" [level=4] [ref=e1537]: Section Title
+                                                - generic [ref=e1539]: "Tagline: New here?"
+                                                - generic [ref=e1540]: "Title: YOU ARE WELCOME"
+                                                - generic [ref=e1541]: "Subtitle: RCCG is dedicated to spreading the message of Christ globally, promoting holiness, and impacting lives through its teachings, outreach, and community development programs"
+                                              - generic [ref=e1543]:
+                                                - heading "Empty Space" [level=4] [ref=e1544]: Empty Space
+                                                - generic [ref=e1546]: "Height: 33px"
+                                          - link "" [ref=e1548] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1549]: 
+                                      - link "" [ref=e1551] [cursor=pointer]:
+                                        - /url: "#"
+                                        - generic [ref=e1552]: 
+                                    - generic [ref=e1553]:
+                                      - generic [ref=e1554]:
+                                        - link "" [ref=e1555]:
+                                          - /url: "#"
+                                          - generic [ref=e1556]: 
+                                        - link "" [ref=e1557] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1558]: 
+                                        - link "" [ref=e1559] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1560]: 
+                                        - link "" [ref=e1561] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1562]: 
+                                        - link "" [ref=e1563] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1564]: 
+                                      - generic [ref=e1565]:
+                                        - heading "Elements Holder" [level=4] [ref=e1566]:
+                                          - generic "Elements Holder" [ref=e1567]
+                                        - generic [ref=e1569]:
+                                          - generic [ref=e1570]:
+                                            - link "" [ref=e1571]:
+                                              - /url: "#"
+                                              - generic [ref=e1572]: 
+                                            - link "" [ref=e1573] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1574]: 
+                                            - link "" [ref=e1575] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1576]: 
+                                            - link "" [ref=e1577] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1578]: 
+                                            - link "" [ref=e1579] [cursor=pointer]:
+                                              - /url: "#"
+                                              - generic [ref=e1580]: 
+                                          - generic [ref=e1581]:
+                                            - heading "Elements Holder Item" [level=4] [ref=e1582]:
+                                              - generic "Elements Holder Item" [ref=e1583]
+                                            - generic [ref=e1585]:
+                                              - generic [ref=e1586]:
+                                                - link "" [ref=e1587]:
+                                                  - /url: "#"
+                                                  - generic [ref=e1588]: 
+                                                - link "" [ref=e1589] [cursor=pointer]:
+                                                  - /url: "#"
+                                                  - generic [ref=e1590]: 
+                                                - link "" [ref=e1591] [cursor=pointer]:
+                                                  - /url: "#"
+                                                  - generic [ref=e1592]: 
+                                                - link "" [ref=e1593] [cursor=pointer]:
+                                                  - /url: "#"
+                                                  - generic [ref=e1594]: 
+                                                - link "" [ref=e1595] [cursor=pointer]:
+                                                  - /url: "#"
+                                                  - generic [ref=e1596]: 
+                                              - generic [ref=e1597]:
+                                                - heading "Accordion" [level=4] [ref=e1598]:
+                                                  - generic "Accordion" [ref=e1599]
+                                                - generic [ref=e1600]:
+                                                  - generic [ref=e1601]:
+                                                    - generic [ref=e1602]:
+                                                      - link "" [ref=e1603]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1604]: 
+                                                      - link "" [ref=e1605] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1606]: 
+                                                      - link "" [ref=e1607] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1608]: 
+                                                      - link "" [ref=e1609] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1610]: 
+                                                      - link "" [ref=e1611] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1612]: 
+                                                    - generic [ref=e1613]:
+                                                      - heading "Accordion Tab" [level=4] [ref=e1614]:
+                                                        - generic "Accordion Tab" [ref=e1615]
+                                                      - paragraph [ref=e1620]: RCCG's vision emphasizes spreading the gospel of Jesus Christ to all parts of the world. The church focuses on evangelism, charity, and promoting holiness in both its members' spiritual and daily lives. Their mission is to make heaven, take as many people with them, and to have a member of RCCG in every family of all nations
+                                                    - link "" [ref=e1622] [cursor=pointer]:
+                                                      - /url: "#"
+                                                      - generic [ref=e1623]: 
+                                                  - generic [ref=e1624]:
+                                                    - generic [ref=e1625]:
+                                                      - link "" [ref=e1626]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1627]: 
+                                                      - link "" [ref=e1628] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1629]: 
+                                                      - link "" [ref=e1630] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1631]: 
+                                                      - link "" [ref=e1632] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1633]: 
+                                                      - link "" [ref=e1634] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1635]: 
+                                                    - generic [ref=e1636]:
+                                                      - heading "Accordion Tab" [level=4] [ref=e1637]:
+                                                        - generic "Accordion Tab" [ref=e1638]
+                                                      - paragraph [ref=e1643]: RCCG follows the core beliefs of Christianity, including the authority of the Bible, the Trinity, salvation through Jesus Christ, and the power of the Holy Spirit. The church emphasizes holiness, righteousness, and living according to the teachings of Jesus Christ
+                                                    - link "" [ref=e1645] [cursor=pointer]:
+                                                      - /url: "#"
+                                                      - generic [ref=e1646]: 
+                                                  - generic [ref=e1647]:
+                                                    - generic [ref=e1648]:
+                                                      - link "" [ref=e1649]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1650]: 
+                                                      - link "" [ref=e1651] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1652]: 
+                                                      - link "" [ref=e1653] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1654]: 
+                                                      - link "" [ref=e1655] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1656]: 
+                                                      - link "" [ref=e1657] [cursor=pointer]:
+                                                        - /url: "#"
+                                                        - generic [ref=e1658]: 
+                                                    - generic [ref=e1659]:
+                                                      - heading "Accordion Tab" [level=4] [ref=e1660]:
+                                                        - generic "Accordion Tab" [ref=e1661]
+                                                      - paragraph [ref=e1666]: RCCG hosts notable spiritual programs like the Holy Ghost Service, Holy Ghost Congress, and Convention held annually, drawing millions of worshippers for prayer, worship, and spiritual revival
+                                                    - link "" [ref=e1668] [cursor=pointer]:
+                                                      - /url: "#"
+                                                      - generic [ref=e1669]: 
+                                              - link "" [ref=e1671] [cursor=pointer]:
+                                                - /url: "#"
+                                                - generic [ref=e1672]: 
+                                          - link "" [ref=e1674] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1675]: 
+                                      - link "" [ref=e1677] [cursor=pointer]:
+                                        - /url: "#"
+                                        - generic [ref=e1678]: 
+                                  - link "" [ref=e1680] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1681]: 
+                                - generic [ref=e1682]:
+                                  - generic [ref=e1683]:
+                                    - link "" [ref=e1684] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1685]: 
+                                    - link "" [ref=e1686] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1687]: 
+                                    - link "" [ref=e1688] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1689]: 
+                                    - link "" [ref=e1690] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1691]: 
+                                  - generic [ref=e1694]:
+                                    - generic [ref=e1695]:
+                                      - link "" [ref=e1696]:
+                                        - /url: "#"
+                                        - generic [ref=e1697]: 
+                                      - link "" [ref=e1698] [cursor=pointer]:
+                                        - /url: "#"
+                                        - generic [ref=e1699]: 
+                                      - link "" [ref=e1700] [cursor=pointer]:
+                                        - /url: "#"
+                                        - generic [ref=e1701]: 
+                                      - link "" [ref=e1702] [cursor=pointer]:
+                                        - /url: "#"
+                                        - generic [ref=e1703]: 
+                                      - link "" [ref=e1704] [cursor=pointer]:
+                                        - /url: "#"
+                                        - generic [ref=e1705]: 
+                                    - generic [ref=e1706]:
+                                      - heading "Elements Holder" [level=4] [ref=e1707]:
+                                        - generic "Elements Holder" [ref=e1708]
+                                      - generic [ref=e1710]:
+                                        - generic [ref=e1711]:
+                                          - link "" [ref=e1712]:
+                                            - /url: "#"
+                                            - generic [ref=e1713]: 
+                                          - link "" [ref=e1714] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1715]: 
+                                          - link "" [ref=e1716] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1717]: 
+                                          - link "" [ref=e1718] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1719]: 
+                                          - link "" [ref=e1720] [cursor=pointer]:
+                                            - /url: "#"
+                                            - generic [ref=e1721]: 
+                                        - generic [ref=e1722]:
+                                          - heading "Elements Holder Item" [level=4] [ref=e1723]:
+                                            - generic "Elements Holder Item" [ref=e1724]
+                                          - generic [ref=e1727]:
+                                            - heading "Single Image" [level=4] [ref=e2735]
+                                            - generic [ref=e1731]: "Image: 2394"
+                                        - link "" [ref=e1733] [cursor=pointer]:
+                                          - /url: "#"
+                                          - generic [ref=e1734]: 
+                                    - link "" [ref=e1736] [cursor=pointer]:
+                                      - /url: "#"
+                                      - generic [ref=e1737]: 
+                                  - link "" [ref=e1739] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1740]: 
+                            - generic [ref=e1741]:
+                              - generic [ref=e1742]:
+                                - generic [ref=e1743]:
+                                  - link "" [ref=e1744]:
+                                    - /url: "#"
+                                    - generic [ref=e1745]: 
+                                  - generic [ref=e1746] [cursor=pointer]:
+                                    - generic "1/1" [ref=e1747]:
+                                      - generic [ref=e1748]: 
+                                    - text:           
+                                  - link "" [ref=e1749] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1750]: 
+                                - generic:
+                                  - link "" [ref=e1751] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1752]: 
+                                  - link "" [ref=e1753] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1754]: 
+                                  - link "" [ref=e1755] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1756]: 
+                                  - link "" [ref=e1757] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1758]: 
+                                  - link "" [ref=e1759] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1760]: 
+                                  - link "" [ref=e1761] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1762]: 
+                              - generic [ref=e1765]:
+                                - generic [ref=e1766]:
+                                  - link "" [ref=e1767] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1768]: 
+                                  - link "" [ref=e1769] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1770]: 
+                                  - link "" [ref=e1771] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1772]: 
+                                  - link "" [ref=e1773] [cursor=pointer]:
+                                    - /url: "#"
+                                    - generic [ref=e1774]: 
+                                - generic [ref=e1776]:
+                                  - generic [ref=e1778]:
+                                    - heading "Section Title" [level=4] [ref=e1779]: Section Title
+                                    - generic [ref=e1781]: "Tagline: Catch up on the word of God"
+                                    - generic [ref=e1782]: "Title: Latest Sermons"
+                                  - generic [ref=e1784]:
+                                    - heading "Empty Space" [level=4] [ref=e1785]: Empty Space
+                                    - generic [ref=e1787]: "Height: 61px"
+                                  - generic [ref=e1789]:
+                                    - heading "Portfolio Slider" [level=4] [ref=e1790]: Portfolio Slider
+                                    - generic [ref=e1792]: "Number of Portfolios Items: 6"
+                                - link "" [ref=e1794] [cursor=pointer]:
+                                  - /url: "#"
+                                  - generic [ref=e1795]: 
+                          - generic [ref=e1796]:
+                            - text:   
+                            - generic "Add Element" [ref=e1798] [cursor=pointer]:
+                              - generic [ref=e1799]: 
+                    - generic [ref=e1800]:
+                      - generic [ref=e1801]:
+                        - heading "Elated Blog" [level=2] [ref=e1802]
+                        - generic [ref=e1803]:
+                          - button "Move up" [ref=e1804] [cursor=pointer]:
+                            - generic [ref=e1805]: Move up
+                          - button "Move down" [ref=e1807] [cursor=pointer]:
+                            - generic [ref=e1808]: Move down
+                          - 'button "Toggle panel: Elated Blog" [expanded] [ref=e1810] [cursor=pointer]':
+                            - generic [ref=e1811]: "Toggle panel: Elated Blog"
+                      - generic [ref=e1815]:
+                        - generic [ref=e1817]:
+                          - generic [ref=e1818]:
+                            - heading "Blog Category" [level=4] [ref=e1819]
+                            - paragraph [ref=e1820]: Choose category of posts to display (leave empty to display all categories)
+                          - combobox [ref=e1825] [cursor=pointer]:
+                            - option "Default" [selected]
+                        - generic [ref=e1827]:
+                          - generic [ref=e1828]:
+                            - heading "Number of Posts" [level=4] [ref=e1829]
+                            - paragraph [ref=e1830]: Enter the number of posts to display
+                          - textbox [ref=e1835]
+                        - generic [ref=e1837]:
+                          - generic [ref=e1838]:
+                            - heading "Masonry - Layout" [level=4] [ref=e1839]
+                            - paragraph [ref=e1840]: Set masonry layout. Default is in grid.
+                          - combobox [ref=e1845] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "In Grid"
+                            - option "Full Width"
+                        - generic [ref=e1847]:
+                          - generic [ref=e1848]:
+                            - heading "Masonry - Number of Columns" [level=4] [ref=e1849]
+                            - paragraph [ref=e1850]: Set number of columns for your masonry blog lists
+                          - combobox [ref=e1855] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "Two"
+                            - option "Three"
+                            - option "Four"
+                            - option "Five"
+                        - generic [ref=e1857]:
+                          - generic [ref=e1858]:
+                            - heading "Masonry - Space Between Items" [level=4] [ref=e1859]
+                            - paragraph [ref=e1860]: Set space size between posts for your masonry blog lists
+                          - combobox [ref=e1865] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "Huge (40)"
+                            - option "Large (25)"
+                            - option "Medium (20)"
+                            - option "Normal (15)"
+                            - option "Small (10)"
+                            - option "Tiny (5)"
+                            - option "No (0)"
+                        - generic [ref=e1867]:
+                          - generic [ref=e1868]:
+                            - heading "Masonry - Featured Image Proportion" [level=4] [ref=e1869]
+                            - paragraph [ref=e1870]: Choose type of proportions you want to use for featured images on masonry blog lists
+                          - combobox [ref=e1875] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "Fixed"
+                            - option "Original"
+                        - generic [ref=e1877]:
+                          - generic [ref=e1878]:
+                            - heading "Pagination Type" [level=4] [ref=e1879]
+                            - paragraph [ref=e1880]: Choose a pagination layout for Blog Lists
+                          - combobox [ref=e1885] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "Standard"
+                            - option "Load More"
+                            - option "Infinite Scroll"
+                            - option "No Pagination"
+                        - generic [ref=e1887]:
+                          - generic [ref=e1888]:
+                            - heading "Number of Words in Excerpt" [level=4] [ref=e1889]
+                            - paragraph [ref=e1890]: Enter a number of words in excerpt (article summary). Default value is 40
+                          - textbox [ref=e1895]
+                    - generic [ref=e1896]:
+                      - generic [ref=e1897]:
+                        - heading "AIOSEO Writing Assistant" [level=2] [ref=e1898]
+                        - generic [ref=e1899]:
+                          - button "Move up" [ref=e1900] [cursor=pointer]:
+                            - generic [ref=e1901]: Move up
+                          - button "Move down" [ref=e1903] [cursor=pointer]:
+                            - generic [ref=e1904]: Move down
+                          - 'button "Toggle panel: AIOSEO Writing Assistant" [expanded] [ref=e1906] [cursor=pointer]':
+                            - generic [ref=e1907]: "Toggle panel: AIOSEO Writing Assistant"
+                      - generic [ref=e1915]:
+                        - img [ref=e1916]
+                        - generic [ref=e1917]:
+                          - text: Elevate your SEO with AIOSEO Writing Assistant
+                          - text: Now Integrated into SEOBoost
+                        - generic [ref=e1918]: Experience the power of AI-driven writing assistance seamlessly integrated into SEOBoost. Login to enhance your content creation process and boost your search rankings.
+                        - button "Login to SEOBoost" [ref=e1919] [cursor=pointer]:
+                          - img [ref=e1920]
+                          - text: Login to SEOBoost
+                          - img [ref=e1921]
+                  - generic [ref=e1923]:
+                    - generic [ref=e1924]:
+                      - generic [ref=e1925]:
+                        - heading "Elated General" [level=2] [ref=e1926]
+                        - generic [ref=e1927]:
+                          - button "Move up" [ref=e1928] [cursor=pointer]:
+                            - generic [ref=e1929]: Move up
+                          - button "Move down" [ref=e1931] [cursor=pointer]:
+                            - generic [ref=e1932]: Move down
+                          - 'button "Toggle panel: Elated General" [expanded] [ref=e1934] [cursor=pointer]':
+                            - generic [ref=e1935]: "Toggle panel: Elated General"
+                      - generic [ref=e1939]:
+                        - generic [ref=e1941]:
+                          - generic [ref=e1942]:
+                            - heading "Slider Shortcode" [level=4] [ref=e1943]
+                            - paragraph [ref=e1944]: Paste your slider shortcode here
+                          - textbox [ref=e1949]: "[rev_slider alias=\"main-home\"][/rev_slider]"
+                        - generic [ref=e1951]:
+                          - generic [ref=e1952]:
+                            - heading "Always put content behind header" [level=4] [ref=e1953]
+                            - paragraph [ref=e1954]: Enabling this option will put page content behind page header
+                          - paragraph [ref=e1959]:
+                            - generic [ref=e1961] [cursor=pointer]: "Yes"
+                            - generic [ref=e1963] [cursor=pointer]: "No"
+                        - generic [ref=e1964]:
+                          - generic [ref=e1965]:
+                            - heading "Content Styles" [level=4] [ref=e1966]
+                            - paragraph [ref=e1967]: Define styles for Content area
+                          - generic [ref=e1969]:
+                            - generic [ref=e1970]:
+                              - generic [ref=e1972]:
+                                - emphasis [ref=e1973]: Page Background Color
+                                - button "Select Color" [ref=e1975] [cursor=pointer]:
+                                  - generic [ref=e1976]: Select Color
+                              - generic [ref=e1978]:
+                                - emphasis [ref=e1979]: Page Background Image
+                                - link "Upload" [ref=e1981] [cursor=pointer]:
+                                  - /url: javascript:void(0)
+                              - generic [ref=e1983]:
+                                - emphasis [ref=e1984]: Page Background Image Repeat
+                                - combobox [ref=e1985] [cursor=pointer]:
+                                  - option
+                                  - option "Default" [selected]
+                                  - option "No"
+                                  - option "Yes"
+                            - generic [ref=e1986]:
+                              - generic [ref=e1988]:
+                                - emphasis [ref=e1989]: Content Padding (eg. 10px 5px 10px 5px)
+                                - textbox [ref=e1990]: 0px
+                              - generic [ref=e1992]:
+                                - emphasis [ref=e1993]: Content Padding for mobile (eg. 10px 5px 10px 5px)
+                                - textbox [ref=e1994]: 0px
+                        - generic [ref=e1996]:
+                          - generic [ref=e1997]:
+                            - heading "Initial Width of Content" [level=4] [ref=e1998]
+                            - paragraph [ref=e1999]: Choose the initial width of content which is in grid (Applies to pages set to "Default Template" and rows set to "In Grid")
+                          - combobox [ref=e2004] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "1400px"
+                            - option "1300px"
+                            - option "1200px"
+                            - option "1100px"
+                            - option "1000px"
+                            - option "800px"
+                        - generic [ref=e2006]:
+                          - generic [ref=e2007]:
+                            - heading "Grid Layout Space" [level=4] [ref=e2008]
+                            - paragraph [ref=e2009]: Choose a space between content layout and sidebar layout for your page
+                          - combobox [ref=e2014] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "Huge (40)"
+                            - option "Large (25)"
+                            - option "Medium (20)"
+                            - option "Normal (15)"
+                            - option "Small (10)"
+                            - option "Tiny (5)"
+                            - option "No (0)"
+                        - generic [ref=e2016]:
+                          - generic [ref=e2017]:
+                            - heading "Boxed Layout" [level=4] [ref=e2018]
+                            - paragraph
+                          - combobox [ref=e2023] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No"
+                            - option "Yes"
+                        - generic [ref=e2025]:
+                          - generic [ref=e2026]:
+                            - heading "Passepartout" [level=4] [ref=e2027]
+                            - paragraph [ref=e2028]: Enabling this option will display passepartout around site content
+                          - combobox [ref=e2033] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No"
+                            - option "Yes"
+                        - generic [ref=e2035]:
+                          - generic [ref=e2036]:
+                            - heading "Smooth Page Transitions" [level=4] [ref=e2037]
+                            - paragraph [ref=e2038]: Enabling this option will perform a smooth transition between pages when clicking on links
+                          - combobox [ref=e2043] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No"
+                            - option "Yes"
+                        - generic [ref=e2045]:
+                          - generic [ref=e2046]:
+                            - heading "Show Comments" [level=4] [ref=e2047]
+                            - paragraph [ref=e2048]: Enabling this option will show comments on your page
+                          - combobox [ref=e2053] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No"
+                            - option "Yes"
+                    - generic [ref=e2054]:
+                      - generic [ref=e2055]:
+                        - heading "Elated Search" [level=2] [ref=e2056]
+                        - generic [ref=e2057]:
+                          - button "Move up" [ref=e2058] [cursor=pointer]:
+                            - generic [ref=e2059]: Move up
+                          - button "Move down" [ref=e2061] [cursor=pointer]:
+                            - generic [ref=e2062]: Move down
+                          - 'button "Toggle panel: Elated Search" [expanded] [ref=e2064] [cursor=pointer]':
+                            - generic [ref=e2065]: "Toggle panel: Elated Search"
+                      - generic [ref=e2071]:
+                        - generic [ref=e2072]:
+                          - heading "Enable Grid Layout" [level=4] [ref=e2073]
+                          - paragraph [ref=e2074]: Set search area to be in grid. (Applied for Search covers header and Slide from Window Top types.
+                        - combobox [ref=e2079] [cursor=pointer]:
+                          - option "Default" [selected]
+                          - option "Yes"
+                          - option "No"
+                    - generic [ref=e2080]:
+                      - generic [ref=e2081]:
+                        - heading "Elated Sidebar" [level=2] [ref=e2082]
+                        - generic [ref=e2083]:
+                          - button "Move up" [ref=e2084] [cursor=pointer]:
+                            - generic [ref=e2085]: Move up
+                          - button "Move down" [ref=e2087] [cursor=pointer]:
+                            - generic [ref=e2088]: Move down
+                          - 'button "Toggle panel: Elated Sidebar" [expanded] [ref=e2090] [cursor=pointer]':
+                            - generic [ref=e2091]: "Toggle panel: Elated Sidebar"
+                      - generic [ref=e2095]:
+                        - generic [ref=e2097]:
+                          - generic [ref=e2098]:
+                            - heading "Sidebar Layout" [level=4] [ref=e2099]
+                            - paragraph [ref=e2100]: Choose the sidebar layout
+                          - combobox [ref=e2105] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No Sidebar"
+                            - option "Sidebar 1/3 Right"
+                            - option "Sidebar 1/4 Right"
+                            - option "Sidebar 1/5 Right"
+                            - option "Sidebar 1/3 Left"
+                            - option "Sidebar 1/4 Left"
+                            - option "Sidebar 1/5 Left"
+                        - generic [ref=e2107]:
+                          - generic [ref=e2108]:
+                            - heading "Choose Widget Area in Sidebar" [level=4] [ref=e2109]
+                            - paragraph [ref=e2110]: Choose Custom Widget area to display in Sidebar"
+                          - generic [ref=e2114]:
+                            - combobox [ref=e2115] [cursor=pointer]
+                            - combobox "Default" [ref=e2118] [cursor=pointer]:
+                              - generic "Default" [ref=e2119]
+                    - generic [ref=e2120]:
+                      - generic [ref=e2121]:
+                        - heading "Elated Logo" [level=2] [ref=e2122]
+                        - generic [ref=e2123]:
+                          - button "Move up" [ref=e2124] [cursor=pointer]:
+                            - generic [ref=e2125]: Move up
+                          - button "Move down" [ref=e2127] [cursor=pointer]:
+                            - generic [ref=e2128]: Move down
+                          - 'button "Toggle panel: Elated Logo" [expanded] [ref=e2130] [cursor=pointer]':
+                            - generic [ref=e2131]: "Toggle panel: Elated Logo"
+                      - generic [ref=e2135]:
+                        - generic [ref=e2137]:
+                          - generic [ref=e2138]:
+                            - heading "Logo Image - Default" [level=4] [ref=e2139]
+                            - paragraph [ref=e2140]: Choose a default logo image to display
+                          - generic [ref=e2145]:
+                            - img "Image thumbnail" [ref=e2147]
+                            - link "Upload" [ref=e2148] [cursor=pointer]:
+                              - /url: javascript:void(0)
+                            - link "Remove" [ref=e2149] [cursor=pointer]:
+                              - /url: "javascript: void(0)"
+                        - generic [ref=e2151]:
+                          - generic [ref=e2152]:
+                            - heading "Logo Image - Dark" [level=4] [ref=e2153]
+                            - paragraph [ref=e2154]: Choose a default logo image to display
+                          - generic [ref=e2159]:
+                            - img "Image thumbnail" [ref=e2161]
+                            - link "Upload" [ref=e2162] [cursor=pointer]:
+                              - /url: javascript:void(0)
+                            - link "Remove" [ref=e2163] [cursor=pointer]:
+                              - /url: "javascript: void(0)"
+                        - generic [ref=e2165]:
+                          - generic [ref=e2166]:
+                            - heading "Logo Image - Light" [level=4] [ref=e2167]
+                            - paragraph [ref=e2168]: Choose a default logo image to display
+                          - generic [ref=e2173]:
+                            - img "Image thumbnail" [ref=e2175]
+                            - link "Upload" [ref=e2176] [cursor=pointer]:
+                              - /url: javascript:void(0)
+                            - link "Remove" [ref=e2177] [cursor=pointer]:
+                              - /url: "javascript: void(0)"
+                        - generic [ref=e2179]:
+                          - generic [ref=e2180]:
+                            - heading "Logo Image - Sticky" [level=4] [ref=e2181]
+                            - paragraph [ref=e2182]: Choose a default logo image to display
+                          - generic [ref=e2187]:
+                            - img "Image thumbnail" [ref=e2189]
+                            - link "Upload" [ref=e2190] [cursor=pointer]:
+                              - /url: javascript:void(0)
+                            - link "Remove" [ref=e2191] [cursor=pointer]:
+                              - /url: "javascript: void(0)"
+                        - generic [ref=e2193]:
+                          - generic [ref=e2194]:
+                            - heading "Logo Image - Mobile" [level=4] [ref=e2195]
+                            - paragraph [ref=e2196]: Choose a default logo image to display
+                          - link "Upload" [ref=e2202] [cursor=pointer]:
+                            - /url: javascript:void(0)
+                    - generic [ref=e2203]:
+                      - generic [ref=e2204]:
+                        - heading "Elated Header" [level=2] [ref=e2205]
+                        - generic [ref=e2206]:
+                          - button "Move up" [ref=e2207] [cursor=pointer]:
+                            - generic [ref=e2208]: Move up
+                          - button "Move down" [ref=e2210] [cursor=pointer]:
+                            - generic [ref=e2211]: Move down
+                          - 'button "Toggle panel: Elated Header" [expanded] [ref=e2213] [cursor=pointer]':
+                            - generic [ref=e2214]: "Toggle panel: Elated Header"
+                      - generic [ref=e2218]:
+                        - generic [ref=e2220]:
+                          - generic [ref=e2221]:
+                            - heading "Choose Header Type" [level=4] [ref=e2222]
+                            - paragraph [ref=e2223]: Select header type layout
+                          - combobox [ref=e2228] [cursor=pointer]:
+                            - option "Default"
+                            - option "Divided" [selected]
+                            - option "Minimal"
+                            - option "Standard"
+                        - generic [ref=e2230]:
+                          - generic [ref=e2231]:
+                            - heading "Header Skin" [level=4] [ref=e2232]
+                            - paragraph [ref=e2233]: Choose a header style to make header elements (logo, main menu, side menu button) in that predefined style
+                          - combobox [ref=e2238] [cursor=pointer]:
+                            - option "Default"
+                            - option "Light" [selected]
+                            - option "Dark"
+                        - generic [ref=e2240]:
+                          - generic [ref=e2241]:
+                            - heading "Choose Header Behaviour" [level=4] [ref=e2242]
+                            - paragraph [ref=e2243]: Select the behaviour of header when you scroll down to page
+                          - combobox [ref=e2248] [cursor=pointer]:
+                            - option "Default"
+                            - option "Fixed on scroll"
+                            - option "No Behavior"
+                            - option "Sticky on scroll up"
+                            - option "Sticky on scroll up/down" [selected]
+                        - generic [ref=e2251]:
+                          - generic [ref=e2252]:
+                            - heading "Scroll Amount for Sticky Header Appearance" [level=4] [ref=e2253]
+                            - paragraph [ref=e2254]: Define scroll amount for sticky header appearance
+                          - generic [ref=e2259]:
+                            - textbox [ref=e2260]: "1150"
+                            - generic [ref=e2261]: px
+                        - generic [ref=e2263]:
+                          - generic [ref=e2264]:
+                            - heading "Sticky Header in Grid" [level=4] [ref=e2265]
+                            - paragraph [ref=e2266]: Enabling this option will put sticky header in grid
+                          - combobox [ref=e2271] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No"
+                            - option "Yes"
+                        - generic [ref=e2273]:
+                          - generic [ref=e2274]:
+                            - heading "Choose Custom Widget Area In Sticky Header Menu Area" [level=4] [ref=e2275]
+                            - paragraph [ref=e2276]: Choose custom widget area to display in sticky header menu area"
+                          - combobox [ref=e2281] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "Shop Sidebar"
+                            - option "Header Top Left Column Dark"
+                            - option "Header Top Right Column Dark"
+                        - generic [ref=e2282]:
+                          - heading "Top Area" [level=5] [ref=e2283]
+                          - generic [ref=e2285]:
+                            - generic [ref=e2286]:
+                              - heading "Header Top Bar" [level=4] [ref=e2287]
+                              - paragraph [ref=e2288]: Enabling this option will show header top bar area
+                            - combobox [ref=e2293] [cursor=pointer]:
+                              - option "Default"
+                              - option "No"
+                              - option "Yes" [selected]
+                          - generic [ref=e2294]:
+                            - generic [ref=e2296]:
+                              - generic [ref=e2297]:
+                                - heading "Top Bar In Grid" [level=4] [ref=e2298]
+                                - paragraph [ref=e2299]: Set top bar content to be in grid
+                              - combobox [ref=e2304] [cursor=pointer]:
+                                - option "Default" [selected]
+                                - option "No"
+                                - option "Yes"
+                            - generic [ref=e2306]:
+                              - generic [ref=e2307]:
+                                - heading "Top Bar Background Color" [level=4] [ref=e2308]
+                                - paragraph
+                              - button "Select Color" [ref=e2314] [cursor=pointer]:
+                                - generic [ref=e2315]: Select Color
+                            - generic [ref=e2317]:
+                              - generic [ref=e2318]:
+                                - heading "Top Bar Background Color Transparency" [level=4] [ref=e2319]
+                                - paragraph [ref=e2320]: Set top bar background color transparenct. Value should be between 0 and 1
+                              - textbox [ref=e2325]: "0"
+                            - generic [ref=e2327]:
+                              - generic [ref=e2328]:
+                                - heading "Top Bar Border" [level=4] [ref=e2329]
+                                - paragraph [ref=e2330]: Set border on top bar
+                              - combobox [ref=e2335] [cursor=pointer]:
+                                - option "Default"
+                                - option "No"
+                                - option "Yes" [selected]
+                            - generic [ref=e2338]:
+                              - generic [ref=e2339]:
+                                - heading "Border Color" [level=4] [ref=e2340]
+                                - paragraph [ref=e2341]: Choose color for top bar border
+                              - button "Select Color" [ref=e2347] [cursor=pointer]:
+                                - generic [ref=e2348]: Select Color
+                            - generic [ref=e2350]:
+                              - generic [ref=e2351]:
+                                - heading "Choose Custom Header Top Bar Left Widget Area" [level=4] [ref=e2352]
+                                - paragraph [ref=e2353]: Choose custom widget area to display in header top bar left column
+                              - combobox [ref=e2358] [cursor=pointer]:
+                                - option "Default" [selected]
+                                - option "Shop Sidebar"
+                                - option "Header Top Left Column Dark"
+                                - option "Header Top Right Column Dark"
+                            - generic [ref=e2360]:
+                              - generic [ref=e2361]:
+                                - heading "Choose Custom Header Top Bar Right Widget Area" [level=4] [ref=e2362]
+                                - paragraph [ref=e2363]: Choose custom widget area to display in header top bar right column
+                              - combobox [ref=e2368] [cursor=pointer]:
+                                - option "Default" [selected]
+                                - option "Shop Sidebar"
+                                - option "Header Top Left Column Dark"
+                                - option "Header Top Right Column Dark"
+                            - generic [ref=e2370]:
+                              - generic [ref=e2371]:
+                                - heading "Top Bar Hide Content" [level=4] [ref=e2372]
+                                - paragraph [ref=e2373]: Hide all content inside top bar
+                              - combobox [ref=e2378] [cursor=pointer]:
+                                - option "No" [selected]
+                                - option "Yes"
+                        - generic [ref=e2379]:
+                          - heading "Menu Area Style" [level=5] [ref=e2380]
+                          - generic [ref=e2382]:
+                            - generic [ref=e2383]:
+                              - heading "Menu Area In Grid" [level=4] [ref=e2384]
+                              - paragraph [ref=e2385]: Set menu area content to be in grid
+                            - combobox [ref=e2390] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                          - generic [ref=e2392]:
+                            - generic [ref=e2393]:
+                              - heading "Background Color" [level=4] [ref=e2394]
+                              - paragraph [ref=e2395]: Choose a background color for menu area
+                            - button "Select Color" [ref=e2401] [cursor=pointer]:
+                              - generic [ref=e2402]: Select Color
+                          - generic [ref=e2404]:
+                            - generic [ref=e2405]:
+                              - heading "Transparency" [level=4] [ref=e2406]
+                              - paragraph [ref=e2407]: Choose a transparency for the menu area background color (0 = fully transparent, 1 = opaque)
+                            - textbox [ref=e2412]: "0"
+                          - generic [ref=e2414]:
+                            - generic [ref=e2415]:
+                              - heading "Menu Area Shadow" [level=4] [ref=e2416]
+                              - paragraph [ref=e2417]: Set shadow on menu area
+                            - combobox [ref=e2422] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                          - generic [ref=e2424]:
+                            - generic [ref=e2425]:
+                              - heading "Menu Area Border" [level=4] [ref=e2426]
+                              - paragraph [ref=e2427]: Set border on menu area
+                            - combobox [ref=e2432] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                          - generic [ref=e2434]:
+                            - generic [ref=e2435]:
+                              - heading "Height" [level=4] [ref=e2436]
+                              - paragraph [ref=e2437]: Enter header height
+                            - generic [ref=e2442]:
+                              - textbox [ref=e2443]
+                              - generic [ref=e2444]: px
+                          - generic [ref=e2446]:
+                            - generic [ref=e2447]:
+                              - heading "Menu Area Side Padding" [level=4] [ref=e2448]
+                              - paragraph [ref=e2449]: Enter value in px or percentage to define menu area side padding
+                            - generic [ref=e2454]:
+                              - textbox [ref=e2455]
+                              - generic [ref=e2456]: px or %
+                        - heading "Mobile Header in Grid" [level=5] [ref=e2457]
+                        - generic [ref=e2459]:
+                          - generic [ref=e2460]:
+                            - heading "Mobile Header in Grid" [level=4] [ref=e2461]
+                            - paragraph [ref=e2462]: Enabling this option will put mobile header in grid
+                          - combobox [ref=e2467] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No"
+                            - option "Yes"
+                        - generic [ref=e2468]:
+                          - heading "Dropdown Styles" [level=5] [ref=e2469]
+                          - generic [ref=e2471]:
+                            - generic [ref=e2472]:
+                              - heading "Dropdown Position" [level=4] [ref=e2473]
+                              - paragraph [ref=e2474]: Enter value in percentage of entire header height
+                            - generic [ref=e2479]:
+                              - textbox [ref=e2480]
+                              - generic [ref=e2481]: "%"
+                          - generic [ref=e2483]:
+                            - generic [ref=e2484]:
+                              - heading "Wide Dropdown Menu In Grid" [level=4] [ref=e2485]
+                              - paragraph [ref=e2486]: Set wide dropdown menu to be in grid
+                            - combobox [ref=e2491] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                        - generic [ref=e2492]:
+                          - heading "Widget Areas" [level=5] [ref=e2493]
+                          - generic [ref=e2495]:
+                            - generic [ref=e2496]:
+                              - heading "Disable Header Widget Areas" [level=4] [ref=e2497]
+                              - paragraph [ref=e2498]: Enabling this option will hide widget areas from header
+                            - paragraph [ref=e2503]:
+                              - generic [ref=e2505] [cursor=pointer]: "Yes"
+                              - generic [ref=e2507] [cursor=pointer]: "No"
+                          - generic [ref=e2508]:
+                            - generic [ref=e2510]:
+                              - generic [ref=e2511]:
+                                - heading "Choose Custom Header Widget Area One" [level=4] [ref=e2512]
+                                - paragraph [ref=e2513]: Choose custom widget area to display in header widget area one
+                              - combobox [ref=e2518] [cursor=pointer]:
+                                - option "Default" [selected]
+                                - option "Shop Sidebar"
+                                - option "Header Top Left Column Dark"
+                                - option "Header Top Right Column Dark"
+                            - generic [ref=e2520]:
+                              - generic [ref=e2521]:
+                                - heading "Choose Custom Header Widget Area Two" [level=4] [ref=e2522]
+                                - paragraph [ref=e2523]: Choose custom widget area to display in header widget area two
+                              - combobox [ref=e2528] [cursor=pointer]:
+                                - option "Default" [selected]
+                                - option "Shop Sidebar"
+                                - option "Header Top Left Column Dark"
+                                - option "Header Top Right Column Dark"
+                    - generic [ref=e2529]:
+                      - generic [ref=e2530]:
+                        - heading "Elated Title" [level=2] [ref=e2531]
+                        - generic [ref=e2532]:
+                          - button "Move up" [ref=e2533] [cursor=pointer]:
+                            - generic [ref=e2534]: Move up
+                          - button "Move down" [ref=e2536] [cursor=pointer]:
+                            - generic [ref=e2537]: Move down
+                          - 'button "Toggle panel: Elated Title" [expanded] [ref=e2539] [cursor=pointer]':
+                            - generic [ref=e2540]: "Toggle panel: Elated Title"
+                      - generic [ref=e2546]:
+                        - generic [ref=e2547]:
+                          - heading "Show Title Area" [level=4] [ref=e2548]
+                          - paragraph [ref=e2549]: Disabling this option will turn off page title area
+                        - combobox [ref=e2554] [cursor=pointer]:
+                          - option "Default"
+                          - option "No" [selected]
+                          - option "Yes"
+                    - generic [ref=e2555]:
+                      - generic [ref=e2556]:
+                        - heading "Elated Footer" [level=2] [ref=e2557]
+                        - generic [ref=e2558]:
+                          - button "Move up" [ref=e2559] [cursor=pointer]:
+                            - generic [ref=e2560]: Move up
+                          - button "Move down" [ref=e2562] [cursor=pointer]:
+                            - generic [ref=e2563]: Move down
+                          - 'button "Toggle panel: Elated Footer" [expanded] [ref=e2565] [cursor=pointer]':
+                            - generic [ref=e2566]: "Toggle panel: Elated Footer"
+                      - generic [ref=e2570]:
+                        - generic [ref=e2572]:
+                          - generic [ref=e2573]:
+                            - heading "Disable Footer For This Page" [level=4] [ref=e2574]
+                            - paragraph [ref=e2575]: Enabling this option will hide footer on this page
+                          - combobox [ref=e2580] [cursor=pointer]:
+                            - option "Default" [selected]
+                            - option "No"
+                            - option "Yes"
+                        - generic [ref=e2581]:
+                          - generic [ref=e2583]:
+                            - generic [ref=e2584]:
+                              - heading "Footer in Grid" [level=4] [ref=e2585]
+                              - paragraph [ref=e2586]: Enabling this option will place Footer content in grid
+                            - combobox [ref=e2591] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                          - generic [ref=e2593]:
+                            - generic [ref=e2594]:
+                              - heading "Uncovering Footer" [level=4] [ref=e2595]
+                              - paragraph [ref=e2596]: Enabling this option will make Footer gradually appear on scroll
+                            - combobox [ref=e2601] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                          - generic [ref=e2603]:
+                            - generic [ref=e2604]:
+                              - heading "Show Footer Top" [level=4] [ref=e2605]
+                              - paragraph [ref=e2606]: Enabling this option will show Footer Top area
+                            - combobox [ref=e2611] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                          - generic [ref=e2612]:
+                            - generic [ref=e2613]:
+                              - heading "Footer Top Styles" [level=4] [ref=e2614]
+                              - paragraph [ref=e2615]: Define style for footer top area
+                            - generic [ref=e2618]:
+                              - generic [ref=e2620]:
+                                - emphasis [ref=e2621]: Background Color
+                                - button "Select Color" [ref=e2623] [cursor=pointer]:
+                                  - generic [ref=e2624]: Select Color
+                              - generic [ref=e2626]:
+                                - emphasis [ref=e2627]: Border Color
+                                - button "Select Color" [ref=e2629] [cursor=pointer]:
+                                  - generic [ref=e2630]: Select Color
+                              - generic [ref=e2632]:
+                                - emphasis [ref=e2633]: Border Width
+                                - generic [ref=e2634]:
+                                  - textbox [ref=e2635]
+                                  - generic [ref=e2636]: px
+                          - generic [ref=e2638]:
+                            - generic [ref=e2639]:
+                              - heading "Show Footer Bottom" [level=4] [ref=e2640]
+                              - paragraph [ref=e2641]: Enabling this option will show Footer Bottom area
+                            - combobox [ref=e2646] [cursor=pointer]:
+                              - option "Default" [selected]
+                              - option "No"
+                              - option "Yes"
+                          - generic [ref=e2647]:
+                            - generic [ref=e2648]:
+                              - heading "Footer Bottom Styles" [level=4] [ref=e2649]
+                              - paragraph [ref=e2650]: Define style for footer bottom area
+                            - generic [ref=e2653]:
+                              - generic [ref=e2655]:
+                                - emphasis [ref=e2656]: Background Color
+                                - button "Select Color" [ref=e2658] [cursor=pointer]:
+                                  - generic [ref=e2659]: Select Color
+                              - generic [ref=e2661]:
+                                - emphasis [ref=e2662]: Border Color
+                                - button "Select Color" [ref=e2664] [cursor=pointer]:
+                                  - generic [ref=e2665]: Select Color
+                              - generic [ref=e2667]:
+                                - emphasis [ref=e2668]: Border Width
+                                - generic [ref=e2669]:
+                                  - textbox [ref=e2670]
+                                  - generic [ref=e2671]: px
+                    - generic [ref=e2672]:
+                      - generic [ref=e2673]:
+                        - heading "Elated Content Bottom" [level=2] [ref=e2674]
+                        - generic [ref=e2675]:
+                          - button "Move up" [ref=e2676] [cursor=pointer]:
+                            - generic [ref=e2677]: Move up
+                          - button "Move down" [disabled] [ref=e2679]:
+                            - generic [ref=e2680]: Move down
+                          - 'button "Toggle panel: Elated Content Bottom" [expanded] [ref=e2682] [cursor=pointer]':
+                            - generic [ref=e2683]: "Toggle panel: Elated Content Bottom"
+                      - generic [ref=e2689]:
+                        - generic [ref=e2690]:
+                          - heading "Enable Content Bottom Area" [level=4] [ref=e2691]
+                          - paragraph [ref=e2692]: This option will enable Content Bottom area on pages
+                        - combobox [ref=e2697] [cursor=pointer]:
+                          - option "Default" [selected]
+                          - option "No"
+                          - option "Yes"
+    - contentinfo [ref=e2698]:
+      - paragraph
+      - paragraph
+    - text:                                        
+  - img
+  - img
+```
