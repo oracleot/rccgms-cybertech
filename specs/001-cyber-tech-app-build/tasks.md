@@ -494,6 +494,97 @@ Based on plan.md structure:
 
 ---
 
+## Phase 16: Social Hub Refactor - Direct Uploads ✅
+
+**Purpose**: Replace Google Drive OAuth integration with direct image uploads to Supabase Storage. Simplify the social hub to focus on content creation, AI captions, and planning without platform publishing integrations.
+
+**Constraints**: Images only (jpeg, png, webp), max 5MB per image, max 3 images per post.
+
+### Database & Storage
+
+- [x] T256 Create migration for social-media storage bucket in supabase/migrations/021_social_media_bucket.sql
+  - Create bucket with public access
+  - Add RLS policy restricting uploads to `{user_id}/*` paths
+  - Add policy for authenticated users to read all files
+
+### API Endpoints
+
+- [x] T257 Create POST /api/social/upload endpoint in app/api/social/upload/route.ts
+  - Accept multipart/form-data with image file
+  - Validate file type (jpeg, png, webp) and size (max 5MB)
+  - Store in `social-media/{profile_id}/{uuid}.{ext}`
+  - Return public URL
+  - Follow pattern from app/api/auth/avatar/route.ts
+
+### Components
+
+- [x] T258 Create MediaUploader component in components/social/media-uploader.tsx
+  - Drag-and-drop zone with click-to-upload fallback
+  - Multi-file selection (max 3 images)
+  - Upload progress indicator per file
+  - Thumbnail previews of uploaded images
+  - Remove button per image
+  - Display validation errors (file type, size, count)
+
+- [x] T259 Update ContentComposer in components/social/content-composer.tsx
+  - Replace Drive file selection with MediaUploader component
+  - Remove selectedFiles (DriveFile[]) state, replace with uploadedUrls (string[])
+  - Enforce 3-image limit in UI
+  - Keep CaptionGenerator integration for AI captions
+  - Keep optional scheduled_for date for calendar planning
+  - Update form submission to use uploaded URLs
+
+- [x] T260 Simplify Social Hub page in app/(dashboard)/social/_components/social-hub-client.tsx
+  - Remove Drive connection state (isConnected, accountInfo)
+  - Remove DriveConnect, DriveBrowser, PhotoGrid components
+  - Show upload-first workflow: MediaUploader → CaptionGenerator → Save
+  - Keep ContentList for viewing saved drafts
+  - Keep PlatformPreview for content previews
+
+### Types & Validations
+
+- [x] T261 Update types/social.ts
+  - Remove DriveFile interface
+  - Remove GoogleDriveIntegration interface
+  - Add UploadedMedia type: { url: string; filename: string; size: number }
+
+- [x] T262 [P] Update lib/validations/social.ts
+  - Remove connectDrive and disconnectDrive schemas
+  - Add uploadMedia schema with file type/size validation
+  - Update createContent schema: media_urls max length 3
+
+### Cleanup - Remove Drive Integration
+
+- [x] T263 Delete lib/integrations/google-drive.ts
+
+- [x] T264 [P] Delete Drive OAuth routes:
+  - app/api/social/drive-auth/route.ts
+  - app/api/social/drive-callback/route.ts
+
+- [x] T265 [P] Delete Drive API routes:
+  - app/api/social/folders/route.ts
+  - app/api/social/files/route.ts
+
+- [x] T266 [P] Delete Drive components:
+  - components/social/drive-connect.tsx
+  - components/social/drive-browser.tsx
+  - components/social/photo-grid.tsx
+
+- [x] T267 Update components/social/index.ts
+  - Remove exports: DriveConnect, DriveBrowser, PhotoGrid
+  - Add export: MediaUploader
+
+### Environment Cleanup
+
+- [x] T268 Remove Google Drive environment variables from .env.example
+  - Remove GOOGLE_CLIENT_ID
+  - Remove GOOGLE_CLIENT_SECRET
+  - Remove GOOGLE_REDIRECT_URI
+
+**Checkpoint**: Social Hub uses direct uploads instead of Google Drive. Users can upload images, generate AI captions, save drafts, and use the calendar for content planning.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

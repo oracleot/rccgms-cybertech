@@ -28,21 +28,11 @@ export interface IntegrationStatus {
   expiresAt?: string
 }
 
-// Google Drive file/folder
-export interface DriveFile {
-  id: string
-  name: string
-  mimeType: string
-  thumbnailUrl?: string
-  webViewLink?: string
-  createdTime: string
-  modifiedTime: string
-}
-
-export interface DriveFolder {
-  id: string
-  name: string
-  parentId?: string
+// Uploaded media from direct upload
+export interface UploadedMedia {
+  url: string
+  filename: string
+  size: number
 }
 
 // Create social content payload
