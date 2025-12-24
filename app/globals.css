@@ -127,7 +127,75 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-}
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+  @keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+    }
+  15%, 35% {
+    transform: translateZ(0) rotate(90deg);
+    }
+  65%, 85% {
+    transform: translateZ(0) rotate(270deg);
+    }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+    }
+  }
+  --animate-pulse: pulse var(--duration) ease-out infinite
+;
+  @keyframes pulse {
+  0%, 100% {
+    boxShadow: 0 0 0 0 var(--pulse-color);
+    }
+  50% {
+    boxShadow: 0 0 0 8px var(--pulse-color);
+    }
+  }
+  --animate-ripple: ripple var(--duration,2s) ease calc(var(--i, 0)*.2s) infinite;
+  @keyframes ripple {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    }
+  50% {
+    transform: translate(-50%, -50%) scale(0.9);
+    }
+  }
+  --animate-orbit: orbit calc(var(--duration)*1s) linear infinite;
+  @keyframes orbit {
+  0% {
+    transform: rotate(calc(var(--angle) * 1deg)) translateY(calc(var(--radius) * 1px)) rotate(calc(var(--angle) * -1deg));
+    }
+  100% {
+    transform: rotate(calc(var(--angle) * 1deg + 360deg)) translateY(calc(var(--radius) * 1px)) rotate(calc((var(--angle) * -1deg) - 360deg));
+    }
+  }
+  --animate-gradient: gradient 8s linear infinite;
+  @keyframes gradient {
+  to {
+    background-position: var(--bg-size, 300%) 0;
+    }
+  }
+  --animate-meteor: meteor 5s linear infinite;
+  @keyframes meteor {
+  0% {
+    transform: rotate(var(--angle)) translateX(0);
+    opacity: 1;
+    }
+  70% {
+    opacity: 1;
+    }
+  100% {
+    transform: rotate(var(--angle)) translateX(-500px);
+    opacity: 0;
+    }
+  }}
 
 :root {
   --radius: 0.625rem;
@@ -204,5 +272,183 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ============================================
+   Phase 9: Color Enhancement - T045-T048
+   ============================================ */
+
+/* T045: Tech accent color variables */
+:root {
+  --electric-blue: oklch(0.65 0.2 250);
+  --electric-purple: oklch(0.6 0.22 290);
+  --tech-cyan: oklch(0.75 0.15 195);
+  --glow-violet: oklch(0.55 0.25 280);
+}
+
+.dark {
+  --electric-blue: oklch(0.7 0.22 250);
+  --electric-purple: oklch(0.65 0.24 290);
+  --tech-cyan: oklch(0.8 0.17 195);
+  --glow-violet: oklch(0.6 0.27 280);
+}
+
+/* T046: Gradient CSS utilities */
+.bg-gradient-tech {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--electric-purple) 100%);
+}
+
+.bg-gradient-tech-soft {
+  background: linear-gradient(135deg, oklch(0.95 0.02 280) 0%, oklch(0.92 0.04 250) 100%);
+}
+
+.dark .bg-gradient-tech-soft {
+  background: linear-gradient(135deg, oklch(0.25 0.03 280) 0%, oklch(0.22 0.04 250) 100%);
+}
+
+.bg-gradient-glow {
+  background: radial-gradient(ellipse at center, var(--electric-purple) 0%, transparent 70%);
+}
+
+.bg-gradient-radial-tech {
+  background: radial-gradient(circle at 50% 50%, oklch(0.6 0.2 280 / 20%) 0%, transparent 50%);
+}
+
+.dark .bg-gradient-radial-tech {
+  background: radial-gradient(circle at 50% 50%, oklch(0.6 0.2 280 / 30%) 0%, transparent 50%);
+}
+
+/* T047: Glow effect CSS utilities */
+.glow-primary {
+  box-shadow: 0 0 20px oklch(0.6 0.2 280 / 30%), 0 0 40px oklch(0.6 0.2 280 / 15%);
+}
+
+.dark .glow-primary {
+  box-shadow: 0 0 20px oklch(0.6 0.2 280 / 40%), 0 0 40px oklch(0.6 0.2 280 / 20%);
+}
+
+.glow-urgent {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px oklch(0.65 0.25 25 / 40%), 0 0 20px oklch(0.65 0.25 25 / 20%);
+  }
+  50% {
+    box-shadow: 0 0 20px oklch(0.65 0.25 25 / 60%), 0 0 40px oklch(0.65 0.25 25 / 30%);
+  }
+}
+
+.glow-success {
+  box-shadow: 0 0 15px oklch(0.7 0.2 145 / 30%), 0 0 30px oklch(0.7 0.2 145 / 15%);
+}
+
+.glow-electric {
+  box-shadow: 0 0 15px var(--electric-blue), 0 0 30px oklch(0.65 0.2 250 / 30%);
+}
+
+/* T048: Harmonious chart colors (purple/blue/teal palette) */
+:root {
+  --chart-1: oklch(0.6 0.22 280);   /* Purple */
+  --chart-2: oklch(0.65 0.2 250);   /* Blue */
+  --chart-3: oklch(0.7 0.18 195);   /* Teal/Cyan */
+  --chart-4: oklch(0.65 0.15 280);  /* Soft Purple */
+  --chart-5: oklch(0.75 0.12 220);  /* Light Blue */
+}
+
+.dark {
+  --chart-1: oklch(0.65 0.24 280);  /* Bright Purple */
+  --chart-2: oklch(0.7 0.22 250);   /* Bright Blue */
+  --chart-3: oklch(0.75 0.2 195);   /* Bright Cyan */
+  --chart-4: oklch(0.7 0.17 280);   /* Medium Purple */
+  --chart-5: oklch(0.8 0.14 220);   /* Light Blue */
+}
+
+/* ============================================
+   Phase 11: Micro-Interactions - T052-T055
+   ============================================ */
+
+/* T052: Button hover scale effect */
+button[data-slot="button"]:not(:disabled):not([data-variant="link"]):hover {
+  transform: scale(1.02);
+}
+
+button[data-slot="button"]:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+button[data-slot="button"] {
+  transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* T053: Animated focus ring */
+button[data-slot="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  ring: 2px;
+  ring-offset: 2px;
+  transition: ring 200ms ease, ring-offset 200ms ease, box-shadow 200ms ease;
+}
+
+/* T054: Loading state animation for buttons */
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin-smooth 0.8s linear infinite;
+}
+
+/* T055: Card hover states globally */
+[data-slot="card"]:not([data-static]) {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+[data-slot="card"]:not([data-static]):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px oklch(0 0 0 / 8%), 0 4px 10px oklch(0 0 0 / 5%);
+}
+
+.dark [data-slot="card"]:not([data-static]):hover {
+  box-shadow: 0 8px 25px oklch(0 0 0 / 25%), 0 4px 10px oklch(0 0 0 / 15%);
+}
+
+/* ============================================
+   Phase 12: Accessibility - T057
+   ============================================ */
+
+/* Reduced motion support - disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Keep essential UI feedback but remove decorative animations */
+  button[data-slot="button"]:hover,
+  button[data-slot="button"]:active {
+    transform: none !important;
+  }
+  
+  [data-slot="card"]:hover {
+    transform: none !important;
+  }
+  
+  .glow-urgent {
+    animation: none !important;
   }
 }
