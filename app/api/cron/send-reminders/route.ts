@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sendRotaReminders } from "@/lib/notifications/rota-notifications"
+import { processPendingNotifications } from "@/lib/notifications/notification-service"
 
 /**
- * Cron endpoint to send duty reminders
+ * Cron endpoint to send duty reminders and process pending notifications
  * 
  * This should be called daily by Vercel Cron or an external scheduler.
- * It sends reminders to volunteers who have upcoming service assignments.
+ * It sends reminders to volunteers who have upcoming service assignments,
+ * and also processes any queued notifications.
  * 
  * Expected to be called at ~8:00 AM local time daily.
+ * 
+ * Note: On Vercel Hobby plan, cron jobs are limited to:
+ * - 2 cron jobs maximum
+ * - Once per day execution only
  */
 export async function GET(request: NextRequest) {
   // Verify cron secret for security
@@ -22,22 +28,37 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    console.log("[Cron] Starting duty reminder job")
+    console.log("[Cron] Starting daily notifications job")
 
-    const result = await sendRotaReminders()
-
+    // 1. Process any pending queued notifications first
+    console.log("[Cron] Processing pending notifications...")
+    const pendingResult = await processPendingNotifications()
     console.log(
-      `[Cron] Duty reminders complete: ${result.sent.email} emails, ${result.sent.sms} SMS, ${result.failed} failed`
+      `[Cron] Pending notifications: ${pendingResult.processed} processed, ${pendingResult.sent} sent, ${pendingResult.failed} failed`
+    )
+
+    // 2. Send duty reminders
+    console.log("[Cron] Sending duty reminders...")
+    const reminderResult = await sendRotaReminders()
+    console.log(
+      `[Cron] Duty reminders: ${reminderResult.sent.email} emails, ${reminderResult.sent.sms} SMS, ${reminderResult.failed} failed`
     )
 
     return NextResponse.json({
       success: true,
-      sent: result.sent,
-      failed: result.failed,
+      pendingNotifications: {
+        processed: pendingResult.processed,
+        sent: pendingResult.sent,
+        failed: pendingResult.failed,
+      },
+      dutyReminders: {
+        sent: reminderResult.sent,
+        failed: reminderResult.failed,
+      },
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("[Cron] Error in duty reminder job:", error)
+    console.error("[Cron] Error in daily notifications job:", error)
     return NextResponse.json(
       {
         success: false,

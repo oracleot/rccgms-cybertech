@@ -1,15 +1,23 @@
 /**
  * Cron Job: Publish Scheduled Social Posts
- * Runs every 5 minutes to check for posts that should be published.
- * Note: Actual publishing to social platforms would require additional
+ * 
+ * Runs once daily at 9:00 AM to check for posts scheduled for that day.
+ * 
+ * Note: On Vercel Hobby plan, cron jobs are limited to:
+ * - 2 cron jobs maximum
+ * - Once per day execution only
+ * 
+ * For more frequent publishing (e.g., every 5 minutes), upgrade to Pro plan.
+ * 
+ * Actual publishing to social platforms would require additional
  * platform-specific APIs (Facebook Graph API, Twitter API, etc.)
- * For now, this marks posts as published and could trigger notifications.
+ * For now, this marks posts as published and creates notifications.
  */
 
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     // Verify the request is from Vercel Cron (in production)
     const authHeader = request.headers.get("authorization")
@@ -23,7 +31,7 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
     const now = new Date().toISOString()
 
-    // Find all scheduled posts that should be published
+    // Find all scheduled posts that should be published (scheduled_for <= now)
     const { data: postsToPublish, error: fetchError } = await supabase
       .from("social_posts")
       .select("*")
@@ -32,7 +40,7 @@ export async function POST(request: NextRequest) {
       .order("scheduled_for", { ascending: true })
 
     if (fetchError) {
-      console.error("Error fetching scheduled posts:", fetchError)
+      console.error("[Cron] Error fetching scheduled posts:", fetchError)
       return NextResponse.json(
         { error: "Failed to fetch scheduled posts" },
         { status: 500 }
@@ -44,8 +52,11 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "No posts to publish",
         published: 0,
+        timestamp: new Date().toISOString(),
       })
     }
+
+    console.log(`[Cron] Found ${postsToPublish.length} posts to publish`)
 
     const results = {
       published: 0,
@@ -79,10 +90,10 @@ export async function POST(request: NextRequest) {
 
         // Log the publication
         console.log(
-          `Published post ${post.id} to platforms: ${post.platforms.join(", ")}`
+          `[Cron] Published post ${post.id} to platforms: ${post.platforms.join(", ")}`
         )
 
-        // Optionally, create a notification for the creator
+        // Create a notification for the creator
         await supabase.from("notifications").insert({
           profile_id: post.created_by,
           type: "social_post",
@@ -91,7 +102,7 @@ export async function POST(request: NextRequest) {
           data: { postId: post.id },
         })
       } catch (error) {
-        console.error(`Failed to publish post ${post.id}:`, error)
+        console.error(`[Cron] Failed to publish post ${post.id}:`, error)
         results.failed++
         results.errors.push(
           `Post ${post.id}: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -109,17 +120,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Processed ${postsToPublish.length} posts`,
       ...results,
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Publish scheduled posts cron error:", error)
+    console.error("[Cron] Publish scheduled posts error:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     )
   }
-}
-
-// Also support GET for manual testing
-export async function GET(request: NextRequest) {
-  return POST(request)
 }
