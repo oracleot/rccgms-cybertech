@@ -2,88 +2,43 @@
 
 /**
  * Social Media Hub Client Component
- * Integrates all social media functionality: Drive browsing, caption generation,
- * platform previews, and content scheduling.
+ * Upload images, generate AI captions, preview across platforms, and schedule content.
  */
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { DriveConnect } from "@/components/social/drive-connect"
-import { DriveBrowser } from "@/components/social/drive-browser"
-import { PhotoGrid } from "@/components/social/photo-grid"
 import { CaptionGenerator } from "@/components/social/caption-generator"
-import { PlatformPreview } from "@/components/social/platform-preview"
+import { PlatformPreview, type DeviceType } from "@/components/social/platform-preview"
 import { ContentComposer } from "@/components/social/content-composer"
 import { ScheduledPosts } from "@/components/social/scheduled-posts"
-import type { DriveFile, DriveFolder } from "@/lib/integrations/google-drive"
-import type { SocialPlatform } from "@/types/social"
+import type { UploadedMedia } from "@/components/social/media-uploader"
 
 export function SocialHubClient() {
-  const [isConnected, setIsConnected] = useState(false)
-  const [currentFolder, setCurrentFolder] = useState<DriveFolder | null>(null)
-  const [selectedFiles, setSelectedFiles] = useState<DriveFile[]>([])
+  const [uploadedMedia, setUploadedMedia] = useState<UploadedMedia[]>([])
   const [caption, setCaption] = useState("")
   const [activeTab, setActiveTab] = useState("create")
-
-  // Check connection status on mount
-  useEffect(() => {
-    checkConnection()
-  }, [])
-
-  async function checkConnection() {
-    try {
-      const response = await fetch("/api/social/drive/folders")
-      setIsConnected(response.ok)
-    } catch {
-      setIsConnected(false)
-    }
-  }
-
-  function handleSelectFolder(folder: DriveFolder) {
-    setCurrentFolder(folder)
-  }
-
-  function handleSelectFile(file: DriveFile) {
-    setSelectedFiles((prev) => {
-      const exists = prev.find((f) => f.id === file.id)
-      if (exists) {
-        return prev.filter((f) => f.id !== file.id)
-      }
-      return [...prev, file]
-    })
-  }
-
-  function handleRemoveFile(fileId: string) {
-    setSelectedFiles((prev) => prev.filter((f) => f.id !== fileId))
-  }
-
-  function handleClearFiles() {
-    setSelectedFiles([])
-  }
+  const [device, setDevice] = useState<DeviceType>("iphone")
 
   function handleCaptionGenerated(newCaption: string) {
     setCaption(newCaption)
   }
 
+  function handleDeviceChange(newDevice: DeviceType) {
+    setDevice(newDevice)
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Social Media Hub</h1>
-          <p className="text-muted-foreground">
-            Create and schedule social media content
-          </p>
-        </div>
-        <DriveConnect
-          isConnected={isConnected}
-          onConnectionChange={setIsConnected}
-        />
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Social Media Hub</h1>
+        <p className="text-muted-foreground">
+          Create and schedule social media content
+        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -95,76 +50,41 @@ export function SocialHubClient() {
         </TabsList>
 
         <TabsContent value="create" className="mt-6">
-          {!isConnected ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                Connect your Google Drive to browse photos for your social posts.
-              </p>
-              <DriveConnect
-                isConnected={isConnected}
-                onConnectionChange={setIsConnected}
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Left column: Upload and AI caption */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Caption generator */}
+              <CaptionGenerator
+                onCaptionGenerated={handleCaptionGenerated}
+                onDeviceChange={handleDeviceChange}
+                initialContext={
+                  uploadedMedia.length > 0
+                    ? `Content includes ${uploadedMedia.length} image(s)`
+                    : ""
+                }
+              />
+
+              {/* Platform previews */}
+              {caption && (
+                <PlatformPreview
+                  content={caption}
+                  mediaUrls={uploadedMedia.map((m) => m.url)}
+                  platforms={["facebook", "instagram", "youtube"]}
+                  device={device}
+                />
+              )}
+            </div>
+
+            {/* Right column: Composer */}
+            <div>
+              <ContentComposer
+                uploadedMedia={uploadedMedia}
+                onMediaChange={setUploadedMedia}
+                initialCaption={caption}
+                onCaptionChange={setCaption}
               />
             </div>
-          ) : (
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Left column: Drive browsing */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  {/* Folder browser */}
-                  <div className="h-[400px] border rounded-lg overflow-hidden">
-                    <ScrollArea className="h-full">
-                      <DriveBrowser
-                        onSelectFolder={handleSelectFolder}
-                        selectedFolderId={currentFolder?.id}
-                      />
-                    </ScrollArea>
-                  </div>
-
-                  {/* Photo grid */}
-                  <div className="h-[400px] border rounded-lg overflow-hidden">
-                    <ScrollArea className="h-full">
-                      <PhotoGrid
-                        folderId={currentFolder?.id || null}
-                        selectedFiles={selectedFiles}
-                        onSelectFile={handleSelectFile}
-                        maxSelection={10}
-                      />
-                    </ScrollArea>
-                  </div>
-                </div>
-
-                {/* Caption generator */}
-                <CaptionGenerator
-                  onCaptionGenerated={handleCaptionGenerated}
-                  initialContext={
-                    selectedFiles.length > 0
-                      ? `Content includes ${selectedFiles.length} photo(s)/video(s)`
-                      : ""
-                  }
-                />
-
-                {/* Platform previews */}
-                {caption && (
-                  <PlatformPreview
-                    content={caption}
-                    mediaUrls={selectedFiles
-                      .map((f) => f.thumbnailUrl?.replace("=s220", "=s1000"))
-                      .filter(Boolean) as string[]}
-                    platforms={["facebook", "instagram", "twitter", "youtube"]}
-                  />
-                )}
-              </div>
-
-              {/* Right column: Composer */}
-              <div>
-                <ContentComposer
-                  selectedFiles={selectedFiles}
-                  onRemoveFile={handleRemoveFile}
-                  onClearFiles={handleClearFiles}
-                />
-              </div>
-            </div>
-          )}
+          </div>
         </TabsContent>
 
         <TabsContent value="scheduled" className="mt-6">

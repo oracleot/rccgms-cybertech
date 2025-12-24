@@ -13,7 +13,7 @@ export type SocialIntegration = Tables<"social_integrations">
 export type PostStatus = Enums<"post_status">
 
 // Platform types
-export type SocialPlatform = "facebook" | "instagram" | "youtube" | "twitter"
+export type SocialPlatform = "facebook" | "instagram" | "youtube"
 
 // Post with creator info
 export interface SocialPostWithDetails extends SocialPost {
@@ -28,21 +28,11 @@ export interface IntegrationStatus {
   expiresAt?: string
 }
 
-// Google Drive file/folder
-export interface DriveFile {
-  id: string
-  name: string
-  mimeType: string
-  thumbnailUrl?: string
-  webViewLink?: string
-  createdTime: string
-  modifiedTime: string
-}
-
-export interface DriveFolder {
-  id: string
-  name: string
-  parentId?: string
+// Uploaded media from direct upload
+export interface UploadedMedia {
+  url: string
+  filename: string
+  size: number
 }
 
 // Create social content payload

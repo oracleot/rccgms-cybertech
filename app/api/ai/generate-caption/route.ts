@@ -10,7 +10,6 @@ import { streamText } from "ai"
 import { generateCaptionSchema } from "@/lib/validations/social"
 
 const platformLimits = {
-  twitter: 280,
   facebook: 2000,
   instagram: 2200,
   youtube: 5000,
@@ -23,9 +22,6 @@ const platformPrompts = {
   instagram: `Create an Instagram caption for a church post that's visually descriptive. 
     Start with an attention-grabbing first line (shows in preview).
     Use line breaks for readability. Include a call to action.`,
-
-  twitter: `Create a concise, impactful tweet for a church. Be direct and engaging.
-    Stay within 280 characters including any hashtags.`,
 
   youtube: `Create a YouTube community post caption for a church. Include:
     - Opening hook (first 2 lines show in preview)

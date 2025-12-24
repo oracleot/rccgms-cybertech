@@ -4,7 +4,7 @@
  * Content Composer Component for Social Posts
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -30,52 +30,55 @@ import {
 } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Send,
   Calendar as CalendarIcon,
   Save,
   Loader2,
   Clock,
-  X,
-  ImageIcon,
 } from "lucide-react"
-import { format } from "date-fns"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
-import type { DriveFile } from "@/lib/integrations/google-drive"
+import { MediaUploader, type UploadedMedia } from "./media-uploader"
 import type { SocialPlatform } from "@/types/social"
 
 interface ContentComposerProps {
-  selectedFiles: DriveFile[]
-  onRemoveFile: (fileId: string) => void
-  onClearFiles: () => void
+  uploadedMedia: UploadedMedia[]
+  onMediaChange: (media: UploadedMedia[]) => void
+  initialCaption?: string
+  onCaptionChange?: (caption: string) => void
 }
 
 const platforms: { value: SocialPlatform; label: string }[] = [
   { value: "facebook", label: "Facebook" },
   { value: "instagram", label: "Instagram" },
   { value: "youtube", label: "YouTube" },
-  { value: "twitter", label: "Twitter/X" },
 ]
 
 export function ContentComposer({
-  selectedFiles,
-  onRemoveFile,
-  onClearFiles,
+  uploadedMedia,
+  onMediaChange,
+  initialCaption = "",
+  onCaptionChange,
 }: ContentComposerProps) {
   const router = useRouter()
-  const [content, setContent] = useState("")
+  const [content, setContent] = useState(initialCaption)
   const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatform[]>([
     "facebook",
   ])
+
+  // Sync content when initialCaption changes (e.g., from caption generator)
+  useEffect(() => {
+    if (initialCaption) {
+      setContent(initialCaption)
+    }
+  }, [initialCaption])
   const [scheduleDate, setScheduleDate] = useState<Date>()
   const [scheduleTime, setScheduleTime] = useState("09:00")
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+
+  function handleContentChange(value: string) {
+    setContent(value)
+    onCaptionChange?.(value)
+  }
 
   function togglePlatform(platform: SocialPlatform) {
     setSelectedPlatforms((prev) =>
@@ -112,9 +115,7 @@ export function ContentComposer({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content,
-          mediaUrls: selectedFiles.map((f) =>
-            f.thumbnailUrl?.replace("=s220", "=s1000") || f.webViewLink
-          ).filter(Boolean),
+          mediaUrls: uploadedMedia.map((m) => m.url),
           platforms: selectedPlatforms,
           scheduledFor,
         }),
@@ -135,7 +136,7 @@ export function ContentComposer({
       setContent("")
       setSelectedPlatforms(["facebook"])
       setScheduleDate(undefined)
-      onClearFiles()
+      onMediaChange([])
 
       // Redirect to calendar
       router.push("/social/calendar")
@@ -156,48 +157,15 @@ export function ContentComposer({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Selected media */}
-        {selectedFiles.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Selected Media ({selectedFiles.length})</Label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearFiles}
-                className="h-7 text-xs"
-              >
-                Clear all
-              </Button>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {selectedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border"
-                >
-                  {file.thumbnailUrl ? (
-                    <img
-                      src={file.thumbnailUrl}
-                      alt={file.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => onRemoveFile(file.id)}
-                    className="absolute top-0.5 right-0.5 p-0.5 bg-black/50 rounded-full text-white hover:bg-black/70"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Media uploader */}
+        <div className="space-y-2">
+          <Label>Images</Label>
+          <MediaUploader
+            uploadedMedia={uploadedMedia}
+            onMediaChange={onMediaChange}
+            maxFiles={3}
+          />
+        </div>
 
         {/* Caption input */}
         <div className="space-y-2">
@@ -206,17 +174,12 @@ export function ContentComposer({
             id="content"
             placeholder="What would you like to share?"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => handleContentChange(e.target.value)}
             rows={5}
           />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{content.length} characters</span>
-            {content.length > 280 && (
-              <span className="text-amber-500">
-                Twitter limit exceeded
-              </span>
-            )}
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {content.length} characters
+          </p>
         </div>
 
         {/* Platform selection */}

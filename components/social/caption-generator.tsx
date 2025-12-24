@@ -25,19 +25,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Sparkles, Loader2, Copy, Check, RefreshCw } from "lucide-react"
+import { Sparkles, Loader2, Copy, Check, RefreshCw, Smartphone } from "lucide-react"
 import { toast } from "sonner"
+import type { DeviceType } from "./platform-preview"
 
 interface CaptionGeneratorProps {
   onCaptionGenerated: (caption: string) => void
+  onDeviceChange?: (device: DeviceType) => void
   initialContext?: string
 }
 
 export function CaptionGenerator({
   onCaptionGenerated,
+  onDeviceChange,
   initialContext = "",
 }: CaptionGeneratorProps) {
-  const [platform, setPlatform] = useState<string>("facebook")
+  const [device, setDevice] = useState<DeviceType>("iphone")
   const [tone, setTone] = useState<string>("inspirational")
   const [context, setContext] = useState(initialContext)
   const [includeEmojis, setIncludeEmojis] = useState(true)
@@ -46,11 +49,17 @@ export function CaptionGenerator({
 
   const { completion, complete, isLoading } = useCompletion({
     api: "/api/ai/generate-caption",
+    streamProtocol: "text",
     onError: (error) => {
       console.error("Caption generation error:", error)
       toast.error("Failed to generate caption. Please try again.")
     },
   })
+
+  function handleDeviceChange(value: DeviceType) {
+    setDevice(value)
+    onDeviceChange?.(value)
+  }
 
   async function handleGenerate() {
     if (!context.trim()) {
@@ -60,7 +69,7 @@ export function CaptionGenerator({
 
     await complete("", {
       body: {
-        platform,
+        platform: "facebook", // Still use platform for caption generation
         tone,
         context,
         includeEmojis,
@@ -97,19 +106,27 @@ export function CaptionGenerator({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Platform selection */}
+        {/* Device selection */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="platform">Platform</Label>
-            <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger id="platform">
+            <Label htmlFor="device">Device Preview</Label>
+            <Select value={device} onValueChange={(v) => handleDeviceChange(v as DeviceType)}>
+              <SelectTrigger id="device">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="facebook">Facebook</SelectItem>
-                <SelectItem value="instagram">Instagram</SelectItem>
-                <SelectItem value="youtube">YouTube</SelectItem>
-                <SelectItem value="twitter">Twitter/X</SelectItem>
+                <SelectItem value="iphone">
+                  <span className="flex items-center gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    iPhone
+                  </span>
+                </SelectItem>
+                <SelectItem value="android">
+                  <span className="flex items-center gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    Android
+                  </span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -207,13 +224,8 @@ export function CaptionGenerator({
               )}
             </div>
             {completion && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 <span>{completion.length} characters</span>
-                {platform === "twitter" && completion.length > 280 && (
-                  <span className="text-destructive">
-                    (exceeds 280 character limit)
-                  </span>
-                )}
               </div>
             )}
           </div>
