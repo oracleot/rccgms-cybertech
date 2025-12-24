@@ -13,7 +13,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { CaptionGenerator } from "@/components/social/caption-generator"
-import { PlatformPreview } from "@/components/social/platform-preview"
+import { PlatformPreview, type DeviceType } from "@/components/social/platform-preview"
 import { ContentComposer } from "@/components/social/content-composer"
 import { ScheduledPosts } from "@/components/social/scheduled-posts"
 import type { UploadedMedia } from "@/components/social/media-uploader"
@@ -22,9 +22,14 @@ export function SocialHubClient() {
   const [uploadedMedia, setUploadedMedia] = useState<UploadedMedia[]>([])
   const [caption, setCaption] = useState("")
   const [activeTab, setActiveTab] = useState("create")
+  const [device, setDevice] = useState<DeviceType>("iphone")
 
   function handleCaptionGenerated(newCaption: string) {
     setCaption(newCaption)
+  }
+
+  function handleDeviceChange(newDevice: DeviceType) {
+    setDevice(newDevice)
   }
 
   return (
@@ -51,6 +56,7 @@ export function SocialHubClient() {
               {/* Caption generator */}
               <CaptionGenerator
                 onCaptionGenerated={handleCaptionGenerated}
+                onDeviceChange={handleDeviceChange}
                 initialContext={
                   uploadedMedia.length > 0
                     ? `Content includes ${uploadedMedia.length} image(s)`
@@ -64,6 +70,7 @@ export function SocialHubClient() {
                   content={caption}
                   mediaUrls={uploadedMedia.map((m) => m.url)}
                   platforms={["facebook", "instagram", "youtube"]}
+                  device={device}
                 />
               )}
             </div>

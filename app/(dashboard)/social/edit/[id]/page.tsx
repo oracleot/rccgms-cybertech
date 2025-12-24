@@ -28,6 +28,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import {
   ArrowLeft,
@@ -37,9 +44,11 @@ import {
   Clock,
   ImageIcon,
   X,
+  Smartphone,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { PlatformPreview, type DeviceType } from "@/components/social/platform-preview"
 import type { SocialPost, SocialPlatform } from "@/types/social"
 
 const platforms: { value: SocialPlatform; label: string }[] = [
@@ -63,6 +72,7 @@ export default function EditPostPage() {
   const [scheduleDate, setScheduleDate] = useState<Date>()
   const [scheduleTime, setScheduleTime] = useState("09:00")
   const [isScheduleOpen, setIsScheduleOpen] = useState(false)
+  const [device, setDevice] = useState<DeviceType>("iphone")
 
   useEffect(() => {
     async function fetchPost() {
@@ -365,24 +375,45 @@ export default function EditPostPage() {
         {/* Preview */}
         <Card>
           <CardHeader>
-            <CardTitle>Preview</CardTitle>
-            <CardDescription>How your post will look</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Preview</CardTitle>
+                <CardDescription>How your post will look</CardDescription>
+              </div>
+              <Select value={device} onValueChange={(v) => setDevice(v as DeviceType)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="iphone">
+                    <span className="flex items-center gap-2">
+                      <Smartphone className="h-4 w-4" />
+                      iPhone
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="android">
+                    <span className="flex items-center gap-2">
+                      <Smartphone className="h-4 w-4" />
+                      Android
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg p-4 bg-muted/50">
-              {mediaUrls.length > 0 && (
-                <div className="aspect-video rounded-lg overflow-hidden mb-4 bg-muted">
-                  <img
-                    src={mediaUrls[0]}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <p className="text-sm whitespace-pre-wrap">
-                {content || "Your caption will appear here..."}
-              </p>
-            </div>
+            {selectedPlatforms.length > 0 ? (
+              <PlatformPreview
+                content={content || "Your caption will appear here..."}
+                mediaUrls={mediaUrls}
+                platforms={selectedPlatforms}
+                device={device}
+              />
+            ) : (
+              <div className="border rounded-lg p-8 bg-muted/50 text-center text-muted-foreground">
+                Select at least one platform to see preview
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
