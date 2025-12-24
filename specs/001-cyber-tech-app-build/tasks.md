@@ -374,7 +374,7 @@ Based on plan.md structure:
 
 ---
 
-## Phase 12: User Story 10 - Volunteer Training & Onboarding (Priority: P3)
+## Phase 12: User Story 10 - Volunteer Training & Onboarding (Priority: P3) ✅
 
 **Goal**: Enable new volunteers to complete structured training programs and track progress toward certification
 
@@ -382,29 +382,29 @@ Based on plan.md structure:
 
 ### Implementation for User Story 10
 
-- [ ] T194 [US10] Create training tracks list page in app/(dashboard)/training/page.tsx
-- [ ] T195 [P] [US10] Create track card component in components/training/track-card.tsx
-- [ ] T196 [P] [US10] Create progress indicator component in components/training/progress-indicator.tsx
-- [ ] T197 [US10] Create track detail page in app/(dashboard)/training/[id]/page.tsx
-- [ ] T198 [P] [US10] Create track overview component in components/training/track-overview.tsx
-- [ ] T199 [P] [US10] Create step list component in components/training/step-list.tsx
-- [ ] T200 [US10] Create step viewer page in app/(dashboard)/training/[id]/step/[stepId]/page.tsx
-- [ ] T201 [P] [US10] Create video step component in components/training/video-step.tsx
-- [ ] T202 [P] [US10] Create document step component in components/training/document-step.tsx
-- [ ] T203 [P] [US10] Create mark complete button component in components/training/mark-complete.tsx
-- [ ] T204 [US10] Implement enrollInTrack server action in app/(dashboard)/training/actions.ts
-- [ ] T205 [P] [US10] Implement completeStep server action in app/(dashboard)/training/actions.ts
-- [ ] T206 [P] [US10] Implement requestVerification server action in app/(dashboard)/training/actions.ts
-- [ ] T207 [US10] Create my training progress page in app/(dashboard)/training/my-progress/page.tsx
-- [ ] T208 [P] [US10] Create my progress summary component in components/training/my-progress-summary.tsx
-- [ ] T209 [US10] Create pending verifications page for mentors in app/(dashboard)/training/verifications/page.tsx
-- [ ] T210 [P] [US10] Create verification request card component in components/training/verification-card.tsx
-- [ ] T211 [P] [US10] Implement verifyStep server action in app/(dashboard)/training/actions.ts
-- [ ] T212 [US10] Create certificate generation endpoint in app/api/training/certificates/[progressId]/route.ts
-- [ ] T213 [P] [US10] Create certificate template in components/training/certificate-template.tsx
-- [ ] T214 [US10] Create admin track management page in app/(dashboard)/admin/training/page.tsx
-- [ ] T215 [P] [US10] Create track editor component in components/admin/track-editor.tsx
-- [ ] T216 [P] [US10] Create step editor component in components/admin/step-editor.tsx
+- [x] T194 [US10] Create training tracks list page in app/(dashboard)/training/page.tsx
+- [x] T195 [P] [US10] Create track card component in components/training/track-card.tsx
+- [x] T196 [P] [US10] Create progress indicator component in components/training/progress-indicator.tsx
+- [x] T197 [US10] Create track detail page in app/(dashboard)/training/[id]/page.tsx
+- [x] T198 [P] [US10] Create track overview component in components/training/track-overview.tsx
+- [x] T199 [P] [US10] Create step list component in components/training/step-list.tsx
+- [x] T200 [US10] Create step viewer page in app/(dashboard)/training/[id]/step/[stepId]/page.tsx
+- [x] T201 [P] [US10] Create video step component in components/training/video-step.tsx
+- [x] T202 [P] [US10] Create document step component in components/training/document-step.tsx
+- [x] T203 [P] [US10] Create mark complete button component in components/training/mark-complete.tsx
+- [x] T204 [US10] Implement enrollInTrack server action in app/(dashboard)/training/actions.ts
+- [x] T205 [P] [US10] Implement completeStep server action in app/(dashboard)/training/actions.ts
+- [x] T206 [P] [US10] Implement requestVerification server action in app/(dashboard)/training/actions.ts
+- [x] T207 [US10] Create my training progress page in app/(dashboard)/training/my-progress/page.tsx
+- [x] T208 [P] [US10] Create my progress summary component in components/training/my-progress-summary.tsx
+- [x] T209 [US10] Create pending verifications page for mentors in app/(dashboard)/training/verifications/page.tsx
+- [x] T210 [P] [US10] Create verification request card component in components/training/verification-card.tsx
+- [x] T211 [P] [US10] Implement verifyStep server action in app/(dashboard)/training/actions.ts
+- [x] T212 [US10] Create certificate generation endpoint in app/api/training/certificates/[progressId]/route.ts
+- [x] T213 [P] [US10] Create certificate template in components/training/certificate-template.tsx
+- [x] T214 [US10] Create admin track management page in app/(dashboard)/admin/training/page.tsx
+- [x] T215 [P] [US10] Create track editor component in components/admin/track-editor.tsx
+- [x] T216 [P] [US10] Create step editor component in components/admin/step-editor.tsx
 
 **Checkpoint**: User Story 10 (Training) is fully functional and testable independently
 
