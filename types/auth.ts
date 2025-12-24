@@ -12,9 +12,26 @@ export type Position = Tables<"positions">
 // User role enum
 export type UserRole = Enums<"user_role">
 
+// User department assignment (junction table)
+export interface UserDepartment {
+  id: string
+  user_id: string
+  department_id: string
+  is_primary: boolean
+  assigned_at: string
+  assigned_by: string | null
+  department?: Department
+}
+
 // Extended profile with relations
 export interface ProfileWithDepartment extends Profile {
   department: Department | null
+}
+
+// Extended profile with all department assignments
+export interface ProfileWithDepartments extends Profile {
+  department: Department | null
+  user_departments: UserDepartment[]
 }
 
 // User session data (from Supabase Auth + profile)

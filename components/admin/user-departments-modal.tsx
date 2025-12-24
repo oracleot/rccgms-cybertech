@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
-import { Shield, Loader2, Star, Building2 } from "lucide-react"
+import { Building2, Loader2, Star, Trash2, Plus } from "lucide-react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -15,27 +15,18 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
-import type { UserRole } from "@/lib/constants"
-import { updateUserRole } from "./actions"
 
 interface UserWithDepartments extends Profile {
   department: Department | null
-  user_departments?: (UserDepartment & { department: Department })[]
+  user_departments: (UserDepartment & { department: Department })[]
 }
 
-interface RoleEditorModalProps {
+interface UserDepartmentsModalProps {
   userId: string
   users: UserWithDepartments[]
   departments: Department[]
@@ -50,43 +41,33 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
-const roleDescriptions: Record<string, string> = {
-  admin: "Full access to all features including user management and system settings",
-  leader: "Can manage rotas, equipment, rundowns, and approve swap requests",
-  volunteer: "Can view schedules, submit availability, and request swaps",
-}
-
 interface DepartmentAssignment {
   departmentId: string
   isPrimary: boolean
 }
 
-export function RoleEditorModal({
+export function UserDepartmentsModal({
   userId,
   users,
   departments,
-}: RoleEditorModalProps) {
+}: UserDepartmentsModalProps) {
   const router = useRouter()
   const user = users.find((u) => u.id === userId)
   const [isPending, startTransition] = useTransition()
-  const [role, setRole] = useState<UserRole>(user?.role as UserRole || "volunteer")
   
-  // Initialize department assignments from user_departments or fallback to legacy
-  const getInitialAssignments = (): DepartmentAssignment[] => {
-    if (user?.user_departments && user.user_departments.length > 0) {
-      return user.user_departments.map(ud => ({
-        departmentId: ud.department_id,
-        isPrimary: ud.is_primary,
-      }))
-    }
-    // Fallback to legacy department_id
-    if (user?.department_id) {
-      return [{ departmentId: user.department_id, isPrimary: true }]
-    }
-    return []
-  }
+  // Initialize with current department assignments
+  const initialAssignments: DepartmentAssignment[] = user?.user_departments?.map(ud => ({
+    departmentId: ud.department_id,
+    isPrimary: ud.is_primary,
+  })) || []
   
-  const [assignments, setAssignments] = useState<DepartmentAssignment[]>(getInitialAssignments())
+  // Fallback: if no user_departments but has department_id, use that
+  const fallbackAssignments: DepartmentAssignment[] = 
+    initialAssignments.length === 0 && user?.department_id 
+      ? [{ departmentId: user.department_id, isPrimary: true }]
+      : initialAssignments
+  
+  const [assignments, setAssignments] = useState<DepartmentAssignment[]>(fallbackAssignments)
 
   if (!user) {
     return null
@@ -100,18 +81,21 @@ export function RoleEditorModal({
     setAssignments(prev => {
       const exists = prev.find(a => a.departmentId === departmentId)
       if (exists) {
+        // Remove if unchecking
         const remaining = prev.filter(a => a.departmentId !== departmentId)
+        // If we removed the primary, make the first one primary
         if (exists.isPrimary && remaining.length > 0) {
           remaining[0].isPrimary = true
         }
         return remaining
       } else {
+        // Add new department
         return [...prev, { departmentId, isPrimary: prev.length === 0 }]
       }
     })
   }
 
-  const setPrimaryDepartment = (departmentId: string) => {
+  const setPrimary = (departmentId: string) => {
     setAssignments(prev => 
       prev.map(a => ({
         ...a,
@@ -120,22 +104,8 @@ export function RoleEditorModal({
     )
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     startTransition(async () => {
-      // First update role and primary department
-      const primaryDept = assignments.find(a => a.isPrimary)
-      const result = await updateUserRole({
-        userId: user.id,
-        role,
-        departmentId: primaryDept?.departmentId || null,
-      })
-
-      if (!result.success) {
-        toast.error(result.error || "Failed to update user")
-        return
-      }
-
-      // Then update department assignments via API
       try {
         const response = await fetch("/api/admin/user-departments", {
           method: "POST",
@@ -146,12 +116,13 @@ export function RoleEditorModal({
           }),
         })
 
+        const data = await response.json()
+
         if (!response.ok) {
-          const data = await response.json()
           throw new Error(data.error || "Failed to update departments")
         }
 
-        toast.success("User updated successfully")
+        toast.success("Departments updated successfully")
         handleClose()
         router.refresh()
       } catch (error) {
@@ -160,16 +131,19 @@ export function RoleEditorModal({
     })
   }
 
+  const selectedCount = assignments.length
+
   return (
     <Dialog open onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Edit User Role & Departments
+            <Building2 className="h-5 w-5" />
+            Manage Departments
           </DialogTitle>
           <DialogDescription>
-            Change role and department assignments for this user
+            Assign this user to one or more departments. The primary department is used for
+            scheduling and notifications.
           </DialogDescription>
         </DialogHeader>
 
@@ -180,42 +154,26 @@ export function RoleEditorModal({
               <AvatarImage src={user.avatar_url || undefined} />
               <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <div className="font-medium">{user.name}</div>
               <div className="text-sm text-muted-foreground">{user.email}</div>
             </div>
-          </div>
-
-          {/* Role Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="leader">Leader</SelectItem>
-                <SelectItem value="volunteer">Volunteer</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {roleDescriptions[role]}
-            </p>
+            {selectedCount > 0 && (
+              <Badge variant="secondary">
+                {selectedCount} department{selectedCount !== 1 ? "s" : ""}
+              </Badge>
+            )}
           </div>
 
           <Separator />
 
-          {/* Department Selection - Multi-select */}
+          {/* Department Selection */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              <Label>Departments</Label>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Select departments for this user. Click the star to set primary.
+            <Label>Departments</Label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Check the departments this user belongs to. Click the star to set as primary.
             </p>
-            <ScrollArea className="h-[180px] rounded-md border p-3">
+            <ScrollArea className="h-[280px] rounded-md border p-3">
               <div className="space-y-2">
                 {departments.map((dept) => {
                   const assignment = assignments.find(a => a.departmentId === dept.id)
@@ -225,32 +183,39 @@ export function RoleEditorModal({
                   return (
                     <div
                       key={dept.id}
-                      className={`flex items-center gap-3 rounded-lg border p-2 transition-colors ${
+                      className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
                         isSelected ? "bg-muted/50 border-primary/50" : "hover:bg-muted/30"
                       }`}
                     >
                       <Checkbox
-                        id={`role-dept-${dept.id}`}
+                        id={`dept-${dept.id}`}
                         checked={isSelected}
                         onCheckedChange={() => toggleDepartment(dept.id)}
                       />
-                      <Label
-                        htmlFor={`role-dept-${dept.id}`}
-                        className="flex-1 font-medium cursor-pointer"
-                      >
-                        {dept.name}
-                      </Label>
+                      <div className="flex-1 min-w-0">
+                        <Label
+                          htmlFor={`dept-${dept.id}`}
+                          className="font-medium cursor-pointer"
+                        >
+                          {dept.name}
+                        </Label>
+                        {dept.description && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {dept.description}
+                          </p>
+                        )}
+                      </div>
                       {isSelected && (
                         <Button
                           type="button"
                           variant={isPrimary ? "default" : "ghost"}
                           size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => setPrimaryDepartment(dept.id)}
+                          className="h-8 w-8 p-0"
+                          onClick={() => setPrimary(dept.id)}
                           title={isPrimary ? "Primary department" : "Set as primary"}
                         >
                           <Star
-                            className={`h-3 w-3 ${isPrimary ? "fill-current" : ""}`}
+                            className={`h-4 w-4 ${isPrimary ? "fill-current" : ""}`}
                           />
                         </Button>
                       )}
@@ -259,10 +224,13 @@ export function RoleEditorModal({
                 })}
               </div>
             </ScrollArea>
-            
-            {/* Selected Departments Summary */}
-            {assignments.length > 0 && (
-              <div className="flex flex-wrap gap-1 pt-2">
+          </div>
+
+          {/* Current Assignments Summary */}
+          {assignments.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Current assignments:</Label>
+              <div className="flex flex-wrap gap-2">
                 {assignments.map((a) => {
                   const dept = departments.find(d => d.id === a.departmentId)
                   return (
@@ -277,8 +245,8 @@ export function RoleEditorModal({
                   )
                 })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter>

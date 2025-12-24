@@ -11,9 +11,11 @@ PROFILES ──┬── has many ──> ROTA_ASSIGNMENTS
            ├── has many ──> AVAILABILITY
            ├── has many ──> EQUIPMENT_CHECKOUTS
            ├── has many ──> VOLUNTEER_PROGRESS
-           └── belongs to ──> DEPARTMENTS
+           ├── has many ──> USER_DEPARTMENTS ──> DEPARTMENTS
+           └── belongs to ──> DEPARTMENTS (primary, legacy)
 
 DEPARTMENTS ──┬── has many ──> POSITIONS
+              ├── has many ──> USER_DEPARTMENTS ──> PROFILES
               └── has many ──> ONBOARDING_TRACKS
 
 SERVICES ──> has many ──> ROTAS ──> has many ──> ROTA_ASSIGNMENTS
@@ -59,6 +61,40 @@ User accounts linked to Supabase Auth.
 - UPDATE: Users can update only their own profile
 - INSERT: Via Supabase Auth trigger only
 - DELETE: Admin only
+
+---
+
+### user_departments
+
+Junction table enabling users to belong to multiple departments.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | uuid | PK, default uuid_generate_v4() | Assignment ID |
+| user_id | uuid | FK profiles(id), not null, on delete cascade | User being assigned |
+| department_id | uuid | FK departments(id), not null, on delete cascade | Department assigned to |
+| is_primary | boolean | not null, default false | Whether this is the user's primary department |
+| assigned_at | timestamptz | not null, default now() | When the assignment was made |
+| assigned_by | uuid | FK profiles(id), nullable, on delete set null | Admin/leader who made the assignment |
+
+**Unique**: (user_id, department_id) - prevents duplicate assignments
+
+**Indexes**: `user_id`, `department_id`, (user_id, is_primary) WHERE is_primary = true
+
+**RLS Policies**:
+- SELECT: All authenticated users can read (for assignment dropdowns)
+- INSERT: Admin and leader only
+- UPDATE: Admin and leader only
+- DELETE: Admin and leader only
+
+**Triggers**:
+- `ensure_single_primary_department`: Before INSERT/UPDATE, ensures only one department per user is marked as primary
+- `sync_primary_to_profiles`: After INSERT/UPDATE/DELETE, syncs the primary department to `profiles.department_id` for backwards compatibility
+
+**Notes**:
+- The `is_primary` flag indicates the user's main department, used for scheduling and notifications
+- When a user is assigned to a department marked as primary, `profiles.department_id` is automatically updated
+- Multiple departments allow volunteers to serve across teams (e.g., Sound and Cameras)
 
 ---
 

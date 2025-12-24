@@ -84,3 +84,39 @@ export const updateNotificationPreferencesSchema = z.object({
 })
 
 export type UpdateNotificationPreferencesInput = z.infer<typeof updateNotificationPreferencesSchema>
+
+// Assign user to multiple departments schema (admin/leader only)
+export const assignUserDepartmentsSchema = z.object({
+  userId: z.string().uuid("Invalid user ID"),
+  departments: z.array(z.object({
+    departmentId: z.string().uuid("Invalid department ID"),
+    isPrimary: z.boolean().optional().default(false),
+  })).min(0),
+})
+
+export type AssignUserDepartmentsInput = z.infer<typeof assignUserDepartmentsSchema>
+
+// Single department assignment
+export const addUserDepartmentSchema = z.object({
+  userId: z.string().uuid("Invalid user ID"),
+  departmentId: z.string().uuid("Invalid department ID"),
+  isPrimary: z.boolean().optional().default(false),
+})
+
+export type AddUserDepartmentInput = z.infer<typeof addUserDepartmentSchema>
+
+// Remove user from department
+export const removeUserDepartmentSchema = z.object({
+  userId: z.string().uuid("Invalid user ID"),
+  departmentId: z.string().uuid("Invalid department ID"),
+})
+
+export type RemoveUserDepartmentInput = z.infer<typeof removeUserDepartmentSchema>
+
+// Set primary department
+export const setPrimaryDepartmentSchema = z.object({
+  userId: z.string().uuid("Invalid user ID"),
+  departmentId: z.string().uuid("Invalid department ID"),
+})
+
+export type SetPrimaryDepartmentInput = z.infer<typeof setPrimaryDepartmentSchema>

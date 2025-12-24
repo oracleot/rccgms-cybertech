@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, Edit, Trash2, Mail, Search, Loader2 } from "lucide-react"
+import { MoreHorizontal, Edit, Trash2, Mail, Search, Loader2, Building2, Star } from "lucide-react"
 import { toast } from "sonner"
 import {
   Table,
@@ -42,15 +42,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { deleteUser } from "./actions"
-import type { Profile, Department } from "@/types/auth"
+import type { Profile, Department, UserDepartment } from "@/types/auth"
 
-interface UserWithDepartment extends Profile {
+interface UserWithDepartments extends Profile {
   department: Department | null
+  user_departments?: (UserDepartment & { department: Department })[]
 }
 
 interface UserTableProps {
-  users: UserWithDepartment[]
+  users: UserWithDepartments[]
   departments: Department[]
 }
 
@@ -102,8 +109,18 @@ export function UserTable({ users, departments }: UserTableProps) {
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase())
     const matchesRole = roleFilter === "all" || user.role === roleFilter
-    const matchesDepartment =
-      departmentFilter === "all" || user.department_id === departmentFilter
+    
+    // Check department filter against all user departments
+    let matchesDepartment = departmentFilter === "all"
+    if (!matchesDepartment) {
+      // Check if user has this department in their assignments
+      const hasInUserDepts = user.user_departments?.some(
+        ud => ud.department_id === departmentFilter
+      )
+      // Fallback to legacy department_id
+      const hasInLegacy = user.department_id === departmentFilter
+      matchesDepartment = hasInUserDepts || hasInLegacy
+    }
 
     return matchesSearch && matchesRole && matchesDepartment
   })
@@ -189,9 +206,7 @@ export function UserTable({ users, departments }: UserTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {user.department?.name || (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                    <DepartmentBadges user={user} />
                   </TableCell>
                   <TableCell>
                     {user.phone || (
@@ -212,6 +227,12 @@ export function UserTable({ users, departments }: UserTableProps) {
                           <Link href={`/admin/users?edit=${user.id}`}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit Role
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/users?departments=${user.id}`}>
+                            <Building2 className="mr-2 h-4 w-4" />
+                            Manage Departments
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
@@ -277,5 +298,70 @@ export function UserTable({ users, departments }: UserTableProps) {
         Showing {filteredUsers.length} of {users.length} users
       </div>
     </div>
+  )
+}
+
+// Helper component to display department badges with primary indicator
+function DepartmentBadges({ user }: { user: UserWithDepartments }) {
+  // Get departments from user_departments array, fallback to legacy department
+  const userDepts = user.user_departments || []
+  
+  if (userDepts.length === 0) {
+    // Fallback to legacy department_id
+    if (user.department) {
+      return (
+        <Badge variant="secondary" className="gap-1">
+          <Star className="h-3 w-3 fill-current" />
+          {user.department.name}
+        </Badge>
+      )
+    }
+    return <span className="text-muted-foreground">—</span>
+  }
+
+  // Sort with primary first
+  const sortedDepts = [...userDepts].sort((a, b) => {
+    if (a.is_primary && !b.is_primary) return -1
+    if (!a.is_primary && b.is_primary) return 1
+    return 0
+  })
+
+  // Show max 3 departments, with +N more indicator
+  const visibleDepts = sortedDepts.slice(0, 3)
+  const remainingCount = sortedDepts.length - 3
+
+  return (
+    <TooltipProvider>
+      <div className="flex flex-wrap gap-1">
+        {visibleDepts.map((ud) => (
+          <Tooltip key={ud.department_id}>
+            <TooltipTrigger asChild>
+              <Badge 
+                variant={ud.is_primary ? "default" : "secondary"} 
+                className="gap-1 cursor-default"
+              >
+                {ud.is_primary && <Star className="h-3 w-3 fill-current" />}
+                {ud.department?.name || "Unknown"}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              {ud.is_primary ? "Primary department" : "Additional department"}
+            </TooltipContent>
+          </Tooltip>
+        ))}
+        {remainingCount > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="cursor-default">
+                +{remainingCount} more
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              {sortedDepts.slice(3).map(ud => ud.department?.name).join(", ")}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    </TooltipProvider>
   )
 }

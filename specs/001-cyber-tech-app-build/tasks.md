@@ -467,7 +467,7 @@ Based on plan.md structure:
 
 ### Database Changes
 
-- [ ] T245 Create migration for user_departments junction table in supabase/migrations/020_user_departments.sql
+- [x] T245 Create migration for user_departments junction table in supabase/migrations/020_user_departments.sql
   - Junction table: user_departments (user_id, department_id, is_primary, assigned_at)
   - Add RLS policies for read (authenticated) and write (admin/leader)
   - Migrate existing profiles.department_id data to junction table
@@ -475,22 +475,22 @@ Based on plan.md structure:
 
 ### Backend Updates
 
-- [ ] T246 Update types/auth.ts to add UserDepartment type and extend Profile with departments array
-- [ ] T247 [P] Update lib/validations/auth.ts with assignUserDepartments schema
-- [ ] T248 Create API endpoint app/api/admin/user-departments/route.ts for managing user department assignments
-- [ ] T249 Update user queries in admin pages to include department assignments via junction table
+- [x] T246 Update types/auth.ts to add UserDepartment type and extend Profile with departments array
+- [x] T247 [P] Update lib/validations/auth.ts with assignUserDepartments schema
+- [x] T248 Create API endpoint app/api/admin/user-departments/route.ts for managing user department assignments
+- [x] T249 Update user queries in admin pages to include department assignments via junction table
 
 ### UI Updates
 
-- [ ] T250 Create components/admin/user-departments-modal.tsx for assigning multiple departments to a user
-- [ ] T251 [P] Update components/admin/user-table.tsx to show all assigned departments as badges
-- [ ] T252 Update components/admin/role-editor.tsx to support multi-department selection with checkboxes
-- [ ] T253 [P] Add "Manage Departments" button to user table actions dropdown
+- [x] T250 Create components/admin/user-departments-modal.tsx for assigning multiple departments to a user
+- [x] T251 [P] Update components/admin/user-table.tsx to show all assigned departments as badges
+- [x] T252 Update components/admin/role-editor.tsx to support multi-department selection with checkboxes
+- [x] T253 [P] Add "Manage Departments" button to user table actions dropdown
 
 ### Documentation
 
-- [ ] T254 Update data-model.md with user_departments table schema and relationships
-- [ ] T255 Update user.guide.md with multi-department assignment instructions
+- [x] T254 Update data-model.md with user_departments table schema and relationships
+- [x] T255 Update user.guide.md with multi-department assignment instructions
 
 ---
 
