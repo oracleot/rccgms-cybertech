@@ -30,7 +30,7 @@ const STATUS_COLORS: Record<EquipmentStatus, { gradient: string; border: string;
     border: "hover:border-green-500/30",
     glow: "group-hover:shadow-green-500/10",
   },
-  "in-use": {
+  in_use: {
     gradient: "from-blue-500/5 via-transparent to-transparent",
     border: "hover:border-blue-500/30",
     glow: "group-hover:shadow-blue-500/10",
@@ -40,10 +40,10 @@ const STATUS_COLORS: Record<EquipmentStatus, { gradient: string; border: string;
     border: "hover:border-amber-500/30",
     glow: "group-hover:shadow-amber-500/10",
   },
-  retired: {
-    gradient: "from-slate-500/5 via-transparent to-transparent",
-    border: "hover:border-slate-500/30",
-    glow: "group-hover:shadow-slate-500/10",
+  returned: {
+    gradient: "from-purple-500/5 via-transparent to-transparent",
+    border: "hover:border-purple-500/30",
+    glow: "group-hover:shadow-purple-500/10",
   },
 }
 
