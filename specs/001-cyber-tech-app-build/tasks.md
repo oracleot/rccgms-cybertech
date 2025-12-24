@@ -494,6 +494,53 @@ Based on plan.md structure:
 
 ---
 
+## Phase 17: RLS Policy Performance Optimization
+
+**Purpose**: Fix Row Level Security (RLS) policy performance issues by wrapping `auth.uid()` and `auth.<function>()` calls in subqueries to prevent re-evaluation per row.
+
+**Issue**: Supabase security advisor detected that RLS policies re-evaluate `auth.uid()` for each row, causing suboptimal query performance at scale. The fix is to wrap these calls in `(SELECT auth.uid())` so they're evaluated once per query.
+
+**Affected Tables**: All tables with RLS policies that reference `auth.uid()` directly:
+- profiles (002_profiles.sql)
+- departments (003_departments.sql)
+- positions (003_departments.sql)
+- services (004_services.sql)
+- rotas (005_rotas.sql)
+- rota_assignments (005_rotas.sql)
+- availability (006_availability.sql)
+- swap_requests (006_availability.sql)
+- livestreams (007_livestreams.sql)
+- prompt_templates (007_livestreams.sql)
+- equipment_categories (008_equipment.sql)
+- equipment (008_equipment.sql)
+- equipment_checkouts (008_equipment.sql)
+- equipment_maintenance (008_equipment.sql)
+- rundowns (009_rundowns.sql)
+- rundown_items (009_rundowns.sql)
+- onboarding_tracks (011_training.sql)
+- onboarding_steps (011_training.sql)
+- volunteer_progress (011_training.sql)
+- step_completions (011_training.sql)
+- notifications (012_notifications.sql)
+- notification_preferences (012_notifications.sql)
+- social_posts (013_social.sql)
+- social_integrations (013_social.sql)
+
+### Implementation
+
+- [x] T269 Create migration supabase/migrations/022_rls_performance_optimization.sql
+  - Drop and recreate all RLS policies that use `auth.uid()` directly
+  - Replace `auth.uid()` with `(SELECT auth.uid())` in all USING and WITH CHECK clauses
+  - Test policy functionality after migration
+
+### Documentation
+
+- [x] T270 Update data-model.md to document the RLS pattern best practice: always use `(SELECT auth.uid())` instead of `auth.uid()` directly
+
+**Checkpoint**: All RLS policies optimized for scale. Queries no longer re-evaluate auth functions per row.
+
+---
+
 ## Phase 16: Social Hub Refactor - Direct Uploads ✅
 
 **Purpose**: Replace Google Drive OAuth integration with direct image uploads to Supabase Storage. Simplify the social hub to focus on content creation, AI captions, and planning without platform publishing integrations.
@@ -693,7 +740,7 @@ With multiple developers:
 
 | Metric | Count |
 |--------|-------|
-| **Total Tasks** | 255 |
+| **Total Tasks** | 257 |
 | **Phase 1 (Setup)** | 14 tasks |
 | **Phase 2 (Foundational)** | 40 tasks |
 | **US1 - Authentication (P1)** | 18 tasks |
@@ -709,6 +756,8 @@ With multiple developers:
 | **Phase 13 (Admin/Notifications)** | 16 tasks |
 | **Phase 14 (Polish)** | 12 tasks |
 | **Phase 15 (Multi-Dept)** | 11 tasks |
+| **Phase 16 (Social Hub Refactor)** | 13 tasks ✅ |
+| **Phase 17 (RLS Performance)** | 2 tasks |
 | **Parallel Opportunities** | ~65% of tasks marked [P] |
 
 ### MVP Scope (Recommended)

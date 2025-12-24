@@ -615,3 +615,46 @@ CREATE TRIGGER set_updated_at
 BEFORE UPDATE ON profiles
 FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 ```
+
+---
+
+## RLS Best Practices
+
+### Performance: Use Subqueries for Auth Functions
+
+**⚠️ CRITICAL**: Always wrap `auth.uid()` and other `auth.<function>()` calls in a subquery to prevent re-evaluation per row:
+
+```sql
+-- ❌ BAD: Re-evaluates auth.uid() for each row (poor performance at scale)
+CREATE POLICY "Users can update own profile"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = auth_user_id);
+
+-- ✅ GOOD: Evaluates auth.uid() once per query (optimal performance)
+CREATE POLICY "Users can update own profile"
+  ON profiles FOR UPDATE
+  USING ((SELECT auth.uid()) = auth_user_id);
+```
+
+This applies to all auth functions:
+- `auth.uid()` → `(SELECT auth.uid())`
+- `auth.jwt()` → `(SELECT auth.jwt())`
+- `auth.role()` → `(SELECT auth.role())`
+- `current_setting()` → `(SELECT current_setting(...))`
+
+### Pattern for Role Checks
+
+```sql
+-- ✅ Optimized role check pattern
+CREATE POLICY "Leaders can manage rotas"
+  ON rotas FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles 
+      WHERE profiles.auth_user_id = (SELECT auth.uid()) 
+      AND profiles.role IN ('admin', 'leader')
+    )
+  );
+```
+
+See: https://supabase.com/docs/guides/database/postgres/row-level-security#call-functions-with-select
