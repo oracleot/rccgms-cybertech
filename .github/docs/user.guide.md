@@ -1290,7 +1290,6 @@ A: Each preview mimics the actual platform's design so you can see exactly how y
 ## Coming Soon
 
 - 📚 **Training** – Complete onboarding and training modules
-- 📱 **Social Media Hub** – Create and schedule social media content with AI captions
 
 
 ## 🔄 Duty Swap Requests
@@ -1445,4 +1444,250 @@ A: Leaders can edit the rota directly if needed. The swap system is designed for
 
 ---
 
-*Last updated: December 23, 2025*
+## 📱 Social Media Hub
+
+Create, schedule, and manage social media content for your church with AI-powered captions and Google Drive integration.
+
+### What You Can Do
+
+**👥 Leaders & 🔧 Admins:**
+- Connect your Google Drive to browse service photos
+- Select images for social media posts
+- Generate AI-powered captions tailored to each platform
+- Preview posts as they'll appear on Facebook, Instagram, and YouTube
+- Schedule posts for future publishing
+- Manage your content calendar
+- View and edit scheduled content
+
+**👤 Volunteers:**
+- View scheduled and published posts (read-only)
+
+---
+
+### Connecting Google Drive
+
+To browse photos from your church's shared drives:
+
+1. Go to **Social** from the main menu
+2. Click **Connect Google Drive**
+3. Sign in with your Google account
+4. Grant permission to access your Drive files
+5. Once connected, you'll see a green checkmark next to Google Drive
+
+> 💡 **Tip**: Use a shared Google account or service account for best results. This ensures all team leaders can access the same photos.
+
+> ⚠️ **Note**: The app only requests read-only access to your Drive. It cannot modify or delete your files.
+
+---
+
+### Browsing Photos
+
+Once connected, browse your Drive photos:
+
+1. Go to **Social** from the main menu
+2. Click **Browse Photos** or the folder icon
+3. Navigate through your folders using the folder tree
+4. Photos display in a grid view with thumbnails
+5. Click on any photo to preview it full-size
+6. Select photos by clicking the checkbox on each thumbnail
+
+**Tips for photo browsing:**
+- ✅ Organize service photos in dated folders (e.g., "2025-01-05 Sunday Service")
+- ✅ Use the search to quickly find specific folders
+- ✅ Select multiple photos for carousel posts
+
+---
+
+### Creating a Social Post
+
+1. From the Social hub, click **New Post**
+2. **Select media** from Google Drive or upload directly
+3. **Choose platforms** – Facebook, Instagram, YouTube (select all that apply)
+4. **Write your caption** manually, or click **Generate Caption** for AI help
+5. **Preview** how the post will look on each platform
+6. **Save as Draft** or **Schedule** for later publishing
+
+---
+
+### Generating AI Captions
+
+Let AI help write engaging captions:
+
+1. Select your image(s)
+2. Click **Generate Caption**
+3. In the caption generator:
+   - **Platform**: Choose the platform (affects length and style)
+   - **Context**: Add details about the service or event
+   - **Tone**: Select casual, professional, or inspirational
+   - **Include emojis**: Toggle on/off
+   - **Include hashtags**: Toggle on/off
+4. Click **Generate**
+5. Watch the caption stream in real-time
+6. Edit the result as needed
+7. Click **Use Caption** to apply it to your post
+
+The AI tailors content for each platform:
+
+| Platform | Style |
+|----------|-------|
+| **Facebook** | Conversational, engagement-focused, longer format |
+| **Instagram** | Visual descriptions, hashtag-heavy, call to action |
+| **YouTube** | SEO-friendly, detailed descriptions, timestamps |
+| **Twitter/X** | Concise, impactful, within 280 characters |
+
+> 💡 **Tip**: Always review and personalize AI-generated captions. Add specific names, dates, or church-specific details.
+
+---
+
+### Platform Previews
+
+Before publishing, see exactly how your post will appear:
+
+#### Facebook Preview
+- Shows your church page header
+- Displays image with caption below
+- Shows engagement buttons (Like, Comment, Share)
+
+#### Instagram Preview
+- Square or portrait image format
+- Caption with line breaks for readability
+- Hashtags section
+
+#### YouTube Preview
+- Video thumbnail with title
+- Description text with links
+- Subscribe and engagement buttons
+
+Toggle between platforms using the tabs above the preview.
+
+---
+
+### Scheduling Posts
+
+Plan your content in advance:
+
+1. Create your post with caption and media
+2. Instead of "Post Now", click **Schedule**
+3. Select the **date and time** to publish
+4. Click **Confirm Schedule**
+5. Your post moves to the Content Calendar
+
+**Scheduling tips:**
+- ✅ Schedule posts 24-48 hours after service for recap content
+- ✅ Post at peak engagement times (typically Sunday evenings or Monday mornings)
+- ✅ Use the calendar view to see all upcoming posts
+- ✅ Edit or reschedule anytime before publishing
+
+---
+
+### Content Calendar
+
+View all your scheduled and published content:
+
+1. Go to **Social → Calendar**
+2. See posts organized by date
+3. Color-coded by status:
+   - 🟡 **Yellow** = Scheduled (waiting to publish)
+   - 🟢 **Green** = Published
+   - ⚫ **Gray** = Draft
+   - 🔴 **Red** = Failed to publish
+4. Click any post to view details or edit
+5. Filter by platform using the dropdown
+
+---
+
+### Editing Scheduled Posts
+
+Need to change something before it publishes?
+
+1. Go to **Social → Calendar**
+2. Find the scheduled post
+3. Click to open it
+4. Make your changes:
+   - Edit caption
+   - Change media
+   - Update platforms
+   - Reschedule time
+5. Click **Save Changes**
+
+---
+
+### Post Status Guide
+
+| Status | Meaning |
+|--------|---------|
+| 📝 **Draft** | Saved but not scheduled |
+| 📅 **Scheduled** | Set to publish at a specific time |
+| ✅ **Published** | Successfully posted to platform(s) |
+| ❌ **Failed** | Publishing failed – check error and retry |
+
+---
+
+### When Publishing Fails
+
+If a post fails to publish:
+
+1. You'll see a **Failed** status on the post
+2. Click to view the error message
+3. Common issues:
+   - Token expired – reconnect Google Drive
+   - Rate limit – wait and retry
+   - Invalid media – check file format
+4. Click **Retry** to try publishing again
+
+---
+
+### Social Media Tips & Best Practices
+
+**Content Creation:**
+- ✅ Use high-quality photos from service
+- ✅ Include people (with permission) for better engagement
+- ✅ Write captions that tell a story
+- ✅ Use relevant hashtags (but don't overdo it)
+- ✅ Include a call to action (visit our website, join us Sunday)
+
+**Scheduling:**
+- ✅ Plan content a week in advance
+- ✅ Post consistently (2-3 times per week)
+- ✅ Vary content types (photos, quotes, announcements)
+- ✅ Check the calendar regularly for gaps
+
+**Platform-Specific:**
+- ✅ Facebook: Longer captions work well, ask questions
+- ✅ Instagram: Visual first, use Stories for casual content
+- ✅ YouTube: Write detailed descriptions for SEO
+
+**Don'ts:**
+- ❌ Don't post without proofreading
+- ❌ Don't use copyrighted music or images
+- ❌ Don't share sensitive information
+- ❌ Don't post blurry or poorly lit photos
+
+---
+
+### Common Questions
+
+**Q: Can volunteers create social posts?**  
+A: No, only Leaders and Admins can create and schedule posts. Volunteers can view published content.
+
+**Q: Does it auto-post to social platforms?**  
+A: Not yet. The system generates content and schedules it, but you'll need to copy and post manually for now. Direct API posting is coming soon.
+
+**Q: Why can't I see my Google Drive folders?**  
+A: Make sure you've connected the right Google account. Check that the folders have proper sharing permissions.
+
+**Q: Can I post to multiple platforms at once?**  
+A: Yes! Select all platforms when creating your post, and it will be scheduled for each.
+
+**Q: How do I disconnect Google Drive?**  
+A: Go to Social → Settings (or Admin → Social Settings) and click "Disconnect" next to Google Drive.
+
+**Q: What image formats are supported?**  
+A: JPEG, PNG, and WebP for images. MP4 for videos. Max file size is 25MB.
+
+**Q: Can I reuse old captions?**  
+A: Yes! When creating a new post, you can view previous captions and copy them as a starting point.
+
+---
+
+*Last updated: December 24, 2025*

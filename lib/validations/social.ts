@@ -35,9 +35,12 @@ export type UpdateContentInput = z.infer<typeof updateContentSchema>
 // Generate caption schema
 export const generateCaptionSchema = z.object({
   imageUrls: z.array(z.string().url()).max(5).optional(),
-  context: z.string().max(500).optional(),
+  context: z.string().min(10, "Please provide some context").max(1000).optional(),
   platform: socialPlatformSchema,
   tone: z.enum(["casual", "professional", "inspirational"]).default("inspirational"),
+  includeEmojis: z.boolean().default(true),
+  includeHashtags: z.boolean().default(true),
+  maxLength: z.number().int().min(50).max(5000).optional(),
 })
 
 export type GenerateCaptionInput = z.infer<typeof generateCaptionSchema>
