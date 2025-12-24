@@ -157,7 +157,7 @@ export function NotificationFeed({
         {notifications.length > maxItems && (
           <div className="mt-3 text-center">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/notifications">
+              <Link href="/settings">
                 View all {notifications.length} notifications
               </Link>
             </Button>

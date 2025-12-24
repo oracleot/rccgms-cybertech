@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Pause, Play, RotateCcw, Timer } from "lucide-react"
 
 import { formatDuration } from "@/lib/utils"
@@ -16,35 +16,42 @@ interface RundownTimerProps {
 export function RundownTimer({ durationSeconds, autoStart = false, onTick }: RundownTimerProps) {
   const [isRunning, setIsRunning] = useState(autoStart)
   const [elapsed, setElapsed] = useState(0)
+  const onTickRef = useRef(onTick)
+
+  // Keep onTick ref up to date without triggering effect
+  useEffect(() => {
+    onTickRef.current = onTick
+  }, [onTick])
 
   useEffect(() => {
     setIsRunning(autoStart)
     if (!autoStart) {
       setElapsed(0)
-      onTick?.(0)
+      // Use setTimeout to defer callback to avoid updating parent during render
+      setTimeout(() => onTickRef.current?.(0), 0)
     }
-  }, [autoStart, onTick])
+  }, [autoStart])
 
   useEffect(() => {
-    if (!isRunning) return // No change, just ensuring consistency
+    if (!isRunning) return
 
     const interval = setInterval(() => {
       setElapsed((prev) => {
         const next = prev + 1
-        onTick?.(next)
+        onTickRef.current?.(next)
         return next
       })
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [isRunning, onTick])
+  }, [isRunning])
 
   const remaining = durationSeconds ? Math.max(durationSeconds - elapsed, 0) : null
 
   const handleReset = () => {
     setElapsed(0)
     setIsRunning(false)
-    onTick?.(0)
+    onTickRef.current?.(0)
   }
 
   return (

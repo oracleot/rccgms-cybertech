@@ -321,8 +321,8 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   DASHBOARD: "/dashboard",
-  PROFILE: "/settings/profile",
-  NOTIFICATIONS: "/notifications",
+  PROFILE: "/settings",
+  NOTIFICATIONS: "/settings",  // Points to settings page with notification preferences
   ROTA: "/rota",
   ROTA_NEW: "/rota/new",
   ROTA_AVAILABILITY: "/rota/availability",
