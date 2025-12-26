@@ -452,3 +452,42 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* ============================================
+   Training Module Animations
+   ============================================ */
+
+/* Progress bar shimmer effect */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Staggered fade-in for lists */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+/* Grid pattern background */
+.bg-grid-white\/10 {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m0 0h1v1h-1zm39 0h1v1h-1zm0 39h1v1h-1zm-39 0h1v1h-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
