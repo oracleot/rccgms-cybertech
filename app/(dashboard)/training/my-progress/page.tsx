@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, GraduationCap } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { MyProgressSummary } from "@/components/training/my-progress-summary"
+import { BlurFade } from "@/components/ui/blur-fade"
+import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
 import type { ProgressWithDetails, TrackWithDepartment } from "@/types/training"
 
 export const metadata = {
@@ -95,26 +97,46 @@ export default async function MyProgressPage() {
   return (
     <div className="container max-w-4xl py-6 space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" asChild className="-ml-4">
-          <Link href="/training">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            All Tracks
-          </Link>
-        </Button>
-      </div>
+      <BlurFade delay={0.1} inView>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" asChild className="-ml-4 group">
+            <Link href="/training">
+              <ChevronLeft className="h-4 w-4 mr-1 transition-transform group-hover:-translate-x-1" />
+              All Tracks
+            </Link>
+          </Button>
+        </div>
+      </BlurFade>
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">My Training Progress</h1>
-        <p className="text-muted-foreground">
-          Track your learning journey and achievements
-        </p>
-      </div>
+      <BlurFade delay={0.15} inView>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/10">
+            <GraduationCap className="h-7 w-7 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              <AnimatedGradientText 
+                colorFrom="hsl(var(--primary))" 
+                colorTo="hsl(var(--primary) / 0.6)"
+                speed={2}
+                className="text-3xl font-bold"
+              >
+                My Training Progress
+              </AnimatedGradientText>
+            </h1>
+            <p className="text-muted-foreground">
+              Track your learning journey and achievements
+            </p>
+          </div>
+        </div>
+      </BlurFade>
 
-      <MyProgressSummary
-        activeEnrollments={activeEnrollments}
-        completedTracks={completedTracks}
-      />
+      <BlurFade delay={0.2} inView>
+        <MyProgressSummary
+          activeEnrollments={activeEnrollments}
+          completedTracks={completedTracks}
+        />
+      </BlurFade>
     </div>
   )
 }

@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, ClipboardCheck } from "lucide-react"
+import { ChevronLeft, ClipboardCheck, Shield } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/shared/empty-state"
+import { BlurFade } from "@/components/ui/blur-fade"
+import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
 import { VerificationCard } from "@/components/training/verification-card"
 import { VerifyActions } from "./verify-actions"
 import type { VerificationRequest } from "@/types/training"
@@ -89,34 +91,61 @@ export default async function VerificationsPage() {
   return (
     <div className="container max-w-4xl py-6 space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" asChild className="-ml-4">
-          <Link href="/training">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Training
-          </Link>
-        </Button>
-      </div>
+      <BlurFade delay={0.1} inView>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" asChild className="-ml-4 group">
+            <Link href="/training">
+              <ChevronLeft className="h-4 w-4 mr-1 transition-transform group-hover:-translate-x-1" />
+              Training
+            </Link>
+          </Button>
+        </div>
+      </BlurFade>
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Pending Verifications</h1>
-        <p className="text-muted-foreground">
-          Review and verify volunteer step completions
-        </p>
-      </div>
+      <BlurFade delay={0.15} inView>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-orange-500/10">
+            <Shield className="h-7 w-7 text-orange-600 dark:text-orange-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              <AnimatedGradientText 
+                colorFrom="hsl(25, 95%, 53%)" 
+                colorTo="hsl(38, 92%, 50%)"
+                speed={2}
+                className="text-3xl font-bold"
+              >
+                Pending Verifications
+              </AnimatedGradientText>
+            </h1>
+            <p className="text-muted-foreground">
+              Review and verify volunteer step completions
+            </p>
+          </div>
+          {verificationRequests.length > 0 && (
+            <div className="ml-auto px-3 py-1.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm font-medium">
+              {verificationRequests.length} pending
+            </div>
+          )}
+        </div>
+      </BlurFade>
 
       {verificationRequests.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          {verificationRequests.map((request) => (
-            <VerifyActions key={request.id} request={request} />
+          {verificationRequests.map((request, index) => (
+            <BlurFade key={request.id} delay={0.2 + index * 0.05} inView>
+              <VerifyActions request={request} />
+            </BlurFade>
           ))}
         </div>
       ) : (
-        <EmptyState
-          icon={<ClipboardCheck className="h-12 w-12" />}
-          title="No Pending Verifications"
-          description="All volunteer step completions have been reviewed. Check back later for new requests."
-        />
+        <BlurFade delay={0.2} inView>
+          <EmptyState
+            icon={<ClipboardCheck className="h-12 w-12" />}
+            title="No Pending Verifications"
+            description="All volunteer step completions have been reviewed. Check back later for new requests."
+          />
+        </BlurFade>
       )}
     </div>
   )

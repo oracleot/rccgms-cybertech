@@ -1,8 +1,9 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, Sparkles } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
+import { BlurFade } from "@/components/ui/blur-fade"
 import { TrackOverview } from "@/components/training/track-overview"
 import { StepList } from "@/components/training/step-list"
 import { EnrollButton } from "./enroll-button"
@@ -154,57 +155,77 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
   return (
     <div className="container max-w-4xl py-6 space-y-8">
       {/* Back link */}
-      <Button variant="ghost" asChild className="-ml-4">
-        <Link href="/training">
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          All Tracks
-        </Link>
-      </Button>
+      <BlurFade delay={0.05} inView>
+        <Button variant="ghost" asChild className="-ml-4 group">
+          <Link href="/training">
+            <ChevronLeft className="h-4 w-4 mr-1 transition-transform group-hover:-translate-x-1" />
+            All Tracks
+          </Link>
+        </Button>
+      </BlurFade>
 
       {/* Track overview */}
-      <TrackOverview 
-        track={trackWithDetails}
-        progress={progressWithDetails}
-      />
+      <BlurFade delay={0.1} inView>
+        <TrackOverview 
+          track={trackWithDetails}
+          progress={progressWithDetails}
+        />
+      </BlurFade>
 
       {/* Enrollment button if not enrolled */}
       {!progress && (
-        <EnrollButton trackId={id} />
+        <BlurFade delay={0.15} inView>
+          <EnrollButton trackId={id} />
+        </BlurFade>
       )}
 
       {/* Steps list - only show if enrolled */}
       {progress && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Training Steps</h2>
-          <StepList
-            trackId={id}
-            steps={stepsWithCompletion}
-            currentStepIndex={currentStepIndex === -1 ? steps.length - 1 : currentStepIndex}
-          />
-        </div>
+        <BlurFade delay={0.2} inView>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Training Steps</h2>
+              <span className="text-sm text-muted-foreground">
+                {progressWithDetails?.completedSteps || 0} of {steps.length} completed
+              </span>
+            </div>
+            <StepList
+              trackId={id}
+              steps={stepsWithCompletion}
+              currentStepIndex={currentStepIndex === -1 ? steps.length - 1 : currentStepIndex}
+            />
+          </div>
+        </BlurFade>
       )}
 
       {/* Preview steps if not enrolled */}
       {!progress && steps.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">What You&apos;ll Learn</h2>
-          <div className="space-y-2 opacity-75">
-            {steps.slice(0, 5).map((step, index) => (
-              <div 
-                key={step.id}
-                className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30"
-              >
-                <span className="text-muted-foreground font-medium">{index + 1}.</span>
-                <span>{step.title}</span>
-              </div>
-            ))}
-            {steps.length > 5 && (
-              <p className="text-sm text-muted-foreground text-center py-2">
-                + {steps.length - 5} more steps
-              </p>
-            )}
+        <BlurFade delay={0.2} inView>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">What You&apos;ll Learn</h2>
+            </div>
+            <div className="space-y-2">
+              {steps.slice(0, 5).map((step, index) => (
+                <div 
+                  key={step.id}
+                  className="flex items-center gap-3 p-4 rounded-xl border bg-gradient-to-r from-muted/30 to-transparent hover:from-muted/50 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
+                    {index + 1}
+                  </div>
+                  <span className="font-medium">{step.title}</span>
+                </div>
+              ))}
+              {steps.length > 5 && (
+                <p className="text-sm text-muted-foreground text-center py-3 border-t">
+                  + {steps.length - 5} more steps to explore
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        </BlurFade>
       )}
     </div>
   )
