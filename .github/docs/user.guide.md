@@ -903,6 +903,57 @@ Plan the order of service, timing, and cues so everyone knows what is happening 
 
 > Note: Alerts loop until you tap **Stop alert**. Some browsers require a click/tap before playing audio—hit **Preview** to unlock audio if you don't hear it.
 
+### Using Extended Display (Projection)
+
+Push the current rundown item to a secondary screen or projector for the congregation to view.
+
+#### Opening the Display Window
+1. In Live View, click the **Open display** button (monitor icon)
+2. A new browser window opens with a full-screen projection view
+3. The connection badge shows **Connected** when sync is active
+4. Position this window on your projector or secondary monitor, then press **F11** for true fullscreen
+
+#### Multi-Screen Selection (Chrome only)
+If your computer has multiple monitors connected:
+1. Click the dropdown arrow next to **Open display**
+2. Choose a specific screen from the list
+3. The display opens directly on that screen in fullscreen mode
+
+> 💡 The screen picker only appears in Chrome with Window Management API support.
+
+#### What Appears on the Display
+| Active Item Type | Display Shows |
+|-----------------|---------------|
+| **Song** | Current verse lyrics (large text), song key badge, verse indicator (e.g., "Verse 2 of 4") |
+| **Scripture** | Scripture text and reference |
+| **Announcement** | Announcement content in large text |
+| **Other items** | Item title and notes |
+| **Timer running** | Elapsed time countdown for timed items |
+
+#### Navigating Song Verses
+When a song item is active:
+1. Use the **◀ Previous** and **Next ▶** buttons below the current item card
+2. Or press **←** / **→** arrow keys to advance verses
+3. The display updates in real-time as you navigate
+4. The verse indicator shows which verse you're on (e.g., "Verse 2 of 4")
+
+#### Customizing Display Appearance
+1. Go to **Settings** → **Display Settings**
+2. Adjust font size (24–120px) with the slider
+3. Pick a font family (Inter, Roboto, Georgia, etc.)
+4. Choose background and text colors using the color pickers
+5. Select a transition effect (none, fade, slide)
+6. Click **Save settings**—changes apply to all future projection windows
+7. Use the **Preview** panel to see how your settings look before saving
+
+#### Tips for Projection
+- ✅ Open the display window and test before service starts
+- ✅ Use high-contrast colors (dark background + white text works well)
+- ✅ Increase font size for larger venues
+- ✅ Keep the operator's Live View tab on your control screen, display window on the projector
+- ⚠️ If the display window disconnects, close it and click **Open display** again
+- ⚠️ Closing the display window does not affect the Live View—you can reopen anytime
+
 ### Tips & Tricks
 - ✅ Create rundowns a few days before service so the team can review
 - ✅ Keep item notes concise (e.g., lighting cues, scripture references)

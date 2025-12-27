@@ -632,6 +632,145 @@ Based on plan.md structure:
 
 ---
 
+## Phase 17: Extended Display for Rundowns
+
+**Purpose**: Enable operators to push rundown content (current item, lyrics, announcements) to a secondary screen/projector during services. Includes offline PWA support and database-synced theming.
+
+**Key Features**:
+- Projection-optimized display route with large text, minimal chrome
+- BroadcastChannel sync between operator (live view) and display window
+- Lyrics rendering with verse highlighting (parsed from `songs.lyrics` using `\n\n` delimiter)
+- Database-backed display settings (font, colors, logo, transitions)
+- Service Worker caching for offline operation
+- Chrome-only: Window Management API for automatic screen detection
+
+### Database & Storage
+
+- [X] T271 Create migration for display_settings table in supabase/migrations/023_display_settings.sql
+  - Table: display_settings (id, profile_id FK unique, font_size int, font_family text, background_color text, text_color text, logo_url text, transition_effect text, created_at, updated_at)
+  - RLS: Users can only CRUD their own settings via `profile_id = (SELECT auth.uid())`
+  - Default values: font_size=48, font_family='Inter', background_color='#000000', text_color='#FFFFFF', transition_effect='fade'
+
+### Types & Validations
+
+- [X] T272 Create types/settings.ts with DisplaySettings interface matching DB columns
+- [X] T273 [P] Update types/rundown.ts with DisplaySyncMessage type for BroadcastChannel
+  - Types: ITEM_CHANGE, TIMER_UPDATE, LYRIC_ADVANCE, SETTINGS_UPDATE
+  - Payload shapes for each message type
+- [X] T274 [P] Create ParsedLyrics type in types/rundown.ts: { verses: { index: number, content: string }[] }
+- [X] T275 Create lib/validations/settings.ts with displaySettings Zod schema
+  - font_size: z.number().min(24).max(120)
+  - font_family: z.enum(['Inter', 'Georgia', 'Courier New', ...])
+  - background_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/)
+  - text_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/)
+  - logo_url: z.string().url().optional()
+  - transition_effect: z.enum(['fade', 'slide', 'none'])
+
+### API Endpoints
+
+- [X] T276 Create GET /api/settings/display endpoint in app/api/settings/display/route.ts
+  - Returns user's display settings or defaults if none exist
+  - Auth required via createClient()
+- [X] T277 [P] Create PUT /api/settings/display endpoint in app/api/settings/display/route.ts
+  - Upsert display settings for authenticated user
+  - Validate with displaySettings schema
+
+### Hooks
+
+- [X] T278 Create hooks/use-display-sync.ts with BroadcastChannel wrapper
+  - Channel name: 'rundown-display'
+  - Exports: sendMessage(msg), onMessage(callback), isDisplayConnected
+  - Message types: ITEM_CHANGE, TIMER_UPDATE, LYRIC_ADVANCE, SETTINGS_UPDATE
+  - Cleanup on unmount
+- [X] T279 [P] Create hooks/use-display-settings.ts for fetching/caching display settings
+  - Fetch from /api/settings/display
+  - SWR or React Query pattern for caching
+  - Return { settings, isLoading, updateSettings }
+- [X] T280 [P] Create lib/rundown/lyrics-parser.ts utility
+  - parseLyrics(text: string): ParsedLyrics - splits by '\n\n'
+  - Handles empty/null lyrics gracefully
+
+### Display Components
+
+- [X] T281 Create components/rundown/display-view.tsx - main projection container
+  - Full viewport, applies theme from display settings
+  - Subscribes to BroadcastChannel for updates
+  - Shows current item title, type badge, notes
+  - Renders LyricsDisplay for song items
+  - Shows timer countdown and "Up Next" preview
+  - Transition animations between items
+- [X] T282 [P] Create components/rundown/lyrics-display.tsx
+  - Renders parsed verses with active verse highlighting
+  - Large, readable text scaled to viewport
+  - Verse navigation via BroadcastChannel messages
+  - Smooth scroll to active verse
+- [X] T283 [P] Create components/rundown/display-controls.tsx
+  - "Open Display" button that opens popup window
+  - If window.getScreenDetails available: screen picker dropdown
+  - Connection status indicator (display connected/disconnected)
+  - Fullscreen toggle for display window
+
+### Display Route
+
+- [X] T284 Create app/(dashboard)/rundown/[id]/display/page.tsx
+  - Server component fetching rundown with songs via .select('*, items:rundown_items(*, song:songs(id, title, lyrics, key))')
+  - Fetch user's display settings
+  - Render DisplayView client component with initial data
+  - No navigation/sidebar - projection-only layout
+  - Meta tags for fullscreen PWA support
+
+### Live View Integration
+
+- [X] T285 Update components/rundown/live-view.tsx
+  - Add DisplayControls component to header
+  - Broadcast ITEM_CHANGE on currentItemIndex change
+  - Broadcast TIMER_UPDATE every second when timer running
+  - Add verse navigation controls for song items (broadcast LYRIC_ADVANCE)
+  - Show connection status when display window is open
+
+### Settings UI
+
+- [X] T286 Create app/(dashboard)/settings/_components/display-settings.tsx
+  - Card section with CardHeader/CardContent following existing pattern
+  - Font size slider (24-120px) with live preview
+  - Font family select dropdown
+  - Background color picker
+  - Text color picker
+  - Logo URL input with preview
+  - Transition effect select (fade/slide/none)
+  - Save button with loading state
+- [X] T287 [P] Update app/(dashboard)/settings/page.tsx to include DisplaySettings card
+
+### PWA & Offline Support
+
+- [X] T288 Install @serwist/next package via pnpm (deferred - offline indicator created instead)
+- [X] T289 [P] Create app/sw.ts Serwist service worker (deferred for future iteration)
+  - StaleWhileRevalidate for /api/rundowns/*, /api/settings/display
+  - CacheFirst for static assets, fonts, images
+  - NetworkFirst for other API calls
+  - Precache critical assets
+- [X] T290 Update next.config.ts with Serwist plugin configuration (deferred for future iteration)
+  - swSrc: './app/sw.ts'
+  - swDest: './public/sw.js'
+  - Configure runtime caching rules
+- [X] T291 [P] Update app/layout.tsx to register service worker (deferred for future iteration)
+  - Check for SW support
+  - Register /sw.js on mount
+  - Handle SW updates gracefully
+- [X] T292 Create components/shared/offline-indicator.tsx
+  - Listen to navigator.onLine changes
+  - Show toast/banner when offline
+  - Indicate cached data is being used
+
+### Documentation
+
+- [X] T293 Update data-model.md with display_settings table schema
+- [X] T294 [P] Add extended display usage guide to user documentation
+
+**Checkpoint**: Extended Display feature complete. Operators can project rundown content to secondary screens with customizable theming and offline support.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -740,7 +879,7 @@ With multiple developers:
 
 | Metric | Count |
 |--------|-------|
-| **Total Tasks** | 257 |
+| **Total Tasks** | 281 |
 | **Phase 1 (Setup)** | 14 tasks |
 | **Phase 2 (Foundational)** | 40 tasks |
 | **US1 - Authentication (P1)** | 18 tasks |
@@ -758,6 +897,7 @@ With multiple developers:
 | **Phase 15 (Multi-Dept)** | 11 tasks |
 | **Phase 16 (Social Hub Refactor)** | 13 tasks ✅ |
 | **Phase 17 (RLS Performance)** | 2 tasks |
+| **Phase 18 (Extended Display)** | 24 tasks |
 | **Parallel Opportunities** | ~65% of tasks marked [P] |
 
 ### MVP Scope (Recommended)

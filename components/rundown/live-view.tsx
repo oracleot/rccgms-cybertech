@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
-import { ListOrdered, Play } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, Clock } from "lucide-react"
 
 import { cn, formatDuration } from "@/lib/utils"
+import { parseLyrics } from "@/lib/rundown/lyrics-parser"
+import { useDisplaySync } from "@/hooks/use-display-sync"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -14,11 +16,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { RundownTimer } from "@/components/rundown/rundown-timer"
+import { DisplayControls } from "@/components/rundown/display-controls"
 import type { RundownEditorItem } from "./types"
+import type { DisplaySyncMessage, ItemChangePayload } from "@/types/rundown"
 
 interface LiveViewProps {
+  rundownId: string
   items: RundownEditorItem[]
   serviceName?: string | null
+  itemsWithSongs?: Map<string, { id: string; title: string; lyrics: string | null; key: string | null }>
 }
 
 const ALERT_SOUNDS = [
@@ -27,7 +33,7 @@ const ALERT_SOUNDS = [
   { id: "alarm", label: "Alarm", type: "square" as OscillatorType, freq: 980 },
 ]
 
-export function LiveView({ items, serviceName }: LiveViewProps) {
+export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: LiveViewProps) {
   const orderedItems = useMemo(() => [...items].sort((a, b) => a.order - b.order), [items])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [elapsed, setElapsed] = useState(0)
@@ -35,11 +41,107 @@ export function LiveView({ items, serviceName }: LiveViewProps) {
   const [warned, setWarned] = useState(false)
   const [selectedSound, setSelectedSound] = useState<string>(ALERT_SOUNDS[0]?.id ?? "beep")
   const [isAlerting, setIsAlerting] = useState(false)
+  const [currentVerseIndex, setCurrentVerseIndex] = useState(0)
+  const [isInTransition, setIsInTransition] = useState(false)
 
   const audioHandle = useRef<{ ctx: AudioContext; intervalId?: number } | null>(null)
+  const prevItemIdRef = useRef<string | null>(null)
 
   const currentItem = orderedItems[currentIndex]
   const nextItem = orderedItems[currentIndex + 1]
+
+  // Get song data for the current item
+  const currentSong = useMemo(() => {
+    if (currentItem?.type === "song" && currentItem.songId && itemsWithSongs) {
+      return itemsWithSongs.get(currentItem.songId)
+    }
+    return null
+  }, [currentItem, itemsWithSongs])
+
+  // Parse lyrics for current song
+  const parsedLyrics = useMemo(() => {
+    if (currentSong?.lyrics) {
+      return parseLyrics(currentSong.lyrics)
+    }
+    return { verses: [] }
+  }, [currentSong])
+
+  // Initialize display sync
+  const { sendMessage, isDisplayConnected, displayCount } = useDisplaySync({
+    rundownId,
+  })
+
+  // Build item payload for display sync
+  const buildItemPayload = useCallback(
+    (index: number): ItemChangePayload => {
+      const item = orderedItems[index]
+      const next = orderedItems[index + 1]
+
+      let song = null
+      if (item?.type === "song" && item.songId && itemsWithSongs) {
+        const songData = itemsWithSongs.get(item.songId)
+        if (songData) {
+          song = {
+            id: songData.id,
+            title: songData.title,
+            lyrics: songData.lyrics,
+            key: songData.key,
+          }
+        }
+      }
+
+      return {
+        currentItemIndex: index,
+        item: item
+          ? {
+              id: item.id,
+              type: item.type,
+              title: item.title,
+              durationSeconds: item.durationSeconds,
+              notes: item.notes,
+              song,
+            }
+          : null,
+        nextItem: next
+          ? {
+              id: next.id,
+              type: next.type,
+              title: next.title,
+              durationSeconds: next.durationSeconds,
+            }
+          : undefined,
+      }
+    },
+    [orderedItems, itemsWithSongs]
+  )
+
+  // Broadcast item change when current index changes
+  useEffect(() => {
+    if (currentItem?.id !== prevItemIdRef.current) {
+      prevItemIdRef.current = currentItem?.id ?? null
+      setCurrentVerseIndex(0) // Reset verse when item changes
+
+      sendMessage({
+        type: "ITEM_CHANGE",
+        payload: buildItemPayload(currentIndex),
+      })
+    }
+  }, [currentIndex, currentItem, sendMessage, buildItemPayload])
+
+  // Broadcast timer updates
+  useEffect(() => {
+    if (!started || !currentItem) return
+
+    const remaining = Math.max(0, currentItem.durationSeconds - elapsed)
+    sendMessage({
+      type: "TIMER_UPDATE",
+      payload: {
+        elapsed,
+        remaining,
+        isRunning: started,
+      },
+    })
+  }, [elapsed, started, currentItem, sendMessage])
 
   const stopAlert = () => {
     const handle = audioHandle.current
@@ -103,20 +205,122 @@ export function LiveView({ items, serviceName }: LiveViewProps) {
     setStarted(true)
     setWarned(false)
     stopAlert()
+
+    // Broadcast initial state when service starts
+    sendMessage({
+      type: "ITEM_CHANGE",
+      payload: buildItemPayload(currentIndex),
+    })
   }
 
-  // Auto-advance when duration elapses
+  // Handle verse navigation for songs
+  const handlePrevVerse = useCallback(() => {
+    if (currentVerseIndex > 0) {
+      const newIndex = currentVerseIndex - 1
+      setCurrentVerseIndex(newIndex)
+      sendMessage({
+        type: "LYRIC_ADVANCE",
+        payload: {
+          currentVerseIndex: newIndex,
+          totalVerses: parsedLyrics.verses.length,
+        },
+      })
+    }
+  }, [currentVerseIndex, parsedLyrics.verses.length, sendMessage])
+
+  const handleNextVerse = useCallback(() => {
+    if (currentVerseIndex < parsedLyrics.verses.length - 1) {
+      const newIndex = currentVerseIndex + 1
+      setCurrentVerseIndex(newIndex)
+      sendMessage({
+        type: "LYRIC_ADVANCE",
+        payload: {
+          currentVerseIndex: newIndex,
+          totalVerses: parsedLyrics.verses.length,
+        },
+      })
+    }
+  }, [currentVerseIndex, parsedLyrics.verses.length, sendMessage])
+
+  // Auto-transition when duration elapses (instead of auto-advancing)
   useEffect(() => {
     const item = orderedItems[currentIndex]
     if (!started || !item) return
     if (!item.durationSeconds || item.durationSeconds <= 0) return
-    if (elapsed >= item.durationSeconds && currentIndex < orderedItems.length - 1) {
+    if (elapsed >= item.durationSeconds && currentIndex < orderedItems.length - 1 && !isInTransition) {
       stopAlert()
-      setCurrentIndex((idx) => Math.min(idx + 1, orderedItems.length - 1))
-      setElapsed(0)
-      setWarned(false)
+      setIsInTransition(true)
+      
+      // Broadcast transition state to display
+      sendMessage({
+        type: "TRANSITION",
+        payload: {
+          isInTransition: true,
+          completedItem: {
+            id: item.id,
+            title: item.title,
+            type: item.type,
+          },
+          nextItem: nextItem ? {
+            id: nextItem.id,
+            title: nextItem.title,
+            type: nextItem.type,
+            durationSeconds: nextItem.durationSeconds,
+          } : null,
+          serviceName: serviceName || null,
+        },
+      })
     }
-  }, [elapsed, started, currentIndex, orderedItems])
+  }, [elapsed, started, currentIndex, orderedItems, isInTransition, sendMessage, serviceName, nextItem])
+
+  // Handler to start next item from transition
+  const handleStartNextItem = useCallback(() => {
+    if (!isInTransition || currentIndex >= orderedItems.length - 1) return
+    
+    setIsInTransition(false)
+    setCurrentIndex((idx) => Math.min(idx + 1, orderedItems.length - 1))
+    setElapsed(0)
+    setWarned(false)
+    
+    // Broadcast that we're exiting transition
+    sendMessage({
+      type: "TRANSITION",
+      payload: {
+        isInTransition: false,
+        completedItem: null,
+        nextItem: null,
+        serviceName: serviceName || null,
+      },
+    })
+  }, [isInTransition, currentIndex, orderedItems.length, sendMessage, serviceName])
+
+  // Handler to skip to next item (without waiting for timer)
+  const handleSkipToNext = useCallback(() => {
+    if (currentIndex >= orderedItems.length - 1) return
+    
+    stopAlert()
+    setIsInTransition(true)
+    
+    const item = orderedItems[currentIndex]
+    sendMessage({
+      type: "TRANSITION",
+      payload: {
+        isInTransition: true,
+        completedItem: item ? {
+          id: item.id,
+          title: item.title,
+          type: item.type,
+        } : null,
+        nextItem: nextItem ? {
+          id: nextItem.id,
+          title: nextItem.title,
+          type: nextItem.type,
+          durationSeconds: nextItem.durationSeconds,
+        } : null,
+        serviceName: serviceName || null,
+      },
+    })
+  }, [currentIndex, orderedItems, nextItem, sendMessage, serviceName])
 
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
@@ -133,7 +337,7 @@ export function LiveView({ items, serviceName }: LiveViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <p className="text-sm text-muted-foreground">Live rundown</p>
           <div className="flex items-center gap-2 text-lg font-semibold">
@@ -141,7 +345,14 @@ export function LiveView({ items, serviceName }: LiveViewProps) {
             <span>{serviceName || "Service"}</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Display controls */}
+          <DisplayControls
+            rundownId={rundownId}
+            isDisplayConnected={isDisplayConnected}
+            displayCount={displayCount}
+          />
+
           <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
             <span>Alert sound</span>
             <Select value={selectedSound} onValueChange={setSelectedSound}>
@@ -160,10 +371,16 @@ export function LiveView({ items, serviceName }: LiveViewProps) {
               Preview
             </Button>
           </div>
-          <Button variant="default" size="sm" onClick={handleStart} disabled={started || !currentItem}>
+          <Button variant="default" size="sm" onClick={handleStart} disabled={started || !currentItem || isInTransition}>
             <Play className="mr-2 h-4 w-4" />
             Start service
           </Button>
+          {started && !isInTransition && nextItem && (
+            <Button variant="outline" size="sm" onClick={handleSkipToNext}>
+              <SkipForward className="mr-2 h-4 w-4" />
+              Skip to next
+            </Button>
+          )}
           {isAlerting && (
             <Button variant="destructive" size="sm" onClick={stopAlert}>
               Stop alert
@@ -172,7 +389,40 @@ export function LiveView({ items, serviceName }: LiveViewProps) {
         </div>
       </div>
 
-      {currentItem ? (
+      {/* Transition Screen */}
+      {isInTransition && nextItem && (
+        <Card className="border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-amber-600 animate-pulse" />
+              <CardTitle className="text-lg text-amber-700 dark:text-amber-400">
+                Transition Break
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-center py-6">
+              <p className="text-sm text-muted-foreground mb-2">Up Next</p>
+              <h2 className="text-2xl font-bold">{nextItem.title}</h2>
+              <p className="text-sm text-muted-foreground capitalize mt-1">
+                {nextItem.type} • {formatDuration(nextItem.durationSeconds)}
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <Button 
+                size="lg" 
+                onClick={handleStartNextItem}
+                className="px-8"
+              >
+                <Play className="mr-2 h-5 w-5" />
+                Start "{nextItem.title}"
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {currentItem && !isInTransition ? (
         <Card className="border-primary/30">
           <CardHeader>
             <CardTitle className="text-xl">{currentItem.title}</CardTitle>
@@ -191,15 +441,56 @@ export function LiveView({ items, serviceName }: LiveViewProps) {
               <span>Total planned: {formatDuration(currentItem.durationSeconds)}</span>
             </div>
             {currentItem.notes && <p className="text-sm">{currentItem.notes}</p>}
+
+            {/* Verse navigation for song items */}
+            {currentItem.type === "song" && parsedLyrics.verses.length > 0 && (
+              <div className="border-t pt-3 mt-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Music className="h-4 w-4 text-primary" />
+                    <span className="font-medium">
+                      Verse {currentVerseIndex + 1} of {parsedLyrics.verses.length}
+                    </span>
+                    {currentSong?.key && (
+                      <span className="text-muted-foreground">• Key: {currentSong.key}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrevVerse}
+                      disabled={currentVerseIndex === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Prev
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNextVerse}
+                      disabled={currentVerseIndex >= parsedLyrics.verses.length - 1}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {/* Current verse preview */}
+                <div className="mt-2 p-3 rounded-md bg-muted/50 text-sm whitespace-pre-line">
+                  {parsedLyrics.verses[currentVerseIndex]?.content || "No lyrics available"}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-      ) : (
+      ) : !isInTransition ? (
         <Card>
           <CardContent className="py-6 text-center text-muted-foreground">
             No items in this rundown yet.
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       <div className="grid gap-3 md:grid-cols-2">
         {nextItem && (

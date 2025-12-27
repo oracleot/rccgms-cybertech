@@ -23,7 +23,7 @@ export default async function RundownLivePage({ params }: RundownLivePageProps) 
     .select(
       `id, title, date,
        service:services(id, name),
-       items:rundown_items(id, order, type, title, duration_seconds, notes)
+       items:rundown_items(id, order, type, title, duration_seconds, notes, song_id, song:songs(id, title, lyrics, key))
       `
     )
     .eq("id", id)
@@ -45,17 +45,36 @@ export default async function RundownLivePage({ params }: RundownLivePageProps) 
       title: string
       duration_seconds: number | null
       notes: string | null
+      song_id: string | null
+      song: { id: string; title: string; lyrics: string | null; key: string | null } | null
     }>
   }
 
-  const items: RundownEditorItem[] = (rundown.items || []).map((item) => ({
-    id: item.id,
-    order: item.order || 0,
-    type: item.type,
-    title: item.title,
-    durationSeconds: item.duration_seconds || 0,
-    notes: item.notes,
-  }))
+  // Transform items and build song map
+  const items: RundownEditorItem[] = []
+  const itemsWithSongs = new Map<string, { id: string; title: string; lyrics: string | null; key: string | null }>()
+
+  for (const item of rundown.items || []) {
+    items.push({
+      id: item.id,
+      order: item.order || 0,
+      type: item.type,
+      title: item.title,
+      durationSeconds: item.duration_seconds || 0,
+      notes: item.notes,
+      songId: item.song_id,
+    })
+
+    // Add song to map if present
+    if (item.song_id && item.song) {
+      itemsWithSongs.set(item.song_id, {
+        id: item.song.id,
+        title: item.song.title,
+        lyrics: item.song.lyrics,
+        key: item.song.key,
+      })
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -82,7 +101,12 @@ export default async function RundownLivePage({ params }: RundownLivePageProps) 
           <CardDescription>{rundown.service?.name || "Service"}</CardDescription>
         </CardHeader>
         <CardContent>
-          <LiveView items={items} serviceName={rundown.service?.name || null} />
+          <LiveView
+            rundownId={rundown.id}
+            items={items}
+            serviceName={rundown.service?.name || null}
+            itemsWithSongs={itemsWithSongs}
+          />
         </CardContent>
       </Card>
     </div>

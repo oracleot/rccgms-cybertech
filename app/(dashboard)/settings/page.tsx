@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ROUTES } from "@/lib/constants"
 import { ProfileForm } from "./_components/profile-form"
+import { DisplaySettings } from "./_components/display-settings"
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
 import { ChangePassword } from "@/components/settings/change-password"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -119,6 +120,19 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <ChangePassword />
+          </CardContent>
+        </Card>
+
+        {/* Display Settings Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Display Settings</CardTitle>
+            <CardDescription>
+              Customize the appearance of projections and extended displays
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DisplaySettings />
           </CardContent>
         </Card>
 
