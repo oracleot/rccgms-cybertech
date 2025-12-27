@@ -12,6 +12,7 @@ PROFILES ──┬── has many ──> ROTA_ASSIGNMENTS
            ├── has many ──> EQUIPMENT_CHECKOUTS
            ├── has many ──> VOLUNTEER_PROGRESS
            ├── has many ──> USER_DEPARTMENTS ──> DEPARTMENTS
+           ├── has one ──> DISPLAY_SETTINGS
            └── belongs to ──> DEPARTMENTS (primary, legacy)
 
 DEPARTMENTS ──┬── has many ──> POSITIONS
@@ -538,6 +539,41 @@ Scheduled social media content.
 | status | enum('draft', 'scheduled', 'published', 'failed') | default 'draft' | Status |
 | created_by | uuid | FK profiles(id), not null | Creator |
 | created_at | timestamptz | default now() | Created timestamp |
+
+---
+
+## Settings
+
+### display_settings
+
+User-specific display customization for projection/extended display.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | uuid | PK, default uuid_generate_v4() | Settings ID |
+| profile_id | uuid | FK profiles(id), unique, not null, on delete cascade | Owner profile |
+| font_size | int | not null, default 48 | Font size for projected text (24-120px) |
+| font_family | text | not null, default 'Inter' | Font family for projection |
+| background_color | text | not null, default '#000000' | Hex color for display background |
+| text_color | text | not null, default '#FFFFFF' | Hex color for display text |
+| logo_url | text | nullable | Optional URL for church/ministry logo |
+| transition_effect | text | not null, default 'fade' | Animation between items: fade, slide, or none |
+| created_at | timestamptz | not null, default now() | Created timestamp |
+| updated_at | timestamptz | not null, default now() | Last update |
+
+**Constraints**:
+- `font_size` must be between 24 and 120
+- `font_family` must be one of: 'Inter', 'Georgia', 'Courier New', 'Arial', 'Times New Roman', 'Roboto'
+- `background_color` and `text_color` must match hex color pattern `^#[0-9A-Fa-f]{6}$`
+- `transition_effect` must be one of: 'fade', 'slide', 'none'
+
+**Indexes**: `profile_id`
+
+**RLS Policies**:
+- SELECT: Users can read only their own display settings
+- INSERT: Users can insert only their own display settings
+- UPDATE: Users can update only their own display settings
+- DELETE: Users can delete only their own display settings
 
 ---
 

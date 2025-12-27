@@ -487,6 +487,18 @@ textarea:focus-visible {
   animation: fade-in-up 0.5s ease-out forwards;
 }
 
+/* Breathing effect for TIME OUT text */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
 /* Grid pattern background */
 .bg-grid-white\/10 {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m0 0h1v1h-1zm39 0h1v1h-1zm0 39h1v1h-1zm-39 0h1v1h-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");

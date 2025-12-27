@@ -88,3 +88,133 @@ export interface LiveViewItem extends RundownItemWithDetails {
   isComplete: boolean
   isCurrent: boolean
 }
+
+// =============================================================================
+// Extended Display Types
+// =============================================================================
+
+/**
+ * Parsed lyrics structure - verses split by double newlines
+ */
+export interface ParsedLyrics {
+  verses: Array<{
+    index: number
+    content: string
+  }>
+}
+
+/**
+ * BroadcastChannel message types for display sync
+ */
+export type DisplaySyncMessageType =
+  | "ITEM_CHANGE"
+  | "TIMER_UPDATE"
+  | "LYRIC_ADVANCE"
+  | "SETTINGS_UPDATE"
+  | "TRANSITION"
+  | "DISPLAY_READY"
+  | "DISPLAY_CLOSED"
+
+/**
+ * Payload for ITEM_CHANGE messages
+ */
+export interface ItemChangePayload {
+  currentItemIndex: number
+  item: {
+    id: string
+    type: RundownItemType
+    title: string
+    durationSeconds: number
+    notes: string | null
+    song?: {
+      id: string
+      title: string
+      lyrics: string | null
+      key: string | null
+    } | null
+  } | null
+  nextItem?: {
+    id: string
+    type: RundownItemType
+    title: string
+    durationSeconds: number
+  } | null
+}
+
+/**
+ * Payload for TIMER_UPDATE messages
+ */
+export interface TimerUpdatePayload {
+  elapsed: number
+  remaining: number
+  isRunning: boolean
+}
+
+/**
+ * Payload for LYRIC_ADVANCE messages
+ */
+export interface LyricAdvancePayload {
+  currentVerseIndex: number
+  totalVerses: number
+}
+
+/**
+ * Payload for SETTINGS_UPDATE messages
+ */
+export interface SettingsUpdatePayload {
+  fontSize: number
+  fontFamily: string
+  backgroundColor: string
+  textColor: string
+  logoUrl: string | null
+  transitionEffect: string
+}
+
+/**
+ * Payload for TRANSITION messages - shown between items
+ */
+export interface TransitionPayload {
+  isInTransition: boolean
+  completedItem: {
+    id: string
+    title: string
+    type: string
+  } | null
+  nextItem: {
+    id: string
+    title: string
+    type: string
+    durationSeconds: number
+  } | null
+  serviceName: string | null
+}
+
+/**
+ * Display sync message structure
+ */
+export type DisplaySyncMessage =
+  | { type: "ITEM_CHANGE"; payload: ItemChangePayload }
+  | { type: "TIMER_UPDATE"; payload: TimerUpdatePayload }
+  | { type: "LYRIC_ADVANCE"; payload: LyricAdvancePayload }
+  | { type: "SETTINGS_UPDATE"; payload: SettingsUpdatePayload }
+  | { type: "TRANSITION"; payload: TransitionPayload }
+  | { type: "DISPLAY_READY"; payload: { rundownId: string } }
+  | { type: "DISPLAY_CLOSED"; payload: { rundownId: string } }
+
+/**
+ * Rundown item with song details for display
+ */
+export interface RundownItemForDisplay {
+  id: string
+  order: number
+  type: RundownItemType
+  title: string
+  durationSeconds: number
+  notes: string | null
+  song?: {
+    id: string
+    title: string
+    lyrics: string | null
+    key: string | null
+  } | null
+}
