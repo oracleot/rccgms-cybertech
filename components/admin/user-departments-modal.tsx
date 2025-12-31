@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
-import { Building2, Loader2, Star, Trash2, Plus } from "lucide-react"
+import { Building2, Loader2, Star } from "lucide-react"
 import { toast } from "sonner"
 import {
   Dialog,

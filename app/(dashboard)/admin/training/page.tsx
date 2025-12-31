@@ -58,7 +58,7 @@ export default async function AdminTrainingPage() {
   const tracks = (tracksData || []) as TrackRow[]
 
   // Get departments for the create form
-  const { data: departments } = await supabase
+  const { data: _departments } = await supabase
     .from("departments")
     .select("id, name")
     .order("name")

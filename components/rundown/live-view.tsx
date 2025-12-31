@@ -18,7 +18,7 @@ import {
 import { RundownTimer } from "@/components/rundown/rundown-timer"
 import { DisplayControls } from "@/components/rundown/display-controls"
 import type { RundownEditorItem } from "./types"
-import type { DisplaySyncMessage, ItemChangePayload } from "@/types/rundown"
+import type { ItemChangePayload } from "@/types/rundown"
 
 interface LiveViewProps {
   rundownId: string
@@ -176,7 +176,8 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
   const startAlertLoop = (soundId: string) => {
     try {
       stopAlert()
-      const AudioCtx = typeof window !== "undefined" ? (window.AudioContext || (window as any).webkitAudioContext) : null
+      type WindowWithWebkit = Window & { webkitAudioContext?: typeof AudioContext }
+      const AudioCtx = typeof window !== "undefined" ? (window.AudioContext || (window as WindowWithWebkit).webkitAudioContext) : null
       if (!AudioCtx) return
       const ctx = new AudioCtx()
       playBurst(ctx, soundId)
@@ -190,7 +191,8 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
   const previewSound = (soundId: string) => {
     try {
-      const AudioCtx = typeof window !== "undefined" ? (window.AudioContext || (window as any).webkitAudioContext) : null
+      type WindowWithWebkit = Window & { webkitAudioContext?: typeof AudioContext }
+      const AudioCtx = typeof window !== "undefined" ? (window.AudioContext || (window as WindowWithWebkit).webkitAudioContext) : null
       if (!AudioCtx) return
       const ctx = new AudioCtx()
       playBurst(ctx, soundId)

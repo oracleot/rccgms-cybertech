@@ -31,12 +31,11 @@ export function CountdownWidget({
   serviceHour = 10,
   serviceMinute = 0,
 }: CountdownWidgetProps) {
-  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null)
-  const [isToday, setIsToday] = useState(false)
-
-  const calculateTimeRemaining = useCallback((): TimeRemaining => {
+  // Calculate time remaining without side effects - returns both time and isToday flag
+  const calculateTimeRemaining = useCallback((): { time: TimeRemaining; isTodayService: boolean } => {
     const now = new Date()
     let targetDate: Date
+    let isTodayService = false
 
     // Check if today is Sunday
     if (now.getDay() === 0) {
@@ -44,16 +43,14 @@ export function CountdownWidget({
       const todayService = setMinutes(setHours(now, serviceHour), serviceMinute)
       if (now < todayService) {
         targetDate = todayService
-        setIsToday(true)
+        isTodayService = true
       } else {
         // Service has passed, target next Sunday
         targetDate = setMinutes(setHours(nextSunday(now), serviceHour), serviceMinute)
-        setIsToday(false)
       }
     } else {
       // Not Sunday, get next Sunday
       targetDate = setMinutes(setHours(nextSunday(now), serviceHour), serviceMinute)
-      setIsToday(false)
     }
 
     const days = differenceInDays(targetDate, now)
@@ -61,14 +58,19 @@ export function CountdownWidget({
     const minutes = differenceInMinutes(targetDate, now) % 60
     const totalHours = differenceInHours(targetDate, now)
 
-    return { days, hours, minutes, totalHours }
+    return { time: { days, hours, minutes, totalHours }, isTodayService }
   }, [serviceHour, serviceMinute])
 
-  useEffect(() => {
-    setTimeRemaining(calculateTimeRemaining())
+  // Initialize state with memoized initial values
+  const initialCalc = calculateTimeRemaining()
+  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(() => initialCalc.time)
+  const [isToday, setIsToday] = useState(() => initialCalc.isTodayService)
 
+  useEffect(() => {
     const interval = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining())
+      const result = calculateTimeRemaining()
+      setTimeRemaining(result.time)
+      setIsToday(result.isTodayService)
     }, 60000) // Update every minute
 
     return () => clearInterval(interval)

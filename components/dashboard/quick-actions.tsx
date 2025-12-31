@@ -4,7 +4,6 @@ import Link from "next/link"
 import {
   CalendarDays,
   Package,
-  MonitorPlay,
   FileText,
   Users,
   Settings,

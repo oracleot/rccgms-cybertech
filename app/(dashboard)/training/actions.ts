@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server"
 
 import { revalidatePath } from "next/cache"
@@ -60,7 +59,7 @@ export async function enrollInTrack(formData: FormData) {
   // Create enrollment
    
   const { error } = await (supabase
-    .from("volunteer_progress") as any)
+    .from("volunteer_progress") as ReturnType<typeof supabase.from>)
       .insert({
       user_id: profile.id,
       track_id: parsed.data.trackId,
@@ -149,15 +148,15 @@ export async function completeStep(formData: FormData) {
   }
 
   // Create completion record
-  const { error } = await supabase
-    .from("step_completions")
+  const { error } = await (supabase
+    .from("step_completions") as ReturnType<typeof supabase.from>)
       .insert({
       volunteer_progress_id: parsed.data.progressId,
       step_id: parsed.data.stepId,
       completed_at: new Date().toISOString(),
       score: parsed.data.score,
       attempts: 1,
-    } as Record<string, unknown>)
+    })
 
   if (error) {
     return { error: error.message }
@@ -183,12 +182,12 @@ export async function completeStep(formData: FormData) {
 
   // If all required steps completed, mark track as complete
   if (allRequiredCompleted && requiredSteps.length > 0) {
-    await supabase
-      .from("volunteer_progress")
+    await (supabase
+      .from("volunteer_progress") as ReturnType<typeof supabase.from>)
         .update({
         status: "completed",
         completed_at: new Date().toISOString(),
-      } as Record<string, unknown>)
+      })
       .eq("id", progress.id)
   }
 
@@ -243,12 +242,12 @@ export async function verifyStep(formData: FormData) {
 
   if (parsed.data.approved) {
     // Approve: Set mentor verification
-    const { error } = await supabase
-      .from("step_completions")
+    const { error } = await (supabase
+      .from("step_completions") as ReturnType<typeof supabase.from>)
         .update({
         mentor_verified_by: profile.id,
         mentor_verified_at: new Date().toISOString(),
-      } as Record<string, unknown>)
+      })
       .eq("id", parsed.data.completionId)
 
     if (error) {
@@ -307,15 +306,15 @@ export async function createTrack(formData: FormData) {
     return { error: parsed.error.flatten().fieldErrors }
   }
 
-  const { error } = await supabase
-    .from("onboarding_tracks")
+  const { error } = await (supabase
+    .from("onboarding_tracks") as ReturnType<typeof supabase.from>)
       .insert({
       department_id: parsed.data.departmentId,
       name: parsed.data.name,
       description: parsed.data.description,
       estimated_weeks: parsed.data.estimatedWeeks,
       is_active: false,
-    } as Record<string, unknown>)
+    })
 
   if (error) {
     return { error: error.message }
@@ -364,14 +363,14 @@ export async function updateTrack(formData: FormData) {
 
   const { id, ...updateData } = parsed.data
 
-  const { error } = await supabase
-    .from("onboarding_tracks")
+  const { error } = await (supabase
+    .from("onboarding_tracks") as ReturnType<typeof supabase.from>)
       .update({
       name: updateData.name,
       description: updateData.description,
       estimated_weeks: updateData.estimatedWeeks,
       is_active: updateData.isActive,
-    } as Record<string, unknown>)
+    })
     .eq("id", id)
 
   if (error) {
@@ -421,8 +420,8 @@ export async function createStep(formData: FormData) {
     return { error: parsed.error.flatten().fieldErrors }
   }
 
-  const { error } = await supabase
-    .from("onboarding_steps")
+  const { error } = await (supabase
+    .from("onboarding_steps") as ReturnType<typeof supabase.from>)
       .insert({
       track_id: parsed.data.trackId,
       order: parsed.data.order,
@@ -432,7 +431,7 @@ export async function createStep(formData: FormData) {
       content_url: parsed.data.contentUrl,
       required: parsed.data.required,
       pass_score: parsed.data.passScore,
-    } as Record<string, unknown>)
+    })
 
   if (error) {
     return { error: error.message }
@@ -491,8 +490,8 @@ export async function updateStep(formData: FormData) {
 
   const step = stepData as { track_id: string } | null
 
-  const { error } = await supabase
-    .from("onboarding_steps")
+  const { error } = await (supabase
+    .from("onboarding_steps") as ReturnType<typeof supabase.from>)
       .update({
       order: updateData.order,
       title: updateData.title,
@@ -501,7 +500,7 @@ export async function updateStep(formData: FormData) {
       content_url: updateData.contentUrl,
       required: updateData.required,
       pass_score: updateData.passScore,
-    } as Record<string, unknown>)
+    })
     .eq("id", id)
 
   if (error) {
@@ -604,9 +603,9 @@ export async function reorderSteps(formData: FormData) {
 
   // Update each step's order
   for (let i = 0; i < parsed.data.stepIds.length; i++) {
-    await supabase
-      .from("onboarding_steps")
-      .update({ order: i + 1 } as Record<string, unknown>)
+    await (supabase
+      .from("onboarding_steps") as ReturnType<typeof supabase.from>)
+      .update({ order: i + 1 })
       .eq("id", parsed.data.stepIds[i])
   }
 

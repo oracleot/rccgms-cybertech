@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useForm, SubmitHandler } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { Plus, Trash2, GripVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -63,6 +62,7 @@ export function StepEditor({
   onCreateStep, 
   onUpdateStep,
   onDeleteStep,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onReorderSteps 
 }: StepEditorProps) {
   const [isOpen, setIsOpen] = useState(false)

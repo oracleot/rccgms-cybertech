@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowRightLeft, Loader2, CheckCircle2, Inbox } from "lucide-react"
+import { ArrowRightLeft, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
-
-import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { SwapRequestCard, type SwapRequestCardData } from "./swap-request-card"
 import { EmptyState } from "@/components/shared/empty-state"

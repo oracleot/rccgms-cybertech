@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { format } from "date-fns"
-import { Youtube, Facebook, ArrowLeft, Copy, ChevronDown, ChevronUp } from "lucide-react"
+import { Youtube, Facebook, Copy, ChevronDown, ChevronUp } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,13 +36,7 @@ export function HistoryList({ initialData }: HistoryListProps) {
   const [hasMore, setHasMore] = useState(true)
   const [offset, setOffset] = useState(initialData?.length || 0)
 
-  useEffect(() => {
-    if (!initialData) {
-      fetchHistory()
-    }
-  }, [initialData])
-
-  const fetchHistory = async (loadMore = false) => {
+  const fetchHistory = useCallback(async (loadMore = false) => {
     setLoading(true)
     try {
       const currentOffset = loadMore ? offset : 0
@@ -66,7 +60,13 @@ export function HistoryList({ initialData }: HistoryListProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [offset])
+
+  useEffect(() => {
+    if (!initialData) {
+      fetchHistory()
+    }
+  }, [initialData, fetchHistory])
 
   const copyToClipboard = async (text: string, platform: string) => {
     try {

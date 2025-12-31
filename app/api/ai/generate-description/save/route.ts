@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       // Update existing livestream
        
       const { data: livestream, error } = await (supabase
-        .from("livestreams") as any)
+        .from("livestreams") as ReturnType<typeof supabase.from>)
         .update({
           [descriptionField]: content,
           title,
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
 
        
       const { data: livestream, error } = await (supabase
-        .from("livestreams") as any)
+        .from("livestreams") as ReturnType<typeof supabase.from>)
         .insert(insertData)
         .select()
         .single()
