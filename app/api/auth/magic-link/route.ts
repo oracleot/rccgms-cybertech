@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { magicLinkSchema } from "@/lib/validations/auth"
 
 /**
@@ -68,10 +69,33 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // SECURITY: Verify user was invited before sending magic link
+  // Check the profiles table - profiles are only created when admins invite users
+  // via inviteUserByEmail (which creates auth.users entry, triggering profile creation)
+  const adminClient = createAdminClient()
+  const { data: existingProfile, error: profileError } = await adminClient
+    .from("profiles")
+    .select("id")
+    .ilike("email", email) // Case-insensitive email match
+    .maybeSingle()
+
+  // If no profile exists (user wasn't invited), don't send magic link
+  // But still return generic message to prevent email enumeration (FR-007)
+  if (profileError || !existingProfile) {
+    console.log("Magic link request for non-invited user:", email)
+    return NextResponse.json({
+      success: true,
+      message: "If an account exists, a magic link has been sent to your email.",
+    })
+  }
+
   const supabase = await createClient()
 
   // Send magic link using signInWithOtp
-  // shouldCreateUser: false prevents self-registration (FR-001)
+  // SECURITY: shouldCreateUser: false ensures ONLY invited users can receive magic links (FR-001)
+  // - If email doesn't exist in Supabase auth → No email is sent (but we return generic message to prevent enumeration)
+  // - If email exists (was invited by admin via inviteUserByEmail) → Magic link email is sent
+  // This effectively makes the system invite-only - random users cannot get access
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
