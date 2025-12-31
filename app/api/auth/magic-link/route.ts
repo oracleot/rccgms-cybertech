@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { magicLinkSchema } from "@/lib/validations/auth"
+import { getAppUrl } from "@/lib/constants"
 
 /**
  * Simple in-memory rate limiter for magic link requests
@@ -96,11 +97,12 @@ export async function POST(request: NextRequest) {
   // - If email doesn't exist in Supabase auth → No email is sent (but we return generic message to prevent enumeration)
   // - If email exists (was invited by admin via inviteUserByEmail) → Magic link email is sent
   // This effectively makes the system invite-only - random users cannot get access
+  const appUrl = getAppUrl()
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+      emailRedirectTo: `${appUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
     },
   })
 

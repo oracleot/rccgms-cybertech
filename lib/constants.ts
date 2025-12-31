@@ -3,6 +3,33 @@
  */
 
 // ===================
+// App URL Helper
+// ===================
+/**
+ * Get the application URL for auth redirects.
+ * ALWAYS uses NEXT_PUBLIC_APP_URL environment variable to ensure
+ * magic links and auth redirects go to the correct domain.
+ * 
+ * In production, set NEXT_PUBLIC_APP_URL to your live domain (e.g., https://yourapp.com)
+ * In development, it defaults to http://localhost:3000
+ */
+export function getAppUrl(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  
+  if (!appUrl) {
+    // Only warn in server context, not during build
+    if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
+      console.warn(
+        '[Cyber Tech] NEXT_PUBLIC_APP_URL is not set. Auth redirects may not work correctly in production.'
+      )
+    }
+    return 'http://localhost:3000'
+  }
+  
+  return appUrl
+}
+
+// ===================
 // User Roles
 // ===================
 export const USER_ROLES = {

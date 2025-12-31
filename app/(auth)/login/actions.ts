@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { magicLinkSchema, type MagicLinkInput } from "@/lib/validations/auth"
-import { headers } from "next/headers"
+import { getAppUrl } from "@/lib/constants"
 
 /**
  * Send a magic link to the user's email for passwordless authentication
@@ -32,13 +32,12 @@ export async function sendMagicLink(data: MagicLinkInput) {
   }
 
   const supabase = await createClient()
-  const headersList = await headers()
-  const origin = headersList.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const appUrl = getAppUrl()
 
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?type=magiclink&next=${encodeURIComponent(parsed.data.redirectTo || "/dashboard")}`,
+      emailRedirectTo: `${appUrl}/auth/callback?type=magiclink&next=${encodeURIComponent(parsed.data.redirectTo || "/dashboard")}`,
     },
   })
 
