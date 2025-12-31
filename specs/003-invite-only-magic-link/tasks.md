@@ -27,8 +27,8 @@ Based on plan.md structure:
 
 **Purpose**: Create validation schemas and type definitions needed for magic link authentication
 
-- [ ] T001 Add magicLinkSchema to lib/validations/auth.ts
-- [ ] T002 [P] Add completeProfileSchema to lib/validations/auth.ts
+- [X] T001 Add magicLinkSchema to lib/validations/auth.ts
+- [X] T002 [P] Add completeProfileSchema to lib/validations/auth.ts
 
 ---
 
@@ -38,8 +38,8 @@ Based on plan.md structure:
 
 **⚠️ CRITICAL**: No user story UI work can begin until these endpoints exist
 
-- [ ] T003 Create magic link request endpoint in app/api/auth/magic-link/route.ts
-- [ ] T004 [P] Create profile completion endpoint in app/api/auth/complete-profile/route.ts
+- [X] T003 Create magic link request endpoint in app/api/auth/magic-link/route.ts
+- [X] T004 [P] Create profile completion endpoint in app/api/auth/complete-profile/route.ts
 
 **Checkpoint**: API endpoints ready - user story UI implementation can now begin
 
@@ -121,6 +121,7 @@ Based on plan.md structure:
 - [ ] T022 [P] Hide forgot-password and reset-password links from UI (keep routes for edge cases)
 - [ ] T023 Run quickstart.md validation - test all 4 test scenarios
 - [ ] T024 Verify email templates in Supabase reflect magic link flow (manual check)
+- [ ] T025 [P] Fix pre-existing lint errors across codebase (28 errors, 66 warnings identified in QA)
 
 ---
 
