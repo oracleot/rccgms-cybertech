@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth"
+import { getAppUrl } from "@/lib/constants"
 
 export async function register(data: RegisterInput) {
   const parsed = registerSchema.safeParse(data)
@@ -13,6 +14,7 @@ export async function register(data: RegisterInput) {
   }
 
   const supabase = await createClient()
+  const appUrl = getAppUrl()
 
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -21,7 +23,7 @@ export async function register(data: RegisterInput) {
       data: {
         name: parsed.data.name,
       },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/verify`,
+      emailRedirectTo: `${appUrl}/verify`,
     },
   })
 
