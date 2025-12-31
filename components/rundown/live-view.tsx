@@ -247,11 +247,12 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     const item = orderedItems[currentIndex]
     if (!started || !item) return
     if (!item.durationSeconds || item.durationSeconds <= 0) return
-    if (elapsed >= item.durationSeconds && currentIndex < orderedItems.length - 1 && !isInTransition) {
+    if (elapsed >= item.durationSeconds && !isInTransition) {
       stopAlert()
       setIsInTransition(true)
       
       // Broadcast transition state to display
+      // For the last item, nextItem will be null, triggering "Service Complete" on display
       sendMessage({
         type: "TRANSITION",
         payload: {
@@ -416,6 +417,54 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
               >
                 <Play className="mr-2 h-5 w-5" />
                 Start "{nextItem.title}"
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Service Complete Screen - shown when last item timer ends */}
+      {isInTransition && !nextItem && (
+        <Card className="border-green-500/50 bg-green-50/50 dark:bg-green-950/20">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
+                <span className="text-white text-xs">✓</span>
+              </div>
+              <CardTitle className="text-lg text-green-700 dark:text-green-400">
+                Service Complete
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-center py-8">
+              <h2 className="text-3xl font-bold mb-2">Thanks for your help!</h2>
+              <p className="text-muted-foreground">
+                All rundown items have been completed.
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <Button 
+                variant="outline"
+                size="lg" 
+                onClick={() => {
+                  setIsInTransition(false)
+                  setStarted(false)
+                  setCurrentIndex(0)
+                  setElapsed(0)
+                  sendMessage({
+                    type: "TRANSITION",
+                    payload: {
+                      isInTransition: false,
+                      completedItem: null,
+                      nextItem: null,
+                      serviceName: serviceName || null,
+                    },
+                  })
+                }}
+                className="px-8"
+              >
+                Reset Service
               </Button>
             </div>
           </CardContent>

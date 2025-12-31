@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import confetti from "canvas-confetti"
 import { cn } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
 import { useDisplayReceiver } from "@/hooks/use-display-sync"
@@ -92,10 +93,10 @@ function ProjectionTimer({
             isOvertime && "text-red-500"
           )}
           style={{
-            fontSize: "clamp(120px, 25vw, 400px)",
+            fontSize: "clamp(14rem, 33vw, 40rem)",
             textShadow: isCritical || isOvertime
-              ? `0 0 60px ${isOvertime ? "#ef4444" : "#f59e0b"}80, 0 0 120px ${isOvertime ? "#ef4444" : "#f59e0b"}40`
-              : `0 0 40px ${textColor}20`,
+              ? `0 0 5rem ${isOvertime ? "#ef4444" : "#f59e0b"}80, 0 0 10rem ${isOvertime ? "#ef4444" : "#f59e0b"}40`
+              : `0 0 3rem ${textColor}20`,
             color: !isWarning && !isCritical && !isOvertime ? textColor : undefined,
             letterSpacing: "-0.05em",
           }}
@@ -139,6 +140,65 @@ function ProjectionTimer({
       >
         {isOvertime ? "OVERTIME" : isCritical ? "ENDING SOON" : "TIME REMAINING"}
       </div>
+    </div>
+  )
+}
+
+/**
+ * End of service component with confetti celebration
+ */
+function EndOfServiceConfetti({ textColor }: { textColor: string }) {
+  const hasFireRef = useRef(false)
+
+  useEffect(() => {
+    if (hasFireRef.current) return
+    hasFireRef.current = true
+
+    // Fire confetti from both sides
+    const duration = 4000
+    const animationEnd = Date.now() + duration
+    const colors = ["#a786ff", "#fd86ff", "#87CEEB", "#f8deb1", "#FFD700"]
+
+    const frame = () => {
+      if (Date.now() > animationEnd) return
+
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 0, y: 0.5 },
+        colors,
+        zIndex: 9999,
+      })
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 1, y: 0.5 },
+        colors,
+        zIndex: 9999,
+      })
+
+      requestAnimationFrame(frame)
+    }
+
+    frame()
+  }, [])
+
+  return (
+    <div className="animate-in fade-in duration-700 text-center">
+      <h1
+        className="font-bold animate-[breathe_3s_ease-in-out_infinite]"
+        style={{
+          fontSize: "clamp(5rem, 18vw, 20rem)",
+          textShadow: `0 0 5rem ${textColor}40, 0 0 10rem ${textColor}20`,
+          letterSpacing: "0.1em",
+        }}
+      >
+        SERVICE OVER!
+      </h1>
     </div>
   )
 }
@@ -243,7 +303,7 @@ export function DisplayView({
   return (
     <div
       className={cn(
-        "min-h-screen w-full flex flex-col",
+        "h-screen w-full flex flex-col overflow-hidden",
         transitionClass
       )}
       style={{
@@ -296,21 +356,21 @@ export function DisplayView({
               />
             </div>
 
-            {/* TIME OUT - BIG with breathing effect */}
-            <h1
-              className="font-bold mb-12 animate-[breathe_3s_ease-in-out_infinite]"
-              style={{ 
-                fontSize: "clamp(80px, 18vw, 300px)",
-                textShadow: `0 0 80px ${settings.textColor}40, 0 0 160px ${settings.textColor}20`,
-                letterSpacing: "0.1em",
-              }}
-            >
-              TIME OUT!
-            </h1>
-
-            {/* Next item info */}
+            {/* Next item info or End of service */}
             {transitionData.nextItem ? (
               <>
+                {/* TIME OUT - BIG with breathing effect (only for mid-service transitions) */}
+                <h1
+                  className="font-bold mb-12 animate-[breathe_3s_ease-in-out_infinite]"
+                  style={{ 
+                    fontSize: "clamp(80px, 18vw, 300px)",
+                    textShadow: `0 0 80px ${settings.textColor}40, 0 0 160px ${settings.textColor}20`,
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  TIME OUT!
+                </h1>
+
                 {/* Up Next label */}
                 <div 
                   className="px-6 py-2 rounded-full text-sm uppercase tracking-[0.3em] mb-6"
@@ -334,24 +394,8 @@ export function DisplayView({
                 </h2>
               </>
             ) : (
-              /* End of service */
-              <div className="animate-in fade-in duration-700">
-                <h1
-                  className="font-bold mb-4"
-                  style={{ 
-                    fontSize: "clamp(48px, 10vw, 160px)",
-                    textShadow: `0 0 60px ${settings.textColor}30`,
-                  }}
-                >
-                  Service Complete
-                </h1>
-                <p
-                  className="opacity-60"
-                  style={{ fontSize: Math.max(24, settings.fontSize * 0.5) }}
-                >
-                  Thank you for joining us
-                </p>
-              </div>
+              /* End of service - SERVICE OVER with confetti (no TIME OUT) */
+              <EndOfServiceConfetti textColor={settings.textColor} />
             )}
 
             {/* Waiting indicator */}
