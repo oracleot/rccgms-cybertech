@@ -87,9 +87,9 @@ Based on plan.md structure:
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Update app/auth/callback/route.ts to handle invite type with profile completeness check (adds `type=invite` handling, builds on T011)
-- [ ] T014 [US1] Modify redirect logic in callback to send incomplete profiles to /accept-invite
-- [ ] T015 [US1] Verify existing admin invite modal works with magic links (no changes expected)
+- [X] T013 [US1] Update app/auth/callback/route.ts to handle invite type with profile completeness check (adds `type=invite` handling, builds on T011)
+- [X] T014 [US1] Modify redirect logic in callback to send incomplete profiles to /accept-invite
+- [X] T015 [US1] Verify existing admin invite modal works with magic links (no changes expected)
 
 **Checkpoint**: Admin invite flow works end-to-end with magic links
 
@@ -103,10 +103,10 @@ Based on plan.md structure:
 
 ### Implementation for User Story 4
 
-- [ ] T016 [US4] Modify app/(auth)/accept-invite/page.tsx to remove password setup fields
-- [ ] T017 [US4] Update accept-invite page to show name-only profile completion form
-- [ ] T018 [US4] Connect profile completion form to PUT /api/auth/complete-profile endpoint
-- [ ] T019 [US4] Add redirect to dashboard after successful profile completion
+- [X] T016 [US4] Modify app/(auth)/accept-invite/page.tsx to remove password setup fields
+- [X] T017 [US4] Update accept-invite page to show name-only profile completion form
+- [X] T018 [US4] Connect profile completion form to PUT /api/auth/complete-profile endpoint
+- [X] T019 [US4] Add redirect to dashboard after successful profile completion
 
 **Checkpoint**: First-time invited users can complete profile and access dashboard
 
