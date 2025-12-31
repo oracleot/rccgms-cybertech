@@ -1,6 +1,13 @@
 "use client"
 
-import { ElementType, memo } from "react"
+/**
+ * Text animation component from Magic UI
+ * Creates motion components dynamically based on the 'as' prop
+ */
+
+/* eslint-disable react-hooks/static-components */
+
+import { ElementType, memo, useMemo } from "react"
 import { AnimatePresence, motion, MotionProps, Variants } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -317,7 +324,8 @@ const TextAnimateBase = ({
   accessible = true,
   ...props
 }: TextAnimateProps) => {
-  const MotionComponent = motion.create(Component)
+  // Memoize the motion component to avoid creating it during render
+  const MotionComponent = useMemo(() => motion.create(Component), [Component])
 
   let segments: string[] = []
   switch (by) {

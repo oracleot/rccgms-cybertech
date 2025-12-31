@@ -50,7 +50,7 @@ export default async function TrainingPage() {
   const tracks = (tracksRaw || []) as TrackRow[]
 
   // Get user's progress for enrolled tracks
-  let progressMap = new Map<string, ProgressWithDetails>()
+  const progressMap = new Map<string, ProgressWithDetails>()
   
   if (profile) {
     const { data: progressRaw } = await supabase

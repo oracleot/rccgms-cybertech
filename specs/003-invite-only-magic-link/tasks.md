@@ -116,12 +116,12 @@ Based on plan.md structure:
 
 **Purpose**: Cleanup, UI polish, and validation across all stories
 
-- [ ] T020 [P] Remove unused password-related imports from login page
-- [ ] T021 [P] Update login page copy/text for magic link flow
-- [ ] T022 [P] Hide forgot-password and reset-password links from UI (keep routes for edge cases)
-- [ ] T023 Run quickstart.md validation - test all 4 test scenarios
-- [ ] T024 Verify email templates in Supabase reflect magic link flow (manual check)
-- [ ] T025 [P] Fix pre-existing lint errors across codebase (28 errors, 66 warnings identified in QA)
+- [X] T020 [P] Remove unused password-related imports from login page
+- [X] T021 [P] Update login page copy/text for magic link flow
+- [X] T022 [P] Hide forgot-password and reset-password links from UI (keep routes for edge cases)
+- [X] T023 Run quickstart.md validation - test all 4 test scenarios
+- [X] T024 Verify email templates in Supabase reflect magic link flow (manual check)
+- [X] T025 [P] Fix pre-existing lint errors across codebase (28 errors, 66 warnings identified in QA)
 
 ---
 

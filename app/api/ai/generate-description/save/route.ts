@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     if (existingLivestream) {
       // Update existing livestream
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: livestream, error } = await (supabase
         .from("livestreams") as any)
         .update({
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
         rota_id: rotaId || null,
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: livestream, error } = await (supabase
         .from("livestreams") as any)
         .insert(insertData)

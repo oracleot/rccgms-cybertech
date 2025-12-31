@@ -332,6 +332,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
       setWarned(true)
       startAlertLoop(selectedSound)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elapsed, started, currentIndex, orderedItems, warned, selectedSound])
 
   useEffect(() => () => stopAlert(), [])
@@ -416,7 +417,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
                 className="px-8"
               >
                 <Play className="mr-2 h-5 w-5" />
-                Start "{nextItem.title}"
+                Start &quot;{nextItem.title}&quot;
               </Button>
             </div>
           </CardContent>
