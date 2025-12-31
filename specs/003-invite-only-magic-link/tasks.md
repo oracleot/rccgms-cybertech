@@ -53,9 +53,9 @@ Based on plan.md structure:
 
 ### Implementation for User Story 3
 
-- [ ] T005 [US3] Update middleware.ts to redirect /register to /login
-- [ ] T006 [US3] Modify app/(auth)/register/page.tsx to redirect to /login (fallback)
-- [ ] T007 [US3] Remove "Sign up" and "Create account" links from app/(auth)/login/page.tsx
+- [X] T005 [US3] Update middleware.ts to redirect /register to /login
+- [X] T006 [US3] Modify app/(auth)/register/page.tsx to redirect to /login (fallback)
+- [X] T007 [US3] Remove "Sign up" and "Create account" links from app/(auth)/login/page.tsx
 
 **Checkpoint**: Self-registration is fully disabled, no way to access register page
 
@@ -69,11 +69,11 @@ Based on plan.md structure:
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Modify app/(auth)/login/page.tsx to use email-only form with magic link flow
-- [ ] T009 [US2] Update app/(auth)/login/actions.ts to use signInWithOtp instead of signInWithPassword
-- [ ] T010 [US2] Add success state UI showing "Check your email" message in login page
-- [ ] T011 [US2] Update app/auth/callback/route.ts to handle magic link type authentication (adds `type=magiclink` handling)
-- [ ] T012 [US2] Remove "Forgot password?" link from login page UI
+- [X] T008 [US2] Modify app/(auth)/login/page.tsx to use email-only form with magic link flow
+- [X] T009 [US2] Update app/(auth)/login/actions.ts to use signInWithOtp instead of signInWithPassword
+- [X] T010 [US2] Add success state UI showing "Check your email" message in login page
+- [X] T011 [US2] Update app/auth/callback/route.ts to handle magic link type authentication (adds `type=magiclink` handling)
+- [X] T012 [US2] Remove "Forgot password?" link from login page UI
 
 **Checkpoint**: Existing users can log in via magic link, password login is removed
 

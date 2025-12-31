@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 /**
  * Auth callback route for handling Supabase redirects
- * This handles email verification, password reset, and invitation links
+ * This handles email verification, password reset, magic link, and invitation links
  * 
  * Supabase sends users here after:
  * - Email confirmation
@@ -19,13 +19,31 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error) {
+    if (!error && data.user) {
       // Handle different auth types
-      if (type === "invite" || type === "magiclink") {
-        // For invitations, redirect to accept-invite to set password
-        return NextResponse.redirect(`${origin}/accept-invite`)
+      if (type === "invite") {
+        // For invitations, check if profile is complete (has name)
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name")
+          .eq("auth_user_id", data.user.id)
+          .maybeSingle()
+        
+        // If profile doesn't exist or has no name, redirect to accept-invite to complete profile
+        const profileData = profile as { name: string | null } | null
+        if (!profileData || !profileData.name) {
+          return NextResponse.redirect(`${origin}/accept-invite`)
+        }
+        
+        // Profile is complete, go to dashboard
+        return NextResponse.redirect(`${origin}/dashboard`)
+      }
+      
+      if (type === "magiclink") {
+        // For magic link logins, redirect to the requested destination
+        return NextResponse.redirect(`${origin}${next}`)
       }
       
       if (type === "recovery") {
