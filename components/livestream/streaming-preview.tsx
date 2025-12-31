@@ -22,8 +22,8 @@ export function StreamingPreview({
   isLoading,
   error,
 }: StreamingPreviewProps) {
-  const Icon = platform === "youtube" ? Youtube : Facebook
-  const platformName = platform === "youtube" ? "YouTube" : "Facebook"
+  const _Icon = platform === "youtube" ? Youtube : Facebook
+  const _platformName = platform === "youtube" ? "YouTube" : "Facebook"
 
   if (platform === "youtube") {
     return (
@@ -103,7 +103,7 @@ export function StreamingPreview({
               <div className="space-y-2">
                 <Youtube className="mx-auto h-10 w-10 text-red-500/30" />
                 <p className="text-sm text-zinc-500">
-                  Fill in the service details and click "Generate" to create a YouTube description
+                  Fill in the service details and click &quot;Generate&quot; to create a YouTube description
                 </p>
               </div>
             </div>
@@ -214,7 +214,7 @@ export function StreamingPreview({
             <div className="space-y-2">
               <Facebook className="mx-auto h-10 w-10 text-[#1877F2]/30" />
               <p className="text-sm text-muted-foreground">
-                Fill in the service details and click "Generate" to create a Facebook post
+                Fill in the service details and click &quot;Generate&quot; to create a Facebook post
               </p>
             </div>
           </div>

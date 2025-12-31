@@ -38,7 +38,9 @@ export default async function EquipmentPage() {
     }
   })
 
-  const nowIso = new Date().toISOString()
+  const now = new Date()
+  const nowIso = now.toISOString()
+  const nowMs = now.getTime()
   const { data: overdueData } = await supabase
     .from("equipment_checkouts")
     .select("id, expected_return, equipment:equipment(id, name), checked_out_by:profiles(id, name)")
@@ -56,7 +58,7 @@ export default async function EquipmentPage() {
     const daysOverdue = Math.max(
       0,
       Math.floor(
-        (Date.now() - new Date(typed.expected_return).getTime()) / (1000 * 60 * 60 * 24)
+        (nowMs - new Date(typed.expected_return).getTime()) / (1000 * 60 * 60 * 24)
       )
     )
 

@@ -164,9 +164,9 @@ export async function PUT(request: NextRequest) {
 
     if (existingTemplate) {
       // Update existing template
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: template, error } = await (supabase
-        .from("prompt_templates") as any)
+        .from("prompt_templates") as ReturnType<typeof supabase.from>)
         .update({
           template: systemPrompt,
           updated_at: new Date().toISOString(),
@@ -195,9 +195,9 @@ export async function PUT(request: NextRequest) {
       })
     } else {
       // Create new template
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: template, error } = await (supabase
-        .from("prompt_templates") as any)
+        .from("prompt_templates") as ReturnType<typeof supabase.from>)
         .insert({
           name: `Default ${platform.charAt(0).toUpperCase() + platform.slice(1)} Template`,
           platform,

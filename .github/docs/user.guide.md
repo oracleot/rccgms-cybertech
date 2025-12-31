@@ -11,8 +11,8 @@ Welcome to Cyber Tech! This guide will help you get started and make the most of
 **New to Cyber Tech?** Here's how to get going in under 2 minutes:
 
 1. **Check your email** for an invitation from your team leader
-2. **Click the invitation link** to set up your password
-3. **Sign in** at the login page
+2. **Click the magic link** in the email to sign in instantly
+3. **Complete your profile** (first time only) by entering your name
 4. **View your dashboard** to see upcoming duties
 
 That's it! You're ready to go. 🎉
@@ -23,36 +23,18 @@ That's it! You're ready to go. 🎉
 
 ### Creating Your Account
 
-Most users will receive an invitation email from a team leader or admin. Here's how to get set up:
+Cyber Tech is **invite-only** – you can only join if a team leader or admin invites you. Here's how to get set up:
 
 1. Look for an email with the subject "You're invited to Cyber Tech"
-2. Click the **Accept Invitation** button in the email
-3. You'll be automatically redirected to the password setup page
-4. Enter a strong password (at least 8 characters)
-5. Confirm your password by typing it again
-6. Click **Complete setup**
+2. Click the **magic link** in the email
+3. If this is your first time, you'll be asked to enter your **name**
+4. Click **Complete Profile**
 
-You'll be automatically signed in and taken to your dashboard.
-
-> 💡 **Tip**: Use a password you'll remember, but make sure it's secure. A mix of letters, numbers, and symbols works best.
+You'll be automatically signed in and taken to your dashboard. No passwords needed!
 
 > 📧 **Note**: If the invitation email lands in your spam folder, mark it as "Not Spam" to ensure future emails arrive correctly. The email comes from your church's configured email domain.
 
-### Signing Up (If Self-Registration is Enabled)
-
-If your church allows self-registration:
-
-1. Go to the Cyber Tech app
-2. Click **Create an account** below the sign-in form
-3. Enter your full name
-4. Enter your email address
-5. Create a password (at least 8 characters)
-6. Confirm your password
-7. Click **Create account**
-8. Check your email for a verification link
-9. Click the link to verify your email
-
-After verification, you can sign in to your account.
+> ⏰ **Important**: Magic links expire after **1 hour**. If your link has expired, go to the login page and request a new one.
 
 ---
 
@@ -60,44 +42,38 @@ After verification, you can sign in to your account.
 
 ### How To Sign In
 
+Cyber Tech uses **magic link authentication** – no passwords to remember!
+
 1. Open the Cyber Tech app in your browser
 2. Enter your **email address**
-3. Enter your **password**
-4. Click **Sign in**
-
-You'll be taken to your dashboard where you can see your upcoming duties.
-
-### Forgot Your Password?
-
-Don't worry – it happens to everyone! Here's how to reset it:
-
-1. On the sign-in page, click **Forgot password?**
-2. Enter the email address you use for Cyber Tech
-3. Click **Send Reset Link**
+3. Click **Send magic link**
 4. Check your email for a message from Cyber Tech
-5. Click the **Reset Password** link in the email
-6. Enter your new password
-7. Confirm your new password
-8. Click **Update Password**
+5. Click the **magic link** in the email
 
-You'll see a success message and can sign in with your new password.
+You'll be automatically signed in and taken to your dashboard.
+
+> 💡 **Tip**: The magic link email usually arrives within a few seconds. Check your spam folder if you don't see it.
 
 ### Tips & Tricks
 
 - ✅ Bookmark the app for quick access on Sundays
 - ✅ Save the login page to your phone's home screen
-- ❌ Don't share your password with others – each person should have their own account
+- ✅ Magic links are secure and expire after 1 hour
+- ✅ Each magic link can only be used once
 
 ### Common Questions
 
-**Q: I didn't receive the password reset email?**  
-A: Check your spam or junk folder. If it's still not there, wait a few minutes and try again. If problems persist, contact your team leader.
+**Q: I didn't receive the magic link email?**  
+A: Check your spam or junk folder. If it's still not there, wait a few minutes and try again. Make sure you're using the email address you were invited with.
 
 **Q: It says my email isn't registered?**  
 A: You may not have been invited yet. Ask your team leader to send you an invitation.
 
-**Q: I'm getting an "invalid credentials" error?**  
-A: Double-check that you're using the correct email and password. Remember that passwords are case-sensitive. Try resetting your password if you're unsure.
+**Q: My magic link says it's expired?**  
+A: Magic links expire after 1 hour for security. Simply go back to the login page and request a new one.
+
+**Q: Can I use a password instead?**  
+A: No, Cyber Tech uses magic link authentication for better security and convenience. No passwords to remember or reset!
 
 ---
 
@@ -211,9 +187,10 @@ As an admin, you can invite new members to join Cyber Tech:
 6. Choose their department (optional)
 7. Click **Send Invitation**
 
-The new user will receive an email with a secure invitation link. When they click the link, they'll be taken through a two-step process:
-1. First, the link verifies their invitation (handled automatically)
-2. Then they're redirected to set their password
+The new user will receive an email with a **magic link**. When they click the link:
+1. They'll be automatically signed in
+2. If this is their first time, they'll be prompted to enter their name
+3. They'll be redirected to their dashboard
 
 > 💡 **Tip**: Most new users should start as Volunteers. You can always upgrade their role later.
 
@@ -332,23 +309,23 @@ From the user menu (⋮), you can:
 
 If invited users are having trouble:
 
-**Invitation link not working:**
-- Links expire after 7 days – send a new invitation if expired
+**Magic link not working:**
+- Links expire after **1 hour** – ask the user to request a new one from the login page
 - Ensure the user clicks the link from their email (don't copy/paste partial URLs)
-- The link should redirect through `/auth/callback` before landing on the password page
+- Each magic link can only be used **once** – if they've already clicked it, they need a new one
 
 **Email went to spam:**
 - Ask users to check spam/junk folders
 - Have them mark the email as "Not Spam" to improve future delivery
 - Consider configuring a custom SMTP provider (Resend, SendGrid) in your Supabase project
 
-**"Invalid or expired invitation" error:**
-- The invitation link has expired or was already used
-- Send a fresh invitation from Admin → Users → Invite User
+**"Invalid or expired" error:**
+- The magic link has expired (after 1 hour) or was already used
+- The user should go to the login page and request a new magic link
 
-**User stuck on password page:**
-- Ensure they're using a supported browser (Chrome, Firefox, Safari, Edge)
-- Try clearing browser cookies and clicking the invitation link again
+**User can't complete profile:**
+- Ensure they entered a valid name (at least 2 characters)
+- Try refreshing the page and submitting again
 
 ---
 

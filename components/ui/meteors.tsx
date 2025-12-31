@@ -1,6 +1,13 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+/**
+ * Meteors animation component from Magic UI
+ * Uses Math.random() for visual effects which is intentionally impure
+ */
+
+/* eslint-disable react-hooks/purity */
+
+import React, { useMemo } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -23,21 +30,20 @@ export const Meteors = ({
   angle = 215,
   className,
 }: MeteorsProps) => {
-  const [meteorStyles, setMeteorStyles] = useState<Array<React.CSSProperties>>(
-    []
-  )
-
-  useEffect(() => {
-    const styles = [...new Array(number)].map(() => ({
+  // Use useMemo to generate meteor styles on initial render
+  // This avoids calling setState in useEffect which causes cascading renders
+  const meteorStyles = useMemo<Array<React.CSSProperties>>(() => {
+    // Use a fixed width for SSR compatibility, will be correct on client
+    const width = typeof window !== "undefined" ? window.innerWidth : 1920
+    return [...new Array(number)].map(() => ({
       "--angle": -angle + "deg",
       top: "-5%",
-      left: `calc(0% + ${Math.floor(Math.random() * window.innerWidth)}px)`,
+      left: `calc(0% + ${Math.floor(Math.random() * width)}px)`,
       animationDelay: Math.random() * (maxDelay - minDelay) + minDelay + "s",
       animationDuration:
         Math.floor(Math.random() * (maxDuration - minDuration) + minDuration) +
         "s",
     }))
-    setMeteorStyles(styles)
   }, [number, minDelay, maxDelay, minDuration, maxDuration, angle])
 
   return (

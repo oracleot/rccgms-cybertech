@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { ArrowRight, MapPin, ScanQrCode, Tag, Sparkles } from "lucide-react"
 
@@ -50,6 +51,9 @@ const STATUS_COLORS: Record<EquipmentStatus, { gradient: string; border: string;
 export function EquipmentCard({ item }: EquipmentCardProps) {
   const colors = STATUS_COLORS[item.status] || STATUS_COLORS.available
   const isAvailable = item.status === "available"
+  
+  // Generate stable random delay for animation - use lazy initializer to avoid impure call during render
+  const [animationDelay] = useState(() => Math.random() * 5)
 
   return (
     <Card className={`relative flex h-full flex-col overflow-hidden group transition-all duration-300 ${colors.border} ${colors.glow} group-hover:shadow-lg`}>
@@ -63,7 +67,7 @@ export function EquipmentCard({ item }: EquipmentCardProps) {
           duration={15} 
           colorFrom="#22c55e" 
           colorTo="#10b981"
-          delay={Math.random() * 5}
+          delay={animationDelay}
         />
       )}
 

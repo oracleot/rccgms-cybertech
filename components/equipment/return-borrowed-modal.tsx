@@ -2,7 +2,7 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { AlertTriangle, Loader2, RotateCcw } from "lucide-react"
+import { Loader2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 
 import { updateEquipment } from "@/app/(dashboard)/equipment/actions"

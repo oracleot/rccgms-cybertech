@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/shared/empty-state"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
-import { VerificationCard } from "@/components/training/verification-card"
 import { VerifyActions } from "./verify-actions"
 import type { VerificationRequest } from "@/types/training"
 

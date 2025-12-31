@@ -67,9 +67,9 @@ export async function POST(request: NextRequest) {
 
     if (existingLivestream) {
       // Update existing livestream
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: livestream, error } = await (supabase
-        .from("livestreams") as any)
+        .from("livestreams") as ReturnType<typeof supabase.from>)
         .update({
           [descriptionField]: content,
           title,
@@ -120,9 +120,9 @@ export async function POST(request: NextRequest) {
         rota_id: rotaId || null,
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: livestream, error } = await (supabase
-        .from("livestreams") as any)
+        .from("livestreams") as ReturnType<typeof supabase.from>)
         .insert(insertData)
         .select()
         .single()

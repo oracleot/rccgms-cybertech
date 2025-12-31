@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { DayPicker, getDefaultClassNames } from "react-day-picker"
+import { DayPicker } from "react-day-picker"
 import { format, startOfMonth, endOfMonth, addMonths, isSameDay } from "date-fns"
 import { CalendarCheck, CalendarX, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { toast } from "sonner"

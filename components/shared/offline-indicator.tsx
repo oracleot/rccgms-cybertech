@@ -9,13 +9,16 @@ import { cn } from "@/lib/utils"
  * Listens to browser online/offline events
  */
 export function OfflineIndicator() {
-  const [isOnline, setIsOnline] = useState(true)
+  // Use lazy initialization to avoid calling setState in useEffect
+  const [isOnline, setIsOnline] = useState(() => {
+    if (typeof navigator !== "undefined") {
+      return navigator.onLine
+    }
+    return true
+  })
   const [showBanner, setShowBanner] = useState(false)
 
   useEffect(() => {
-    // Check initial status
-    setIsOnline(navigator.onLine)
-
     const handleOnline = () => {
       setIsOnline(true)
       // Show "back online" briefly then hide

@@ -105,7 +105,7 @@ export function DutyReminderEmail({
                   margin: "0 0 24px",
                 }}
               >
-                This is a friendly reminder that you're scheduled to serve{" "}
+                This is a friendly reminder that you&#39;re scheduled to serve{" "}
                 <strong>{timeText}</strong>:
               </p>
 
@@ -245,7 +245,7 @@ export function DutyReminderEmail({
                   textAlign: "center" as const,
                 }}
               >
-                Can&apos;t make it? Request a swap through the app as soon as possible.
+                Can&#39;t make it? Request a swap through the app as soon as possible.
               </p>
             </td>
           </tr>

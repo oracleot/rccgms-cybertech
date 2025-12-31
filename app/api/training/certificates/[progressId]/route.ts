@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
@@ -6,7 +5,25 @@ interface RouteContext {
   params: Promise<{ progressId: string }>
 }
 
-export async function GET(request: Request, context: RouteContext) {
+interface ProgressData {
+  id: string
+  user_id: string
+  status: string
+  completed_at: string | null
+  track: {
+    id: string
+    name: string
+    department: { id: string; name: string } | null
+  } | null
+}
+
+interface ProfileData {
+  id: string
+  name: string | null
+  role: string
+}
+
+export async function GET(_request: Request, context: RouteContext) {
   const { progressId } = await context.params
   const supabase = await createClient()
 
@@ -16,18 +33,20 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   // Get user's profile
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
     .select("id, name, role")
     .eq("auth_user_id", user.id)
     .single()
 
+  const profile = profileData as ProfileData | null
+  
   if (!profile) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 })
   }
 
   // Get the progress record
-  const { data: progress } = await supabase
+  const { data: progressData } = await supabase
     .from("volunteer_progress")
     .select(`
       *,
@@ -40,6 +59,8 @@ export async function GET(request: Request, context: RouteContext) {
     .eq("id", progressId)
     .single()
 
+  const progress = progressData as ProgressData | null
+  
   if (!progress) {
     return NextResponse.json({ error: "Progress not found" }, { status: 404 })
   }
@@ -58,11 +79,13 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   // Get the user who completed the track
-  const { data: completedByProfile } = await supabase
+  const { data: completedByData } = await supabase
     .from("profiles")
     .select("name")
     .eq("id", progress.user_id)
     .single()
+
+  const completedByProfile = completedByData as { name: string | null } | null
 
   // Generate certificate data
   const certificateData = {

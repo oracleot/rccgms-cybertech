@@ -120,3 +120,18 @@ export const setPrimaryDepartmentSchema = z.object({
 })
 
 export type SetPrimaryDepartmentInput = z.infer<typeof setPrimaryDepartmentSchema>
+
+// Magic link login schema
+export const magicLinkSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  redirectTo: z.string().optional().default("/dashboard"),
+})
+
+export type MagicLinkInput = z.infer<typeof magicLinkSchema>
+
+// Profile completion schema (for first-time invited users)
+export const completeProfileSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+})
+
+export type CompleteProfileInput = z.infer<typeof completeProfileSchema>

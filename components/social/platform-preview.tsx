@@ -3,11 +3,14 @@
 /**
  * Platform Preview Component for Social Posts
  * Features device mockups (iPhone, Android, Laptop) for realistic preview
+ * 
+ * Note: Using <img> instead of next/image because media comes from external
+ * Google Drive URLs with dynamic origins that can't be pre-configured.
  */
 
-import { useState } from "react"
+/* eslint-disable @next/next/no-img-element */
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   ThumbsUp,
@@ -21,7 +24,6 @@ import {
   Wifi,
   Battery,
   Signal,
-  Smartphone,
 } from "lucide-react"
 import type { SocialPlatform } from "@/types/social"
 

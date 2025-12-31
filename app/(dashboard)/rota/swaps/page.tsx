@@ -47,7 +47,7 @@ function SwapsPageContent() {
   const [selectedAssignment, setSelectedAssignment] = useState<AssignmentDetails | null>(null)
 
   // Load a specific assignment by ID (for ?request= param)
-  const loadAssignmentById = useCallback(async (assignmentId: string) => {
+  const loadAssignmentById = useCallback(async (assignmentId: string): Promise<AssignmentDetails | null> => {
     const supabase = createClient()
 
     try {
@@ -72,7 +72,7 @@ function SwapsPageContent() {
       if (assignmentResult) {
         const assignment = assignmentResult as unknown as LoadedAssignment
         if (assignment.rota && assignment.position) {
-          setSelectedAssignment({
+          return {
             id: assignment.id,
             rotaId: assignment.rota.id,
             date: assignment.rota.date,
@@ -80,21 +80,29 @@ function SwapsPageContent() {
             positionId: assignment.position.id,
             positionName: assignment.position.name,
             departmentName: assignment.position.department?.name || "Department",
-          })
-          setIsModalOpen(true)
+          }
         }
       }
+      return null
     } catch (error) {
       console.error("Error loading assignment:", error)
+      return null
     }
   }, [])
 
   // Handle ?request= query parameter
   useEffect(() => {
     if (requestParam) {
-      loadAssignmentById(requestParam)
+      let cancelled = false
+      loadAssignmentById(requestParam).then((result) => {
+        if (!cancelled && result) {
+          setSelectedAssignment(result)
+          setIsModalOpen(true)
+        }
+      })
       // Clear the query param from URL
       router.replace("/rota/swaps", { scroll: false })
+      return () => { cancelled = true }
     }
   }, [requestParam, loadAssignmentById, router])
 
