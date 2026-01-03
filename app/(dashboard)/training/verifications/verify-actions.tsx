@@ -13,7 +13,7 @@ interface VerifyActionsProps {
 
 export function VerifyActions({ request }: VerifyActionsProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
 
   const handleVerify = async (completionId: string, approved: boolean, notes?: string) => {
     startTransition(async () => {

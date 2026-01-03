@@ -3,7 +3,12 @@
 /**
  * Media Uploader Component
  * Drag-and-drop image upload with preview and progress
+ * 
+ * Note: Using <img> for previews from local file blobs which can't be 
+ * pre-configured in next.config.js image domains.
  */
+
+/* eslint-disable @next/next/no-img-element */
 
 import { useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"

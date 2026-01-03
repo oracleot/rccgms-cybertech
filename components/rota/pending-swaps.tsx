@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { ArrowRightLeft, Loader2, Inbox, Users, ShieldCheck } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { ArrowRightLeft, Inbox, Users, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -34,7 +34,7 @@ export function PendingSwaps({
   const [currentUserRole, setCurrentUserRole] = useState<string>("")
   const [activeTab, setActiveTab] = useState<TabValue>("open")
 
-  async function fetchSwapRequests() {
+  const fetchSwapRequests = useCallback(async () => {
     setIsLoading(true)
     const supabase = createClient()
 
@@ -148,11 +148,11 @@ export function PendingSwaps({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [limit])
 
   useEffect(() => {
     fetchSwapRequests()
-  }, [])
+  }, [fetchSwapRequests])
 
   async function handleAccept(id: string) {
     const response = await fetch("/api/rota/swaps", {

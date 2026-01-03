@@ -5,8 +5,9 @@
  * Displays scheduled posts in a calendar view with filtering options.
  */
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
@@ -58,7 +59,7 @@ export function ContentCalendarClient() {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
-  async function fetchPosts() {
+  const fetchPosts = useCallback(async () => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
@@ -81,11 +82,11 @@ export function ContentCalendarClient() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentMonth, statusFilter])
 
   useEffect(() => {
     fetchPosts()
-  }, [currentMonth, statusFilter])
+  }, [fetchPosts])
 
   // Get posts for a specific date
   function getPostsForDate(date: Date): SocialPost[] {
@@ -195,12 +196,13 @@ export function ContentCalendarClient() {
                   >
                     <div className="flex gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                       {/* Thumbnail */}
-                      <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-muted">
+                      <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-muted relative">
                         {mediaUrls.length > 0 ? (
-                          <img
+                          <Image
                             src={mediaUrls[0]}
                             alt=""
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">

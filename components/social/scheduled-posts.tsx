@@ -2,7 +2,12 @@
 
 /**
  * Scheduled Posts List Component
+ * 
+ * Note: Using <img> instead of next/image because media comes from external
+ * Google Drive URLs with dynamic origins that can't be pre-configured.
  */
+
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -11,9 +16,6 @@ import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import {
   AlertDialog,
@@ -112,6 +114,7 @@ export function ScheduledPosts({ status = "all" }: ScheduledPostsProps) {
 
   useEffect(() => {
     fetchPosts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status])
 
   async function handleDelete(id: string) {

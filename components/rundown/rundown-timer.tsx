@@ -1,5 +1,12 @@
 "use client"
 
+/**
+ * Timer component for rundown live view
+ * Uses Date.now() for accurate elapsed time tracking
+ */
+
+/* eslint-disable react-hooks/purity */
+
 import { useEffect, useRef, useState } from "react"
 import { Pause, Play, RotateCcw, Timer } from "lucide-react"
 
@@ -14,10 +21,12 @@ interface RundownTimerProps {
 }
 
 export function RundownTimer({ durationSeconds, autoStart = false, onTick }: RundownTimerProps) {
+  // Track the autoStart value we last processed to detect changes
+  const lastAutoStartRef = useRef(autoStart)
   const [isRunning, setIsRunning] = useState(autoStart)
   const [elapsed, setElapsed] = useState(0)
   const onTickRef = useRef(onTick)
-  const startTimeRef = useRef<number | null>(null)
+  const startTimeRef = useRef<number | null>(autoStart ? Date.now() : null)
   const pausedElapsedRef = useRef<number>(0)
 
   // Keep onTick ref up to date without triggering effect
@@ -25,20 +34,22 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     onTickRef.current = onTick
   }, [onTick])
 
-  useEffect(() => {
-    setIsRunning(autoStart)
+  // Handle autoStart changes using a ref comparison to avoid setState in effect
+  if (autoStart !== lastAutoStartRef.current) {
+    lastAutoStartRef.current = autoStart
     if (!autoStart) {
-      setElapsed(0)
+      if (isRunning) setIsRunning(false)
+      if (elapsed !== 0) setElapsed(0)
       startTimeRef.current = null
       pausedElapsedRef.current = 0
-      // Use setTimeout to defer callback to avoid updating parent during render
+      // Defer callback to avoid updating parent during render
       setTimeout(() => onTickRef.current?.(0), 0)
     } else {
-      // Start fresh timer with current timestamp
+      if (!isRunning) setIsRunning(true)
       startTimeRef.current = Date.now()
       pausedElapsedRef.current = 0
     }
-  }, [autoStart])
+  }
 
   // Use timestamp-based timing to work correctly even when tab is inactive
   useEffect(() => {

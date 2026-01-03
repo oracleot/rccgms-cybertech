@@ -59,7 +59,7 @@ export function DisplayControls({
   const [displayWindow, setDisplayWindow] = useState<Window | null>(null)
   const [screens, setScreens] = useState<ScreenDetails["screens"]>([])
   const [hasMultiScreenSupport, setHasMultiScreenSupport] = useState(false)
-  const [isRequestingScreens, setIsRequestingScreens] = useState(false)
+  const [_isRequestingScreens, setIsRequestingScreens] = useState(false)
 
   // Check for multi-screen support and request screen details
   const checkScreenSupport = useCallback(async () => {
@@ -134,7 +134,7 @@ export function DisplayControls({
   }, [displayWindow])
 
   // Close the display window
-  const closeDisplay = useCallback(() => {
+  const _closeDisplay = useCallback(() => {
     if (displayWindow && !displayWindow.closed) {
       displayWindow.close()
       setDisplayWindow(null)

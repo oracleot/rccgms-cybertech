@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import Image from "next/image"
 import confetti from "canvas-confetti"
 import { cn } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
@@ -10,13 +11,10 @@ import type {
   DisplaySyncMessage,
   ItemChangePayload,
   TimerUpdatePayload,
-  LyricAdvancePayload,
-  SettingsUpdatePayload,
   TransitionPayload,
   RundownItemForDisplay,
 } from "@/types/rundown"
 import type { DisplaySettingsWithDefaults } from "@/types/settings"
-import { DEFAULT_DISPLAY_SETTINGS } from "@/types/settings"
 
 interface DisplayViewProps {
   rundownId: string
@@ -209,6 +207,7 @@ function EndOfServiceConfetti({ textColor }: { textColor: string }) {
  */
 export function DisplayView({
   rundownId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initialItems,
   initialSettings,
   serviceName,
@@ -433,10 +432,12 @@ export function DisplayView({
     >
       {/* Logo (optional) */}
       {settings.logoUrl && (
-        <div className="absolute top-4 right-4">
-          <img
+        <div className="absolute top-4 right-4 h-16 w-auto">
+          <Image
             src={settings.logoUrl}
             alt="Logo"
+            width={64}
+            height={64}
             className="h-16 w-auto object-contain opacity-70"
           />
         </div>

@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -42,7 +43,6 @@ import {
   Save,
   Loader2,
   Clock,
-  ImageIcon,
   X,
   Smartphone,
 } from "lucide-react"
@@ -221,10 +221,11 @@ export default function EditPostPage() {
                       key={url}
                       className="relative w-20 h-20 rounded-lg overflow-hidden border group"
                     >
-                      <img
+                      <Image
                         src={url}
                         alt="Media"
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                       <button
                         onClick={() => removeMedia(url)}

@@ -25,7 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validations/auth"
+import { completeProfileSchema, type CompleteProfileInput } from "@/lib/validations/auth"
 import { ROUTES } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
 
@@ -35,13 +35,12 @@ function AcceptInviteContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [isVerifying, setIsVerifying] = useState(true)
   const [isValid, setIsValid] = useState(false)
-  const [userName, setUserName] = useState<string>("")
+  const [userEmail, setUserEmail] = useState<string>("")
 
-  const form = useForm<ResetPasswordInput>({
-    resolver: zodResolver(resetPasswordSchema),
+  const form = useForm<CompleteProfileInput>({
+    resolver: zodResolver(completeProfileSchema),
     defaultValues: {
-      password: "",
-      confirmPassword: "",
+      name: "",
     },
   })
 
@@ -67,32 +66,42 @@ function AcceptInviteContent() {
       
       if (session) {
         setIsValid(true)
-        // Get user metadata for personalization
-        const name = session.user.user_metadata?.name || ""
-        setUserName(name)
+        // Get user email for display
+        setUserEmail(session.user.email || "")
+        
+        // Pre-fill name from user metadata if available
+        const metadataName = session.user.user_metadata?.name || ""
+        if (metadataName) {
+          form.setValue("name", metadataName)
+        }
       }
       
       setIsVerifying(false)
     }
 
     verifyInvitation()
-  }, [searchParams])
+  }, [searchParams, form])
 
-  async function onSubmit(data: ResetPasswordInput) {
+  async function onSubmit(data: CompleteProfileInput) {
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      
-      const { error } = await supabase.auth.updateUser({
-        password: data.password,
+      const response = await fetch("/api/auth/complete-profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       })
 
-      if (error) {
-        toast.error("Failed to set password. Please try again.")
+      const result = await response.json()
+
+      if (!response.ok) {
+        const errorMessage = result.details?.[0]?.message || result.message || "Failed to complete profile"
+        toast.error(errorMessage)
         return
       }
 
-      toast.success("Welcome to Cyber Tech! Your account is ready.")
+      toast.success("Welcome to Cyber Tech! Your profile is ready.")
       router.push(ROUTES.DASHBOARD)
     } catch (_error) {
       toast.error("An unexpected error occurred. Please try again.")
@@ -144,10 +153,15 @@ function AcceptInviteContent() {
     <Card className="w-full">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">
-          Welcome{userName ? `, ${userName}` : ""}!
+          Welcome to Cyber Tech!
         </CardTitle>
         <CardDescription>
-          Set your password to complete your account setup
+          Complete your profile to get started
+          {userEmail && (
+            <span className="block mt-1 text-sm">
+              Signing in as <strong>{userEmail}</strong>
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -155,34 +169,15 @@ function AcceptInviteContent() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="password"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Your Name</FormLabel>
                   <FormControl>
                     <Input
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
+                      type="text"
+                      placeholder="Enter your full name"
+                      autoComplete="name"
                       disabled={isLoading}
                       {...field}
                     />
@@ -192,7 +187,7 @@ function AcceptInviteContent() {
               )}
             />
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Setting up..." : "Complete setup"}
+              {isLoading ? "Setting up..." : "Complete Profile"}
             </Button>
           </form>
         </Form>

@@ -18,7 +18,7 @@ export function StepCompleteButton({
   requiresVerification = false 
 }: StepCompleteButtonProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
 
   const handleComplete = async () => {
     startTransition(async () => {

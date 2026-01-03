@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations/auth"
+import { getAppUrl } from "@/lib/constants"
 
 export async function requestPasswordReset(data: ForgotPasswordInput) {
   const parsed = forgotPasswordSchema.safeParse(data)
@@ -11,9 +12,10 @@ export async function requestPasswordReset(data: ForgotPasswordInput) {
   }
 
   const supabase = await createClient()
+  const appUrl = getAppUrl()
 
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
+    redirectTo: `${appUrl}/reset-password`,
   })
 
   if (error) {
