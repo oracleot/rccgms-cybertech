@@ -921,6 +921,17 @@ If your computer has multiple monitors connected:
 
 > 💡 The screen picker only appears in Chrome with Window Management API support.
 
+#### Display Stays Accurate in Background
+The display timer automatically stays accurate even if the browser tab is in the background:
+- **Timer continues counting** when you switch to other tabs or applications
+- **Returns instantly to correct time** when you come back to the display tab
+- **Works during device sleep** – timer reflects actual elapsed time when you wake your device
+- **Multi-window sync maintained** – all display windows stay synchronized within ±500ms
+
+This means you can safely minimize or background the display window without worrying about the timer freezing. When you return to it, the timer will show the correct elapsed time instantly.
+
+> 💡 **Tip**: You can confidently switch tabs to check notes or other resources during service without affecting timer accuracy.
+
 #### What Appears on the Display
 | Active Item Type | Display Shows |
 |-----------------|---------------|

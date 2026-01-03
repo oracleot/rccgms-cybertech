@@ -58,10 +58,10 @@ export async function enrollInTrack(formData: FormData) {
   }
 
   // Create enrollment
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const { error } = await (supabase
     .from("volunteer_progress") as any)
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .insert({
+      .insert({
       user_id: profile.id,
       track_id: parsed.data.trackId,
       status: "in_progress",
@@ -151,7 +151,7 @@ export async function completeStep(formData: FormData) {
   // Create completion record
   const { error } = await supabase
     .from("step_completions")
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .insert({
+      .insert({
       volunteer_progress_id: parsed.data.progressId,
       step_id: parsed.data.stepId,
       completed_at: new Date().toISOString(),
@@ -185,7 +185,7 @@ export async function completeStep(formData: FormData) {
   if (allRequiredCompleted && requiredSteps.length > 0) {
     await supabase
       .from("volunteer_progress")
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .update({
+        .update({
         status: "completed",
         completed_at: new Date().toISOString(),
       } as Record<string, unknown>)
@@ -245,7 +245,7 @@ export async function verifyStep(formData: FormData) {
     // Approve: Set mentor verification
     const { error } = await supabase
       .from("step_completions")
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .update({
+        .update({
         mentor_verified_by: profile.id,
         mentor_verified_at: new Date().toISOString(),
       } as Record<string, unknown>)
@@ -309,7 +309,7 @@ export async function createTrack(formData: FormData) {
 
   const { error } = await supabase
     .from("onboarding_tracks")
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .insert({
+      .insert({
       department_id: parsed.data.departmentId,
       name: parsed.data.name,
       description: parsed.data.description,
@@ -366,7 +366,7 @@ export async function updateTrack(formData: FormData) {
 
   const { error } = await supabase
     .from("onboarding_tracks")
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .update({
+      .update({
       name: updateData.name,
       description: updateData.description,
       estimated_weeks: updateData.estimatedWeeks,
@@ -423,7 +423,7 @@ export async function createStep(formData: FormData) {
 
   const { error } = await supabase
     .from("onboarding_steps")
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .insert({
+      .insert({
       track_id: parsed.data.trackId,
       order: parsed.data.order,
       title: parsed.data.title,
@@ -493,7 +493,7 @@ export async function updateStep(formData: FormData) {
 
   const { error } = await supabase
     .from("onboarding_steps")
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ .update({
+      .update({
       order: updateData.order,
       title: updateData.title,
       description: updateData.description,

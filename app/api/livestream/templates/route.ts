@@ -164,7 +164,7 @@ export async function PUT(request: NextRequest) {
 
     if (existingTemplate) {
       // Update existing template
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: template, error } = await (supabase
         .from("prompt_templates") as any)
         .update({
@@ -195,7 +195,7 @@ export async function PUT(request: NextRequest) {
       })
     } else {
       // Create new template
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const { data: template, error } = await (supabase
         .from("prompt_templates") as any)
         .insert({

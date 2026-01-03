@@ -85,7 +85,9 @@ export function DisplayControls({
   // Open display in a new window
   const openDisplay = useCallback(
     (screenIndex?: number) => {
-      const displayUrl = `/rundown/${rundownId}/display`
+      // Add autoFullscreen query param if specific screen selected
+      const autoFullscreen = screenIndex !== undefined && screens[screenIndex]
+      const displayUrl = `/rundown/${rundownId}/display${autoFullscreen ? '?autoFullscreen=true' : ''}`
 
       // Determine window features
       let features = "popup=yes,menubar=no,toolbar=no,location=no,status=no"

@@ -226,6 +226,12 @@ export function DisplayView({
   const [showTransitionScreen, setShowTransitionScreen] = useState(false)
   const [transitionData, setTransitionData] = useState<TransitionPayload | null>(null)
   const prevItemIdRef = useRef<string | null>(null)
+  
+  // Independent timer management (doesn't rely on control window)
+  const timerStartTimeRef = useRef<number | null>(null)
+  const timerDurationRef = useRef<number>(0)
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [isTimerActive, setIsTimerActive] = useState(false) // State to trigger timer effect
 
   // Parse lyrics for the current song item
   const parsedLyrics = useMemo(() => {
@@ -251,10 +257,32 @@ export function DisplayView({
         setCurrentItem(message.payload.item)
         setNextItem(message.payload.nextItem)
         setCurrentVerseIndex(0) // Reset verse when item changes
+        
+        // Reset independent timer when item changes
+        timerStartTimeRef.current = null
+        timerDurationRef.current = 0
+        setIsTimerActive(false)
+        setTimer({ elapsed: 0, remaining: 0, isRunning: false })
         break
 
       case "TIMER_UPDATE":
-        setTimer(message.payload)
+        // Sync with control window timer
+        const timerPayload = message.payload
+        setTimer(timerPayload)
+        
+        // Initialize or update independent timer
+        if (timerPayload.isRunning) {
+          // Calculate start time based on elapsed seconds
+          const now = Date.now()
+          timerStartTimeRef.current = now - (timerPayload.elapsed * 1000)
+          // Use duration from payload or calculate from elapsed + remaining
+          timerDurationRef.current = timerPayload.elapsed + timerPayload.remaining
+          setIsTimerActive(true)
+        } else {
+          timerStartTimeRef.current = null
+          timerDurationRef.current = 0
+          setIsTimerActive(false)
+        }
         break
 
       case "LYRIC_ADVANCE":
@@ -287,6 +315,97 @@ export function DisplayView({
 
   // Initialize display receiver
   useDisplayReceiver(rundownId, handleMessage)
+
+  // Auto-fullscreen if requested via query parameter (from multi-screen selection)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('autoFullscreen') === 'true') {
+      // Small delay to ensure page is fully loaded
+      const timer = setTimeout(() => {
+        try {
+          document.documentElement.requestFullscreen?.().catch((err) => {
+            console.log('Fullscreen request failed (user interaction may be required):', err)
+          })
+        } catch (error) {
+          console.log('Fullscreen not available:', error)
+        }
+      }, 500)
+
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  // Independent timer loop - continues running even when control window is backgrounded
+  useEffect(() => {
+    // Clear any existing interval first
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+
+    if (!isTimerActive || !timerStartTimeRef.current || !timerDurationRef.current) {
+      return
+    }
+
+    // Update timer every 250ms using Date.now() for accuracy
+    const updateTimer = () => {
+      if (!timerStartTimeRef.current || !timerDurationRef.current) return
+
+      const now = Date.now()
+      const elapsedMs = now - timerStartTimeRef.current
+      const elapsedSeconds = Math.floor(elapsedMs / 1000)
+      const remainingSeconds = Math.max(0, timerDurationRef.current - elapsedSeconds)
+
+      setTimer({
+        elapsed: elapsedSeconds,
+        remaining: remainingSeconds,
+        isRunning: true,
+      })
+    }
+
+    // Run immediately
+    updateTimer()
+
+    // Then run every 250ms
+    timerIntervalRef.current = setInterval(updateTimer, 250)
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
+      }
+    }
+  }, [isTimerActive])
+
+  // Page Visibility API: Force timer recalculation when tab becomes visible
+  // Ensures timer catches up if browser throttled the interval while backgrounded
+  useEffect(() => {
+    // Check if Page Visibility API is supported (graceful degradation)
+    if (typeof document === "undefined" || !('visibilityState' in document)) {
+      return
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && timerStartTimeRef.current && timerDurationRef.current) {
+        // Force immediate recalculation when tab becomes visible
+        const now = Date.now()
+        const elapsedMs = now - timerStartTimeRef.current
+        const elapsedSeconds = Math.floor(elapsedMs / 1000)
+        const remainingSeconds = Math.max(0, timerDurationRef.current - elapsedSeconds)
+
+        setTimer({
+          elapsed: elapsedSeconds,
+          remaining: remainingSeconds,
+          isRunning: true,
+        })
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
 
   // Transition class based on settings
   const transitionClass = useMemo(() => {
