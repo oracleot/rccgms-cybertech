@@ -81,6 +81,30 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     return () => clearInterval(interval)
   }, [isRunning])
 
+  // Page Visibility API: Force immediate recalculation when tab becomes visible
+  // This ensures timer shows accurate time after being backgrounded
+  useEffect(() => {
+    // Check if Page Visibility API is supported (graceful degradation)
+    if (typeof document === "undefined" || !('visibilityState' in document)) {
+      return
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isRunning && startTimeRef.current !== null) {
+        // Force immediate recalculation when tab becomes visible
+        const now = Date.now()
+        const elapsedSinceStart = Math.floor((now - startTimeRef.current) / 1000)
+        const totalElapsed = pausedElapsedRef.current + elapsedSinceStart
+        
+        setElapsed(totalElapsed)
+        onTickRef.current?.(totalElapsed)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [isRunning])
+
   // Handle pause: store elapsed time
   const handlePauseResume = () => {
     if (isRunning) {
