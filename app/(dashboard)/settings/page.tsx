@@ -147,14 +147,14 @@ export default async function SettingsPage() {
           <CardContent>
             <NotificationPreferences
               profileId={profile.id}
-              preferences={(notificationPrefs as Array<{
-                id?: string
-                profile_id: string
-                notification_type: string
-                email_enabled: boolean
-                sms_enabled: boolean
-                reminder_timing: string | null
-              }>) || []}
+              preferences={((notificationPrefs || []).map((pref) => ({
+                id: pref.id,
+                profile_id: pref.user_id,
+                notification_type: pref.notification_type,
+                email_enabled: pref.email_enabled ?? false,
+                sms_enabled: pref.sms_enabled ?? false,
+                reminder_timing: pref.reminder_timing,
+              })))}
             />
           </CardContent>
         </Card>

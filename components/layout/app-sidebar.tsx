@@ -15,6 +15,7 @@ import {
   Building2,
   Bell,
   Shield,
+  Palette,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
@@ -47,6 +48,11 @@ const navItems = [
     title: "Livestream",
     href: ROUTES.LIVESTREAM,
     icon: MonitorPlay,
+  },
+  {
+    title: "Designs",
+    href: ROUTES.DESIGNS,
+    icon: Palette,
   },
   {
     title: "Equipment",

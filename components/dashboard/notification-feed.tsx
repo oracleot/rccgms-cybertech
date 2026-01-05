@@ -44,6 +44,11 @@ const NOTIFICATION_ICONS: Record<NotificationType, React.ReactNode> = {
   training_assigned: <GraduationCap className="h-4 w-4" />,
   training_completed: <GraduationCap className="h-4 w-4 text-green-600" />,
   equipment_overdue: <Package className="h-4 w-4 text-destructive" />,
+  design_request_new: <Sparkles className="h-4 w-4" />,
+  design_request_claimed: <Check className="h-4 w-4" />,
+  design_request_review: <AlertCircle className="h-4 w-4" />,
+  design_request_revision: <AlertCircle className="h-4 w-4 text-amber-600" />,
+  design_request_completed: <Check className="h-4 w-4 text-green-600" />,
 }
 
 const NOTIFICATION_COLORS: Record<NotificationType, string> = {
@@ -56,6 +61,11 @@ const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   training_assigned: "bg-purple-500/10 text-purple-500 border-purple-500/20",
   training_completed: "bg-green-500/10 text-green-500 border-green-500/20",
   equipment_overdue: "bg-red-500/10 text-red-500 border-red-500/20",
+  design_request_new: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+  design_request_claimed: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  design_request_review: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  design_request_revision: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  design_request_completed: "bg-green-500/10 text-green-500 border-green-500/20",
 }
 
 function NotificationItemComponent({

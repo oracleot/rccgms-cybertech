@@ -19,12 +19,12 @@
 
 **Purpose**: Database, types, and validation setup shared across all user stories
 
-- [ ] T001 Apply database migration in supabase/migrations/024_design_requests.sql
-- [ ] T002 Regenerate TypeScript types with `pnpm db:generate`
-- [ ] T003 [P] Create TypeScript types for designs in types/designs.ts
-- [ ] T004 [P] Create Zod validation schemas in lib/validations/designs.ts
-- [ ] T005 [P] Create rate limiting helper in lib/rate-limit.ts
-- [ ] T006 Update NotificationType union in types/notification.ts with design request types
+- [X] T001 Apply database migration in supabase/migrations/024_design_requests.sql
+- [X] T002 Regenerate TypeScript types with `pnpm db:generate`
+- [X] T003 [P] Create TypeScript types for designs in types/designs.ts
+- [X] T004 [P] Create Zod validation schemas in lib/validations/designs.ts
+- [X] T005 [P] Create rate limiting helper in lib/rate-limit.ts
+- [X] T006 Update NotificationType union in types/notification.ts with design request types
 
 ---
 
@@ -34,10 +34,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Update middleware.ts to whitelist `/designs/request` as public route
-- [ ] T008 [P] Create design status badge component in components/designs/design-status-badge.tsx
-- [ ] T009 [P] Create design priority badge component in components/designs/design-priority-badge.tsx
-- [ ] T010 Add designs navigation item to dashboard sidebar in components/layout/ (existing sidebar component)
+- [X] T007 Update middleware.ts to whitelist `/designs/request` as public route
+- [X] T008 [P] Create design status badge component in components/designs/design-status-badge.tsx
+- [X] T009 [P] Create design priority badge component in components/designs/design-priority-badge.tsx
+- [X] T010 Add designs navigation item to dashboard sidebar in components/layout/ (existing sidebar component)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -51,11 +51,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T011 [P] [US1] Create public layout (no auth) in app/designs/request/layout.tsx
-- [ ] T012 [P] [US1] Create public request form page in app/designs/request/page.tsx
-- [ ] T013 [US1] Create design request form component in components/designs/design-request-form.tsx (with honeypot field)
-- [ ] T014 [US1] Create POST /api/designs endpoint for public submission in app/api/designs/route.ts (rate limit + honeypot check)
-- [ ] T015 [US1] Add success confirmation UI to form submission flow
+- [X] T011 [P] [US1] Create public layout (no auth) in app/designs/request/layout.tsx
+- [X] T012 [P] [US1] Create public request form page in app/designs/request/page.tsx
+- [X] T013 [US1] Create design request form component in components/designs/design-request-form.tsx (with honeypot field)
+- [X] T014 [US1] Create POST /api/designs endpoint for public submission in app/api/designs/route.ts (rate limit + honeypot check)
+- [X] T015 [US1] Add success confirmation UI to form submission flow
 
 **Checkpoint**: User Story 1 complete - Public form submission works independently
 
@@ -69,14 +69,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Create design request card component in components/designs/design-request-card.tsx
-- [ ] T017 [P] [US2] Create design request list component with filters in components/designs/design-request-list.tsx
-- [ ] T018 [P] [US2] Create claim modal component in components/designs/claim-modal.tsx
-- [ ] T019 [US2] Create dashboard designs list page in app/(dashboard)/designs/page.tsx
-- [ ] T020 [US2] Add GET endpoint to app/api/designs/route.ts (list with filters, search, pagination)
-- [ ] T021 [US2] Create POST /api/designs/[id]/assign endpoint for claim/unclaim in app/api/designs/[id]/assign/route.ts
-- [ ] T022 [US2] Create server actions for designs in app/(dashboard)/designs/actions.ts (claimRequest, unclaimRequest)
-- [ ] T022b [US2] Add reassign functionality to assign endpoint (admin/leader only) - FR-021
+- [X] T016 [P] [US2] Create design request card component in components/designs/design-request-card.tsx
+- [X] T017 [P] [US2] Create design request list component with filters in components/designs/design-request-list.tsx
+- [X] T018 [P] [US2] Create claim modal component in components/designs/claim-modal.tsx
+- [X] T019 [US2] Create dashboard designs list page in app/(dashboard)/designs/page.tsx
+- [X] T020 [US2] Add GET endpoint to app/api/designs/route.ts (list with filters, search, pagination)
+- [X] T021 [US2] Create POST /api/designs/[id]/assign endpoint for claim/unclaim in app/api/designs/[id]/assign/route.ts
+- [X] T022 [US2] Create server actions for designs in app/(dashboard)/designs/actions.ts (claimRequest, unclaimRequest)
+- [X] T022b [US2] Add reassign functionality to assign endpoint (admin/leader only) - FR-021
 
 **Checkpoint**: User Story 2 complete - Team can view, filter, claim, and reassign requests
 

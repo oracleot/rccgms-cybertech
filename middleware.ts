@@ -53,7 +53,8 @@ export async function middleware(request: NextRequest) {
 
   const isPublicRoute = request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname.startsWith("/api/") || // API routes handle their own auth
-    request.nextUrl.pathname.startsWith("/api/health")
+    request.nextUrl.pathname.startsWith("/api/health") ||
+    request.nextUrl.pathname.startsWith("/designs/request") // Public design request form
 
   // If user is not logged in and trying to access protected route
   if (!user && !isAuthRoute && !isPublicRoute) {
