@@ -1368,6 +1368,321 @@ A: Each preview mimics the actual platform's design so you can see exactly how y
 
 ---
 
+## 🎨 Design Requests
+
+Need a banner for an event? A flyer for outreach? The Design Requests feature lets anyone in the congregation submit design needs, and the tech team can track and deliver them efficiently.
+
+### What You Can Do
+
+**🌐 Anyone (No Login Required):**
+- Submit design requests through the public form
+- Provide event details, deadlines, and reference images
+- Receive email updates when your design is ready
+
+**👤 Tech Team Members:**
+- View all design requests in one dashboard
+- Claim requests to work on them
+- Update status as you progress (In Progress → Review → Completed)
+- Add internal notes for team coordination
+- Deliver final designs with Google Drive links
+
+**👥 Leaders & 🔧 Admins:**
+- Everything team members can do, plus:
+- Reassign requests to different designers
+- Adjust priority levels
+- Request revisions with specific feedback
+- Archive or delete old requests
+
+---
+
+### Submitting a Design Request (Public Form)
+
+Anyone can request a design—no login required! Here's how:
+
+1. Go to **[Your Church URL]/designs/request** (or get the link from the church bulletin)
+2. Fill out the form with:
+   - **Title**: What you need (e.g., "Youth Conference Banner")
+   - **Description**: Event details, key message, audience, etc.
+   - **Type**: Flyer, Banner, Social Graphic, Video Thumbnail, Presentation, or Other
+   - **Priority**: How urgent is this? (Normal, High, Urgent)
+   - **Your Contact Info**: Name, email, phone (optional), ministry (optional)
+   - **Needed By Date**: When do you need it?
+   - **Reference Links**: Up to 5 links for inspiration (optional)
+3. Click **Submit Request**
+4. You'll see a confirmation message with your request ID
+5. Check your email for updates as the team works on your design
+
+> 💡 **Tip**: The more details you provide, the better! Include color preferences, branding requirements, text content, and examples of styles you like.
+
+> ⚠️ **Rate Limit**: To prevent spam, you can only submit 3 requests per hour from the same device.
+
+---
+
+### Viewing Design Requests (Team Dashboard)
+
+Once logged in as a team member, access the Designs dashboard:
+
+1. Click **Designs** in the sidebar
+2. You'll see all design requests with:
+   - Title and requester name
+   - Type (banner, flyer, etc.) and priority level
+   - Current status (Submitted, In Progress, Review, etc.)
+   - Deadline (needed by date)
+   - Who's assigned (if anyone)
+
+**Filter Options**:
+- **Status**: Show only Submitted, In Progress, Review, etc.
+- **Priority**: Filter by Low, Normal, High, or Urgent
+- **Assigned To**: See requests assigned to you or others
+- **Search**: Search by title or requester name
+- **Include Archived**: Toggle to show/hide completed old requests
+
+---
+
+### Claiming a Design Request
+
+When you're ready to work on a design:
+
+1. Find an **unclaimed request** (no assignee shown)
+2. Click the request card to view details
+3. Click **Claim** at the top
+4. You're now assigned!
+   - Your name appears on the card
+   - Requester gets an email notification that you've claimed it
+   - Status stays as "Submitted" until you update it
+
+**Unclaiming**:
+- Changed your mind? Click **Unclaim** to release the request
+- Status resets to "Submitted" if it was "In Progress"
+
+---
+
+### Updating Status & Progress
+
+As you work through a design request, keep the status updated:
+
+#### Status Workflow:
+
+```
+Submitted → In Progress → Review → Completed
+            ↓
+       Revision Requested (loops back to In Progress)
+```
+
+**How to Update**:
+1. Open the design request
+2. Click **Update Status**
+3. Select the new status:
+   - **In Progress**: You've started working on it
+   - **Review**: Design is ready for requester to review
+   - **Revision Requested**: Requester needs changes (add notes!)
+   - **Completed**: Final deliverable provided
+   - **Cancelled**: Request no longer needed
+4. Add notes if needed (e.g., "Logo added as requested")
+5. Click **Update**
+
+> 📧 **Email Notifications**: Requesters receive emails when:
+> - Their request is claimed
+> - Status changes to "Review" (ready for their feedback)
+> - Design is completed with download link
+
+---
+
+### Completing a Design Request
+
+When your design is finalized:
+
+1. **Upload to Google Drive**:
+   - Upload the final files to your church's shared Design Deliverables folder
+   - Get the sharing link (make sure it's accessible to anyone with the link)
+
+2. **Mark as Complete**:
+   - Open the request
+   - Click **Complete**
+   - Paste the **Google Drive link** (required!)
+   - Add any final notes (e.g., "Includes print-ready PDF and web PNG")
+   - Click **Complete Request**
+
+3. **Requester Notified**:
+   - They receive an email with the download link
+   - Status changes to "Completed"
+   - Request shows green "Completed" badge
+
+> ⚠️ **Important**: You MUST provide a deliverable URL to complete a request. This ensures requesters always know where to download their files.
+
+---
+
+### Requesting Revisions
+
+Sometimes the requester needs changes after reviewing the design:
+
+1. Open the request (should be in "Review" status)
+2. Click **Update Status** → **Revision Requested**
+3. **Add specific notes** about what needs changing:
+   - Be clear and detailed (e.g., "Change 'Youth Night' to 'Youth Conference'")
+   - Reference specific elements (e.g., "Logo too small on top right")
+4. Click **Update**
+5. Designer receives notification and sees revision notes
+6. Designer updates status back to "In Progress" and makes changes
+
+**Revision Notes are Append-Only**:
+- Each revision request is logged with a timestamp
+- All previous revision notes stay visible
+- This creates a clear history of feedback
+
+---
+
+### Managing Priorities (Leaders/Admins)
+
+Leaders and Admins can adjust priority levels:
+
+1. Open a design request
+2. Click **Edit Priority**
+3. Select new priority:
+   - **Low**: No rush, work on it when available
+   - **Normal**: Standard turnaround (default)
+   - **High**: Important event coming up soon
+   - **Urgent**: Critical deadline, prioritize immediately
+4. Click **Update**
+
+**Priority Badges**:
+- Low: Gray badge
+- Normal: Blue badge
+- High: Orange badge with warning icon
+- Urgent: Red badge with lightning icon
+
+---
+
+### Internal Notes (Team Only)
+
+Add notes that only the tech team can see:
+
+1. Open a design request
+2. Scroll to **Internal Notes** section
+3. Click **Add Note**
+4. Type your note (e.g., "Waiting for logo from pastor", "Using Template B")
+5. Click **Save**
+
+Internal notes help with:
+- Coordinating between designers
+- Tracking blockers or dependencies
+- Documenting design decisions
+- Recording communication with requester
+
+---
+
+### Reassigning Requests (Leaders/Admins)
+
+Sometimes you need to move a request to another designer:
+
+1. Open the design request
+2. Click **Reassign**
+3. Select the new designer from the dropdown
+4. Add a note explaining why (optional but recommended)
+5. Click **Confirm**
+
+The new assignee receives a notification, and the old assignee is unassigned.
+
+---
+
+### Archiving & Deleting
+
+**Auto-Archive** (Automatic):
+- Completed requests are automatically archived after 12 months
+- Archived requests don't show in the default list
+- Use the "Include Archived" filter to view them
+
+**Manual Delete** (Leaders/Admins Only):
+1. Open the request
+2. Click **Delete** (red button)
+3. Confirm deletion
+4. Request is permanently removed
+
+> ⚠️ **Warning**: Deletion is permanent! Only delete spam, duplicates, or invalid requests. For completed work, let auto-archive handle it.
+
+---
+
+### Status Guide
+
+| Status | Meaning | Who Can Set It |
+|--------|---------|----------------|
+| **Submitted** | New request, not yet claimed | System (on submission) |
+| **In Progress** | Designer actively working | Assigned team member |
+| **Review** | Ready for requester feedback | Assigned team member |
+| **Revision Requested** | Changes needed from requester | Assigned team member |
+| **Completed** | Final deliverable provided | Assigned team member |
+| **Cancelled** | Request no longer needed | Anyone |
+
+---
+
+### Design Type Examples
+
+| Type | Examples |
+|------|----------|
+| **Flyer** | Event announcements, ministry info sheets |
+| **Banner** | Stage/building banners, social media headers |
+| **Social Graphic** | Instagram posts, Facebook images, stories |
+| **Video Thumbnail** | YouTube thumbnails, video covers |
+| **Presentation** | Sermon slides, training materials |
+| **Other** | Business cards, certificates, custom needs |
+
+---
+
+### Tips & Best Practices
+
+✅ **Do This**:
+- Claim requests as soon as you can work on them
+- Update status regularly so requesters know progress
+- Add internal notes for context (helps if you need to hand off)
+- Upload high-quality files to Google Drive (include multiple formats)
+- Review requests carefully before marking as complete
+
+❌ **Avoid This**:
+- Don't claim requests if you can't start within 24 hours
+- Don't mark as "Review" until you've genuinely finished
+- Don't complete without a deliverable URL
+- Don't skip revision notes—be specific about what's needed
+- Don't delete requests unless they're spam or invalid
+
+---
+
+### Notifications You'll Receive
+
+| Event | Who Gets Notified | Notification Type |
+|-------|-------------------|-------------------|
+| New request submitted | All tech team members | Email |
+| Request claimed | Requester | Email |
+| Status → Review | Requester | Email |
+| Revision requested | Assigned designer | Email |
+| Request completed | Requester (with download link) | Email |
+
+---
+
+### Common Questions
+
+**Q: Can I claim multiple requests at once?**  
+A: Yes! There's no limit. Just make sure you can handle the workload.
+
+**Q: What if no one claims my request?**  
+A: Leaders monitor unclaimed requests and will assign them if needed. You'll be notified once someone claims it.
+
+**Q: Can I cancel my own request?**  
+A: Requesters can't cancel directly. Reply to the notification email or contact the tech team to cancel.
+
+**Q: How long does it take to get a design?**  
+A: Depends on complexity and team availability. Typical turnaround is 3-7 days for standard designs. Urgent requests are prioritized.
+
+**Q: Can I request changes after it's completed?**  
+A: For major changes, submit a new request. For minor tweaks (fixing a typo, small color adjustment), contact the designer directly via email.
+
+**Q: What if I submit too many requests too fast?**  
+A: The form has a rate limit of 3 submissions per hour to prevent spam. If you need to submit more, wait an hour or contact the team directly.
+
+**Q: Can I see designs from previous events?**  
+A: Not through the app, but you can ask the design team for access to the Google Drive archive folder.
+
+---
+
 ## Coming Soon
 
 - 📚 **Training** – Complete onboarding and training modules

@@ -24,6 +24,11 @@ export type NotificationType =
   | "training_assigned"
   | "training_completed"
   | "equipment_overdue"
+  | "design_request_new"
+  | "design_request_claimed"
+  | "design_request_review"
+  | "design_request_revision"
+  | "design_request_completed"
 
 // Notification with user info
 export interface NotificationWithUser extends Notification {

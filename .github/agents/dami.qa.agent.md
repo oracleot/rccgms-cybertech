@@ -158,7 +158,45 @@ Execution:
 - Capture server URL (typically http://localhost:PORT)
 ```
 
-**6b. Browser Navigation & Validation**
+**6b. Authentication with Magic Links**
+
+This project uses magic link authentication (no password login). For authenticated E2E tests:
+
+```text
+Magic Link Authentication Flow:
+1. Read test credentials from `.github/docs/test-credentials`
+2. Navigate to /login page
+3. Enter the test email address (e.g., volunteer, leader, or admin account)
+4. Click "Send magic link" button
+5. **PAUSE and notify user**:
+   
+   📧 **Magic Link Sent - User Action Required**
+   
+   A magic link has been sent to: [email]
+   
+   Please:
+   1. Check your email inbox for the magic link
+   2. Click the link to authenticate
+   3. Confirm here when you're logged in
+   
+   Reply with "logged in" or "ready" to continue testing.
+
+6. Wait for user confirmation before proceeding
+7. After confirmation, verify authenticated state by checking:
+   - Dashboard is accessible
+   - User profile/name is visible
+   - Protected routes load correctly
+8. Proceed with authenticated E2E tests
+```
+
+**Role-Based Testing:**
+- Use **Volunteer Account** for basic user flow testing
+- Use **Leader Account** for team management features
+- Use **Admin Account** for admin-only features (user management, settings)
+
+If multiple roles need testing, repeat the magic link flow for each role.
+
+**6c. Browser Navigation & Validation**
 
 Use browser automation to test user flows:
 
@@ -172,7 +210,7 @@ For each user story in the target phase:
   6. Test error states and edge cases
 ```
 
-**6c. Test Scenarios by Phase Type**
+**6d. Test Scenarios by Phase Type**
 
 **Setup Phase Testing:**
 
@@ -183,6 +221,8 @@ For each user story in the target phase:
 **User Story Phase Testing:**
 
 - Follow the "Independent Test" criteria from tasks.md
+- **Public routes first**: Test any unauthenticated flows (public forms, landing pages)
+- **Then authenticated routes**: Use magic link flow (step 6b) for protected features
 - Test the complete user flow end-to-end
 - Verify data persistence (reload page, check data still exists)
 - Test form validation (required fields, error messages)
@@ -195,7 +235,7 @@ For each user story in the target phase:
 - Responsive: Test at mobile/tablet/desktop breakpoints
 - Performance: Page load times, interaction responsiveness
 
-**6d. Browser Testing Checklist**
+**6e. Browser Testing Checklist**
 
 For each tested flow, verify and report:
 

@@ -361,6 +361,7 @@ export const ROUTES = {
   RUNDOWN: "/rundown",
   RUNDOWN_NEW: "/rundown/new",
   LIVESTREAM: "/livestream",
+  DESIGNS: "/designs",
   SOCIAL: "/social",
   TRAINING: "/training",
   TRAINING_MY_PROGRESS: "/training/my-progress",
