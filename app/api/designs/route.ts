@@ -6,6 +6,7 @@ import {
   designRequestQuerySchema,
 } from "@/lib/validations/designs"
 import { checkRateLimit } from "@/lib/rate-limit"
+import { notifyTeamNewRequest } from "@/lib/notifications/design-notifications"
 
 /**
  * POST /api/designs - Create a new design request (public, no auth)
@@ -79,9 +80,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // TODO: Queue notification to all team members
-    // This would integrate with the notification service to email
-    // all users with appropriate roles about the new request
+    // Queue notification to all team members
+    try {
+      await notifyTeamNewRequest({
+        requestId: data.id,
+        title: parsed.data.title,
+        type: parsed.data.type,
+        priority: parsed.data.priority,
+        requesterName: parsed.data.requesterName,
+        neededBy: parsed.data.neededBy || null,
+      })
+    } catch (notifyError) {
+      // Log but don't fail the request - notification is non-critical
+      console.error("Failed to send new request notification:", notifyError)
+    }
 
     return NextResponse.json(
       {
@@ -205,7 +217,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match expected format
-    const transformedData = (data || []).map((request: any) => ({
+    const transformedData = (data || []).map((request) => ({
       id: request.id,
       title: request.title,
       type: request.request_type,

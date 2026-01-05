@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Search, Filter, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -31,11 +31,7 @@ export function DesignRequestList() {
   
   const debouncedSearch = useDebounce(search, 300)
 
-  useEffect(() => {
-    fetchRequests()
-  }, [debouncedSearch, statusFilter, priorityFilter, includeArchived])
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -60,7 +56,11 @@ export function DesignRequestList() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [debouncedSearch, statusFilter, priorityFilter, includeArchived])
+
+  useEffect(() => {
+    fetchRequests()
+  }, [fetchRequests])
 
   const clearFilters = () => {
     setSearch("")

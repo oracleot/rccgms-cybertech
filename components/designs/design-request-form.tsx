@@ -124,7 +124,7 @@ export function DesignRequestForm() {
                 <span className="font-mono text-gray-900 dark:text-gray-100">{requestId}</span>
               </p>
               <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                Save this ID for reference. You'll receive email updates as we work on your design.
+                Save this ID for reference. You&apos;ll receive email updates as we work on your design.
               </p>
             </div>
           )}
@@ -390,7 +390,7 @@ export function DesignRequestForm() {
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">
-          * Required fields. You'll receive an email confirmation after submitting.
+          * Required fields. You&apos;ll receive an email confirmation after submitting.
         </p>
       </form>
     </Form>

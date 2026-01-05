@@ -77,13 +77,13 @@ export function ClaimModal({
           <DialogDescription>
             {isClaim ? (
               <>
-                You're about to claim <span className="font-semibold">"{requestTitle}"</span>.
-                This will assign the request to you, change its status to "In Progress", and make you responsible for completing it.
+                You&apos;re about to claim <span className="font-semibold">&quot;{requestTitle}&quot;</span>.
+                This will assign the request to you, change its status to &quot;In Progress&quot;, and make you responsible for completing it.
               </>
             ) : (
               <>
-                You're about to unclaim <span className="font-semibold">"{requestTitle}"</span>.
-                The request will be reset to "Pending" status and made available for others to claim.
+                You&apos;re about to unclaim <span className="font-semibold">&quot;{requestTitle}&quot;</span>.
+                The request will be reset to &quot;Pending&quot; status and made available for others to claim.
               </>
             )}
           </DialogDescription>

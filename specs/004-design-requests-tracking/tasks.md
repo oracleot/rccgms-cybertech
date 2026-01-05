@@ -90,11 +90,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T023 [P] [US3] Create update status modal component in components/designs/update-status-modal.tsx
-- [ ] T024 [US3] Create design request detail page in app/(dashboard)/designs/[id]/page.tsx
-- [ ] T025 [US3] Create GET /api/designs/[id] endpoint for single request in app/api/designs/[id]/route.ts
-- [ ] T026 [US3] Create PATCH /api/designs/[id] endpoint for status/priority/notes update in app/api/designs/[id]/route.ts
-- [ ] T027 [US3] Add updateRequest server action to app/(dashboard)/designs/actions.ts
+- [X] T023 [P] [US3] Create update status modal component in components/designs/update-status-modal.tsx
+- [X] T024 [US3] Create design request detail page in app/(dashboard)/designs/[id]/page.tsx
+- [X] T025 [US3] Create GET /api/designs/[id] endpoint for single request in app/api/designs/[id]/route.ts
+- [X] T026 [US3] Create PATCH /api/designs/[id] endpoint for status/priority/notes update in app/api/designs/[id]/route.ts
+- [X] T027 [US3] Add updateRequest server action to app/(dashboard)/designs/actions.ts
 
 **Checkpoint**: User Story 3 complete - Status tracking workflow operational
 
@@ -108,10 +108,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T028 [P] [US4] Create complete modal component in components/designs/complete-modal.tsx (requires deliverable URL)
-- [ ] T029 [US4] Create POST /api/designs/[id]/complete endpoint in app/api/designs/[id]/complete/route.ts
-- [ ] T030 [US4] Add completeRequest server action to app/(dashboard)/designs/actions.ts
-- [ ] T031 [US4] Display deliverable link on completed request detail page
+- [X] T028 [P] [US4] Create complete modal component in components/designs/complete-modal.tsx (requires deliverable URL)
+- [X] T029 [US4] Create POST /api/designs/[id]/complete endpoint in app/api/designs/[id]/complete/route.ts
+- [X] T030 [US4] Add completeRequest server action to app/(dashboard)/designs/actions.ts
+- [X] T031 [US4] Display deliverable link on completed request detail page
 
 **Checkpoint**: User Story 4 complete - Designs can be completed with deliverables
 
@@ -125,9 +125,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T032 [US5] Add revision workflow to update status modal (revision_requested status with required notes)
-- [ ] T033 [US5] Update PATCH /api/designs/[id] to handle revision notes append with timestamp
-- [ ] T034 [US5] Display revision notes history on detail page in app/(dashboard)/designs/[id]/page.tsx
+- [X] T032 [US5] Add revision workflow to update status modal (revision_requested status with required notes)
+- [X] T033 [US5] Update PATCH /api/designs/[id] to handle revision notes append with timestamp
+- [X] T034 [US5] Display revision notes history on detail page in app/(dashboard)/designs/[id]/page.tsx
 
 **Checkpoint**: User Story 5 complete - Revision workflow operational
 
@@ -141,14 +141,14 @@
 
 ### Implementation for User Story 6
 
-- [ ] T035 [P] [US6] Create new request email template in emails/design-request-new.tsx
-- [ ] T036 [P] [US6] Create claimed email template in emails/design-request-claimed.tsx
-- [ ] T037 [P] [US6] Create review email template in emails/design-request-review.tsx
-- [ ] T038 [P] [US6] Create completed email template in emails/design-request-completed.tsx
-- [ ] T039 [US6] Integrate notification service in POST /api/designs (notify team on new request - query profiles table for all team member emails)
-- [ ] T040 [US6] Integrate notification service in assign endpoint (notify requester on claim)
-- [ ] T041 [US6] Integrate notification service in PATCH endpoint (notify on status changes)
-- [ ] T042 [US6] Integrate notification service in complete endpoint (notify requester with deliverable link)
+- [X] T035 [P] [US6] Create new request email template in emails/design-request-new.tsx
+- [X] T036 [P] [US6] Create claimed email template in emails/design-request-claimed.tsx
+- [X] T037 [P] [US6] Create review email template in emails/design-request-review.tsx
+- [X] T038 [P] [US6] Create completed email template in emails/design-request-completed.tsx
+- [X] T039 [US6] Integrate notification service in POST /api/designs (notify team on new request - query profiles table for all team member emails)
+- [X] T040 [US6] Integrate notification service in assign endpoint (notify requester on claim)
+- [X] T041 [US6] Integrate notification service in PATCH endpoint (notify on status changes)
+- [X] T042 [US6] Integrate notification service in complete endpoint (notify requester with deliverable link)
 
 **Checkpoint**: User Story 6 complete - All notification triggers operational
 
@@ -158,14 +158,14 @@
 
 **Purpose**: Edge cases, archiving, deletion, and final polish
 
-- [ ] T043 [P] Create delete modal component in components/designs/delete-modal.tsx
-- [ ] T044 Create DELETE /api/designs/[id] endpoint in app/api/designs/[id]/route.ts (admin/leader only)
-- [ ] T045 Add deleteRequest server action to app/(dashboard)/designs/actions.ts
-- [ ] T046 Add "Include archived" filter toggle to design request list
-- [ ] T047 Create cron job for auto-archive in app/api/cron/archive-designs/route.ts
-- [ ] T048 Add search functionality to design request list (title, requester name)
-- [ ] T049 Handle edge case: past "needed by" date warning badge
-- [ ] T050 Run quickstart.md validation checklist
+- [X] T043 [P] Create delete modal component in components/designs/delete-modal.tsx
+- [X] T044 Create DELETE /api/designs/[id] endpoint in app/api/designs/[id]/route.ts (admin/leader only)
+- [X] T045 Add deleteRequest server action to app/(dashboard)/designs/actions.ts
+- [X] T046 Add "Include archived" filter toggle to design request list
+- [X] T047 Create cron job for auto-archive in app/api/cron/archive-designs/route.ts
+- [X] T048 Add search functionality to design request list (title, requester name)
+- [X] T049 Handle edge case: past "needed by" date warning badge
+- [X] T050 Run quickstart.md validation checklist
 
 ---
 

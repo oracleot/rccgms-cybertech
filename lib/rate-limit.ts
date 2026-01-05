@@ -14,7 +14,7 @@ const rateLimitMap = new Map<string, RateLimitRecord>()
 
 // Cleanup interval to prevent memory leaks
 const CLEANUP_THRESHOLD = 10000 // Clean up when map exceeds 10k entries
-const CLEANUP_INTERVAL = 3600000 // 1 hour
+const _CLEANUP_INTERVAL = 3600000 // 1 hour
 
 interface RateLimitResult {
   allowed: boolean

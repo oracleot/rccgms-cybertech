@@ -31,7 +31,7 @@ export default function DesignRequestPage() {
       {/* Footer Note */}
       <div className="mt-8 text-center text-sm text-muted-foreground">
         <p>
-          You'll receive email updates as your design progresses. Questions?{" "}
+          You&apos;ll receive email updates as your design progresses. Questions?{" "}
           <a
             href="mailto:tech@rccgmorningstar.org"
             className="font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400"

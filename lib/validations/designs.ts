@@ -48,7 +48,11 @@ export const createDesignRequestSchema = z.object({
     .optional(),
   neededBy: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
+    .refine(
+      (val) => val === "" || /^\d{4}-\d{2}-\d{2}$/.test(val),
+      "Invalid date format (YYYY-MM-DD)"
+    )
+    .transform((val) => (val === "" ? undefined : val))
     .optional(),
   referenceUrls: z
     .array(z.string().url("Invalid URL"))

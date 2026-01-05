@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Calendar, Clock, User, UserCheck } from "lucide-react"
 import { format, formatDistanceToNow, isPast } from "date-fns"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -33,13 +34,15 @@ export function DesignRequestCard({ request, className, onUpdate }: DesignReques
 
   return (
     <>
-      <Card className={cn("transition-all hover:shadow-md", className)}>
+      <Card className={cn("transition-all hover:shadow-md group", className)}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 space-y-1">
-              <h3 className="font-semibold text-lg leading-tight line-clamp-2">
-                {request.title}
-              </h3>
+              <Link href={`/designs/${request.id}`} className="block">
+                <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors cursor-pointer">
+                  {request.title}
+                </h3>
+              </Link>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <User className="h-3 w-3" />
