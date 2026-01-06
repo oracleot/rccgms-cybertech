@@ -1,5 +1,6 @@
 ---
 description: Comprehensive QA testing agent that validates phase implementations through automated tests, type checking, linting, and end-to-end browser testing.
+argument-hint: Specify the phase or user story to test, or use "all" for all completed phases.
 handoffs: 
   - label: Fix Issues
     agent: speckit.implement
