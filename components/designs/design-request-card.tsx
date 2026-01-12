@@ -15,15 +15,27 @@ import { ClaimModal } from "./claim-modal"
 
 interface DesignRequestCardProps {
   request: DesignRequestListItem
+  currentUserProfileId?: string
+  isAdminOrLeader?: boolean
   className?: string
   onUpdate?: () => void
 }
 
-export function DesignRequestCard({ request, className, onUpdate }: DesignRequestCardProps) {
+export function DesignRequestCard({ 
+  request, 
+  currentUserProfileId,
+  isAdminOrLeader = false,
+  className, 
+  onUpdate 
+}: DesignRequestCardProps) {
   const [showClaimModal, setShowClaimModal] = useState(false)
   const [claimAction, setClaimAction] = useState<"claim" | "unclaim">("claim")
   const isPastDeadline = request.neededBy && isPast(new Date(request.neededBy))
   const isUnclaimed = !request.assignee
+  
+  // Check if current user can unclaim (is assignee or admin)
+  const isAssignee = request.assignee?.id === currentUserProfileId
+  const canUnclaim = isAssignee || isAdminOrLeader
 
   const handleClaimClick = (e: React.MouseEvent, action: "claim" | "unclaim") => {
     e.preventDefault()
@@ -113,7 +125,7 @@ export function DesignRequestCard({ request, className, onUpdate }: DesignReques
                 <UserCheck className="h-4 w-4 mr-1" />
                 Claim
               </Button>
-            ) : (
+            ) : canUnclaim ? (
               <Button
                 size="sm"
                 variant="ghost"
@@ -122,7 +134,7 @@ export function DesignRequestCard({ request, className, onUpdate }: DesignReques
               >
                 Unclaim
               </Button>
-            )}
+            ) : null}
           </div>
         </CardFooter>
       </Card>

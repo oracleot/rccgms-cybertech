@@ -23,6 +23,10 @@ export function DesignRequestList() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
+  // Current user info for permission checks
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | undefined>(undefined)
+  const [isAdminOrLeader, setIsAdminOrLeader] = useState(false)
+  
   // Filters
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -30,6 +34,23 @@ export function DesignRequestList() {
   const [includeArchived, setIncludeArchived] = useState(false)
   
   const debouncedSearch = useDebounce(search, 300)
+
+  // Fetch current user profile on mount
+  useEffect(() => {
+    async function fetchCurrentUser() {
+      try {
+        const response = await fetch("/api/auth/profile")
+        if (response.ok) {
+          const data = await response.json()
+          setCurrentUserProfileId(data.id)
+          setIsAdminOrLeader(data.role === "admin" || data.role === "leader")
+        }
+      } catch {
+        // Silently fail - user will just not see unclaim buttons
+      }
+    }
+    fetchCurrentUser()
+  }, [])
 
   const fetchRequests = useCallback(async () => {
     setIsLoading(true)
@@ -201,6 +222,8 @@ export function DesignRequestList() {
               <DesignRequestCard 
                 key={request.id} 
                 request={request}
+                currentUserProfileId={currentUserProfileId}
+                isAdminOrLeader={isAdminOrLeader}
                 onUpdate={fetchRequests}
               />
             ))}
