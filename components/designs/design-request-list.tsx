@@ -17,15 +17,17 @@ import { Card } from "@/components/ui/card"
 import type { DesignRequestListItem } from "@/types/designs"
 import { DesignRequestCard } from "./design-request-card"
 import { useDebounce } from "@/hooks/use-debounce"
+import { useUser } from "@/hooks/use-user"
 
 export function DesignRequestList() {
   const [requests, setRequests] = useState<DesignRequestListItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  // Current user info for permission checks
-  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | undefined>(undefined)
-  const [isAdminOrLeader, setIsAdminOrLeader] = useState(false)
+  // Get current user info for permission checks
+  const { user, isLoading: isUserLoading } = useUser()
+  const currentUserProfileId = user?.id
+  const isAdmin = user?.role === "admin"
   
   // Filters
   const [search, setSearch] = useState("")
@@ -34,23 +36,6 @@ export function DesignRequestList() {
   const [includeArchived, setIncludeArchived] = useState(false)
   
   const debouncedSearch = useDebounce(search, 300)
-
-  // Fetch current user profile on mount
-  useEffect(() => {
-    async function fetchCurrentUser() {
-      try {
-        const response = await fetch("/api/auth/profile")
-        if (response.ok) {
-          const data = await response.json()
-          setCurrentUserProfileId(data.id)
-          setIsAdminOrLeader(data.role === "admin" || data.role === "leader")
-        }
-      } catch {
-        // Silently fail - user will just not see unclaim buttons
-      }
-    }
-    fetchCurrentUser()
-  }, [])
 
   const fetchRequests = useCallback(async () => {
     setIsLoading(true)
@@ -185,7 +170,7 @@ export function DesignRequestList() {
       </Card>
 
       {/* Results */}
-      {isLoading ? (
+      {isLoading || isUserLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -223,7 +208,7 @@ export function DesignRequestList() {
                 key={request.id} 
                 request={request}
                 currentUserProfileId={currentUserProfileId}
-                isAdminOrLeader={isAdminOrLeader}
+                isAdmin={isAdmin}
                 onUpdate={fetchRequests}
               />
             ))}

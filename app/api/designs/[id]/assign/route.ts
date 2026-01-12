@@ -92,7 +92,7 @@ export async function POST(
 
     // Handle unclaim
     if (action === "unclaim") {
-      // Check if request is assigned to current user
+      // Check if request exists
       const { data: existingRequest } = await supabase
         .from("design_requests")
         .select("assigned_to, status")
@@ -103,7 +103,11 @@ export async function POST(
         return NextResponse.json({ error: "Request not found" }, { status: 404 })
       }
 
-      if (existingRequest.assigned_to !== profile.id) {
+      // Only the assignee or an admin can unclaim
+      const isAssignee = existingRequest.assigned_to === profile.id
+      const isAdmin = profile.role === "admin"
+      
+      if (!isAssignee && !isAdmin) {
         return NextResponse.json(
           { error: "You can only unclaim requests assigned to you" },
           { status: 403 }

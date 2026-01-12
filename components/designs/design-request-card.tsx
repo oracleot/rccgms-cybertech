@@ -16,7 +16,7 @@ import { ClaimModal } from "./claim-modal"
 interface DesignRequestCardProps {
   request: DesignRequestListItem
   currentUserProfileId?: string
-  isAdminOrLeader?: boolean
+  isAdmin?: boolean
   className?: string
   onUpdate?: () => void
 }
@@ -24,7 +24,7 @@ interface DesignRequestCardProps {
 export function DesignRequestCard({ 
   request, 
   currentUserProfileId,
-  isAdminOrLeader = false,
+  isAdmin = false,
   className, 
   onUpdate 
 }: DesignRequestCardProps) {
@@ -34,8 +34,8 @@ export function DesignRequestCard({
   const isUnclaimed = !request.assignee
   
   // Check if current user can unclaim (is assignee or admin)
-  const isAssignee = request.assignee?.id === currentUserProfileId
-  const canUnclaim = isAssignee || isAdminOrLeader
+  const isAssignee = Boolean(currentUserProfileId && request.assignee?.id === currentUserProfileId)
+  const canUnclaim = isAssignee || isAdmin
 
   const handleClaimClick = (e: React.MouseEvent, action: "claim" | "unclaim") => {
     e.preventDefault()

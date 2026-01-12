@@ -118,10 +118,10 @@ export async function unclaimRequest(requestId: string): Promise<ActionResult> {
     return { success: false, error: "Not authenticated" }
   }
 
-  // Get user profile
+  // Get user profile with role
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, role")
     .eq("auth_user_id", user.id)
     .single()
 
@@ -129,7 +129,7 @@ export async function unclaimRequest(requestId: string): Promise<ActionResult> {
     return { success: false, error: "Profile not found" }
   }
 
-  // Check if request is assigned to current user
+  // Check if request exists
   const { data: request } = await supabase
     .from("design_requests")
     .select("assigned_to, status")
@@ -140,7 +140,11 @@ export async function unclaimRequest(requestId: string): Promise<ActionResult> {
     return { success: false, error: "Request not found" }
   }
 
-  if (request.assigned_to !== profile.id) {
+  // Only the assignee or an admin can unclaim
+  const isAssignee = request.assigned_to === profile.id
+  const isAdmin = profile.role === "admin"
+  
+  if (!isAssignee && !isAdmin) {
     return { success: false, error: "You can only unclaim requests assigned to you" }
   }
 
