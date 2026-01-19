@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+For full product specs and architecture, see `specs/001-cyber-tech-app-build/`.
+
 ## Getting Started
 
 First, run the development server:
@@ -19,6 +21,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Changelog
+
+All notable changes are documented in [CHANGELOG.md](CHANGELOG.md). Please add an entry under the appropriate date whenever you make a user-visible change.
 
 ## Learn More
 
