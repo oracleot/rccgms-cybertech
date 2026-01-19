@@ -1,0 +1,296 @@
+"use client"
+
+import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
+import { Shield, Loader2, Star, Building2 } from "lucide-react"
+import { toast } from "sonner"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import type { Profile, Department, UserDepartment } from "@/types/auth"
+import type { UserRole } from "@/lib/constants"
+import { updateUserRole } from "./actions"
+
+interface UserWithDepartments extends Profile {
+  department: Department | null
+  user_departments?: (UserDepartment & { department: Department })[]
+}
+
+interface RoleEditorModalProps {
+  userId: string
+  users: UserWithDepartments[]
+  departments: Department[]
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+const roleDescriptions: Record<string, string> = {
+  admin: "Full access to all features including user management and system settings",
+  leader: "Can manage rotas, equipment, rundowns, and approve swap requests",
+  volunteer: "Can view schedules, submit availability, and request swaps",
+}
+
+interface DepartmentAssignment {
+  departmentId: string
+  isPrimary: boolean
+}
+
+export function RoleEditorModal({
+  userId,
+  users,
+  departments,
+}: RoleEditorModalProps) {
+  const router = useRouter()
+  const user = users.find((u) => u.id === userId)
+  const [isPending, startTransition] = useTransition()
+  const [role, setRole] = useState<UserRole>(user?.role as UserRole || "volunteer")
+  
+  // Initialize department assignments from user_departments or fallback to legacy
+  const getInitialAssignments = (): DepartmentAssignment[] => {
+    if (user?.user_departments && user.user_departments.length > 0) {
+      return user.user_departments.map(ud => ({
+        departmentId: ud.department_id,
+        isPrimary: ud.is_primary,
+      }))
+    }
+    // Fallback to legacy department_id
+    if (user?.department_id) {
+      return [{ departmentId: user.department_id, isPrimary: true }]
+    }
+    return []
+  }
+  
+  const [assignments, setAssignments] = useState<DepartmentAssignment[]>(getInitialAssignments())
+
+  if (!user) {
+    return null
+  }
+
+  const handleClose = () => {
+    router.push("/admin/users")
+  }
+
+  const toggleDepartment = (departmentId: string) => {
+    setAssignments(prev => {
+      const exists = prev.find(a => a.departmentId === departmentId)
+      if (exists) {
+        const remaining = prev.filter(a => a.departmentId !== departmentId)
+        if (exists.isPrimary && remaining.length > 0) {
+          remaining[0].isPrimary = true
+        }
+        return remaining
+      } else {
+        return [...prev, { departmentId, isPrimary: prev.length === 0 }]
+      }
+    })
+  }
+
+  const setPrimaryDepartment = (departmentId: string) => {
+    setAssignments(prev => 
+      prev.map(a => ({
+        ...a,
+        isPrimary: a.departmentId === departmentId,
+      }))
+    )
+  }
+
+  const handleSave = () => {
+    startTransition(async () => {
+      // First update role and primary department
+      const primaryDept = assignments.find(a => a.isPrimary)
+      const result = await updateUserRole({
+        userId: user.id,
+        role,
+        departmentId: primaryDept?.departmentId || null,
+      })
+
+      if (!result.success) {
+        toast.error(result.error || "Failed to update user")
+        return
+      }
+
+      // Then update department assignments via API
+      try {
+        const response = await fetch("/api/admin/user-departments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            departments: assignments,
+          }),
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || "Failed to update departments")
+        }
+
+        toast.success("User updated successfully")
+        handleClose()
+        router.refresh()
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to update departments")
+      }
+    })
+  }
+
+  return (
+    <Dialog open onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Edit User Role & Departments
+          </DialogTitle>
+          <DialogDescription>
+            Change role and department assignments for this user
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {/* User Info */}
+          <div className="flex items-center gap-3 rounded-lg border p-3">
+            <Avatar>
+              <AvatarImage src={user.avatar_url || undefined} />
+              <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="font-medium">{user.name}</div>
+              <div className="text-sm text-muted-foreground">{user.email}</div>
+            </div>
+          </div>
+
+          {/* Role Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="leader">Leader</SelectItem>
+                <SelectItem value="volunteer">Volunteer</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {roleDescriptions[role]}
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Department Selection - Multi-select */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <Label>Departments</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Select departments for this user. Click the star to set primary.
+            </p>
+            <ScrollArea className="h-[180px] rounded-md border p-3">
+              <div className="space-y-2">
+                {departments.map((dept) => {
+                  const assignment = assignments.find(a => a.departmentId === dept.id)
+                  const isSelected = !!assignment
+                  const isPrimary = assignment?.isPrimary || false
+
+                  return (
+                    <div
+                      key={dept.id}
+                      className={`flex items-center gap-3 rounded-lg border p-2 transition-colors ${
+                        isSelected ? "bg-muted/50 border-primary/50" : "hover:bg-muted/30"
+                      }`}
+                    >
+                      <Checkbox
+                        id={`role-dept-${dept.id}`}
+                        checked={isSelected}
+                        onCheckedChange={() => toggleDepartment(dept.id)}
+                      />
+                      <Label
+                        htmlFor={`role-dept-${dept.id}`}
+                        className="flex-1 font-medium cursor-pointer"
+                      >
+                        {dept.name}
+                      </Label>
+                      {isSelected && (
+                        <Button
+                          type="button"
+                          variant={isPrimary ? "default" : "ghost"}
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={() => setPrimaryDepartment(dept.id)}
+                          title={isPrimary ? "Primary department" : "Set as primary"}
+                        >
+                          <Star
+                            className={`h-3 w-3 ${isPrimary ? "fill-current" : ""}`}
+                          />
+                        </Button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </ScrollArea>
+            
+            {/* Selected Departments Summary */}
+            {assignments.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-2">
+                {assignments.map((a) => {
+                  const dept = departments.find(d => d.id === a.departmentId)
+                  return (
+                    <Badge 
+                      key={a.departmentId} 
+                      variant={a.isPrimary ? "default" : "secondary"}
+                      className="gap-1"
+                    >
+                      {a.isPrimary && <Star className="h-3 w-3 fill-current" />}
+                      {dept?.name || "Unknown"}
+                    </Badge>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={isPending}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
