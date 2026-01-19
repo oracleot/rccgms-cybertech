@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 - Tidy up documentation and add more detailed setup notes.
 
-## [2026-01-19]
+## [2026-01-19] - Ash
 
 ### Added
 - Added ability in Rundown Live View to jump back to previous items via a dedicated "Previous item" button and by clicking items in the sidebar list.
