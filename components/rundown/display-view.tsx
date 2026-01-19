@@ -6,6 +6,7 @@ import confetti from "canvas-confetti"
 import { cn } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
 import { useDisplayReceiver } from "@/hooks/use-display-sync"
+import { useScreenWakeLock } from "@/hooks/use-screen-wake-lock"
 import { LyricsDisplay } from "./lyrics-display"
 import type {
   DisplaySyncMessage,
@@ -231,6 +232,9 @@ export function DisplayView({
   const timerDurationRef = useRef<number>(0)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const [isTimerActive, setIsTimerActive] = useState(false) // State to trigger timer effect
+
+  // Keep the projection screen awake while the display is open
+  useScreenWakeLock(true)
 
   // Parse lyrics for the current song item
   const parsedLyrics = useMemo(() => {

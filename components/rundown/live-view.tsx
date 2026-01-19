@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, Clock
 import { cn, formatDuration } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
 import { useDisplaySync } from "@/hooks/use-display-sync"
+import { useScreenWakeLock } from "@/hooks/use-screen-wake-lock"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -49,6 +50,9 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
   const currentItem = orderedItems[currentIndex]
   const nextItem = orderedItems[currentIndex + 1]
+
+  // Keep the operator's screen awake while the service is running
+  useScreenWakeLock(started)
 
   // Get song data for the current item
   const currentSong = useMemo(() => {
