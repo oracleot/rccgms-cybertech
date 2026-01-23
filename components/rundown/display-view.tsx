@@ -207,7 +207,7 @@ function EndOfServiceConfetti({ textColor }: { textColor: string }) {
  */
 export function DisplayView({
   rundownId,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future offline support
   initialItems,
   initialSettings,
   serviceName,

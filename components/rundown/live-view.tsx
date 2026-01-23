@@ -334,7 +334,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
       setWarned(true)
       startAlertLoop(selectedSound)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- startAlertLoop is stable, including it causes infinite loop
   }, [elapsed, started, currentIndex, orderedItems, warned, selectedSound])
 
   useEffect(() => () => stopAlert(), [])

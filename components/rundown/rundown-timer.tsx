@@ -5,7 +5,7 @@
  * Uses Date.now() for accurate elapsed time tracking
  */
 
-/* eslint-disable react-hooks/purity */
+/* eslint-disable react-hooks/purity -- uses Date.now() for real-time elapsed tracking */
 
 import { useEffect, useRef, useState } from "react"
 import { Pause, Play, RotateCcw, Timer } from "lucide-react"

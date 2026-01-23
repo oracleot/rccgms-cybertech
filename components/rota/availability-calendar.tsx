@@ -63,7 +63,7 @@ export function AvailabilityCalendar({ className }: AvailabilityCalendarProps) {
       await fetchAvailability()
     }
     loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchAvailability is stable, only re-fetch when month changes
   }, [currentMonth])
 
   // Get availability for a specific date - used by modifiers
