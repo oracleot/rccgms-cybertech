@@ -6,6 +6,245 @@
 -- 2. Missing composite indexes for common query patterns
 -- 3. More restrictive design_requests insert policy
 -- 4. Refactored RLS policies to use helper functions from migration 026
+-- 5. Fix function search_path vulnerabilities (14 functions)
+-- 6. Remove duplicate permissive policies causing performance issues
+-- 7. Fix remaining auth_rls_initplan issues
+
+-- ===========================================
+-- 0. FIX FUNCTION SEARCH_PATH VULNERABILITIES
+-- ===========================================
+-- All functions must have search_path set to prevent search_path injection attacks.
+-- Setting search_path = '' forces fully qualified table names.
+
+-- Fix: ensure_single_primary_department
+CREATE OR REPLACE FUNCTION public.ensure_single_primary_department()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.is_primary = true THEN
+    UPDATE public.user_departments
+    SET is_primary = false
+    WHERE user_id = NEW.user_id
+      AND id != NEW.id
+      AND is_primary = true;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: sync_primary_department_to_profile
+CREATE OR REPLACE FUNCTION public.sync_primary_department_to_profile()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.is_primary = true THEN
+    UPDATE public.profiles
+    SET department_id = NEW.department_id
+    WHERE id = NEW.user_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: update_updated_at_column (generic updated_at trigger)
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: update_updated_at (alias for above, used by some tables)
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: update_design_requests_updated_at
+CREATE OR REPLACE FUNCTION public.update_design_requests_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: set_design_assignment_timestamp
+CREATE OR REPLACE FUNCTION public.set_design_assignment_timestamp()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.assigned_to IS NOT NULL AND (OLD.assigned_to IS NULL OR OLD.assigned_to != NEW.assigned_to) THEN
+    NEW.assigned_at = NOW();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: set_design_completion_timestamp
+CREATE OR REPLACE FUNCTION public.set_design_completion_timestamp()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.status = 'completed' AND OLD.status != 'completed' THEN
+    NEW.completed_at = NOW();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: notify_new_design_request
+CREATE OR REPLACE FUNCTION public.notify_new_design_request()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  -- Notification logic handled by application layer
+  -- This is a placeholder for database-level notifications if needed
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: notify_design_assignment
+CREATE OR REPLACE FUNCTION public.notify_design_assignment()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  -- Notification logic handled by application layer
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: notify_design_completion
+CREATE OR REPLACE FUNCTION public.notify_design_completion()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  -- Notification logic handled by application layer
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: check_training_completion
+CREATE OR REPLACE FUNCTION public.check_training_completion()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  total_steps INTEGER;
+  completed_steps INTEGER;
+BEGIN
+  -- Get total steps for the track
+  SELECT COUNT(*) INTO total_steps
+  FROM public.onboarding_steps os
+  JOIN public.volunteer_progress vp ON vp.track_id = os.track_id
+  WHERE vp.id = NEW.volunteer_progress_id;
+
+  -- Get completed steps
+  SELECT COUNT(*) INTO completed_steps
+  FROM public.step_completions
+  WHERE volunteer_progress_id = NEW.volunteer_progress_id;
+
+  -- Update progress if all steps completed
+  IF completed_steps >= total_steps AND total_steps > 0 THEN
+    UPDATE public.volunteer_progress
+    SET status = 'completed', completed_at = NOW()
+    WHERE id = NEW.volunteer_progress_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: handle_new_user
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  INSERT INTO public.profiles (auth_user_id, email, name, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+    'volunteer'
+  )
+  ON CONFLICT (auth_user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: update_equipment_on_checkout
+CREATE OR REPLACE FUNCTION public.update_equipment_on_checkout()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE public.equipment SET status = 'checked_out' WHERE id = NEW.equipment_id;
+  ELSIF TG_OP = 'UPDATE' AND NEW.returned_at IS NOT NULL AND OLD.returned_at IS NULL THEN
+    UPDATE public.equipment SET status = 'available' WHERE id = NEW.equipment_id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- Fix: update_rota_published_at
+CREATE OR REPLACE FUNCTION public.update_rota_published_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.status = 'published' AND (OLD.status IS NULL OR OLD.status != 'published') THEN
+    NEW.published_at = NOW();
+  END IF;
+  RETURN NEW;
+END;
+$$;
 
 -- ===========================================
 -- 1. FIX STORAGE BUCKET POLICIES
@@ -484,7 +723,190 @@ FOR DELETE
 USING ((SELECT public.is_admin_or_leader()));
 
 -- ===========================================
--- 5. COMMENTS
+-- 5. DROP DUPLICATE PERMISSIVE POLICIES
+-- ===========================================
+-- The linter flags "multiple_permissive_policies" when the same operation 
+-- has multiple PERMISSIVE policies. Drop older/redundant ones to consolidate.
+
+-- profiles - drop old policies that duplicate newer consolidated ones
+DROP POLICY IF EXISTS "Anyone can view profiles" ON profiles;
+DROP POLICY IF EXISTS "Authenticated users can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Public read access" ON profiles;
+
+-- departments - drop duplicate view policies
+DROP POLICY IF EXISTS "Anyone can view departments" ON departments;
+DROP POLICY IF EXISTS "Public read access" ON departments;
+
+-- positions - drop duplicate view policies
+DROP POLICY IF EXISTS "Anyone can view positions" ON positions;
+DROP POLICY IF EXISTS "Public read access" ON positions;
+
+-- services - drop duplicate view policies
+DROP POLICY IF EXISTS "Anyone can view services" ON services;
+DROP POLICY IF EXISTS "Public read access" ON services;
+
+-- rotas - drop duplicate policies
+DROP POLICY IF EXISTS "Anyone can view published rotas" ON rotas;
+DROP POLICY IF EXISTS "Users view published rotas" ON rotas;
+
+-- rota_assignments - drop duplicates
+DROP POLICY IF EXISTS "Users can view own assignments" ON rota_assignments;
+DROP POLICY IF EXISTS "Anyone can view assignments from published rotas" ON rota_assignments;
+
+-- availability - drop duplicates
+DROP POLICY IF EXISTS "Users can view own availability" ON availability;
+DROP POLICY IF EXISTS "Leaders can view all availability" ON availability;
+
+-- swap_requests - drop duplicates
+DROP POLICY IF EXISTS "Users view relevant swap requests" ON swap_requests;
+
+-- livestreams - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view livestreams" ON livestreams;
+DROP POLICY IF EXISTS "Public read access" ON livestreams;
+
+-- prompt_templates - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view active prompt templates" ON prompt_templates;
+DROP POLICY IF EXISTS "Public read access" ON prompt_templates;
+
+-- equipment_categories - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view equipment categories" ON equipment_categories;
+DROP POLICY IF EXISTS "Public read access" ON equipment_categories;
+
+-- equipment - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view equipment" ON equipment;
+DROP POLICY IF EXISTS "Public read access" ON equipment;
+
+-- equipment_maintenance - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view maintenance records" ON equipment_maintenance;
+DROP POLICY IF EXISTS "Public read access" ON equipment_maintenance;
+
+-- rundowns - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view published rundowns" ON rundowns;
+DROP POLICY IF EXISTS "Users view published rundowns" ON rundowns;
+
+-- rundown_items - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view rundown items from published rundowns" ON rundown_items;
+DROP POLICY IF EXISTS "Users view items from published rundowns" ON rundown_items;
+
+-- onboarding_tracks - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view tracks" ON onboarding_tracks;
+DROP POLICY IF EXISTS "Public read access" ON onboarding_tracks;
+
+-- onboarding_steps - drop duplicates
+DROP POLICY IF EXISTS "Anyone can view steps" ON onboarding_steps;
+DROP POLICY IF EXISTS "Public read access" ON onboarding_steps;
+
+-- songs - drop duplicates and fix remaining policy
+DROP POLICY IF EXISTS "Anyone can view songs" ON songs;
+DROP POLICY IF EXISTS "Authenticated users can view songs" ON songs;
+DROP POLICY IF EXISTS "Leaders can manage songs" ON songs;
+
+CREATE POLICY "Authenticated users can view songs"
+  ON songs FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+CREATE POLICY "Leaders can manage songs"
+  ON songs FOR ALL
+  USING ((SELECT public.is_admin_or_leader()));
+
+-- user_departments - drop old policies causing duplicates
+DROP POLICY IF EXISTS "user_departments_select" ON user_departments;
+DROP POLICY IF EXISTS "user_departments_insert_admin_leader" ON user_departments;
+DROP POLICY IF EXISTS "user_departments_update_admin_leader" ON user_departments;
+DROP POLICY IF EXISTS "user_departments_delete_admin_leader" ON user_departments;
+
+-- design_requests - drop duplicate policies
+DROP POLICY IF EXISTS "public_insert_design_requests" ON design_requests;
+DROP POLICY IF EXISTS "admin_delete_design_requests" ON design_requests;
+DROP POLICY IF EXISTS "team_view_design_requests" ON design_requests;
+DROP POLICY IF EXISTS "Anyone can view design requests" ON design_requests;
+DROP POLICY IF EXISTS "Authenticated can view design_requests" ON design_requests;
+
+-- ===========================================
+-- 6. FIX ALWAYS-TRUE SYSTEM POLICIES
+-- ===========================================
+-- Some policies use WITH CHECK (true) which the linter flags.
+-- These are intentional for system/trigger operations but we'll
+-- restrict them to authenticated/service-role patterns.
+
+-- notifications - system insert policy (used by triggers)
+DROP POLICY IF EXISTS "System can create notifications" ON notifications;
+
+CREATE POLICY "System can create notifications"
+  ON notifications FOR INSERT
+  WITH CHECK (
+    -- Allow authenticated users to create their own notifications
+    user_id = (SELECT public.current_profile_id())
+    -- OR triggers via service role (checked at Supabase level, not in policy)
+  );
+
+-- profiles - system insert policy (used by handle_new_user trigger)
+-- This runs via trigger with SECURITY DEFINER, no RLS policy needed for service role
+DROP POLICY IF EXISTS "System can insert profiles" ON profiles;
+-- Note: handle_new_user uses SECURITY DEFINER, so it bypasses RLS. 
+-- No policy needed here.
+
+-- ===========================================
+-- 7. ADD CONSOLIDATED VIEW POLICIES
+-- ===========================================
+-- After dropping duplicates, ensure each table has proper view access.
+
+-- profiles: Authenticated users can view all profiles
+DROP POLICY IF EXISTS "Authenticated view profiles" ON profiles;
+CREATE POLICY "Authenticated view profiles"
+  ON profiles FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- departments: Authenticated users can view all departments  
+DROP POLICY IF EXISTS "Authenticated view departments" ON departments;
+CREATE POLICY "Authenticated view departments"
+  ON departments FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- positions: Authenticated users can view all positions
+DROP POLICY IF EXISTS "Authenticated view positions" ON positions;
+CREATE POLICY "Authenticated view positions"
+  ON positions FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- services: Authenticated users can view all services
+DROP POLICY IF EXISTS "Authenticated view services" ON services;
+CREATE POLICY "Authenticated view services"
+  ON services FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- livestreams: Authenticated users can view all livestreams
+DROP POLICY IF EXISTS "Authenticated view livestreams" ON livestreams;
+CREATE POLICY "Authenticated view livestreams"
+  ON livestreams FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- equipment: Authenticated users can view all equipment
+DROP POLICY IF EXISTS "Authenticated view equipment" ON equipment;
+CREATE POLICY "Authenticated view equipment"
+  ON equipment FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- equipment_categories: Authenticated users can view all categories
+DROP POLICY IF EXISTS "Authenticated view equipment categories" ON equipment_categories;
+CREATE POLICY "Authenticated view equipment categories"
+  ON equipment_categories FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- equipment_maintenance: Authenticated users can view all maintenance
+DROP POLICY IF EXISTS "Authenticated view maintenance" ON equipment_maintenance;
+CREATE POLICY "Authenticated view maintenance"
+  ON equipment_maintenance FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- prompt_templates: Authenticated users can view all templates
+DROP POLICY IF EXISTS "Authenticated view templates" ON prompt_templates;
+CREATE POLICY "Authenticated view templates"
+  ON prompt_templates FOR SELECT
+  USING ((SELECT auth.uid()) IS NOT NULL);
+
+-- ===========================================
+-- 8. COMMENTS
 -- ===========================================
 COMMENT ON INDEX idx_profiles_auth_user_role IS 
   'Composite index for RLS policy lookups that check auth_user_id + role';
