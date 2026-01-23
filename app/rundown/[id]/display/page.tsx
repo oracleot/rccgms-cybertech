@@ -84,7 +84,7 @@ export default async function DisplayPage({ params }: DisplayPageProps) {
 
     if (profile) {
       const profileData = profile as { id: string }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- display_settings table not in generated types
       const supabaseAny = supabase as any
       const { data: settings } = await supabaseAny
         .from("display_settings")

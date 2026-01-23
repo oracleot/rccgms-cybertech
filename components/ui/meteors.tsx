@@ -5,7 +5,7 @@
  * Uses Math.random() for visual effects which is intentionally impure
  */
 
-/* eslint-disable react-hooks/purity */
+/* eslint-disable react-hooks/purity -- uses Math.random() for visual animation effects */
 
 import React, { useMemo } from "react"
 

@@ -89,7 +89,7 @@ export function TeamAvailabilityGrid({ departments, className }: TeamAvailabilit
       await fetchAvailability()
     }
     loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchAvailability is stable, only re-fetch when week/department changes
   }, [weekStart, selectedDepartment])
 
   // Get availability status for a team member on a specific date

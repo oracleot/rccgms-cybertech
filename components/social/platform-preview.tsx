@@ -8,7 +8,7 @@
  * Google Drive URLs with dynamic origins that can't be pre-configured.
  */
 
-/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @next/next/no-img-element -- Google Drive URLs with dynamic origins */
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

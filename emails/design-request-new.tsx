@@ -1,6 +1,6 @@
 import * as React from "react"
 
-/* eslint-disable @next/next/no-head-element */
+/* eslint-disable @next/next/no-head-element -- React Email templates use raw <head> elements */
 
 interface DesignRequestNewEmailProps {
   title: string

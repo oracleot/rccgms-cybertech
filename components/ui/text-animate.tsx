@@ -5,7 +5,7 @@
  * Creates motion components dynamically based on the 'as' prop
  */
 
-/* eslint-disable react-hooks/static-components */
+/* eslint-disable react-hooks/static-components -- dynamic motion component creation based on 'as' prop */
 
 import { ElementType, memo, useMemo } from "react"
 import { AnimatePresence, motion, MotionProps, Variants } from "motion/react"
