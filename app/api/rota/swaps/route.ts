@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createSwapRequestSchema, updateSwapRequestSchema } from "@/lib/validations/rota"
+import { requireCurrentProfile } from "@/lib/auth/profile"
 
 /**
  * POST /api/rota/swaps - Create a new swap request
@@ -19,24 +20,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    // Get current user profile (single query instead of auth + profile)
+    let profile
+    try {
+      profile = await requireCurrentProfile()
+    } catch {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
-
-    // Get user's profile ID
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
-    }
-
-    const profileData = profile as { id: string }
 
     // Verify the assignment belongs to the requester
     const { data: assignmentResult } = await supabase
@@ -51,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     const assignment = assignmentResult as { id: string; user_id: string; rota: { date: string; status: string } | null }
 
-    if (assignment.user_id !== profileData.id) {
+    if (assignment.user_id !== profile.id) {
       return NextResponse.json(
         { error: "You can only request swaps for your own assignments" },
         { status: 403 }
@@ -86,7 +76,7 @@ export async function POST(request: NextRequest) {
     // Create the swap request
     const insertData = {
       original_assignment_id: parsed.data.assignmentId,
-      requester_id: profileData.id,
+      requester_id: profile.id,
       target_user_id: targetUserId || null,
       reason: parsed.data.reason || null,
       status: "pending" as const,
@@ -137,24 +127,13 @@ export async function PATCH(request: NextRequest) {
 
     const { id, action } = parsed.data
 
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    // Get current user profile (single query instead of auth + profile)
+    let profile
+    try {
+      profile = await requireCurrentProfile()
+    } catch {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
-
-    // Get user's profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
-    }
-
-    const profileData = profile as { id: string; role: string }
 
     // Get the swap request
     const { data: swapRequestResult } = await supabase
@@ -186,7 +165,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         // For targeted requests, verify the current user is the target
-        if (swapRequest.target_user_id && swapRequest.target_user_id !== profileData.id) {
+        if (swapRequest.target_user_id && swapRequest.target_user_id !== profile.id) {
           return NextResponse.json(
             { error: "You are not authorized to accept this request" },
             { status: 403 }
@@ -195,7 +174,7 @@ export async function PATCH(request: NextRequest) {
 
         const acceptData = { 
           status: "accepted" as const,
-          target_user_id: profileData.id,
+          target_user_id: profile.id,
         }
 
         const { error: acceptError } = await supabase
@@ -221,7 +200,7 @@ export async function PATCH(request: NextRequest) {
           )
         }
 
-        if (swapRequest.target_user_id && swapRequest.target_user_id !== profileData.id) {
+        if (swapRequest.target_user_id && swapRequest.target_user_id !== profile.id) {
           return NextResponse.json(
             { error: "You are not authorized to decline this request" },
             { status: 403 }
@@ -250,7 +229,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       case "approve": {
-        if (profileData.role !== "admin" && profileData.role !== "leader") {
+        if (profile.role !== "admin" && profile.role !== "leader") {
           return NextResponse.json(
             { error: "Only leaders can approve swap requests" },
             { status: 403 }
@@ -318,7 +297,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       case "reject": {
-        if (profileData.role !== "admin" && profileData.role !== "leader") {
+        if (profile.role !== "admin" && profile.role !== "leader") {
           return NextResponse.json(
             { error: "Only leaders can reject swap requests" },
             { status: 403 }
@@ -370,31 +349,28 @@ export async function PATCH(request: NextRequest) {
 
 /**
  * GET /api/rota/swaps - Get swap requests for current user
+ * 
+ * Query params:
+ * - type: "incoming" | "outgoing" | "pending-approval" | "all"
+ * - cursor: ISO timestamp for cursor-based pagination (created_at of last item)
+ * - limit: number of items to return (default 20, max 100)
  */
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const type = searchParams.get("type") // "incoming", "outgoing", "pending-approval", or "all"
+    const cursor = searchParams.get("cursor") // ISO timestamp for pagination
+    const limitParam = searchParams.get("limit")
+    const limit = Math.min(Math.max(parseInt(limitParam || "20", 10), 1), 100)
 
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    // Get current user profile (single query instead of auth + profile)
+    let profile
+    try {
+      profile = await requireCurrentProfile()
+    } catch {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
-
-    // Get user's profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
-    }
-
-    const profileData = profile as { id: string; role: string }
 
     // Build query based on type
     let query = supabase
@@ -414,21 +390,27 @@ export async function GET(request: NextRequest) {
         )
       `)
       .order("created_at", { ascending: false })
+      .limit(limit + 1) // Fetch one extra to check if there are more
+
+    // Apply cursor-based pagination
+    if (cursor) {
+      query = query.lt("created_at", cursor)
+    }
 
     if (type === "incoming") {
-      query = query.eq("target_user_id", profileData.id)
+      query = query.eq("target_user_id", profile.id)
     } else if (type === "outgoing") {
-      query = query.eq("requester_id", profileData.id)
+      query = query.eq("requester_id", profile.id)
     } else if (type === "pending-approval") {
       // Leaders only
-      if (profileData.role !== "admin" && profileData.role !== "leader") {
+      if (profile.role !== "admin" && profile.role !== "leader") {
         return NextResponse.json({ error: "Not authorized" }, { status: 403 })
       }
       query = query.eq("status", "accepted")
     }
     // For "all" or undefined, return all requests the user is involved with
     else {
-      query = query.or(`requester_id.eq.${profileData.id},target_user_id.eq.${profileData.id}`)
+      query = query.or(`requester_id.eq.${profile.id},target_user_id.eq.${profile.id}`)
     }
 
     const { data, error } = await query
@@ -441,7 +423,21 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ requests: data || [] })
+    // Check if there are more results
+    const hasMore = data && data.length > limit
+    const requests = hasMore ? data.slice(0, limit) : (data || [])
+    const nextCursor = hasMore && requests.length > 0 
+      ? (requests[requests.length - 1] as { created_at: string }).created_at 
+      : null
+
+    return NextResponse.json({ 
+      requests,
+      pagination: {
+        hasMore,
+        nextCursor,
+        limit
+      }
+    })
   } catch (error) {
     console.error("Error in GET /api/rota/swaps:", error)
     return NextResponse.json(
