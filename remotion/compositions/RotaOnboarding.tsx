@@ -9,12 +9,12 @@ import {
 import { theme } from "../styles/theme";
 import { IntroScene } from "../scenes/IntroScene";
 import { CalendarScene } from "../scenes/CalendarScene";
+import { ProgressBar } from "../components/ProgressBar";
+import { SceneTransition } from "../components/SceneTransition";
+import { OutroScene } from "../scenes/OutroScene";
 import { AssignmentScene } from "../scenes/AssignmentScene";
 import { SwapRequestScene } from "../scenes/SwapRequestScene";
 import { NotificationsScene } from "../scenes/NotificationsScene";
-import { OutroScene } from "../scenes/OutroScene";
-import { ProgressBar } from "../components/ProgressBar";
-import { SceneTransition } from "../components/SceneTransition";
 
 // Scene timing (47 seconds total at 30fps = 1410 frames)
 // Target audience: 20-45 years, ~150 WPM comfortable pace
