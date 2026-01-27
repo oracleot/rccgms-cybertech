@@ -137,7 +137,8 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     if (isRunning && startTimeRef.current !== null) {
       // Recalculate start time to maintain the new elapsed value
       const now = Date.now()
-      startTimeRef.current = now - (newElapsed - pausedElapsedRef.current) * 1000
+      startTimeRef.current = now - newElapsed * 1000
+      pausedElapsedRef.current = 0
     } else {
       // Timer is paused, just update paused elapsed
       pausedElapsedRef.current = newElapsed
@@ -155,7 +156,8 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     if (isRunning && startTimeRef.current !== null) {
       // Recalculate start time to maintain the new elapsed value
       const now = Date.now()
-      startTimeRef.current = now - (newElapsed - pausedElapsedRef.current) * 1000
+      startTimeRef.current = now - newElapsed * 1000
+      pausedElapsedRef.current = 0
     } else {
       // Timer is paused, just update paused elapsed
       pausedElapsedRef.current = newElapsed

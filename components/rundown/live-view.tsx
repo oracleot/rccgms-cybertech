@@ -330,18 +330,13 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     if (currentIndex <= 0) return
     
     stopAlert()
-    setCurrentIndex((idx) => Math.max(idx - 1, 0))
     setElapsed(0)
     setWarned(false)
     setIsInTransition(false)
     
-    // Broadcast the item change
-    const prevIndex = Math.max(currentIndex - 1, 0)
-    sendMessage({
-      type: "ITEM_CHANGE",
-      payload: buildItemPayload(prevIndex),
-    })
-  }, [currentIndex, sendMessage, buildItemPayload])
+    // Update index - this will trigger the useEffect that broadcasts the item change
+    setCurrentIndex((idx) => Math.max(idx - 1, 0))
+  }, [currentIndex])
 
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
