@@ -135,7 +135,7 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
   // Helper function to update timer state when adjusting elapsed time
   const updateTimerState = (newElapsed: number) => {
     setElapsed(newElapsed)
-    
+
     // Update the base times based on whether timer is running
     if (isRunning && startTimeRef.current !== null) {
       // Recalculate start time to maintain the new elapsed value
@@ -146,7 +146,7 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
       // Timer is paused, just update paused elapsed
       pausedElapsedRef.current = newElapsed
     }
-    
+
     onTickRef.current?.(newElapsed)
   }
 
