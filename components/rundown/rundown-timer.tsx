@@ -20,6 +20,10 @@ interface RundownTimerProps {
   onTick?: (seconds: number) => void
 }
 
+// Timer control constants
+const TIME_SKIP_SECONDS = 15 // Seconds to skip when rewinding or fast-forwarding
+const OVERTIME_BUFFER_SECONDS = 300 // Allow 5 minutes over the scheduled time
+
 export function RundownTimer({ durationSeconds, autoStart = false, onTick }: RundownTimerProps) {
   // Track the autoStart value we last processed to detect changes
   const lastAutoStartRef = useRef(autoStart)
@@ -128,9 +132,8 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     onTickRef.current?.(0)
   }
 
-  // Fast-forward and rewind handlers
-  const handleRewind = () => {
-    const newElapsed = Math.max(0, elapsed - 15)
+  // Helper function to update timer state when adjusting elapsed time
+  const updateTimerState = (newElapsed: number) => {
     setElapsed(newElapsed)
     
     // Update the base times based on whether timer is running
@@ -147,23 +150,18 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     onTickRef.current?.(newElapsed)
   }
 
+  // Fast-forward and rewind handlers
+  const handleRewind = () => {
+    const newElapsed = Math.max(0, elapsed - TIME_SKIP_SECONDS)
+    updateTimerState(newElapsed)
+  }
+
   const handleFastForward = () => {
-    const maxElapsed = durationSeconds ? durationSeconds + 300 : elapsed + 15 // Allow 5 min over time
-    const newElapsed = Math.min(maxElapsed, elapsed + 15)
-    setElapsed(newElapsed)
-    
-    // Update the base times based on whether timer is running
-    if (isRunning && startTimeRef.current !== null) {
-      // Recalculate start time to maintain the new elapsed value
-      const now = Date.now()
-      startTimeRef.current = now - newElapsed * 1000
-      pausedElapsedRef.current = 0
-    } else {
-      // Timer is paused, just update paused elapsed
-      pausedElapsedRef.current = newElapsed
-    }
-    
-    onTickRef.current?.(newElapsed)
+    const maxElapsed = durationSeconds 
+      ? durationSeconds + OVERTIME_BUFFER_SECONDS 
+      : elapsed + TIME_SKIP_SECONDS
+    const newElapsed = Math.min(maxElapsed, elapsed + TIME_SKIP_SECONDS)
+    updateTimerState(newElapsed)
   }
 
   return (
