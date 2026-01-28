@@ -8,7 +8,7 @@
 /* eslint-disable react-hooks/purity -- uses Date.now() for real-time elapsed tracking */
 
 import { useEffect, useRef, useState } from "react"
-import { Pause, Play, RotateCcw, Timer } from "lucide-react"
+import { Pause, Play, RotateCcw, Timer, FastForward, Rewind } from "lucide-react"
 
 import { formatDuration } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,10 @@ interface RundownTimerProps {
   autoStart?: boolean
   onTick?: (seconds: number) => void
 }
+
+// Timer control constants
+const TIME_SKIP_SECONDS = 15 // Seconds to skip when rewinding or fast-forwarding
+const OVERTIME_BUFFER_SECONDS = 300 // Allow 5 minutes over the scheduled time
 
 export function RundownTimer({ durationSeconds, autoStart = false, onTick }: RundownTimerProps) {
   // Track the autoStart value we last processed to detect changes
@@ -128,6 +132,38 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     onTickRef.current?.(0)
   }
 
+  // Helper function to update timer state when adjusting elapsed time
+  const updateTimerState = (newElapsed: number) => {
+    setElapsed(newElapsed)
+
+    // Update the base times based on whether timer is running
+    if (isRunning && startTimeRef.current !== null) {
+      // Recalculate start time to maintain the new elapsed value
+      const now = Date.now()
+      startTimeRef.current = now - newElapsed * 1000
+      pausedElapsedRef.current = 0
+    } else {
+      // Timer is paused, just update paused elapsed
+      pausedElapsedRef.current = newElapsed
+    }
+
+    onTickRef.current?.(newElapsed)
+  }
+
+  // Fast-forward and rewind handlers
+  const handleRewind = () => {
+    const newElapsed = Math.max(0, elapsed - TIME_SKIP_SECONDS)
+    updateTimerState(newElapsed)
+  }
+
+  const handleFastForward = () => {
+    const maxElapsed = durationSeconds 
+      ? durationSeconds + OVERTIME_BUFFER_SECONDS 
+      : elapsed + TIME_SKIP_SECONDS
+    const newElapsed = Math.min(maxElapsed, elapsed + TIME_SKIP_SECONDS)
+    updateTimerState(newElapsed)
+  }
+
   return (
     <Card className="flex items-center gap-4 px-4 py-3">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -138,8 +174,24 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
         )}
       </div>
       <div className="ml-auto flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleRewind}
+          title="Rewind 15 seconds"
+        >
+          <Rewind className="h-4 w-4" />
+        </Button>
         <Button variant="outline" size="icon" onClick={handlePauseResume}>
           {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleFastForward}
+          title="Fast-forward 15 seconds"
+        >
+          <FastForward className="h-4 w-4" />
         </Button>
         <Button variant="ghost" size="icon" onClick={handleReset}>
           <RotateCcw className="h-4 w-4" />
