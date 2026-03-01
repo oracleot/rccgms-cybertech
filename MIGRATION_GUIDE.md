@@ -1,17 +1,31 @@
 # Quick Migration Guide - Developer Role
 
-## The Issue
-PostgreSQL requires new enum values to be committed before they can be used in the same transaction. The original migration tried to add `developer` to the enum and use it in policies all at once, which caused the error:
+## UPDATED: Simplified Two-Step Process
+
+I've created a single file with clear instructions: `supabase/migrations/APPLY_THIS_developer_role_complete.sql`
+
+### 🎯 Easiest Method: Use the Combined File
+
+1. Open [Supabase Dashboard](https://supabase.com/dashboard) → SQL Editor
+2. Open `APPLY_THIS_developer_role_complete.sql` in your code editor
+3. **STEP 1**: Copy lines from "PART 1" section (lines ~15-35)
+4. Paste into SQL Editor and click **Run**
+5. ✅ Verify success (should see "Added developer to user_role enum")
+6. **STEP 2**: Copy lines from "PART 2" section (lines ~48 to end)
+7. Paste into SQL Editor and click **Run**
+8. ✅ Verify success (should see multiple "DROP POLICY" and "CREATE POLICY" messages)
+
+---
+
+## Why Two Steps?
+
+PostgreSQL requires new enum values to be committed before they can be used. If you try to run both parts together, you'll get:
 
 ```
 ERROR: 55P04: unsafe use of new value "developer" of enum type user_role
 ```
 
-## The Solution
-Split into two migrations that must be applied **in sequence**:
-
-1. **Migration 028**: Add `developer` to enum (commit)
-2. **Migration 029**: Use `developer` in RLS policies
+By running them separately, the enum gets committed after Part 1, then Part 2 can use it.
 
 ---
 
