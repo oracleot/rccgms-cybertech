@@ -253,6 +253,9 @@ export async function updateRundownItem(
       return { success: false, error: "Failed to update item" }
     }
 
+    if (parsed.data.rundownId) {
+      revalidatePath(`/rundown/${parsed.data.rundownId}`)
+    }
     return { success: true, data: undefined }
   } catch (err) {
     console.error("Unexpected error in updateRundownItem:", err)

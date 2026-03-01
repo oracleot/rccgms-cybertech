@@ -50,6 +50,7 @@ export type CreateRundownItemInput = z.infer<typeof createRundownItemSchema>
 // Update rundown item schema
 export const updateRundownItemSchema = z.object({
   id: z.string().uuid(),
+  rundownId: z.string().uuid().optional(),
   type: rundownItemTypeSchema.optional(),
   title: z.string().min(1).max(200).optional(),
   durationSeconds: z.number().int().min(0).max(36000).optional(),

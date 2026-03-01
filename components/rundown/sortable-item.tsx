@@ -26,9 +26,10 @@ interface SortableItemProps {
   onEdit: (item: RundownEditorItem) => void
   onDelete: (id: string) => void
   isDraggable?: boolean
+  canEdit?: boolean
 }
 
-export function SortableItem({ item, onEdit, onDelete, isDraggable = true }: SortableItemProps) {
+export function SortableItem({ item, onEdit, onDelete, isDraggable = true, canEdit = true }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     disabled: !isDraggable,
@@ -75,12 +76,16 @@ export function SortableItem({ item, onEdit, onDelete, isDraggable = true }: Sor
         {item.notes && <p className="text-sm text-muted-foreground">{item.notes}</p>}
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {canEdit && (
+          <>
+            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </div>
     </Card>
   )

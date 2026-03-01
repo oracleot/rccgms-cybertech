@@ -116,6 +116,7 @@ export function AddItemModal({
       } else if (values.id) {
         const result = await updateRundownItem({
           id: values.id,
+          rundownId,
           type: values.type,
           title: values.title,
           durationSeconds: values.durationSeconds,

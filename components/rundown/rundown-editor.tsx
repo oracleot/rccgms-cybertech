@@ -13,6 +13,16 @@ import {
 } from "@/app/(dashboard)/rundown/actions"
 import { createClient } from "@/lib/supabase/client"
 import { formatDuration } from "@/lib/utils"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -45,6 +55,7 @@ export function RundownEditor({ rundownId, initialItems, canEdit }: RundownEdito
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<RundownEditorItem | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const sensors = useSensors(useSensor(PointerSensor))
 
   const supabase = createClient()
@@ -152,13 +163,24 @@ export function RundownEditor({ rundownId, initialItems, canEdit }: RundownEdito
     setEditingItem(null)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    setDeleteConfirmId(id)
+  }
+
+  const handleConfirmedDelete = async () => {
+    if (!deleteConfirmId) return
+    const id = deleteConfirmId
+    setDeleteConfirmId(null)
     const result = await deleteRundownItem(id)
     if (!result.success) {
       toast.error(result.error)
       return
     }
     setItems((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const handleDeleteDialogChange = (open: boolean) => {
+    if (!open) setDeleteConfirmId(null)
   }
 
   const handleTemplateApply = async (
@@ -236,6 +258,7 @@ export function RundownEditor({ rundownId, initialItems, canEdit }: RundownEdito
                         }}
                         onDelete={handleDelete}
                         isDraggable={canEdit}
+                        canEdit={canEdit}
                       />
                     ))}
                 </div>
@@ -257,6 +280,21 @@ export function RundownEditor({ rundownId, initialItems, canEdit }: RundownEdito
           onItemSaved={handleItemSaved}
         />
       )}
+
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={handleDeleteDialogChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the item from the rundown. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmedDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
