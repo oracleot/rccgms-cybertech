@@ -224,6 +224,10 @@ CREATE POLICY "Admins, developers, and leaders can manage positions"
 -- ===========================================
 
 DROP POLICY IF EXISTS "Admins and leaders can manage invitations" ON invitations;
+DROP POLICY IF EXISTS "Admins and developers can view invitations" ON invitations;
+DROP POLICY IF EXISTS "Admins and leaders can insert invitations" ON invitations;
+DROP POLICY IF EXISTS "Admins and leaders can update invitations" ON invitations;
+DROP POLICY IF EXISTS "Admins and leaders can delete invitations" ON invitations;
 
 -- Developers can view invitations (read-only)
 CREATE POLICY "Admins and developers can view invitations"
@@ -236,9 +240,38 @@ CREATE POLICY "Admins and developers can view invitations"
     )
   );
 
--- Only admins and leaders can create/update/delete invitations
-CREATE POLICY "Admins and leaders can manage invitations"
-  ON invitations FOR INSERT, UPDATE, DELETE
+-- Only admins and leaders can insert invitations
+CREATE POLICY "Admins and leaders can insert invitations"
+  ON invitations FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.auth_user_id = auth.uid()
+      AND profiles.role IN ('admin', 'leader')
+    )
+  );
+
+-- Only admins and leaders can update invitations
+CREATE POLICY "Admins and leaders can update invitations"
+  ON invitations FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.auth_user_id = auth.uid()
+      AND profiles.role IN ('admin', 'leader')
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.auth_user_id = auth.uid()
+      AND profiles.role IN ('admin', 'leader')
+    )
+  );
+
+-- Only admins and leaders can delete invitations
+CREATE POLICY "Admins and leaders can delete invitations"
+  ON invitations FOR DELETE
   USING (
     EXISTS (
       SELECT 1 FROM profiles
