@@ -39,6 +39,7 @@ interface RoleEditorModalProps {
   userId: string
   users: UserWithDepartments[]
   departments: Department[]
+  currentUserRole: UserRole // Add current user's role for permission checks
 }
 
 function getInitials(name: string): string {
@@ -65,6 +66,7 @@ export function RoleEditorModal({
   userId,
   users,
   departments,
+  currentUserRole,
 }: RoleEditorModalProps) {
   const router = useRouter()
   const user = users.find((u) => u.id === userId)
@@ -90,6 +92,34 @@ export function RoleEditorModal({
 
   if (!user) {
     return null
+  }
+
+  // Permission checks for UI
+  const isTargetUserAdmin = user.role === "admin"
+  const isCurrentUserLeader = currentUserRole === "leader"
+  const canEditThisUser = !(isCurrentUserLeader && isTargetUserAdmin)
+
+  // Available roles based on current user's permissions
+  const availableRoles: { value: UserRole; label: string; description: string }[] = [
+    {
+      value: "volunteer",
+      label: "Volunteer",
+      description: roleDescriptions.volunteer,
+    },
+    {
+      value: "leader",
+      label: "Leader",
+      description: roleDescriptions.leader,
+    },
+  ]
+
+  // Only admins can see/assign admin role
+  if (currentUserRole === "admin") {
+    availableRoles.push({
+      value: "admin",
+      label: "Admin",
+      description: roleDescriptions.admin,
+    })
   }
 
   const handleClose = () => {
@@ -189,19 +219,39 @@ export function RoleEditorModal({
           {/* Role Selection */}
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="leader">Leader</SelectItem>
-                <SelectItem value="volunteer">Volunteer</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {roleDescriptions[role]}
-            </p>
+            {!canEditThisUser ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <p className="font-medium">Cannot modify admin users</p>
+                <p className="text-xs mt-1">Leaders cannot change roles for admin users.</p>
+              </div>
+            ) : (
+              <>
+                <Select
+                  value={role}
+                  onValueChange={(v) => setRole(v as UserRole)}
+                  disabled={!canEditThisUser}
+                >
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableRoles.map((roleOption) => (
+                      <SelectItem key={roleOption.value} value={roleOption.value}>
+                        {roleOption.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {roleDescriptions[role]}
+                </p>
+                {isCurrentUserLeader && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    As a leader, you can assign volunteer and leader roles only.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           <Separator />
@@ -285,7 +335,7 @@ export function RoleEditorModal({
           <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isPending}>
+          <Button onClick={handleSave} disabled={isPending || !canEditThisUser}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Changes
           </Button>

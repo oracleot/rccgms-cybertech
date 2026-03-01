@@ -207,16 +207,25 @@ export async function reassignRequest(
     return { success: false, error: "Only admins and leaders can reassign requests" }
   }
 
-  // Verify new assignee exists
+  // Verify new assignee exists and get their role
   const { data: newAssignee } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, role")
     .eq("id", newAssigneeId)
     .single()
 
   if (!newAssignee) {
     return { success: false, error: "Assignee not found" }
   }
+
+  // Permission validation: Leaders can only assign to volunteers and members (leaders)
+  if (profile.role === "leader") {
+    if (newAssignee.role === "admin") {
+      return { success: false, error: "Leaders cannot assign designs to admins" }
+    }
+  }
+  // Admins can assign to members (leaders) and volunteers (not explicitly restricted)
+  // No additional check needed for admins as they have full permissions
 
   // Reassign
   const { error } = await supabase

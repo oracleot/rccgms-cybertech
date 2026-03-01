@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { requireAdmin } from "@/lib/auth/guards"
+import { requireLeader } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 import { UserTable } from "@/components/admin/user-table"
 import { RoleEditorModal } from "@/components/admin/role-editor"
@@ -10,6 +10,7 @@ import { UserDepartmentsModal } from "@/components/admin/user-departments-modal"
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
+import type { UserRole } from "@/lib/constants"
 
 export const metadata = {
   title: "User Management | Admin | Cyber Tech",
@@ -90,7 +91,8 @@ interface UsersPageProps {
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
-  await requireAdmin()
+  const currentUser = await requireLeader() // Allow both leaders and admins
+  const currentUserRole = currentUser.profile.role as UserRole
   const params = await searchParams
   const [users, departments] = await Promise.all([getUsers(), getDepartments()])
   const editUserId = params.edit
@@ -124,6 +126,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           userId={editUserId}
           users={users}
           departments={departments}
+          currentUserRole={currentUserRole}
         />
       )}
 

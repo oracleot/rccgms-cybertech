@@ -87,6 +87,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
   const isPastDeadline = request.needed_by && isPast(new Date(request.needed_by))
   const isAssignee = profile?.id === request.assigned_to
   const isAdminOrLeader = profile?.role === "admin" || profile?.role === "leader"
+  const currentUserRole = (profile?.role as "admin" | "leader" | "volunteer") || "volunteer"
 
   return (
     <div className="space-y-6">
@@ -153,6 +154,8 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
                   isAssigned={!!request.assigned_to}
                   isAssignee={isAssignee}
                   isAdminOrLeader={isAdminOrLeader}
+                  currentUserRole={currentUserRole}
+                  currentAssigneeId={request.assigned_to}
                 />
               </div>
             </CardHeader>

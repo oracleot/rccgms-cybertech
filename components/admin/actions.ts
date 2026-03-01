@@ -15,8 +15,40 @@ export async function updateUserRole(
   input: UpdateUserRoleInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    // Get current user's role
+    const currentUser = await requireLeader() // Allow leaders and admins
+    const currentUserRole = currentUser.profile.role
+    
     const supabase = createAdminClient()
+
+    // Get target user's current role
+    const { data: targetUser, error: fetchError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", input.userId)
+      .single()
+
+    if (fetchError || !targetUser) {
+      return { success: false, error: "Target user not found" }
+    }
+
+    // Permission checks based on current user's role
+    if (currentUserRole === "leader") {
+      // Leaders cannot assign admin role
+      if (input.role === "admin") {
+        return { success: false, error: "Leaders cannot assign admin role" }
+      }
+      
+      // Leaders cannot modify existing admins
+      if (targetUser.role === "admin") {
+        return { success: false, error: "Leaders cannot modify admin users" }
+      }
+      
+      // Leaders can only assign to volunteers and members (leader role)
+      if (input.role !== "volunteer" && input.role !== "leader") {
+        return { success: false, error: "Leaders can only assign volunteer or leader roles" }
+      }
+    }
 
     const { error } = await supabase
       .from("profiles")
