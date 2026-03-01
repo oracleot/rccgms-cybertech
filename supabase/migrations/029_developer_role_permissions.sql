@@ -11,22 +11,21 @@
 -- Role hierarchy: admin > developer > leader > member
 
 -- ===========================================
--- STEP 1: PROFILES TABLE - Developer can view all users
+-- STEP 1: PROFILES TABLE - Fix open read policy
 -- ===========================================
 
--- Developers can view all profiles (read-only)
--- Note: Update/delete operations restricted to admins only
-DROP POLICY IF EXISTS "Admin users can view all profiles" ON profiles;
+-- NOTE: Do NOT create a profiles SELECT policy that queries profiles —
+-- this causes infinite recursion (42P17). The original "Anyone can view
+-- profiles" USING(true) policy already provides read access.
 
-CREATE POLICY "Admin and developer users can view all profiles"
+DROP POLICY IF EXISTS "Admin users can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Admin and developer users can view all profiles" ON profiles;
+
+-- Ensure the open read policy exists
+DROP POLICY IF EXISTS "Anyone can view profiles" ON profiles;
+CREATE POLICY "Anyone can view profiles"
   ON profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.auth_user_id = auth.uid()
-      AND p.role IN ('admin', 'developer')
-    )
-  );
+  USING (true);
 
 -- Keep admin-only update/delete policies
 -- (Developers cannot modify user data in production)

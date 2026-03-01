@@ -54,20 +54,21 @@ COMMENT ON TYPE user_role IS 'User roles: admin (full control), developer (techn
 -- social_content, training_modules, invitations
 
 -- ===========================================
--- PROFILES TABLE - Developer can view all users
+-- PROFILES TABLE - Keep open read policy
 -- ===========================================
+-- NOTE: The original "Anyone can view profiles" USING(true) policy
+-- already allows all users to read profiles. Do NOT create a separate
+-- admin/developer SELECT policy that queries profiles from within a
+-- profiles policy — this causes infinite recursion (42P17).
 
 DROP POLICY IF EXISTS "Admin users can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Admin and developer users can view all profiles" ON profiles;
 
-CREATE POLICY "Admin and developer users can view all profiles"
+-- Ensure the open read policy exists
+DROP POLICY IF EXISTS "Anyone can view profiles" ON profiles;
+CREATE POLICY "Anyone can view profiles"
   ON profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.auth_user_id = auth.uid()
-      AND p.role IN ('admin', 'developer')
-    )
-  );
+  USING (true);
 
 -- ===========================================
 -- CONTENT TABLES - Full access for developers
