@@ -34,20 +34,25 @@ export async function updateUserRole(
 
     // Permission checks based on current user's role
     if (currentUserRole === "leader") {
-      // Leaders cannot assign admin role
-      if (input.role === "admin") {
-        return { success: false, error: "Leaders cannot assign admin role" }
+      // Leaders cannot assign admin or developer roles
+      if (input.role === "admin" || input.role === "developer") {
+        return { success: false, error: "Leaders cannot assign admin or developer roles" }
       }
       
-      // Leaders cannot modify existing admins
-      if (targetUser.role === "admin") {
-        return { success: false, error: "Leaders cannot modify admin users" }
+      // Leaders cannot modify existing admins or developers
+      if (targetUser.role === "admin" || targetUser.role === "developer") {
+        return { success: false, error: "Leaders cannot modify admin or developer users" }
       }
       
       // Leaders can only assign to members and leaders
       if (input.role !== "member" && input.role !== "leader") {
         return { success: false, error: "Leaders can only assign member or leader roles" }
       }
+    }
+    
+    // Developers cannot use this action (read-only access to user management)
+    if (currentUserRole === "developer") {
+      return { success: false, error: "Developers have read-only access to user management" }
     }
 
     const { error } = await supabase

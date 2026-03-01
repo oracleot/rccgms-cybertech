@@ -53,6 +53,7 @@ function getInitials(name: string): string {
 
 const roleDescriptions: Record<string, string> = {
   admin: "Full access to all features including user management and system settings",
+  developer: "Technical/backend access with content management and read-only user viewing",
   leader: "Can manage rotas, equipment, rundowns, and approve swap requests",
   member: "Can view schedules, submit availability, and request swaps",
 }
@@ -113,13 +114,20 @@ export function RoleEditorModal({
     },
   ]
 
-  // Only admins can see/assign admin role
+  // Only admins can see/assign admin and developer roles
   if (currentUserRole === "admin") {
-    availableRoles.push({
-      value: "admin",
-      label: "Admin",
-      description: roleDescriptions.admin,
-    })
+    availableRoles.push(
+      {
+        value: "developer",
+        label: "Developer",
+        description: roleDescriptions.developer,
+      },
+      {
+        value: "admin",
+        label: "Admin",
+        description: roleDescriptions.admin,
+      }
+    )
   }
 
   const handleClose = () => {

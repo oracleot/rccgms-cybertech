@@ -79,13 +79,13 @@ export function ReassignModal({
           .select("id, name, email, role")
           .order("name", { ascending: true })
 
-        // Leaders can only see members and other leaders (not admins)
+        // Leaders can only see members and other leaders (not admins or developers)
         if (currentUserRole === "leader") {
           query = query.in("role", ["member", "leader"])
         }
-        // Admins can see members and leaders (not other admins for design assignment)
+        // Admins can see members, developers, and leaders (not other admins for design assignment)
         else if (currentUserRole === "admin") {
-          query = query.in("role", ["member", "leader"])
+          query = query.in("role", ["member", "developer", "leader"])
         }
 
         const { data, error } = await query

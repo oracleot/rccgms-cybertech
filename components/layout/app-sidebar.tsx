@@ -108,7 +108,7 @@ const adminItems = [
 ]
 
 interface AppSidebarProps {
-  userRole?: "admin" | "leader" | "member"
+  userRole?: "admin" | "developer" | "leader" | "member"
 }
 
 export function AppSidebar({ userRole = "member" }: AppSidebarProps) {

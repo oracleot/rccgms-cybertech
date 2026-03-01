@@ -5,7 +5,7 @@ import { generateEquipmentQR, getEquipmentUrl } from "@/lib/equipment/qr"
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-type Role = "admin" | "leader" | "member"
+type Role = "admin" | "developer" | "leader" | "member"
 
 interface Profile {
   id: string

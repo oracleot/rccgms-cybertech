@@ -34,6 +34,7 @@ export function getAppUrl(): string {
 // ===================
 export const USER_ROLES = {
   ADMIN: "admin",
+  DEVELOPER: "developer",
   LEADER: "leader",
   MEMBER: "member",
 } as const
@@ -42,12 +43,14 @@ export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES]
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
+  developer: "Developer",
   leader: "Team Leader",
   member: "Member",
 }
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  admin: 3,
+  admin: 4,
+  developer: 3,
   leader: 2,
   member: 1,
 }
