@@ -15,34 +15,52 @@ All changes are committed and pushed to branch: `copilot/fix-live-view-timer`
 
 ## 🔄 Required Actions
 
-### 1. Apply Migration 028 to Database
+### 1. Apply Migrations to Database (TWO STEPS REQUIRED!)
 
-**Option A: Via Supabase Dashboard (Recommended)**
+**⚠️ IMPORTANT**: Due to PostgreSQL enum limitations, this requires TWO separate migrations applied in sequence.
 
+**Step 1: Add Developer Enum Value**
+
+Via Supabase Dashboard:
 1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
 2. Select your project
 3. Navigate to **SQL Editor**
-4. Open the file: `supabase/migrations/028_add_developer_role.sql`
+4. Open file: `supabase/migrations/028_add_developer_role_enum.sql`
 5. Copy the entire SQL content
 6. Paste into SQL Editor
 7. Click **Run**
-8. Verify no errors
+8. ✅ Verify success (should show "ALTER TYPE" completion)
 
-**Option B: Via Supabase CLI (If Linked)**
+**Step 2: Apply Developer Permissions**
+
+Via Supabase Dashboard:
+1. In the same **SQL Editor**
+2. Open file: `supabase/migrations/029_developer_role_permissions.sql`
+3. Copy the entire SQL content
+4. Paste into SQL Editor
+5. Click **Run**
+6. ✅ Verify no errors
+
+**Via Supabase CLI (Alternative):**
 
 ```powershell
 # First, link your project (if not already done)
 npx supabase link --project-ref YOUR_PROJECT_REF
 
-# Then push the migration
+# Push migrations (will apply both in order)
 npx supabase db push
 ```
 
-**Migration Summary:**
+**What These Migrations Do:**
+
+**Migration 028** (Enum):
 - Adds `developer` enum value to `user_role` type
+- Must be committed before being used in policies
+
+**Migration 029** (Permissions):
 - Updates RLS policies on 15+ tables to include developer permissions
-- Adds helper function for role hierarchy
 - Grants developers read access to user data
+- Adds content management permissions
 
 ### 2. Create a Test Developer Account
 
@@ -163,10 +181,15 @@ The deployment process depends on your setup:
 
 ### Migration Fails
 
+**Error: "unsafe use of new value 'developer' of enum type"**
+- This means you tried to run the combined migration
+- **Solution**: Apply migrations 028 and 029 separately (in order)
+- Migration 028 adds the enum, migration 029 uses it
+
 **Error: "type 'developer' already exists"**
 - The developer enum value may already exist
 - Check: `SELECT unnest(enum_range(NULL::user_role));`
-- Skip that specific line if it exists
+- If it exists, skip migration 028, run 029 only
 
 **Error: "relation 'profiles' does not exist"**
 - Verify you're running in the correct database
