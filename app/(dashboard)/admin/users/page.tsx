@@ -105,19 +105,23 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground">
-            Manage team members, roles, and permissions
+            {currentUserRole === "developer" 
+              ? "View team members and their roles (read-only access)" 
+              : "Manage team members, roles, and permissions"}
           </p>
         </div>
-        <Button asChild>
-          <a href="/admin/users?invite=true">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Invite User
-          </a>
-        </Button>
+        {currentUserRole !== "developer" && (
+          <Button asChild>
+            <a href="/admin/users?invite=true">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Invite User
+            </a>
+          </Button>
+        )}
       </div>
 
       <Suspense fallback={<LoadingSkeleton className="h-96" />}>
-        <UserTable users={users} departments={departments} />
+        <UserTable users={users} departments={departments} currentUserRole={currentUserRole} />
       </Suspense>
 
       {/* Role Editor Modal - shown when edit param is present */}

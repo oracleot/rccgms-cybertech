@@ -59,12 +59,14 @@ interface UserWithDepartments extends Profile {
 interface UserTableProps {
   users: UserWithDepartments[]
   departments: Department[]
+  currentUserRole: "admin" | "developer" | "leader"
 }
 
 const roleColors: Record<string, string> = {
   admin: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  developer: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   leader: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  volunteer: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  member: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
 }
 
 function getInitials(name: string): string {
@@ -76,7 +78,7 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
-export function UserTable({ users, departments }: UserTableProps) {
+export function UserTable({ users, departments, currentUserRole }: UserTableProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState("")
@@ -87,6 +89,8 @@ export function UserTable({ users, departments }: UserTableProps) {
     authUserId: string
     name: string
   } | null>(null)
+  
+  const isDeveloper = currentUserRole === "developer"
 
   const handleDeleteUser = () => {
     if (!deleteConfirm) return
@@ -223,38 +227,75 @@ export function UserTable({ users, departments }: UserTableProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/admin/users?edit=${user.id}`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Role
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/admin/users?departments=${user.id}`}>
-                            <Building2 className="mr-2 h-4 w-4" />
-                            Manage Departments
-                          </Link>
-                        </DropdownMenuItem>
+                        {isDeveloper ? (
+                          <>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <DropdownMenuItem disabled>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Role (Read-Only)
+                                  </DropdownMenuItem>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Developers have read-only access to user management</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <DropdownMenuItem disabled>
+                                    <Building2 className="mr-2 h-4 w-4" />
+                                    Manage Departments (Read-Only)
+                                  </DropdownMenuItem>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Developers have read-only access to user management</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </>
+                        ) : (
+                          <>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/users?edit=${user.id}`}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Role
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/users?departments=${user.id}`}>
+                                <Building2 className="mr-2 h-4 w-4" />
+                                Manage Departments
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         <DropdownMenuItem asChild>
                           <Link href={`mailto:${user.email}`}>
                             <Mail className="mr-2 h-4 w-4" />
                             Send Email
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() =>
-                            setDeleteConfirm({
-                              id: user.id,
-                              authUserId: user.auth_user_id,
-                              name: user.name,
-                            })
-                          }
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete User
-                        </DropdownMenuItem>
+                        {!isDeveloper && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() =>
+                                setDeleteConfirm({
+                                  id: user.id,
+                                  authUserId: user.auth_user_id,
+                                  name: user.name,
+                                })
+                              }
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete User
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
