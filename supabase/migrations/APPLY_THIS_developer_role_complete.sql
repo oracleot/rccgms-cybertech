@@ -44,6 +44,14 @@ COMMENT ON TYPE user_role IS 'User roles: admin (full control), developer (techn
 -- PART 2: UPDATE RLS POLICIES (RUN THIS SECOND)
 -- =====================================================
 -- After Part 1 succeeds, copy from here to end and run
+-- 
+-- Verified existing tables via REST API:
+-- profiles, rundowns, rundown_items, equipment, equipment_checkouts,
+-- rotas, rota_assignments, design_requests, notifications,
+-- departments, positions, social_posts, social_integrations
+--
+-- Tables NOT in database (skipped):
+-- social_content, training_modules, invitations
 
 -- ===========================================
 -- PROFILES TABLE - Developer can view all users
@@ -143,68 +151,44 @@ CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
     )
   );
 
--- DESIGN_REQUESTS (only if table exists)
-DO $$
-BEGIN
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'design_requests') THEN
-    DROP POLICY IF EXISTS "Admins and leaders can manage design requests" ON design_requests;
-    
-    CREATE POLICY "Admins, developers, and leaders can manage design requests"
-      ON design_requests FOR ALL
-      USING (
-        EXISTS (
-          SELECT 1 FROM profiles
-          WHERE profiles.auth_user_id = auth.uid()
-          AND profiles.role IN ('admin', 'developer', 'leader')
-        )
-      );
-    RAISE NOTICE 'Updated design_requests policies';
-  ELSE
-    RAISE NOTICE 'Skipping design_requests - table does not exist';
-  END IF;
-END$$;
+-- DESIGN_REQUESTS
+DROP POLICY IF EXISTS "Admins and leaders can manage design requests" ON design_requests;
 
--- SOCIAL_CONTENT (only if table exists)
-DO $$
-BEGIN
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'social_content') THEN
-    DROP POLICY IF EXISTS "Admins and leaders can manage social content" ON social_content;
-    
-    CREATE POLICY "Admins, developers, and leaders can manage social content"
-      ON social_content FOR ALL
-      USING (
-        EXISTS (
-          SELECT 1 FROM profiles
-          WHERE profiles.auth_user_id = auth.uid()
-          AND profiles.role IN ('admin', 'developer', 'leader')
-        )
-      );
-    RAISE NOTICE 'Updated social_content policies';
-  ELSE
-    RAISE NOTICE 'Skipping social_content - table does not exist';
-  END IF;
-END$$;
+CREATE POLICY "Admins, developers, and leaders can manage design requests"
+  ON design_requests FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.auth_user_id = auth.uid()
+      AND profiles.role IN ('admin', 'developer', 'leader')
+    )
+  );
 
--- TRAINING_MODULES (only if table exists)
-DO $$
-BEGIN
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'training_modules') THEN
-    DROP POLICY IF EXISTS "Admins and leaders can manage training modules" ON training_modules;
-    
-    CREATE POLICY "Admins, developers, and leaders can manage training modules"
-      ON training_modules FOR ALL
-      USING (
-        EXISTS (
-          SELECT 1 FROM profiles
-          WHERE profiles.auth_user_id = auth.uid()
-          AND profiles.role IN ('admin', 'developer', 'leader')
-        )
-      );
-    RAISE NOTICE 'Updated training_modules policies';
-  ELSE
-    RAISE NOTICE 'Skipping training_modules - table does not exist';
-  END IF;
-END$$;
+-- SOCIAL_POSTS
+DROP POLICY IF EXISTS "Admins and leaders can manage social posts" ON social_posts;
+
+CREATE POLICY "Admins, developers, and leaders can manage social posts"
+  ON social_posts FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.auth_user_id = auth.uid()
+      AND profiles.role IN ('admin', 'developer', 'leader')
+    )
+  );
+
+-- SOCIAL_INTEGRATIONS
+DROP POLICY IF EXISTS "Admins and leaders can manage social integrations" ON social_integrations;
+
+CREATE POLICY "Admins, developers, and leaders can manage social integrations"
+  ON social_integrations FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.auth_user_id = auth.uid()
+      AND profiles.role IN ('admin', 'developer', 'leader')
+    )
+  );
 
 -- ===========================================
 -- SYSTEM LOGS - Developer access
@@ -259,63 +243,6 @@ CREATE POLICY "Admins, developers, and leaders can manage positions"
       SELECT 1 FROM profiles
       WHERE profiles.auth_user_id = auth.uid()
       AND profiles.role IN ('admin', 'developer', 'leader')
-    )
-  );
-
--- ===========================================
--- INVITATIONS - Developers can view
--- ===========================================
-
-DROP POLICY IF EXISTS "Admins and leaders can manage invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and developers can view invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and leaders can insert invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and leaders can update invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and leaders can delete invitations" ON invitations;
-
-CREATE POLICY "Admins and developers can view invitations"
-  ON invitations FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'developer')
-    )
-  );
-
-CREATE POLICY "Admins and leaders can insert invitations"
-  ON invitations FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
-    )
-  );
-
-CREATE POLICY "Admins and leaders can update invitations"
-  ON invitations FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
-    )
-  );
-
-CREATE POLICY "Admins and leaders can delete invitations"
-  ON invitations FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
     )
   );
 
