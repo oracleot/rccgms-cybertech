@@ -13,6 +13,7 @@ import { Pause, Play, RotateCcw, Timer, FastForward, Rewind } from "lucide-react
 import { formatDuration } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Slider } from "@/components/ui/slider"
 
 interface RundownTimerProps {
   durationSeconds?: number
@@ -164,44 +165,72 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     updateTimerState(newElapsed)
   }
 
+  // Handle slider change
+  const handleSliderChange = (value: number[]) => {
+    const newElapsed = value[0] ?? 0
+    updateTimerState(newElapsed)
+  }
+
+  // Calculate max slider value (duration + overtime buffer)
+  const maxSliderValue = durationSeconds 
+    ? durationSeconds + OVERTIME_BUFFER_SECONDS 
+    : 3600 // Default to 1 hour if no duration
+
   return (
-    <Card className="flex items-center gap-4 px-4 py-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Timer className="h-4 w-4" />
-        <span className="font-medium text-foreground">{formatDuration(elapsed)}</span>
-        {remaining !== null && (
-          <span className="text-muted-foreground">/ {formatDuration(durationSeconds || 0)}</span>
-        )}
-      </div>
-      <div className="ml-auto flex items-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handleRewind}
-          title="Rewind 15 seconds"
-        >
-          <Rewind className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="icon" onClick={handlePauseResume}>
-          {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handleFastForward}
-          title="Fast-forward 15 seconds"
-        >
-          <FastForward className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={handleReset}>
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-      </div>
-      {remaining !== null && (
-        <div className="text-xs text-muted-foreground">
-          {remaining === 0 ? "Over time" : `${formatDuration(remaining)} remaining`}
+    <Card className="space-y-3 px-4 py-3">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Timer className="h-4 w-4" />
+          <span className="font-medium text-foreground">{formatDuration(elapsed)}</span>
+          {remaining !== null && (
+            <span className="text-muted-foreground">/ {formatDuration(durationSeconds || 0)}</span>
+          )}
         </div>
-      )}
+        <div className="ml-auto flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleRewind}
+            title="Rewind 15 seconds"
+          >
+            <Rewind className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={handlePauseResume}>
+            {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleFastForward}
+            title="Fast-forward 15 seconds"
+          >
+            <FastForward className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleReset}>
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
+        {remaining !== null && (
+          <div className="text-xs text-muted-foreground">
+            {remaining === 0 ? "Over time" : `${formatDuration(remaining)} remaining`}
+          </div>
+        )}
+      
+      {/* Timer Slider */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>0:00</span>
+          <span>Drag to adjust time</span>
+          <span>{formatDuration(maxSliderValue)}</span>
+        </div>
+        <Slider
+          value={[elapsed]}
+          onValueChange={handleSliderChange}
+          max={maxSliderValue}
+          step={1}
+          className="cursor-pointer"
+        />
+      </div>
     </Card>
   )
 }

@@ -92,9 +92,7 @@ export async function createRundown(
 
     const { supabase, profile } = result
 
-    if (!assertLeaderOrAdmin(profile)) {
-      return { success: false, error: "Only admins and leaders can create rundowns" }
-    }
+    // All authenticated users (including volunteers) can create rundowns
 
     const { data, error } = await supabase
       .from("rundowns")
