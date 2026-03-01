@@ -215,6 +215,7 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
             {remaining === 0 ? "Over time" : `${formatDuration(remaining)} remaining`}
           </div>
         )}
+      </div>
       
       {/* Timer Slider */}
       <div className="space-y-2">
