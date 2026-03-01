@@ -9,6 +9,7 @@ import { InviteUserModal } from "@/components/admin/invite-user-modal"
 import { UserDepartmentsModal } from "@/components/admin/user-departments-modal"
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
+import { TestModePanel } from "@/components/admin/test-mode-panel"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
 import type { UserRole } from "@/lib/constants"
 
@@ -119,6 +120,11 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           </Button>
         )}
       </div>
+
+      {/* Test Mode Panel - only for developers */}
+      {currentUserRole === "developer" && (
+        <TestModePanel />
+      )}
 
       <Suspense fallback={<LoadingSkeleton className="h-96" />}>
         <UserTable users={users} departments={departments} currentUserRole={currentUserRole} />

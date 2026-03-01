@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
-import { Shield, Loader2, Star, Building2 } from "lucide-react"
+import { Shield, Loader2, Star, Building2, Beaker } from "lucide-react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useTestMode } from "@/contexts/test-mode-context"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
 import type { UserRole } from "@/lib/constants"
 import { updateUserRole } from "./actions"
@@ -73,6 +74,7 @@ export function RoleEditorModal({
   const user = users.find((u) => u.id === userId)
   const [isPending, startTransition] = useTransition()
   const [role, setRole] = useState<UserRole>(user?.role as UserRole || "member")
+  const { isTestMode, simulateRoleChange } = useTestMode()
   
   // Initialize department assignments from user_departments or fallback to legacy
   const getInitialAssignments = (): DepartmentAssignment[] => {
@@ -98,6 +100,7 @@ export function RoleEditorModal({
   // Permission checks for UI
   const isTargetUserAdmin = user.role === "admin"
   const isCurrentUserLeader = currentUserRole === "leader"
+  const isDeveloper = currentUserRole === "developer"
   const canEditThisUser = !(isCurrentUserLeader && isTargetUserAdmin)
 
   // Available roles based on current user's permissions
@@ -159,6 +162,25 @@ export function RoleEditorModal({
   }
 
   const handleSave = () => {
+    // If developer in test mode, simulate the change
+    if (isDeveloper && isTestMode) {
+      const previousRole = user.role as UserRole
+      simulateRoleChange(user.id, user.name, previousRole, role)
+      toast.success("Change simulated", {
+        description: "This is a test simulation - no changes were made to the database",
+      })
+      handleClose()
+      return
+    }
+
+    // Developer without test mode cannot make changes
+    if (isDeveloper && !isTestMode) {
+      toast.error("Read-only access", {
+        description: "Developers can only make changes in test mode",
+      })
+      return
+    }
+
     startTransition(async () => {
       // First update role and primary department
       const primaryDept = assignments.find(a => a.isPrimary)
@@ -205,9 +227,17 @@ export function RoleEditorModal({
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
             Edit User Role & Departments
+            {isDeveloper && isTestMode && (
+              <Badge variant="outline" className="ml-auto gap-1 text-orange-600 border-orange-300">
+                <Beaker className="h-3 w-3" />
+                Test Mode
+              </Badge>
+            )}
           </DialogTitle>
           <DialogDescription>
-            Change role and department assignments for this user
+            {isDeveloper && isTestMode 
+              ? "Changes will be simulated only - not applied to production database"
+              : "Change role and department assignments for this user"}
           </DialogDescription>
         </DialogHeader>
 
@@ -343,9 +373,12 @@ export function RoleEditorModal({
           <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isPending || !canEditThisUser}>
+          <Button 
+            onClick={handleSave} 
+            disabled={isPending || (!canEditThisUser && !(isDeveloper && isTestMode))}
+          >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
+            {isDeveloper && isTestMode ? "Simulate Change" : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
