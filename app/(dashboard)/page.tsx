@@ -41,7 +41,7 @@ export default async function DashboardHomePage() {
   }
 
   const isLeaderOrAdmin =
-    profile.role === "admin" || profile.role === "leader"
+    profile.role === "admin" || profile.role === "developer" || profile.role === "leader"
 
   const today = startOfDay(new Date())
   const nextWeek = addDays(today, 7)

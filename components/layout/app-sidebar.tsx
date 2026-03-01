@@ -195,7 +195,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {(userRole === "admin" || userRole === "leader") && (
+        {(userRole === "admin" || userRole === "developer" || userRole === "leader") && (
           <SidebarGroup>
             <SidebarGroupLabel>Management</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -241,7 +241,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
           </SidebarGroup>
         )}
 
-        {userRole === "admin" && (
+        {(userRole === "admin" || userRole === "developer") && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>

@@ -105,7 +105,7 @@ export async function POST(
 
       // Only the assignee or an admin can unclaim
       const isAssignee = existingRequest.assigned_to === profile.id
-      const isAdmin = profile.role === "admin"
+      const isAdmin = profile.role === "admin" || profile.role === "developer"
       
       if (!isAssignee && !isAdmin) {
         return NextResponse.json(

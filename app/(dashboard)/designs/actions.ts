@@ -142,7 +142,7 @@ export async function unclaimRequest(requestId: string): Promise<ActionResult> {
 
   // Only the assignee or an admin can unclaim
   const isAssignee = request.assigned_to === profile.id
-  const isAdmin = profile.role === "admin"
+  const isAdmin = profile.role === "admin" || profile.role === "developer"
   
   if (!isAssignee && !isAdmin) {
     return { success: false, error: "You can only unclaim requests assigned to you" }

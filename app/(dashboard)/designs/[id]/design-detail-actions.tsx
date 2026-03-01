@@ -126,7 +126,7 @@ export function DesignDetailActions({
               </DropdownMenuItem>
             )}
 
-            {isAdminOrLeader && !isTerminal && (currentUserRole === "admin" || currentUserRole === "leader") && (
+            {isAdminOrLeader && !isTerminal && (currentUserRole === \"admin\" || currentUserRole === \"developer\" || currentUserRole === \"leader\") && (
               <DropdownMenuItem onClick={() => setShowReassignModal(true)}>
                 <UserCog className="h-4 w-4 mr-2" />
                 Reassign

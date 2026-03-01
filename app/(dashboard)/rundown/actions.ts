@@ -75,7 +75,7 @@ async function requireProfile(): Promise<RequireProfileResult> {
 }
 
 function assertLeaderOrAdmin(profile: Profile) {
-  return profile.role === "admin" || profile.role === "leader"
+  return profile.role === "admin" || profile.role === "developer" || profile.role === "leader"
 }
 
 export async function createRundown(

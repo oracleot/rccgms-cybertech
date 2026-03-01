@@ -27,7 +27,7 @@ export default async function AvailabilityPage() {
     
     const profile = profileData as { role: string } | null
     if (profile) {
-      isLeaderOrAdmin = profile.role === "admin" || profile.role === "leader"
+      isLeaderOrAdmin = profile.role === "admin" || profile.role === "developer" || profile.role === "leader"
     }
   }
 
