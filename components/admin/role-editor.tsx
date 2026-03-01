@@ -54,7 +54,7 @@ function getInitials(name: string): string {
 const roleDescriptions: Record<string, string> = {
   admin: "Full access to all features including user management and system settings",
   leader: "Can manage rotas, equipment, rundowns, and approve swap requests",
-  volunteer: "Can view schedules, submit availability, and request swaps",
+  member: "Can view schedules, submit availability, and request swaps",
 }
 
 interface DepartmentAssignment {
@@ -71,7 +71,7 @@ export function RoleEditorModal({
   const router = useRouter()
   const user = users.find((u) => u.id === userId)
   const [isPending, startTransition] = useTransition()
-  const [role, setRole] = useState<UserRole>(user?.role as UserRole || "volunteer")
+  const [role, setRole] = useState<UserRole>(user?.role as UserRole || "member")
   
   // Initialize department assignments from user_departments or fallback to legacy
   const getInitialAssignments = (): DepartmentAssignment[] => {
@@ -102,9 +102,9 @@ export function RoleEditorModal({
   // Available roles based on current user's permissions
   const availableRoles: { value: UserRole; label: string; description: string }[] = [
     {
-      value: "volunteer",
-      label: "Volunteer",
-      description: roleDescriptions.volunteer,
+      value: "member",
+      label: "Member",
+      description: roleDescriptions.member,
     },
     {
       value: "leader",
@@ -247,7 +247,7 @@ export function RoleEditorModal({
                 </p>
                 {isCurrentUserLeader && (
                   <p className="text-xs text-amber-600 dark:text-amber-400">
-                    As a leader, you can assign volunteer and leader roles only.
+                    As a leader, you can assign member and leader roles only.
                   </p>
                 )}
               </>

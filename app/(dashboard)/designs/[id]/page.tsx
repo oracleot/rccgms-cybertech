@@ -87,7 +87,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
   const isPastDeadline = request.needed_by && isPast(new Date(request.needed_by))
   const isAssignee = profile?.id === request.assigned_to
   const isAdminOrLeader = profile?.role === "admin" || profile?.role === "leader"
-  const currentUserRole = (profile?.role as "admin" | "leader" | "volunteer") || "volunteer"
+  const currentUserRole = (profile?.role as "admin" | "leader" | "member") || "member"
 
   return (
     <div className="space-y-6">

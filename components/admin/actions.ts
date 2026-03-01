@@ -44,9 +44,9 @@ export async function updateUserRole(
         return { success: false, error: "Leaders cannot modify admin users" }
       }
       
-      // Leaders can only assign to volunteers and members (leader role)
-      if (input.role !== "volunteer" && input.role !== "leader") {
-        return { success: false, error: "Leaders can only assign volunteer or leader roles" }
+      // Leaders can only assign to members and leaders
+      if (input.role !== "member" && input.role !== "leader") {
+        return { success: false, error: "Leaders can only assign member or leader roles" }
       }
     }
 

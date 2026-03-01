@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const profile = profileQuery.data as { id: string; role: string } | null
 
-    if (!profile || profile.role === "volunteer") {
+    if (!profile || profile.role === "member") {
       return NextResponse.json(
         { error: "Only leaders and admins can create social content" },
         { status: 403 }

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-type Role = "admin" | "leader" | "volunteer"
+type Role = "admin" | "leader" | "member"
 
 interface Profile {
   id: string

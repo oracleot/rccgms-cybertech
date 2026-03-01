@@ -38,7 +38,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     icon: <CalendarDays className="h-5 w-5" />,
     title: "View Rota",
     description: "Check your schedule",
-    roles: ["admin", "leader", "volunteer"],
+    roles: ["admin", "leader", "member"],
     color: "violet",
   },
   {
@@ -46,7 +46,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     icon: <RefreshCcw className="h-5 w-5" />,
     title: "Update Availability",
     description: "Set when you can serve",
-    roles: ["admin", "leader", "volunteer"],
+    roles: ["admin", "leader", "member"],
     color: "blue",
   },
   {
@@ -54,7 +54,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     icon: <Package className="h-5 w-5" />,
     title: "Checkout Equipment",
     description: "Reserve gear for service",
-    roles: ["admin", "leader", "volunteer"],
+    roles: ["admin", "leader", "member"],
     color: "green",
   },
   {
@@ -62,7 +62,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     icon: <FileText className="h-5 w-5" />,
     title: "View Rundowns",
     description: "Service order & timing",
-    roles: ["admin", "leader", "volunteer"],
+    roles: ["admin", "leader", "member"],
     color: "amber",
   },
   {

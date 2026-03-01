@@ -61,7 +61,7 @@ export default async function RotaDetailPage({ params }: RotaDetailPageProps) {
 
   // Get current user's role
   const { data: { user } } = await supabase.auth.getUser()
-  let userRole = "volunteer"
+  let userRole = "member"
   
   if (user) {
     const { data: profile } = await supabase

@@ -1455,7 +1455,7 @@ export type Database = {
       rundown_status: "draft" | "published" | "archived"
       step_type: "video" | "document" | "quiz" | "shadowing" | "practical"
       swap_status: "pending" | "accepted" | "declined" | "approved" | "rejected"
-      user_role: "admin" | "leader" | "volunteer"
+      user_role: "admin" | "leader" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1629,7 +1629,7 @@ export const Constants = {
       rundown_status: ["draft", "published", "archived"],
       step_type: ["video", "document", "quiz", "shadowing", "practical"],
       swap_status: ["pending", "accepted", "declined", "approved", "rejected"],
-      user_role: ["admin", "leader", "volunteer"],
+      user_role: ["admin", "leader", "member"],
     },
   },
 } as const

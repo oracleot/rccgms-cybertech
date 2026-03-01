@@ -108,10 +108,10 @@ const adminItems = [
 ]
 
 interface AppSidebarProps {
-  userRole?: "admin" | "leader" | "volunteer"
+  userRole?: "admin" | "leader" | "member"
 }
 
-export function AppSidebar({ userRole = "volunteer" }: AppSidebarProps) {
+export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) => {

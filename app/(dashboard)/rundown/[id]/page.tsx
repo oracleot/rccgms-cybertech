@@ -40,7 +40,7 @@ export default async function RundownDetailPage({ params }: RundownPageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  let role = "volunteer"
+  let role = "member"
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")

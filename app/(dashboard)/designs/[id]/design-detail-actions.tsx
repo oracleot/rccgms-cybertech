@@ -26,7 +26,7 @@ interface DesignDetailActionsProps {
   isAssigned: boolean
   isAssignee: boolean
   isAdminOrLeader: boolean
-  currentUserRole: "admin" | "leader" | "volunteer"
+  currentUserRole: "admin" | "leader" | "member"
   currentAssigneeId: string | null
 }
 
