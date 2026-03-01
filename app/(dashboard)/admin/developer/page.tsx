@@ -16,7 +16,7 @@ export default async function DeveloperToolsPage() {
   // Fetch all profiles for role overview
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, name, role, department_id, departments(name)")
+    .select("id, name, role, department_id, departments!fk_profiles_department(name)")
     .order("name")
 
   // Count by role

@@ -35,8 +35,8 @@ export default async function SettingsPage() {
     redirect(ROUTES.LOGIN)
   }
 
-  // Fetch profile with department
-  const { data: profileData } = await supabase
+  // Fetch profile with department (use FK hint to disambiguate - there are two FKs between profiles and departments)
+  const { data: profileData, error: profileError } = await supabase
     .from("profiles")
     .select(`
       id,
@@ -45,7 +45,7 @@ export default async function SettingsPage() {
       avatar_url,
       role,
       department_id,
-      departments (
+      departments!fk_profiles_department (
         id,
         name
       )
