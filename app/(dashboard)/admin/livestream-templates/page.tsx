@@ -27,7 +27,7 @@ export default async function LivestreamTemplatesPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- profile type inference issue
   const profileRole = (profile as any)?.role as string | undefined
   // Only admins can access this page
-  if (!profileRole || profileRole !== "admin") {
+  if (!profileRole || !["admin", "developer"].includes(profileRole)) {
     redirect("/dashboard")
   }
 

@@ -54,7 +54,7 @@ export default async function EditTrackPage({ params }: EditTrackPageProps) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !["admin", "developer"].includes(profile.role)) {
     redirect("/training")
   }
 

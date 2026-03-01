@@ -16,6 +16,7 @@ import {
   Bell,
   Shield,
   Palette,
+  Code2,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
@@ -104,6 +105,11 @@ const adminItems = [
     title: "Notifications",
     href: ROUTES.ADMIN_NOTIFICATIONS,
     icon: Bell,
+  },
+  {
+    title: "Dev Tools",
+    href: ROUTES.ADMIN_DEVELOPER_TOOLS,
+    icon: Code2,
   },
 ]
 

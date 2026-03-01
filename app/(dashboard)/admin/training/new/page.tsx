@@ -29,7 +29,7 @@ export default async function NewTrackPage() {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !["admin", "developer"].includes(profile.role)) {
     redirect("/training")
   }
 

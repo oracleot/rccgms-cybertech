@@ -375,4 +375,5 @@ export const ROUTES = {
   ADMIN_DEPARTMENTS: "/admin/departments",
   ADMIN_NOTIFICATIONS: "/admin/notifications",
   ADMIN_TRAINING: "/admin/training",
+  ADMIN_DEVELOPER_TOOLS: "/admin/developer",
 } as const
