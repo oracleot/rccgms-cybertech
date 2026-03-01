@@ -143,44 +143,68 @@ CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
     )
   );
 
--- DESIGN_REQUESTS
-DROP POLICY IF EXISTS "Admins and leaders can manage design requests" ON design_requests;
+-- DESIGN_REQUESTS (only if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'design_requests') THEN
+    DROP POLICY IF EXISTS "Admins and leaders can manage design requests" ON design_requests;
+    
+    CREATE POLICY "Admins, developers, and leaders can manage design requests"
+      ON design_requests FOR ALL
+      USING (
+        EXISTS (
+          SELECT 1 FROM profiles
+          WHERE profiles.auth_user_id = auth.uid()
+          AND profiles.role IN ('admin', 'developer', 'leader')
+        )
+      );
+    RAISE NOTICE 'Updated design_requests policies';
+  ELSE
+    RAISE NOTICE 'Skipping design_requests - table does not exist';
+  END IF;
+END$$;
 
-CREATE POLICY "Admins, developers, and leaders can manage design requests"
-  ON design_requests FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'developer', 'leader')
-    )
-  );
+-- SOCIAL_CONTENT (only if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'social_content') THEN
+    DROP POLICY IF EXISTS "Admins and leaders can manage social content" ON social_content;
+    
+    CREATE POLICY "Admins, developers, and leaders can manage social content"
+      ON social_content FOR ALL
+      USING (
+        EXISTS (
+          SELECT 1 FROM profiles
+          WHERE profiles.auth_user_id = auth.uid()
+          AND profiles.role IN ('admin', 'developer', 'leader')
+        )
+      );
+    RAISE NOTICE 'Updated social_content policies';
+  ELSE
+    RAISE NOTICE 'Skipping social_content - table does not exist';
+  END IF;
+END$$;
 
--- SOCIAL_CONTENT
-DROP POLICY IF EXISTS "Admins and leaders can manage social content" ON social_content;
-
-CREATE POLICY "Admins, developers, and leaders can manage social content"
-  ON social_content FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'developer', 'leader')
-    )
-  );
-
--- TRAINING_MODULES
-DROP POLICY IF EXISTS "Admins and leaders can manage training modules" ON training_modules;
-
-CREATE POLICY "Admins, developers, and leaders can manage training modules"
-  ON training_modules FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'developer', 'leader')
-    )
-  );
+-- TRAINING_MODULES (only if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'training_modules') THEN
+    DROP POLICY IF EXISTS "Admins and leaders can manage training modules" ON training_modules;
+    
+    CREATE POLICY "Admins, developers, and leaders can manage training modules"
+      ON training_modules FOR ALL
+      USING (
+        EXISTS (
+          SELECT 1 FROM profiles
+          WHERE profiles.auth_user_id = auth.uid()
+          AND profiles.role IN ('admin', 'developer', 'leader')
+        )
+      );
+    RAISE NOTICE 'Updated training_modules policies';
+  ELSE
+    RAISE NOTICE 'Skipping training_modules - table does not exist';
+  END IF;
+END$$;
 
 -- ===========================================
 -- SYSTEM LOGS - Developer access
