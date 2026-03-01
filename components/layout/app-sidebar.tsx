@@ -17,6 +17,7 @@ import {
   Shield,
   Palette,
   Code2,
+  UserCircle,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
@@ -75,15 +76,19 @@ const navItems = [
     href: ROUTES.TRAINING,
     icon: GraduationCap,
   },
-]
-
-const leaderItems = [
+  {
+    title: "Profile",
+    href: ROUTES.PROFILE,
+    icon: UserCircle,
+  },
   {
     title: "Settings",
     href: ROUTES.SETTINGS,
     icon: Settings,
   },
 ]
+
+const leaderItems: typeof navItems = []
 
 const adminItems = [
   {
