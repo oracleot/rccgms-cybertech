@@ -17,10 +17,11 @@ import {
   Clapperboard,
   Palette,
   Bell,
-  Beaker,
   Terminal,
   Globe,
   Zap,
+  Table2,
+  Code,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +30,9 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { TestModePanel } from "@/components/admin/test-mode-panel"
+import { TableBrowser } from "./table-browser"
+import { SchemaInspector } from "./schema-inspector"
+import { SqlQueryRunner } from "./sql-query-runner"
 
 interface HealthData {
   status: "healthy" | "degraded" | "error"
@@ -134,18 +138,26 @@ export function DeveloperToolsClient({
 
   return (
     <Tabs defaultValue="health" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="health" className="flex items-center gap-2">
+      <TabsList className="grid w-full grid-cols-5">
+        <TabsTrigger value="health" className="flex items-center gap-1 text-xs sm:text-sm">
           <Activity className="h-4 w-4" />
-          System Health
+          <span className="hidden sm:inline">System</span> Health
         </TabsTrigger>
-        <TabsTrigger value="database" className="flex items-center gap-2">
+        <TabsTrigger value="database" className="flex items-center gap-1 text-xs sm:text-sm">
           <Database className="h-4 w-4" />
-          Database
+          Overview
         </TabsTrigger>
-        <TabsTrigger value="tools" className="flex items-center gap-2">
-          <Beaker className="h-4 w-4" />
-          Dev Tools
+        <TabsTrigger value="browse" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Table2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Table</span> Browser
+        </TabsTrigger>
+        <TabsTrigger value="schema" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Code className="h-4 w-4" />
+          Schema
+        </TabsTrigger>
+        <TabsTrigger value="query" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Terminal className="h-4 w-4" />
+          SQL
         </TabsTrigger>
       </TabsList>
 
@@ -286,7 +298,7 @@ export function DeveloperToolsClient({
         )}
       </TabsContent>
 
-      {/* Database Tab */}
+      {/* Dev Tools Tab */}
       <TabsContent value="database" className="space-y-4">
         {/* Connection Status */}
         <Card>
@@ -402,14 +414,11 @@ export function DeveloperToolsClient({
             </div>
           </CardContent>
         </Card>
-      </TabsContent>
-
-      {/* Dev Tools Tab */}
-      <TabsContent value="tools" className="space-y-4">
-        {/* Test Mode */}
-        <TestModePanel />
 
         <Separator />
+
+        {/* Test Mode */}
+        <TestModePanel />
 
         {/* Session Info */}
         <Card>
@@ -429,6 +438,7 @@ export function DeveloperToolsClient({
                 <span className="text-muted-foreground">Role</span>
                 <Badge className={cn(
                   currentUserRole === "admin" && "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+                  currentUserRole === "lead_developer" && "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
                   currentUserRole === "developer" && "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
                   currentUserRole === "leader" && "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
                   currentUserRole === "member" && "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
@@ -460,7 +470,7 @@ export function DeveloperToolsClient({
                 href="https://supabase.com/dashboard"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colours"
+                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colors"
               >
                 <Database className="h-4 w-4 text-green-500" />
                 Supabase Dashboard
@@ -469,16 +479,16 @@ export function DeveloperToolsClient({
                 href="https://vercel.com/dashboard"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colours"
+                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colors"
               >
                 <Globe className="h-4 w-4 text-foreground" />
                 Vercel Dashboard
               </a>
               <a
-                href="https://github.com"
+                href="https://github.com/oracleot/rccgms-cybertech"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colours"
+                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colors"
               >
                 <Terminal className="h-4 w-4 text-foreground" />
                 GitHub Repository
@@ -487,7 +497,7 @@ export function DeveloperToolsClient({
                 href="/api/admin/developer/health"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colours"
+                className="flex items-center gap-2 rounded-lg border p-3 text-sm hover:bg-accent transition-colors"
               >
                 <Activity className="h-4 w-4 text-violet-500" />
                 Health API (JSON)
@@ -495,6 +505,25 @@ export function DeveloperToolsClient({
             </div>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      {/* Table Browser Tab */}
+      <TabsContent value="browse" className="space-y-4">
+        <TableBrowser />
+      </TabsContent>
+
+      {/* Schema Inspector Tab */}
+      <TabsContent value="schema" className="space-y-4">
+        <SchemaInspector tables={
+          health 
+            ? Object.entries(health.tables).map(([name, row_count]) => ({ name, row_count }))
+            : []
+        } />
+      </TabsContent>
+
+      {/* SQL Query Console Tab */}
+      <TabsContent value="query" className="space-y-4">
+        <SqlQueryRunner />
       </TabsContent>
     </Tabs>
   )
