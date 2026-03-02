@@ -57,9 +57,6 @@ export async function requireRole(
 /**
  * Require admin role
  */
-/**
- * Require admin role
- */
 export async function requireAdmin() {
   return requireRole([USER_ROLES.ADMIN])
 }

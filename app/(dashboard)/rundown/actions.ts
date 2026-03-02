@@ -92,7 +92,7 @@ export async function createRundown(
 
     const { supabase, profile } = result
 
-    // All authenticated users (including volunteers) can create rundowns
+    // All authenticated users (any role) can create rundowns
 
     const { data, error } = await supabase
       .from("rundowns")

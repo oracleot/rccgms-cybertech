@@ -218,14 +218,14 @@ export async function reassignRequest(
     return { success: false, error: "Assignee not found" }
   }
 
-  // Permission validation: Leaders can only assign to volunteers and members (leaders)
+  // Permission validation:
+  // - Leaders can only assign to members or other leaders
+  // - Admins can assign to any role
   if (profile.role === "leader") {
-    if (newAssignee.role === "admin") {
-      return { success: false, error: "Leaders cannot assign designs to admins" }
+    if (newAssignee.role !== "member" && newAssignee.role !== "leader") {
+      return { success: false, error: "Leaders can only assign designs to members or other leaders" }
     }
   }
-  // Admins can assign to members (leaders) and volunteers (not explicitly restricted)
-  // No additional check needed for admins as they have full permissions
 
   // Reassign
   const { error } = await supabase

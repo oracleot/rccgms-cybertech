@@ -4,7 +4,7 @@
 
 All code changes for the developer role have been implemented and committed:
 
-1. **Migration 028**: Added developer role to database schema with RLS policies
+1. **Migrations 028 & 029**: Added developer role enum and RLS policies to the database schema
 2. **TypeScript Types**: Updated all type definitions across 17 files
 3. **Auth Guards**: Updated with developer permissions
 4. **Admin UI**: Implemented read-only mode for developers

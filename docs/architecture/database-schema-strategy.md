@@ -17,48 +17,46 @@ public/
 │   ├── profiles
 │   ├── departments
 │   ├── positions
-│   ├── user_departments (junction table)
-│   └── invitations
+│   └── user_departments (junction table)
 │
-├── Rota Management (7 tables)
+├── Rota Management (5 tables)
 │   ├── rotas
 │   ├── rota_assignments
 │   ├── availability
 │   ├── swap_requests
-│   ├── services
-│   ├── recurrence_patterns
-│   └── service_dates
+│   └── services
 │
 ├── Equipment Management (4 tables)
 │   ├── equipment
 │   ├── equipment_checkouts
 │   ├── equipment_categories
-│   └── equipment_maintenance_log
+│   └── equipment_maintenance
 │
-├── Rundowns (3 tables)
+├── Rundowns (2 tables)
 │   ├── rundowns
-│   ├── rundown_items
-│   └── rundown_templates
+│   └── rundown_items
 │
-├── Social Media (3 tables)
-│   ├── social_content
-│   ├── social_platforms
-│   └── social_scheduled_posts
+├── Social Media (2 tables)
+│   ├── social_posts
+│   └── social_integrations
 │
-├── Training (4 tables)
-│   ├── training_modules
-│   ├── training_steps
-│   ├── training_completions
-│   └── training_tracks
+├── Onboarding / Training (4 tables)
+│   ├── onboarding_steps
+│   ├── onboarding_tracks
+│   ├── step_completions
+│   └── volunteer_progress
 │
-├── Design Requests (3 tables)
-│   ├── design_requests
-│   ├── design_assets
-│   └── design_reviews
+├── Design Requests (1 table)
+│   └── design_requests
 │
-├── Livestream (2 tables)
-│   ├── livestream_streams
-│   └── livestream_templates
+├── Livestream (1 table)
+│   └── livestreams
+│
+├── Other Tables
+│   ├── display_settings
+│   ├── notification_preferences
+│   ├── prompt_templates
+│   └── songs
 │
 └── System Tables
     └── notifications (audit log)
@@ -366,10 +364,14 @@ Queries must filter: `WHERE deleted_at IS NULL`
 - Granted members full rundown permissions
 - Enabled realtime for rundowns
 
-**028_add_developer_role.sql**
-- Added `developer` role for technical/backend staff
+**028_add_developer_role_enum.sql**
+- Added `developer` enum value to `user_role` type
+- Must be committed before being used in policies
+
+**029_developer_role_permissions.sql**
+- Updated RLS policies on all content and system tables
 - Granted developers content management + read-only user viewing
-- Updated all RLS policies to include developer permissions
+- Developer notifications restricted to read-only access
 
 ---
 
@@ -415,6 +417,6 @@ ORDER BY idx_scan ASC;
 ---
 
 **Next Steps:**
-1. ✅ Apply migration 028 (developer role)
-2. ⏳ Implement dummy/test mode for developers
+1. ✅ Apply migrations 028 + 029 (developer role)
+2. ✅ Implement test mode for developers
 3. 📋 Plan v2.0 schema migration (post-launch)

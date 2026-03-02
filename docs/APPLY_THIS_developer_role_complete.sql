@@ -1,14 +1,18 @@
 -- =====================================================
--- COMBINED DEVELOPER ROLE MIGRATION
+-- COMBINED DEVELOPER ROLE MIGRATION (REFERENCE ONLY)
 -- =====================================================
--- This file combines migrations 028 and 029 into a single
--- file that can be run, but you MUST run it in TWO STEPS:
+-- This file is a REFERENCE COPY, NOT a Supabase migration.
+-- It combines migrations 028 and 029 into a single file.
+-- You MUST run it in TWO STEPS:
 -- 
 -- STEP 1: Run only the section marked "PART 1" below
 -- STEP 2: After Part 1 succeeds, run "PART 2"
 --
 -- Why? PostgreSQL requires enum values to be committed
 -- before they can be used in policies.
+--
+-- NOTE: All policies use (SELECT auth.uid()) to avoid per-row
+-- re-evaluation (see 022_rls_performance_optimization.sql).
 -- =====================================================
 
 -- =====================================================
@@ -82,7 +86,7 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundowns"
   USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.auth_user_id = auth.uid() 
+      WHERE profiles.auth_user_id = (SELECT auth.uid()) 
       AND profiles.role IN ('admin', 'developer', 'leader', 'member')
     )
   );
@@ -95,7 +99,7 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundown items
   USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.auth_user_id = auth.uid() 
+      WHERE profiles.auth_user_id = (SELECT auth.uid()) 
       AND profiles.role IN ('admin', 'developer', 'leader', 'member')
     )
   );
@@ -108,7 +112,7 @@ CREATE POLICY "Admins, developers, and leaders can manage equipment"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -121,7 +125,7 @@ CREATE POLICY "Admins, developers, and leaders can manage checkouts"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -134,7 +138,7 @@ CREATE POLICY "Admins, developers, and leaders can manage rotas"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -147,7 +151,7 @@ CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -160,7 +164,7 @@ CREATE POLICY "Admins, developers, and leaders can manage design requests"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -173,7 +177,7 @@ CREATE POLICY "Admins, developers, and leaders can manage social posts"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -186,36 +190,25 @@ CREATE POLICY "Admins, developers, and leaders can manage social integrations"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
 
 -- ===========================================
--- SYSTEM LOGS - Developer access
+-- SYSTEM LOGS - Developer read-only access
 -- ===========================================
 
 DROP POLICY IF EXISTS "Admins can view all notifications" ON notifications;
+DROP POLICY IF EXISTS "Developers can manage notifications" ON notifications;
 
 CREATE POLICY "Admins and developers can view all notifications"
   ON notifications FOR SELECT
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer')
-    )
-  );
-
-DROP POLICY IF EXISTS "Developers can manage notifications" ON notifications;
-
-CREATE POLICY "Developers can manage notifications"
-  ON notifications FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role = 'developer'
     )
   );
 
@@ -230,7 +223,7 @@ CREATE POLICY "Admins and developers can manage departments"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer')
     )
   );
@@ -242,7 +235,7 @@ CREATE POLICY "Admins, developers, and leaders can manage positions"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -251,17 +244,11 @@ CREATE POLICY "Admins, developers, and leaders can manage positions"
 -- COMMENTS
 -- ===========================================
 
-COMMENT ON POLICY "Admin and developer users can view all profiles" ON profiles
-  IS 'Allows admins and developers to view all user profiles. Developers have read-only access for monitoring and debugging purposes.';
-
 COMMENT ON POLICY "Admins, developers, leaders, and members can manage rundowns" ON rundowns
   IS 'Allows all authenticated users with appropriate roles to manage rundowns. Developers have full access as part of backend management duties.';
 
 COMMENT ON POLICY "Admins and developers can view all notifications" ON notifications
-  IS 'Allows admins and developers to view system logs and notifications for monitoring and debugging.';
-
-COMMENT ON POLICY "Developers can manage notifications" ON notifications
-  IS 'Allows developers to create/update/delete notifications for testing and debugging purposes.';
+  IS 'Allows admins and developers to view system logs and notifications for monitoring and debugging. Write access restricted to admin/service role.';
 
 -- END PART 2
 -- =====================================================

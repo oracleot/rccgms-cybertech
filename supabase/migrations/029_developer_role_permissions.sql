@@ -3,12 +3,21 @@
 -- Prerequisites: Migration 028 must be applied first (adds developer to enum)
 -- 
 -- Permissions granted to developers:
---   - Full content management (rundowns, designs, equipment, rotas, social, training)
+--   - Full content management (rundowns, designs, equipment, rotas, social)
 --   - Read-only user viewing (profiles)
---   - System logs and notifications access
+--   - Read-only notifications/logs access
 --   - Cannot delete users or manage admin accounts
 --
 -- Role hierarchy: admin > developer > leader > member
+--
+-- NOTE: All policies use (SELECT auth.uid()) instead of auth.uid() directly
+-- to avoid per-row function re-evaluation (see 022_rls_performance_optimization.sql)
+--
+-- Tables verified to exist: profiles, rundowns, rundown_items, equipment,
+-- equipment_checkouts, rotas, rota_assignments, design_requests, notifications,
+-- departments, positions, social_posts, social_integrations
+--
+-- Tables NOT in database (skipped): social_content, training_modules, invitations
 
 -- ===========================================
 -- STEP 1: PROFILES TABLE - Fix open read policy
@@ -43,7 +52,7 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundowns"
   USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.auth_user_id = auth.uid() 
+      WHERE profiles.auth_user_id = (SELECT auth.uid()) 
       AND profiles.role IN ('admin', 'developer', 'leader', 'member')
     )
   );
@@ -56,7 +65,7 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundown items
   USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.auth_user_id = auth.uid() 
+      WHERE profiles.auth_user_id = (SELECT auth.uid()) 
       AND profiles.role IN ('admin', 'developer', 'leader', 'member')
     )
   );
@@ -69,7 +78,7 @@ CREATE POLICY "Admins, developers, and leaders can manage equipment"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -82,7 +91,7 @@ CREATE POLICY "Admins, developers, and leaders can manage checkouts"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -95,7 +104,7 @@ CREATE POLICY "Admins, developers, and leaders can manage rotas"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -108,7 +117,7 @@ CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
@@ -121,62 +130,54 @@ CREATE POLICY "Admins, developers, and leaders can manage design requests"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
 
--- SOCIAL_CONTENT: Developers can manage social content
-DROP POLICY IF EXISTS "Admins and leaders can manage social content" ON social_content;
+-- SOCIAL_POSTS: Developers can manage social posts
+-- NOTE: Table is social_posts, NOT social_content (see 013_social.sql)
+DROP POLICY IF EXISTS "Admins and leaders can manage social posts" ON social_posts;
 
-CREATE POLICY "Admins, developers, and leaders can manage social content"
-  ON social_content FOR ALL
+CREATE POLICY "Admins, developers, and leaders can manage social posts"
+  ON social_posts FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
 
--- TRAINING_MODULES: Developers can manage training content
-DROP POLICY IF EXISTS "Admins and leaders can manage training modules" ON training_modules;
+-- SOCIAL_INTEGRATIONS: Developers can manage social integrations
+DROP POLICY IF EXISTS "Admins and leaders can manage social integrations" ON social_integrations;
 
-CREATE POLICY "Admins, developers, and leaders can manage training modules"
-  ON training_modules FOR ALL
+CREATE POLICY "Admins, developers, and leaders can manage social integrations"
+  ON social_integrations FOR ALL
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
 
 -- ===========================================
--- STEP 3: SYSTEM LOGS - Developer access
+-- STEP 3: SYSTEM LOGS - Developer read-only access
 -- ===========================================
 
--- NOTIFICATIONS: Developers can view all notifications (logs)
+-- NOTIFICATIONS: Developers can VIEW all notifications (logs) - read-only
+-- Write/delete restricted to admin-only or service role to preserve log integrity
 DROP POLICY IF EXISTS "Admins can view all notifications" ON notifications;
+DROP POLICY IF EXISTS "Developers can manage notifications" ON notifications;
 
 CREATE POLICY "Admins and developers can view all notifications"
   ON notifications FOR SELECT
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer')
-    )
-  );
-
--- Allow developers to manage notifications (for debugging/testing)
-CREATE POLICY "Developers can manage notifications"
-  ON notifications FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role = 'developer'
     )
   );
 
@@ -192,7 +193,7 @@ CREATE POLICY "Admins and developers can manage departments"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer')
     )
   );
@@ -205,69 +206,8 @@ CREATE POLICY "Admins, developers, and leaders can manage positions"
   USING (
     EXISTS (
       SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
+      WHERE profiles.auth_user_id = (SELECT auth.uid())
       AND profiles.role IN ('admin', 'developer', 'leader')
-    )
-  );
-
--- ===========================================
--- STEP 5: INVITATIONS - Developers can view
--- ===========================================
-
-DROP POLICY IF EXISTS "Admins and leaders can manage invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and developers can view invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and leaders can insert invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and leaders can update invitations" ON invitations;
-DROP POLICY IF EXISTS "Admins and leaders can delete invitations" ON invitations;
-
--- Developers can view invitations (read-only)
-CREATE POLICY "Admins and developers can view invitations"
-  ON invitations FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'developer')
-    )
-  );
-
--- Only admins and leaders can insert invitations
-CREATE POLICY "Admins and leaders can insert invitations"
-  ON invitations FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
-    )
-  );
-
--- Only admins and leaders can update invitations
-CREATE POLICY "Admins and leaders can update invitations"
-  ON invitations FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
-    )
-  );
-
--- Only admins and leaders can delete invitations
-CREATE POLICY "Admins and leaders can delete invitations"
-  ON invitations FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.auth_user_id = auth.uid()
-      AND profiles.role IN ('admin', 'leader')
     )
   );
 
@@ -275,14 +215,8 @@ CREATE POLICY "Admins and leaders can delete invitations"
 -- COMMENTS AND DOCUMENTATION
 -- ===========================================
 
-COMMENT ON POLICY "Admin and developer users can view all profiles" ON profiles
-  IS 'Allows admins and developers to view all user profiles. Developers have read-only access for monitoring and debugging purposes.';
-
 COMMENT ON POLICY "Admins, developers, leaders, and members can manage rundowns" ON rundowns
   IS 'Allows all authenticated users with appropriate roles to manage rundowns. Developers have full access as part of backend management duties.';
 
 COMMENT ON POLICY "Admins and developers can view all notifications" ON notifications
-  IS 'Allows admins and developers to view system logs and notifications for monitoring and debugging.';
-
-COMMENT ON POLICY "Developers can manage notifications" ON notifications
-  IS 'Allows developers to create/update/delete notifications for testing and debugging purposes.';
+  IS 'Allows admins and developers to view system logs and notifications for monitoring and debugging. Write access restricted to admin/service role.';

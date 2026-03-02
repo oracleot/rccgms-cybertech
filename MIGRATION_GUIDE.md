@@ -2,12 +2,12 @@
 
 ## UPDATED: Simplified Two-Step Process
 
-I've created a single file with clear instructions: `supabase/migrations/APPLY_THIS_developer_role_complete.sql`
+I've created a single reference file with clear instructions: `docs/APPLY_THIS_developer_role_complete.sql`
 
 ### 🎯 Easiest Method: Use the Combined File
 
 1. Open [Supabase Dashboard](https://supabase.com/dashboard) → SQL Editor
-2. Open `APPLY_THIS_developer_role_complete.sql` in your code editor
+2. Open `docs/APPLY_THIS_developer_role_complete.sql` in your code editor
 3. **STEP 1**: Copy lines from "PART 1" section (lines ~15-35)
 4. Paste into SQL Editor and click **Run**
 5. ✅ Verify success (should see "Added developer to user_role enum")
@@ -147,6 +147,6 @@ After applying both migrations:
 ## Support
 
 If you encounter issues:
-1. Check the [Next Steps Guide](developer-role-next-steps.md)
-2. Review [Test Mode Documentation](../features/developer-test-mode.md)
+1. Check the [Next Steps Guide](docs/implementation/developer-role-next-steps.md)
+2. Review [Test Mode Documentation](docs/features/developer-test-mode.md)
 3. Verify you applied migrations in correct order

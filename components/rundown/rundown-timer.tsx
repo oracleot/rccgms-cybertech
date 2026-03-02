@@ -171,10 +171,12 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     updateTimerState(newElapsed)
   }
 
-  // Calculate max slider value (duration + overtime buffer)
-  const maxSliderValue = durationSeconds 
-    ? durationSeconds + OVERTIME_BUFFER_SECONDS 
+  // Calculate base max slider value (duration + overtime buffer or default)
+  const baseMaxSliderValue = durationSeconds
+    ? durationSeconds + OVERTIME_BUFFER_SECONDS
     : 3600 // Default to 1 hour if no duration
+  // Ensure slider max is always at least the current elapsed time
+  const maxSliderValue = Math.max(baseMaxSliderValue, elapsed)
 
   return (
     <Card className="space-y-3 px-4 py-3">

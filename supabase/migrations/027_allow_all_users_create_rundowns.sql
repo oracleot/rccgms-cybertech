@@ -10,15 +10,12 @@
 -- STEP 1: RENAME ENUM VALUE volunteer → member
 -- ===========================================
 
--- Add new 'member' value to enum
-ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'member';
+-- Rename 'volunteer' to 'member' in the enum
+-- Note: RENAME VALUE requires PostgreSQL 10+
+ALTER TYPE user_role RENAME VALUE 'volunteer' TO 'member';
 
--- Migrate all existing 'volunteer' users to 'member'
-UPDATE profiles SET role = 'member' WHERE role = 'volunteer';
-
--- Note: Cannot directly remove enum value in PostgreSQL
--- The old 'volunteer' value will remain in the enum but unused
--- This is safe and has no impact on functionality
+-- Update the default value for new profiles
+ALTER TABLE profiles ALTER COLUMN role SET DEFAULT 'member';
 
 -- ===========================================
 -- STEP 2: RUNDOWNS TABLE - Grant members full access
@@ -36,7 +33,7 @@ CREATE POLICY "Admins, leaders, and members can manage rundowns"
   USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.auth_user_id = auth.uid() 
+      WHERE profiles.auth_user_id = (SELECT auth.uid()) 
       AND profiles.role IN ('admin', 'leader', 'member')
     )
   );
@@ -57,7 +54,7 @@ CREATE POLICY "Admins, leaders, and members can manage rundown items"
   USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.auth_user_id = auth.uid() 
+      WHERE profiles.auth_user_id = (SELECT auth.uid()) 
       AND profiles.role IN ('admin', 'leader', 'member')
     )
   );

@@ -199,8 +199,7 @@ Planned improvements:
 ## Related Documentation
 
 - [Database Schema Strategy](../architecture/database-schema-strategy.md)
-- [Developer Role Specification](../spec/developer-role.md)
-- [RLS Policy Patterns](../architecture/rls-policy-patterns.md)
+- [Developer Role Next Steps](../implementation/developer-role-next-steps.md)
 
 ## Support
 
