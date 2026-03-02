@@ -188,9 +188,9 @@ function EndOfServiceConfetti({ textColor }: { textColor: string }) {
   return (
     <div className="animate-in fade-in duration-700 text-center">
       <h1
-        className="font-bold animate-[breathe_3s_ease-in-out_infinite]"
+        className="font-bold animate-[breathe_3s_ease-in-out_infinite] leading-none"
         style={{
-          fontSize: "clamp(5rem, 18vw, 20rem)",
+          fontSize: "clamp(4rem, 15vw, 22vh)",
           textShadow: `0 0 5rem ${textColor}40, 0 0 10rem ${textColor}20`,
           letterSpacing: "0.1em",
         }}
@@ -224,7 +224,9 @@ export function DisplayView({
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [showTransitionScreen, setShowTransitionScreen] = useState(false)
   const [transitionData, setTransitionData] = useState<TransitionPayload | null>(null)
+  const [isRedFlash, setIsRedFlash] = useState(false)
   const prevItemIdRef = useRef<string | null>(null)
+  const hasFlashedRef = useRef(false)
   
   // Independent timer management (doesn't rely on control window)
   const timerStartTimeRef = useRef<number | null>(null)
@@ -262,6 +264,8 @@ export function DisplayView({
         timerDurationRef.current = 0
         setIsTimerActive(false)
         setTimer({ elapsed: 0, remaining: 0, isRunning: false })
+        setIsRedFlash(false)
+        hasFlashedRef.current = false
         break
 
       case "TIMER_UPDATE":
@@ -406,6 +410,29 @@ export function DisplayView({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
+  // Red flash effect when timer reaches zero — a bright visual cue instead of sound
+  useEffect(() => {
+    if (
+      timer.isRunning &&
+      timer.remaining <= 0 &&
+      timer.elapsed > 0 &&
+      !hasFlashedRef.current
+    ) {
+      hasFlashedRef.current = true
+      setIsRedFlash(true)
+
+      // Flash 3 times: on  →  off  →  on  →  off  →  on  →  off
+      const timers: NodeJS.Timeout[] = []
+      timers.push(setTimeout(() => setIsRedFlash(false), 400))
+      timers.push(setTimeout(() => setIsRedFlash(true), 600))
+      timers.push(setTimeout(() => setIsRedFlash(false), 1000))
+      timers.push(setTimeout(() => setIsRedFlash(true), 1200))
+      timers.push(setTimeout(() => setIsRedFlash(false), 1600))
+
+      return () => timers.forEach(clearTimeout)
+    }
+  }, [timer.isRunning, timer.remaining, timer.elapsed])
+
   // Transition class based on settings
   const transitionClass = useMemo(() => {
     switch (settings.transitionEffect) {
@@ -421,7 +448,7 @@ export function DisplayView({
   return (
     <div
       className={cn(
-        "h-screen w-full flex flex-col overflow-hidden",
+        "h-screen w-full flex flex-col overflow-hidden relative",
         transitionClass
       )}
       style={{
@@ -430,6 +457,14 @@ export function DisplayView({
         fontFamily: settings.fontFamily,
       }}
     >
+      {/* Bright red flash overlay — visual alert when time runs out */}
+      <div
+        className={cn(
+          "absolute inset-0 z-50 pointer-events-none transition-opacity duration-150",
+          isRedFlash ? "opacity-100" : "opacity-0"
+        )}
+        style={{ backgroundColor: "#ff0000" }}
+      />
       {/* Logo (optional) */}
       {settings.logoUrl && (
         <div className="absolute top-4 right-4 h-16 w-auto">
@@ -446,7 +481,7 @@ export function DisplayView({
       {/* Main content area */}
       <div
         className={cn(
-          "flex-1 flex flex-col items-center justify-center px-8 py-12",
+          "flex-1 flex flex-col items-center justify-center px-8 py-6 min-h-0",
           isTransitioning && settings.transitionEffect === "fade" && "opacity-0",
           isTransitioning && settings.transitionEffect === "slide" && "translate-y-4"
         )}
@@ -481,9 +516,9 @@ export function DisplayView({
               <>
                 {/* TIME OUT - BIG with breathing effect (only for mid-service transitions) */}
                 <h1
-                  className="font-bold mb-12 animate-[breathe_3s_ease-in-out_infinite]"
+                  className="font-bold mb-8 animate-[breathe_3s_ease-in-out_infinite] leading-none"
                   style={{ 
-                    fontSize: "clamp(80px, 18vw, 300px)",
+                    fontSize: "clamp(60px, 15vw, 22vh)",
                     textShadow: `0 0 80px ${settings.textColor}40, 0 0 160px ${settings.textColor}20`,
                     letterSpacing: "0.1em",
                   }}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   Monitor,
   MonitorUp,
@@ -60,6 +60,22 @@ export function DisplayControls({
   const [screens, setScreens] = useState<ScreenDetails["screens"]>([])
   const [hasMultiScreenSupport, setHasMultiScreenSupport] = useState(false)
   const [_isRequestingScreens, setIsRequestingScreens] = useState(false)
+  const screensLoadedRef = useRef(false)
+
+  // Eagerly detect screens on mount so we can auto-open on secondary
+  useEffect(() => {
+    if (typeof window === "undefined" || screensLoadedRef.current) return
+    if (!("getScreenDetails" in window)) return
+
+    screensLoadedRef.current = true
+    setHasMultiScreenSupport(true)
+
+    window.getScreenDetails!()
+      .then((details) => setScreens(details.screens))
+      .catch(() => {
+        // Permission denied — will fall back to default window
+      })
+  }, [])
 
   // Check for multi-screen support and request screen details
   const checkScreenSupport = useCallback(async () => {
@@ -82,19 +98,28 @@ export function DisplayControls({
     }
   }, [])
 
-  // Open display in a new window
+  // Open display in a new window — auto-targets secondary screen if available
   const openDisplay = useCallback(
     (screenIndex?: number) => {
-      // Add autoFullscreen query param if specific screen selected
-      const autoFullscreen = screenIndex !== undefined && screens[screenIndex]
+      // Auto-detect secondary screen if no specific index provided
+      let targetIndex = screenIndex
+      if (targetIndex === undefined && screens.length > 1) {
+        const secondaryIdx = screens.findIndex((s) => !s.isPrimary)
+        if (secondaryIdx !== -1) {
+          targetIndex = secondaryIdx
+        }
+      }
+
+      // Add autoFullscreen query param if a specific screen is targeted
+      const autoFullscreen = targetIndex !== undefined && screens[targetIndex]
       const displayUrl = `/rundown/${rundownId}/display${autoFullscreen ? '?autoFullscreen=true' : ''}`
 
       // Determine window features
       let features = "popup=yes,menubar=no,toolbar=no,location=no,status=no"
 
       // If a specific screen is selected, position the window there
-      if (screenIndex !== undefined && screens[screenIndex]) {
-        const screen = screens[screenIndex]
+      if (targetIndex !== undefined && screens[targetIndex]) {
+        const screen = screens[targetIndex]
         features += `,left=${screen.availLeft},top=${screen.availTop},width=${screen.availWidth},height=${screen.availHeight}`
       } else {
         // Default: open at reasonable size
