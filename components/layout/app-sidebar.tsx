@@ -277,8 +277,8 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <div className="px-2 py-2">
-          <p className="text-xs text-muted-foreground">
+        <div className="px-2 py-2" suppressHydrationWarning>
+          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
             © {new Date().getFullYear()} RCCG Morning Star
           </p>
         </div>
