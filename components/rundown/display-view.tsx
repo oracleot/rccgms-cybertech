@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import confetti from "canvas-confetti"
+import { Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
 import { useDisplayReceiver } from "@/hooks/use-display-sync"
@@ -225,6 +226,8 @@ export function DisplayView({
   const [showTransitionScreen, setShowTransitionScreen] = useState(false)
   const [transitionData, setTransitionData] = useState<TransitionPayload | null>(null)
   const [isRedFlash, setIsRedFlash] = useState(false)
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false)
+  const [isTimeoutBlinkRed, setIsTimeoutBlinkRed] = useState(false)
   const prevItemIdRef = useRef<string | null>(null)
   const hasFlashedRef = useRef(false)
   
@@ -319,24 +322,14 @@ export function DisplayView({
   // Initialize display receiver
   useDisplayReceiver(rundownId, handleMessage)
 
-  // Auto-fullscreen if requested via query parameter (from multi-screen selection)
+  // Show fullscreen prompt if requested via query parameter (from multi-screen selection)
+  // Fullscreen API requires a user gesture, so we show a click overlay instead of auto-requesting
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     const params = new URLSearchParams(window.location.search)
     if (params.get('autoFullscreen') === 'true') {
-      // Small delay to ensure page is fully loaded
-      const timer = setTimeout(() => {
-        try {
-          document.documentElement.requestFullscreen?.().catch((err) => {
-            console.log('Fullscreen request failed (user interaction may be required):', err)
-          })
-        } catch (error) {
-          console.log('Fullscreen not available:', error)
-        }
-      }, 500)
-
-      return () => clearTimeout(timer)
+      setShowFullscreenPrompt(true)
     }
   }, [])
 
@@ -433,6 +426,35 @@ export function DisplayView({
     }
   }, [timer.isRunning, timer.remaining, timer.elapsed])
 
+  // Blinking red "TIME OUT!" text — escalates after 45 seconds of operator inaction
+  const hasNextItemInTransition = transitionData?.nextItem != null
+  useEffect(() => {
+    if (!showTransitionScreen || !hasNextItemInTransition) {
+      setIsTimeoutBlinkRed(false)
+      return
+    }
+
+    const startTime = Date.now()
+    let timeoutId: NodeJS.Timeout
+
+    const tick = () => {
+      const elapsedMs = Date.now() - startTime
+      const isUrgent = elapsedMs > 45_000 // 45 seconds → faster blinking
+      const interval = isUrgent ? 300 : 800
+
+      setIsTimeoutBlinkRed((prev) => !prev)
+      timeoutId = setTimeout(tick, interval)
+    }
+
+    // Start blinking after a brief pause
+    timeoutId = setTimeout(tick, 800)
+
+    return () => {
+      clearTimeout(timeoutId)
+      setIsTimeoutBlinkRed(false)
+    }
+  }, [showTransitionScreen, hasNextItemInTransition])
+
   // Transition class based on settings
   const transitionClass = useMemo(() => {
     switch (settings.transitionEffect) {
@@ -465,6 +487,25 @@ export function DisplayView({
         )}
         style={{ backgroundColor: "#ff0000" }}
       />
+
+      {/* Fullscreen prompt overlay — requires user gesture to enter fullscreen */}
+      {showFullscreenPrompt && (
+        <div
+          className="absolute inset-0 z-[60] flex items-center justify-center cursor-pointer bg-black/90 animate-in fade-in duration-300"
+          onClick={() => {
+            document.documentElement.requestFullscreen?.()
+              .then(() => setShowFullscreenPrompt(false))
+              .catch(() => setShowFullscreenPrompt(false))
+          }}
+        >
+          <div className="text-center text-white space-y-4">
+            <Maximize2 className="h-20 w-20 mx-auto animate-pulse" />
+            <p className="text-3xl font-bold">Tap to Enter Fullscreen</p>
+            <p className="text-sm opacity-50">Press Esc to exit later</p>
+          </div>
+        </div>
+      )}
+
       {/* Logo (optional) */}
       {settings.logoUrl && (
         <div className="absolute top-4 right-4 h-16 w-auto">
@@ -514,13 +555,19 @@ export function DisplayView({
             {/* Next item info or End of service */}
             {transitionData.nextItem ? (
               <>
-                {/* TIME OUT - BIG with breathing effect (only for mid-service transitions) */}
+                {/* TIME OUT - BIG with blinking red that escalates after 45s */}
                 <h1
-                  className="font-bold mb-8 animate-[breathe_3s_ease-in-out_infinite] leading-none"
+                  className={cn(
+                    "font-bold mb-8 leading-none transition-colors duration-150",
+                    !isTimeoutBlinkRed && "animate-[breathe_3s_ease-in-out_infinite]"
+                  )}
                   style={{ 
                     fontSize: "clamp(60px, 15vw, 22vh)",
-                    textShadow: `0 0 80px ${settings.textColor}40, 0 0 160px ${settings.textColor}20`,
+                    textShadow: isTimeoutBlinkRed
+                      ? "0 0 80px #ef444460, 0 0 160px #ef444430"
+                      : `0 0 80px ${settings.textColor}40, 0 0 160px ${settings.textColor}20`,
                     letterSpacing: "0.1em",
+                    color: isTimeoutBlinkRed ? "#ef4444" : undefined,
                   }}
                 >
                   TIME OUT!
