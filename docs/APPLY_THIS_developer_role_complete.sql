@@ -78,7 +78,7 @@ CREATE POLICY "Anyone can view profiles"
 -- CONTENT TABLES - Full access for developers
 -- ===========================================
 
--- RUNDOWNS
+-- RUNDOWNS (027 created: "Admins, leaders, and members can manage rundowns")
 DROP POLICY IF EXISTS "Admins, leaders, and members can manage rundowns" ON rundowns;
 
 CREATE POLICY "Admins, developers, leaders, and members can manage rundowns"
@@ -91,7 +91,7 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundowns"
     )
   );
 
--- RUNDOWN_ITEMS
+-- RUNDOWN_ITEMS (027 created: "Admins, leaders, and members can manage rundown items")
 DROP POLICY IF EXISTS "Admins, leaders, and members can manage rundown items" ON rundown_items;
 
 CREATE POLICY "Admins, developers, leaders, and members can manage rundown items"
@@ -104,8 +104,8 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundown items
     )
   );
 
--- EQUIPMENT
-DROP POLICY IF EXISTS "Admins and leaders can manage equipment" ON equipment;
+-- EQUIPMENT (022 created: "Leaders can manage equipment")
+DROP POLICY IF EXISTS "Leaders can manage equipment" ON equipment;
 
 CREATE POLICY "Admins, developers, and leaders can manage equipment"
   ON equipment FOR ALL
@@ -117,8 +117,8 @@ CREATE POLICY "Admins, developers, and leaders can manage equipment"
     )
   );
 
--- EQUIPMENT_CHECKOUTS
-DROP POLICY IF EXISTS "Admins and leaders can manage checkouts" ON equipment_checkouts;
+-- EQUIPMENT_CHECKOUTS (add management policy alongside existing 022 policies)
+DROP POLICY IF EXISTS "Admins, developers, and leaders can manage checkouts" ON equipment_checkouts;
 
 CREATE POLICY "Admins, developers, and leaders can manage checkouts"
   ON equipment_checkouts FOR ALL
@@ -130,8 +130,8 @@ CREATE POLICY "Admins, developers, and leaders can manage checkouts"
     )
   );
 
--- ROTAS
-DROP POLICY IF EXISTS "Admins and leaders can manage rotas" ON rotas;
+-- ROTAS (022 created: "Leaders can manage rotas")
+DROP POLICY IF EXISTS "Leaders can manage rotas" ON rotas;
 
 CREATE POLICY "Admins, developers, and leaders can manage rotas"
   ON rotas FOR ALL
@@ -143,8 +143,8 @@ CREATE POLICY "Admins, developers, and leaders can manage rotas"
     )
   );
 
--- ROTA_ASSIGNMENTS
-DROP POLICY IF EXISTS "Admins and leaders can manage rota assignments" ON rota_assignments;
+-- ROTA_ASSIGNMENTS (022 created: "Leaders can manage assignments")
+DROP POLICY IF EXISTS "Leaders can manage assignments" ON rota_assignments;
 
 CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
   ON rota_assignments FOR ALL
@@ -156,8 +156,8 @@ CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
     )
   );
 
--- DESIGN_REQUESTS
-DROP POLICY IF EXISTS "Admins and leaders can manage design requests" ON design_requests;
+-- DESIGN_REQUESTS (024/025 used short names; add management policy alongside)
+DROP POLICY IF EXISTS "Admins, developers, and leaders can manage design requests" ON design_requests;
 
 CREATE POLICY "Admins, developers, and leaders can manage design requests"
   ON design_requests FOR ALL
@@ -169,8 +169,8 @@ CREATE POLICY "Admins, developers, and leaders can manage design requests"
     )
   );
 
--- SOCIAL_POSTS
-DROP POLICY IF EXISTS "Admins and leaders can manage social posts" ON social_posts;
+-- SOCIAL_POSTS (022 created: "Leaders can manage social posts")
+DROP POLICY IF EXISTS "Leaders can manage social posts" ON social_posts;
 
 CREATE POLICY "Admins, developers, and leaders can manage social posts"
   ON social_posts FOR ALL
@@ -182,8 +182,8 @@ CREATE POLICY "Admins, developers, and leaders can manage social posts"
     )
   );
 
--- SOCIAL_INTEGRATIONS
-DROP POLICY IF EXISTS "Admins and leaders can manage social integrations" ON social_integrations;
+-- SOCIAL_INTEGRATIONS (022 created: "Users manage own integrations")
+DROP POLICY IF EXISTS "Users manage own integrations" ON social_integrations;
 
 CREATE POLICY "Admins, developers, and leaders can manage social integrations"
   ON social_integrations FOR ALL
@@ -199,7 +199,7 @@ CREATE POLICY "Admins, developers, and leaders can manage social integrations"
 -- SYSTEM LOGS - Developer read-only access
 -- ===========================================
 
-DROP POLICY IF EXISTS "Admins can view all notifications" ON notifications;
+DROP POLICY IF EXISTS "Admins and developers can view all notifications" ON notifications;
 DROP POLICY IF EXISTS "Developers can manage notifications" ON notifications;
 
 CREATE POLICY "Admins and developers can view all notifications"
@@ -216,6 +216,7 @@ CREATE POLICY "Admins and developers can view all notifications"
 -- DEPARTMENTS AND POSITIONS
 -- ===========================================
 
+-- DEPARTMENTS (022 created: "Admins can manage departments")
 DROP POLICY IF EXISTS "Admins can manage departments" ON departments;
 
 CREATE POLICY "Admins and developers can manage departments"
@@ -228,7 +229,8 @@ CREATE POLICY "Admins and developers can manage departments"
     )
   );
 
-DROP POLICY IF EXISTS "Admins and leaders can manage positions" ON positions;
+-- POSITIONS (022 created: "Leaders and admins can manage positions")
+DROP POLICY IF EXISTS "Leaders and admins can manage positions" ON positions;
 
 CREATE POLICY "Admins, developers, and leaders can manage positions"
   ON positions FOR ALL
@@ -239,6 +241,24 @@ CREATE POLICY "Admins, developers, and leaders can manage positions"
       AND profiles.role IN ('admin', 'developer', 'leader')
     )
   );
+
+-- ===========================================
+-- UPDATE HELPER FUNCTIONS
+-- ===========================================
+
+CREATE OR REPLACE FUNCTION public.is_admin_or_leader()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE auth_user_id = (SELECT auth.uid())
+    AND role IN ('admin', 'developer', 'leader')
+  )
+$$;
 
 -- ===========================================
 -- COMMENTS

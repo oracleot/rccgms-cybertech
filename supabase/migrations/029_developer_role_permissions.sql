@@ -13,6 +13,9 @@
 -- NOTE: All policies use (SELECT auth.uid()) instead of auth.uid() directly
 -- to avoid per-row function re-evaluation (see 022_rls_performance_optimization.sql)
 --
+-- IMPORTANT: DROP names must match the EXACT policy names from the migration
+-- that created them (022 unless later migrations replaced them).
+--
 -- Tables verified to exist: profiles, rundowns, rundown_items, equipment,
 -- equipment_checkouts, rotas, rota_assignments, design_requests, notifications,
 -- departments, positions, social_posts, social_integrations
@@ -43,8 +46,8 @@ CREATE POLICY "Anyone can view profiles"
 -- STEP 2: CONTENT TABLES - Full access for developers
 -- ===========================================
 
--- RUNDOWNS: Already has policy for all authenticated users with proper roles
--- Update to include developer
+-- RUNDOWNS: Replace policy from 027 to include developer
+-- 027 created: "Admins, leaders, and members can manage rundowns"
 DROP POLICY IF EXISTS "Admins, leaders, and members can manage rundowns" ON rundowns;
 
 CREATE POLICY "Admins, developers, leaders, and members can manage rundowns"
@@ -57,7 +60,8 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundowns"
     )
   );
 
--- RUNDOWN_ITEMS
+-- RUNDOWN_ITEMS: Replace policy from 027
+-- 027 created: "Admins, leaders, and members can manage rundown items"
 DROP POLICY IF EXISTS "Admins, leaders, and members can manage rundown items" ON rundown_items;
 
 CREATE POLICY "Admins, developers, leaders, and members can manage rundown items"
@@ -70,8 +74,9 @@ CREATE POLICY "Admins, developers, leaders, and members can manage rundown items
     )
   );
 
--- EQUIPMENT: Update equipment policies to include developers
-DROP POLICY IF EXISTS "Admins and leaders can manage equipment" ON equipment;
+-- EQUIPMENT: Replace policy from 022
+-- 022 created: "Leaders can manage equipment"
+DROP POLICY IF EXISTS "Leaders can manage equipment" ON equipment;
 
 CREATE POLICY "Admins, developers, and leaders can manage equipment"
   ON equipment FOR ALL
@@ -83,8 +88,10 @@ CREATE POLICY "Admins, developers, and leaders can manage equipment"
     )
   );
 
--- EQUIPMENT_CHECKOUTS: Developers can manage checkouts
-DROP POLICY IF EXISTS "Admins and leaders can manage checkouts" ON equipment_checkouts;
+-- EQUIPMENT_CHECKOUTS: Add a management policy for developers
+-- 022 created separate SELECT/INSERT/UPDATE policies, keep those for members
+-- but add a FOR ALL for elevated roles
+DROP POLICY IF EXISTS "Admins, developers, and leaders can manage checkouts" ON equipment_checkouts;
 
 CREATE POLICY "Admins, developers, and leaders can manage checkouts"
   ON equipment_checkouts FOR ALL
@@ -96,8 +103,9 @@ CREATE POLICY "Admins, developers, and leaders can manage checkouts"
     )
   );
 
--- ROTAS: Update rota policies to include developers
-DROP POLICY IF EXISTS "Admins and leaders can manage rotas" ON rotas;
+-- ROTAS: Replace policy from 022
+-- 022 created: "Leaders can manage rotas"
+DROP POLICY IF EXISTS "Leaders can manage rotas" ON rotas;
 
 CREATE POLICY "Admins, developers, and leaders can manage rotas"
   ON rotas FOR ALL
@@ -109,8 +117,9 @@ CREATE POLICY "Admins, developers, and leaders can manage rotas"
     )
   );
 
--- ROTA_ASSIGNMENTS: Developers can manage assignments
-DROP POLICY IF EXISTS "Admins and leaders can manage rota assignments" ON rota_assignments;
+-- ROTA_ASSIGNMENTS: Replace policy from 022
+-- 022 created: "Leaders can manage assignments"
+DROP POLICY IF EXISTS "Leaders can manage assignments" ON rota_assignments;
 
 CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
   ON rota_assignments FOR ALL
@@ -122,8 +131,10 @@ CREATE POLICY "Admins, developers, and leaders can manage rota assignments"
     )
   );
 
--- DESIGN_REQUESTS: Developers can manage design requests
-DROP POLICY IF EXISTS "Admins and leaders can manage design requests" ON design_requests;
+-- DESIGN_REQUESTS: Add management policy for developers
+-- 024/025 created: public_insert, authenticated_select, authenticated_update, admin_leader_delete
+-- Keep those fine-grained policies, add a broader one for admin/developer/leader
+DROP POLICY IF EXISTS "Admins, developers, and leaders can manage design requests" ON design_requests;
 
 CREATE POLICY "Admins, developers, and leaders can manage design requests"
   ON design_requests FOR ALL
@@ -135,9 +146,9 @@ CREATE POLICY "Admins, developers, and leaders can manage design requests"
     )
   );
 
--- SOCIAL_POSTS: Developers can manage social posts
--- NOTE: Table is social_posts, NOT social_content (see 013_social.sql)
-DROP POLICY IF EXISTS "Admins and leaders can manage social posts" ON social_posts;
+-- SOCIAL_POSTS: Replace policy from 022
+-- 022 created: "Leaders can manage social posts"
+DROP POLICY IF EXISTS "Leaders can manage social posts" ON social_posts;
 
 CREATE POLICY "Admins, developers, and leaders can manage social posts"
   ON social_posts FOR ALL
@@ -149,8 +160,11 @@ CREATE POLICY "Admins, developers, and leaders can manage social posts"
     )
   );
 
--- SOCIAL_INTEGRATIONS: Developers can manage social integrations
-DROP POLICY IF EXISTS "Admins and leaders can manage social integrations" ON social_integrations;
+-- SOCIAL_INTEGRATIONS: Replace user-scoped policy with role-scoped
+-- 022 created: "Users manage own integrations" (user-scoped FOR ALL)
+-- Replacing with admin/developer/leader access. Members retain their own
+-- integration access via the authenticated user policies.
+DROP POLICY IF EXISTS "Users manage own integrations" ON social_integrations;
 
 CREATE POLICY "Admins, developers, and leaders can manage social integrations"
   ON social_integrations FOR ALL
@@ -168,7 +182,9 @@ CREATE POLICY "Admins, developers, and leaders can manage social integrations"
 
 -- NOTIFICATIONS: Developers can VIEW all notifications (logs) - read-only
 -- Write/delete restricted to admin-only or service role to preserve log integrity
-DROP POLICY IF EXISTS "Admins can view all notifications" ON notifications;
+-- 022 created: "View notifications" (FOR SELECT, user-scoped)
+-- We keep that for regular users, add admin+developer global read
+DROP POLICY IF EXISTS "Admins and developers can view all notifications" ON notifications;
 DROP POLICY IF EXISTS "Developers can manage notifications" ON notifications;
 
 CREATE POLICY "Admins and developers can view all notifications"
@@ -185,7 +201,8 @@ CREATE POLICY "Admins and developers can view all notifications"
 -- STEP 4: DEPARTMENTS AND POSITIONS
 -- ===========================================
 
--- Developers can manage departments
+-- DEPARTMENTS: Replace policy from 022
+-- 022 created: "Admins can manage departments"
 DROP POLICY IF EXISTS "Admins can manage departments" ON departments;
 
 CREATE POLICY "Admins and developers can manage departments"
@@ -198,8 +215,9 @@ CREATE POLICY "Admins and developers can manage departments"
     )
   );
 
--- Developers can manage positions
-DROP POLICY IF EXISTS "Admins and leaders can manage positions" ON positions;
+-- POSITIONS: Replace policy from 022
+-- 022 created: "Leaders and admins can manage positions"
+DROP POLICY IF EXISTS "Leaders and admins can manage positions" ON positions;
 
 CREATE POLICY "Admins, developers, and leaders can manage positions"
   ON positions FOR ALL
@@ -212,6 +230,25 @@ CREATE POLICY "Admins, developers, and leaders can manage positions"
   );
 
 -- ===========================================
+-- STEP 5: UPDATE RLS HELPER FUNCTIONS
+-- ===========================================
+-- Update helpers from 026 to include developer role
+
+CREATE OR REPLACE FUNCTION public.is_admin_or_leader()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE auth_user_id = (SELECT auth.uid())
+    AND role IN ('admin', 'developer', 'leader')
+  )
+$$;
+
+-- ===========================================
 -- COMMENTS AND DOCUMENTATION
 -- ===========================================
 
@@ -220,3 +257,6 @@ COMMENT ON POLICY "Admins, developers, leaders, and members can manage rundowns"
 
 COMMENT ON POLICY "Admins and developers can view all notifications" ON notifications
   IS 'Allows admins and developers to view system logs and notifications for monitoring and debugging. Write access restricted to admin/service role.';
+
+COMMENT ON FUNCTION public.is_admin_or_leader() IS 
+  'Returns true if the current user has admin, developer, or leader role. Use in RLS policies for management permissions.';
