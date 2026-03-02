@@ -27,7 +27,7 @@ export function DesignRequestList() {
   // Get current user info for permission checks
   const { user, isLoading: isUserLoading } = useUser()
   const currentUserProfileId = user?.id
-  const isAdmin = user?.role === "admin" || user?.role === "developer"
+  const isAdmin = user?.role === "admin" || user?.role === "lead_developer" || user?.role === "developer"
   
   // Filters
   const [search, setSearch] = useState("")

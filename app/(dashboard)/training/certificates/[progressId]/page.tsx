@@ -85,8 +85,8 @@ export default async function CertificatePage({ params }: CertificatePageProps) 
     notFound()
   }
 
-  // Verify user owns this progress or is admin
-  if (progress.user_id !== profile.id && profile.role !== "admin") {
+  // Verify user owns this progress or is admin/lead_developer
+  if (progress.user_id !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
     redirect("/training/my-progress")
   }
 

@@ -31,7 +31,7 @@ export default async function VerificationsPage() {
 
   const profile = profileData as { id: string; role: string } | null
 
-  if (!profile || (profile.role !== "leader" && profile.role !== "admin")) {
+  if (!profile || (profile.role !== "leader" && profile.role !== "lead_developer" && profile.role !== "admin")) {
     redirect("/training")
   }
 

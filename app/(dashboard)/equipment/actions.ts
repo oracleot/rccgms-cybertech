@@ -62,7 +62,7 @@ async function getProfile(): Promise<ActionResult<Profile>> {
 }
 
 function requireLeader(profile: Profile): ActionResult<Profile> {
-  if (profile.role === "admin" || profile.role === "developer" || profile.role === "leader") {
+  if (profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer" || profile.role === "leader") {
     return { success: true, data: profile }
   }
   return { success: false, error: "Only leaders and admins can perform this action" }

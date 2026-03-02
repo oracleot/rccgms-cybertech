@@ -18,7 +18,7 @@ import { revalidatePath } from "next/cache"
 // GET /api/admin/user-departments - Get user department assignments
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/user-departments - Assign user to departments (replace all)
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const body = await request.json()
 
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/user-departments - Add user to a single department
 export async function PUT(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const body = await request.json()
 
@@ -223,7 +223,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/user-departments - Remove user from department
 export async function DELETE(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
@@ -261,7 +261,7 @@ export async function DELETE(request: NextRequest) {
 // PATCH /api/admin/user-departments - Set primary department
 export async function PATCH(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const body = await request.json()
 

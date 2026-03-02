@@ -53,7 +53,7 @@ export default async function DashboardPage() {
     pendingSwaps: 0,
   }
 
-  if (profile?.role === "admin" || profile?.role === "developer" || profile?.role === "leader") {
+  if (profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader") {
     const [volunteers, equipment, services, swaps] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
         </div>
       </BlurFade>
 
-      {(profile?.role === "admin" || profile?.role === "developer" || profile?.role === "leader") && (
+      {(profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader") && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <BlurFade delay={0.15} inView>
             <Card className="relative overflow-hidden group hover:border-violet-500/30 transition-colors">

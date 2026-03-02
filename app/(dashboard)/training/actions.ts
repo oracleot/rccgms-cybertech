@@ -226,7 +226,7 @@ export async function verifyStep(formData: FormData) {
 
   const profile = profileData as { id: string; role: string } | null
 
-  if (!profile || (profile.role !== "leader" && profile.role !== "admin")) {
+  if (!profile || (profile.role !== "leader" && profile.role !== "lead_developer" && profile.role !== "admin")) {
     return { error: "Only leaders and admins can verify steps" }
   }
 
@@ -289,7 +289,7 @@ export async function createTrack(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can create tracks" }
   }
 
@@ -343,7 +343,7 @@ export async function updateTrack(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can update tracks" }
   }
 
@@ -401,7 +401,7 @@ export async function createStep(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can create steps" }
   }
 
@@ -460,7 +460,7 @@ export async function updateStep(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can update steps" }
   }
 
@@ -532,7 +532,7 @@ export async function deleteStep(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can delete steps" }
   }
 
@@ -587,7 +587,7 @@ export async function reorderSteps(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can reorder steps" }
   }
 

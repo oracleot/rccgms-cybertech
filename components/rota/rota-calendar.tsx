@@ -41,7 +41,7 @@ export function RotaCalendar() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
-  const canCreateRota = user?.role === "admin" || user?.role === "developer" || user?.role === "leader"
+  const canCreateRota = user?.role === "admin" || user?.role === "lead_developer" || user?.role === "developer" || user?.role === "leader"
 
   const fetchRotas = useCallback(async (month: Date) => {
     setIsLoading(true)

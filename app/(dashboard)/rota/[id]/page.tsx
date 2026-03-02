@@ -98,7 +98,7 @@ export default async function RotaDetailPage({ params }: RotaDetailPageProps) {
   // Type assertion for the complex query result
   const rota = data as unknown as RotaData
 
-  const canEdit = userRole === "admin" || userRole === "developer" || userRole === "leader"
+  const canEdit = userRole === "admin" || userRole === "lead_developer" || userRole === "developer" || userRole === "leader"
 
   return (
     <div className="flex flex-col gap-6">

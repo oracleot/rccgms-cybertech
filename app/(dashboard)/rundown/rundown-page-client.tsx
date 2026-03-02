@@ -30,7 +30,7 @@ export function RundownPageClient() {
   const [isLoading, setIsLoading] = useState(true)
   const [rundowns, setRundowns] = useState<RundownListResult[]>([])
 
-  const canCreate = user?.role === "admin" || user?.role === "developer" || user?.role === "leader"
+  const canCreate = user?.role === "admin" || user?.role === "lead_developer" || user?.role === "developer" || user?.role === "leader"
 
   const fetchRundowns = useCallback(async () => {
     setIsLoading(true)

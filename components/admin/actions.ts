@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { requireAdmin, requireLeader } from "@/lib/auth/guards"
+import { requireAdmin, requireLeader, requireLeadDeveloper } from "@/lib/auth/guards"
 import { logAuditEvent } from "@/lib/audit-log"
 import type { UserRole } from "@/lib/constants"
 
@@ -112,7 +112,7 @@ export async function createDepartment(
   input: CreateDepartmentInput
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -133,7 +133,7 @@ export async function createDepartment(
     const result = data as { id: string }
 
     // Audit log
-    const admin = await requireAdmin()
+    const admin = await requireLeadDeveloper()
     await logAuditEvent({
       actorId: admin.profile.id,
       actorName: admin.profile.name,
@@ -164,7 +164,7 @@ export async function updateDepartment(
   input: UpdateDepartmentInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const updateData: Record<string, unknown> = {}
@@ -244,7 +244,7 @@ export async function createPosition(
   input: CreatePositionInput
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -276,7 +276,7 @@ export async function deletePosition(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { error } = await supabase.from("positions").delete().eq("id", id)
@@ -297,7 +297,7 @@ export async function retryNotification(
   notificationId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     // Reset the notification status to pending so it gets picked up by the next cron run
@@ -329,7 +329,7 @@ export async function retryAllFailedNotifications(): Promise<{
   count?: number
 }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     // Get count first

@@ -29,7 +29,7 @@ export default async function TeamAvailabilityPage() {
     .single()
 
   const profile = profileData as { role: string } | null
-  if (!profile || (profile.role !== "admin" && profile.role !== "leader")) {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader")) {
     redirect("/rota/availability")
   }
 

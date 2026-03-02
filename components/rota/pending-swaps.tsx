@@ -248,7 +248,7 @@ export function PendingSwaps({
     r.status === "accepted"
   )
 
-  const isLeader = currentUserRole === "admin" || currentUserRole === "developer" || currentUserRole === "leader"
+  const isLeader = currentUserRole === "admin" || currentUserRole === "lead_developer" || currentUserRole === "developer" || currentUserRole === "leader"
 
   if (isLoading) {
     return (

@@ -93,7 +93,7 @@ export default async function RundownDetailPage({ params }: RundownPageProps) {
       : null,
   }))
 
-  const canEdit = role === "admin" || role === "developer" || role === "leader"
+  const canEdit = role === "admin" || role === "lead_developer" || role === "developer" || role === "leader"
 
   if (!canEdit) {
     redirect(`/rundown/${id}/live`)

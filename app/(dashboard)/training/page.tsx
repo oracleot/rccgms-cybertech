@@ -119,7 +119,7 @@ export default async function TrainingPage() {
     enrollmentCounts.set(track.id, count || 0)
   }
 
-  const isLeaderOrAdmin = profile?.role === "leader" || profile?.role === "developer" || profile?.role === "admin"
+  const isLeaderOrAdmin = profile?.role === "leader" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "admin"
   
   // Calculate stats for the hero section
   const totalTracks = tracks.length

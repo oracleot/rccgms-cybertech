@@ -47,7 +47,7 @@ export async function createRota(input: CreateRotaInput): Promise<ActionResult<{
 
     const profile = profileData as { id: string; role: string }
 
-    if (profile.role !== "admin" && profile.role !== "leader") {
+    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
       return { success: false, error: "Only admins and leaders can create rotas" }
     }
 
@@ -121,7 +121,7 @@ export async function updateRotaAssignments(input: UpdateAssignmentsInput): Prom
 
     const profile = profileData as { id: string; role: string }
 
-    if (profile.role !== "admin" && profile.role !== "leader") {
+    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
       return { success: false, error: "Only admins and leaders can update assignments" }
     }
 
@@ -195,7 +195,7 @@ export async function publishRota(input: PublishRotaInput): Promise<ActionResult
 
     const profile = profileData as { id: string; role: string }
 
-    if (profile.role !== "admin" && profile.role !== "leader") {
+    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
       return { success: false, error: "Only admins and leaders can publish rotas" }
     }
 
@@ -258,7 +258,7 @@ export async function deleteRota(rotaId: string): Promise<ActionResult> {
 
     const profile = profileData as { id: string; role: string }
 
-    if (profile.role !== "admin" && profile.role !== "leader") {
+    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
       return { success: false, error: "Only admins and leaders can delete rotas" }
     }
 
