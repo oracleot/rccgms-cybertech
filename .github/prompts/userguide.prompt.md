@@ -22,7 +22,7 @@ Before writing, understand what was implemented:
 
 ### 2. Writing Style
 
-- **Audience**: Non-technical church volunteers and leaders
+- **Audience**: Non-technical church members and leaders
 - **Tone**: Friendly, helpful, encouraging
 - **Language**: Simple and clear - avoid jargon
 - **Format**: Step-by-step instructions with visual cues
@@ -65,7 +65,7 @@ FAQ format for frequent issues.
 - What users will see at each step
 - Expected outcomes ("You'll see a success message")
 - What to do if something goes wrong
-- Role-specific instructions where relevant (Volunteer vs Leader vs Admin)
+- Role-specific instructions where relevant (Member vs Leader vs Admin)
 
 **DO NOT include:**
 - Technical jargon (API, database, middleware, etc.)
@@ -76,7 +76,7 @@ FAQ format for frequent issues.
 ### 5. Role Awareness
 
 The app has three user roles. Clearly indicate when features are role-specific:
-- 👤 **Volunteers**: Basic access, personal schedule management
+- 👤 **Members**: Basic access, personal schedule management
 - 👥 **Leaders**: Team management, scheduling, content creation
 - 🔧 **Admins**: Full system access, user management
 
@@ -144,4 +144,4 @@ Run this agent after completing:
 
 ---
 
-**Remember**: You're writing for the church volunteer who just wants to know "how do I check when I'm serving next Sunday?" - keep it simple, friendly, and practical.
+**Remember**: You're writing for the church member who just wants to know "how do I check when I'm serving next Sunday?" - keep it simple, friendly, and practical.

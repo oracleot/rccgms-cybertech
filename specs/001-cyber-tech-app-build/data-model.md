@@ -10,7 +10,7 @@
 PROFILES ──┬── has many ──> ROTA_ASSIGNMENTS
            ├── has many ──> AVAILABILITY
            ├── has many ──> EQUIPMENT_CHECKOUTS
-           ├── has many ──> VOLUNTEER_PROGRESS
+           ├── has many ──> MEMBER_PROGRESS
            ├── has many ──> USER_DEPARTMENTS ──> DEPARTMENTS
            ├── has one ──> DISPLAY_SETTINGS
            └── belongs to ──> DEPARTMENTS (primary, legacy)
@@ -30,7 +30,7 @@ EQUIPMENT ──┬── has many ──> EQUIPMENT_CHECKOUTS
 RUNDOWNS ──> has many ──> RUNDOWN_ITEMS ──> references ──> SONGS
 
 ONBOARDING_TRACKS ──> has many ──> ONBOARDING_STEPS
-ONBOARDING_TRACKS ──> has many ──> VOLUNTEER_PROGRESS ──> has many ──> STEP_COMPLETIONS
+ONBOARDING_TRACKS ──> has many ──> MEMBER_PROGRESS ──> has many ──> STEP_COMPLETIONS
 ```
 
 ---
@@ -49,7 +49,7 @@ User accounts linked to Supabase Auth.
 | name | text | not null | Display name |
 | phone | text | nullable | Mobile for SMS notifications |
 | avatar_url | text | nullable | Profile photo URL |
-| role | enum('admin', 'leader', 'volunteer') | not null, default 'volunteer' | Access role |
+| role | enum('admin', 'leader', 'member') | not null, default 'member' | Access role |
 | department_id | uuid | FK departments(id), nullable | Primary department |
 | notification_preferences | jsonb | default '{}' | Email/SMS settings |
 | created_at | timestamptz | default now() | Created timestamp |
@@ -95,7 +95,7 @@ Junction table enabling users to belong to multiple departments.
 **Notes**:
 - The `is_primary` flag indicates the user's main department, used for scheduling and notifications
 - When a user is assigned to a department marked as primary, `profiles.department_id` is automatically updated
-- Multiple departments allow volunteers to serve across teams (e.g., Sound and Cameras)
+- Multiple departments allow members to serve across teams (e.g., Sound and Cameras)
 
 ---
 
@@ -126,8 +126,8 @@ Specific roles within a service.
 | name | text | not null | e.g., "Camera 1", "Main Sound" |
 | department_id | uuid | FK departments(id), not null | Parent department |
 | description | text | nullable | Position details |
-| min_volunteers | int | not null, default 1 | Minimum required |
-| max_volunteers | int | not null, default 1 | Maximum allowed |
+| min_members | int | not null, default 1 | Minimum required |
+| max_members | int | not null, default 1 | Maximum allowed |
 | created_at | timestamptz | default now() | Created timestamp |
 
 **Unique**: (name, department_id)
@@ -178,13 +178,13 @@ Service schedules for specific dates.
 
 ### rota_assignments
 
-Links volunteers to positions for a rota.
+Links members to positions for a rota.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | uuid | PK | Assignment ID |
 | rota_id | uuid | FK rotas(id), not null, on delete cascade | Parent rota |
-| user_id | uuid | FK profiles(id), not null | Assigned volunteer |
+| user_id | uuid | FK profiles(id), not null | Assigned member |
 | position_id | uuid | FK positions(id), not null | Position assigned |
 | status | enum('pending', 'confirmed', 'declined') | default 'pending' | Confirmation status |
 | confirmed_at | timestamptz | nullable | When confirmed |
@@ -198,12 +198,12 @@ Links volunteers to positions for a rota.
 
 ### availability
 
-Volunteer availability declarations.
+Member availability declarations.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | uuid | PK | Availability ID |
-| user_id | uuid | FK profiles(id), not null | Volunteer |
+| user_id | uuid | FK profiles(id), not null | Member |
 | date | date | not null | Date in question |
 | is_available | boolean | not null | Available or not |
 | notes | text | nullable | Reason if unavailable |
@@ -444,14 +444,14 @@ Individual training steps.
 
 ---
 
-### volunteer_progress
+### member_progress
 
 Track enrollment and completion.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | uuid | PK | Progress ID |
-| user_id | uuid | FK profiles(id), not null | Volunteer |
+| user_id | uuid | FK profiles(id), not null | Member |
 | track_id | uuid | FK onboarding_tracks(id), not null | Training track |
 | started_at | timestamptz | default now() | Enrollment date |
 | completed_at | timestamptz | nullable | Completion date |
@@ -468,14 +468,14 @@ Individual step completion records.
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | uuid | PK | Completion ID |
-| volunteer_progress_id | uuid | FK volunteer_progress(id), not null | Parent progress |
+| member_progress_id | uuid | FK member_progress(id), not null | Parent progress |
 | step_id | uuid | FK onboarding_steps(id), not null | Completed step |
 | completed_at | timestamptz | default now() | When completed |
 | score | int | nullable | Quiz score if applicable |
 | attempts | int | default 1 | Quiz attempts |
 | mentor_verified_by | uuid | FK profiles(id), nullable | Mentor sign-off |
 
-**Unique**: (volunteer_progress_id, step_id)
+**Unique**: (member_progress_id, step_id)
 
 ---
 
@@ -580,7 +580,7 @@ User-specific display customization for projection/extended display.
 ## Enums Summary
 
 ```sql
-CREATE TYPE user_role AS ENUM ('admin', 'leader', 'volunteer');
+CREATE TYPE user_role AS ENUM ('admin', 'leader', 'member');
 CREATE TYPE rota_status AS ENUM ('draft', 'published');
 CREATE TYPE assignment_status AS ENUM ('pending', 'confirmed', 'declined');
 CREATE TYPE swap_status AS ENUM ('pending', 'accepted', 'declined', 'approved', 'rejected');

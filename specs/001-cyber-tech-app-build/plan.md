@@ -5,7 +5,7 @@
 
 ## Summary
 
-Build a comprehensive church tech department management web application that centralizes rota scheduling, livestream description generation, equipment tracking, service rundowns, social media management, and volunteer training. The application uses Next.js 14 with App Router, Supabase for database/auth, Vercel AI SDK for GPT-4 integration, and deploys as a PWA on Vercel. Key priorities are mobile-first design, offline capability for critical views, and modular feature independence.
+Build a comprehensive church tech department management web application that centralizes rota scheduling, livestream description generation, equipment tracking, service rundowns, social media management, and member training. The application uses Next.js 14 with App Router, Supabase for database/auth, Vercel AI SDK for GPT-4 integration, and deploys as a PWA on Vercel. Key priorities are mobile-first design, offline capability for critical views, and modular feature independence.
 
 ## Technical Context
 
@@ -38,7 +38,7 @@ Build a comprehensive church tech department management web application that cen
 - 50 concurrent users without degradation
 
 **Scale/Scope**: 
-- 20-50 active volunteers
+- 20-50 active members
 - ~50 screens across all features
 - 7 feature modules (Auth, Rota, Livestream, Equipment, Rundown, Social, Training)
 
@@ -48,7 +48,7 @@ Build a comprehensive church tech department management web application that cen
 
 | Principle | Status | Evidence |
 |-----------|--------|----------|
-| I. User-Centric Ministry Focus | ✅ PASS | All features directly serve volunteer coordination and service quality (rota, rundown, training) |
+| I. User-Centric Ministry Focus | ✅ PASS | All features directly serve member coordination and service quality (rota, rundown, training) |
 | II. Mobile-First, Offline-Capable | ✅ PASS | PWA requirement in FR-060, offline views in FR-062, < 2s load in FR-059 |
 | III. Modular Feature Independence | ✅ PASS | 7 independent modules with clear boundaries defined in project structure |
 | IV. Type Safety & Validation | ✅ PASS | TypeScript strict mode, Zod schemas for forms, Supabase-generated types |
@@ -97,7 +97,7 @@ cyber-tech/
 │   │   ├── social/                   # Social media hub
 │   │   ├── equipment/                # Equipment inventory
 │   │   ├── rundown/                  # Service rundowns
-│   │   ├── training/                 # Volunteer training
+│   │   ├── training/                 # Member training
 │   │   ├── team/                     # Team directory
 │   │   ├── admin/                    # Admin settings
 │   │   └── settings/                 # User settings

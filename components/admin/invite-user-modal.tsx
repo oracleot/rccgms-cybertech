@@ -111,7 +111,7 @@ export function InviteUserModal({ departments }: InviteUserModalProps) {
               <Input
                 id="email"
                 type="email"
-                placeholder="volunteer@example.com"
+                placeholder="member@example.com"
                 {...register("email")}
               />
               {errors.email && (

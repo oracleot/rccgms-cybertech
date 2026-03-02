@@ -41,7 +41,7 @@ export interface TrainingTrack {
   updated_at: string
 }
 
-// Base volunteer progress type
+// Base member progress type
 export interface TrainingProgress {
   id: string
   user_id: string
@@ -54,7 +54,7 @@ export interface TrainingProgress {
 // Base step completion type
 export interface StepCompletion {
   id: string
-  volunteer_progress_id: string
+  member_progress_id: string
   step_id: string
   completed_at: string
   score: number | null

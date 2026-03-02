@@ -47,7 +47,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   // Get the progress record
   const { data: progressData } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select(`
       *,
       track:onboarding_tracks(

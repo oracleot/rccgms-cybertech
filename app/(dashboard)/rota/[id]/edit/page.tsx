@@ -217,7 +217,7 @@ export default function EditRotaPage() {
     try {
       const result = await publishRota({
         rotaId: rota.id,
-        notifyVolunteers: true,
+        notifyMembers: true,
       })
 
       if (!result.success) {

@@ -176,7 +176,7 @@ export default async function RotaDetailPage({ params }: RotaDetailPageProps) {
         <CardHeader>
           <CardTitle className="text-lg">Team Assignments</CardTitle>
           <CardDescription>
-            {rota.assignments?.length || 0} volunteers assigned
+            {rota.assignments?.length || 0} members assigned
           </CardDescription>
         </CardHeader>
         <CardContent>

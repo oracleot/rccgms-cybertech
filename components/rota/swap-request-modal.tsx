@@ -47,7 +47,7 @@ interface AssignmentDetails {
   departmentName: string
 }
 
-interface VolunteerOption {
+interface MemberOption {
   id: string
   name: string
   avatarUrl: string | null
@@ -68,8 +68,8 @@ export function SwapRequestModal({
   onSuccess,
 }: SwapRequestModalProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [volunteers, setVolunteers] = useState<VolunteerOption[]>([])
-  const [loadingVolunteers, setLoadingVolunteers] = useState(false)
+  const [members, setMembers] = useState<MemberOption[]>([])
+  const [loadingMembers, setLoadingMembers] = useState(false)
 
   const form = useForm<CreateSwapRequestInput>({
     resolver: zodResolver(createSwapRequestSchema),
@@ -87,12 +87,12 @@ export function SwapRequestModal({
     }
   }, [assignment, form])
 
-  // Fetch eligible volunteers when modal opens
+  // Fetch eligible members when modal opens
   useEffect(() => {
-    async function fetchVolunteers() {
+    async function fetchMembers() {
       if (!open || !assignment) return
 
-      setLoadingVolunteers(true)
+      setLoadingMembers(true)
       const supabase = createClient()
 
       try {
@@ -100,30 +100,30 @@ export function SwapRequestModal({
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        // Get all volunteers (excluding the current user)
-        // Note: We get all volunteers since users can be assigned to positions outside their primary department
-        const { data: volunteersResult } = await supabase
+        // Get all members (excluding the current user)
+        // Note: We get all members since users can be assigned to positions outside their primary department
+        const { data: membersResult } = await supabase
           .from("profiles")
           .select("id, name, avatar_url")
           .neq("auth_user_id", user.id)
           .not("role", "is", null)
           .order("name")
 
-        const volunteersData = (volunteersResult || []) as { id: string; name: string; avatar_url: string | null }[]
+        const membersData = (membersResult || []) as { id: string; name: string; avatar_url: string | null }[]
 
         // Check availability for the rota date
         const { data: availabilityResult } = await supabase
           .from("availability")
           .select("user_id, is_available")
           .eq("date", assignment.date)
-          .in("user_id", volunteersData.map(v => v.id))
+          .in("user_id", membersData.map(v => v.id))
 
         const availabilityData = (availabilityResult || []) as { user_id: string; is_available: boolean }[]
         const availabilityMap = new Map(
           availabilityData.map(a => [a.user_id, a.is_available])
         )
 
-        const volunteerOptions: VolunteerOption[] = volunteersData.map(v => ({
+        const memberOptions: MemberOption[] = membersData.map(v => ({
           id: v.id,
           name: v.name,
           avatarUrl: v.avatar_url,
@@ -132,22 +132,22 @@ export function SwapRequestModal({
         }))
 
         // Sort: available first, then by name
-        volunteerOptions.sort((a, b) => {
+        memberOptions.sort((a, b) => {
           if (a.isAvailable && !b.isAvailable) return -1
           if (!a.isAvailable && b.isAvailable) return 1
           return a.name.localeCompare(b.name)
         })
 
-        setVolunteers(volunteerOptions)
+        setMembers(memberOptions)
       } catch (error) {
-        console.error("Error fetching volunteers:", error)
-        toast.error("Failed to load volunteers")
+        console.error("Error fetching members:", error)
+        toast.error("Failed to load members")
       } finally {
-        setLoadingVolunteers(false)
+        setLoadingMembers(false)
       }
     }
 
-    fetchVolunteers()
+    fetchMembers()
   }, [open, assignment])
 
   async function onSubmit(data: CreateSwapRequestInput) {
@@ -229,7 +229,7 @@ export function SwapRequestModal({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={loadingVolunteers}
+                    disabled={loadingMembers}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -243,21 +243,21 @@ export function SwapRequestModal({
                           <span>Open request (anyone can accept)</span>
                         </div>
                       </SelectItem>
-                      {volunteers.map((volunteer) => (
+                      {members.map((member) => (
                         <SelectItem 
-                          key={volunteer.id} 
-                          value={volunteer.id}
-                          disabled={!volunteer.isAvailable}
+                          key={member.id} 
+                          value={member.id}
+                          disabled={!member.isAvailable}
                         >
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarImage src={volunteer.avatarUrl || undefined} />
+                              <AvatarImage src={member.avatarUrl || undefined} />
                               <AvatarFallback className="text-xs">
-                                {getInitials(volunteer.name)}
+                                {getInitials(member.name)}
                               </AvatarFallback>
                             </Avatar>
-                            <span>{volunteer.name}</span>
-                            {!volunteer.isAvailable && (
+                            <span>{member.name}</span>
+                            {!member.isAvailable && (
                               <Badge variant="secondary" className="text-xs">
                                 Unavailable
                               </Badge>

@@ -137,7 +137,7 @@ export function TrackEditor({ departments, track, onSubmit }: TrackEditorProps) 
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="What will volunteers learn in this track?"
+              placeholder="What will members learn in this track?"
               rows={3}
               {...register("description")}
             />
@@ -165,7 +165,7 @@ export function TrackEditor({ departments, track, onSubmit }: TrackEditorProps) 
             <div className="space-y-0.5">
               <Label htmlFor="isActive">Publish Track</Label>
               <p className="text-sm text-muted-foreground">
-                Published tracks are visible to all volunteers
+                Published tracks are visible to all members
               </p>
             </div>
             <Switch

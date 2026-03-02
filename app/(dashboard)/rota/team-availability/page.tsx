@@ -78,8 +78,8 @@ export default async function TeamAvailabilityPage() {
           <ul className="text-sm text-amber-700 space-y-1">
             <li>• Green cells indicate team members who are available</li>
             <li>• Red cells indicate team members who are unavailable</li>
-            <li>• Gray cells mean the volunteer hasn&apos;t set their availability</li>
-            <li>• Hover over cells to see any notes the volunteer has added</li>
+            <li>• Gray cells mean the member hasn&apos;t set their availability</li>
+            <li>• Hover over cells to see any notes the member has added</li>
             <li>• Use the summary row to quickly see availability counts</li>
           </ul>
         </div>

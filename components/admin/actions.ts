@@ -236,8 +236,8 @@ interface CreatePositionInput {
   departmentId: string
   name: string
   description?: string
-  minVolunteers?: number
-  maxVolunteers?: number
+  minMembers?: number
+  maxMembers?: number
 }
 
 export async function createPosition(
@@ -253,8 +253,8 @@ export async function createPosition(
         department_id: input.departmentId,
         name: input.name,
         description: input.description || null,
-        min_volunteers: input.minVolunteers || 1,
-        max_volunteers: input.maxVolunteers || 1,
+        min_members: input.minMembers || 1,
+        max_members: input.maxMembers || 1,
       } as Record<string, unknown>)
       .select("id")
       .single()

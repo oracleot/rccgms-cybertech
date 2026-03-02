@@ -687,8 +687,8 @@ export type Database = {
           department_id: string
           description: string | null
           id: string
-          max_volunteers: number
-          min_volunteers: number
+          max_members: number
+          min_members: number
           name: string
         }
         Insert: {
@@ -696,8 +696,8 @@ export type Database = {
           department_id: string
           description?: string | null
           id?: string
-          max_volunteers?: number
-          min_volunteers?: number
+          max_members?: number
+          min_members?: number
           name: string
         }
         Update: {
@@ -705,8 +705,8 @@ export type Database = {
           department_id?: string
           description?: string | null
           id?: string
-          max_volunteers?: number
-          min_volunteers?: number
+          max_members?: number
+          min_members?: number
           name?: string
         }
         Relationships: [
@@ -1213,7 +1213,7 @@ export type Database = {
           mentor_verified_by: string | null
           score: number | null
           step_id: string
-          volunteer_progress_id: string
+          member_progress_id: string
         }
         Insert: {
           attempts?: number | null
@@ -1223,7 +1223,7 @@ export type Database = {
           mentor_verified_by?: string | null
           score?: number | null
           step_id: string
-          volunteer_progress_id: string
+          member_progress_id: string
         }
         Update: {
           attempts?: number | null
@@ -1233,7 +1233,7 @@ export type Database = {
           mentor_verified_by?: string | null
           score?: number | null
           step_id?: string
-          volunteer_progress_id?: string
+          member_progress_id?: string
         }
         Relationships: [
           {
@@ -1251,10 +1251,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "step_completions_volunteer_progress_id_fkey"
-            columns: ["volunteer_progress_id"]
+            foreignKeyName: "step_completions_member_progress_id_fkey"
+            columns: ["member_progress_id"]
             isOneToOne: false
-            referencedRelation: "volunteer_progress"
+            referencedRelation: "member_progress"
             referencedColumns: ["id"]
           },
         ]
@@ -1366,7 +1366,7 @@ export type Database = {
           },
         ]
       }
-      volunteer_progress: {
+      member_progress: {
         Row: {
           completed_at: string | null
           id: string
@@ -1393,14 +1393,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "volunteer_progress_track_id_fkey"
+            foreignKeyName: "member_progress_track_id_fkey"
             columns: ["track_id"]
             isOneToOne: false
             referencedRelation: "onboarding_tracks"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "volunteer_progress_user_id_fkey"
+            foreignKeyName: "member_progress_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

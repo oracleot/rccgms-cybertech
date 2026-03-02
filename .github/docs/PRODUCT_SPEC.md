@@ -33,7 +33,7 @@ To empower the tech department with modern tools that reduce manual overhead, im
 |------|-------------|-----------|
 | **Tech Lead/Admin** | Oversees all tech operations | Full access to all features, user management, analytics |
 | **Team Leaders** | Manage specific areas (sound, cameras, etc.) | Rota creation, team member management, rundown editing |
-| **Volunteers** | Serve on scheduled Sundays | View schedules, submit availability, access training |
+| **Members** | Serve on scheduled Sundays | View schedules, submit availability, access training |
 
 ### User Personas
 
@@ -49,7 +49,7 @@ To empower the tech department with modern tools that reduce manual overhead, im
 - **Goals:** Know who's on her team each Sunday, track equipment condition
 - **Pain Points:** Difficulty tracking who's trained on which camera, equipment issues discovered during service
 
-#### Persona 3: James (Volunteer)
+#### Persona 3: James (Member)
 - **Age:** 22
 - **Tech Comfort:** High
 - **Goals:** Know when he's serving, complete required training
@@ -71,12 +71,12 @@ To empower the tech department with modern tools that reduce manual overhead, im
 | AUTH-02 | Users can log in with email/password | Session persists across browser sessions |
 | AUTH-03 | Users can reset password | Reset link sent via email, expires in 1 hour |
 | AUTH-04 | Admins can invite new members | Invitation email with signup link |
-| AUTH-05 | Role-based access control | 3 roles: Admin, Leader, Volunteer |
+| AUTH-05 | Role-based access control | 3 roles: Admin, Leader, Member |
 | AUTH-06 | Profile management | Users can update name, phone, avatar |
 
 #### User Roles & Permissions
 
-| Permission | Admin | Leader | Volunteer |
+| Permission | Admin | Leader | Member |
 |------------|-------|--------|-----------|
 | View own schedule | ✅ | ✅ | ✅ |
 | Submit availability | ✅ | ✅ | ✅ |
@@ -111,7 +111,7 @@ A scheduling system to manage which team members serve in specific roles each Su
 | ROTA-07 | Automated reminders | Email + SMS, customizable timing |
 | ROTA-08 | Notification preferences | Members choose channels and timing (default: 1 day before) |
 | ROTA-09 | View assignment history | Past rotas accessible for reference |
-| ROTA-10 | Publish/unpublish rotas | Draft rotas not visible to volunteers |
+| ROTA-10 | Publish/unpublish rotas | Draft rotas not visible to members |
 
 #### Service Positions
 
@@ -276,13 +276,13 @@ Create and manage service order/flow documents with timing, assignments, and cue
 
 ---
 
-### 3.7 Volunteer Onboarding & Training
+### 3.7 Member Onboarding & Training
 
 **Priority:** P2 (Medium)
 
 #### Overview
 
-Structured training program for new volunteers with progress tracking and certification.
+Structured training program for new members with progress tracking and certification.
 
 #### Functional Requirements
 
@@ -291,7 +291,7 @@ Structured training program for new volunteers with progress tracking and certif
 | TRAIN-01 | Training tracks by department | Each role has a learning path |
 | TRAIN-02 | Step types | Video, document, quiz, shadowing, practical |
 | TRAIN-03 | Progress tracking | Visual progress indicators |
-| TRAIN-04 | Mentor assignment | Pair new volunteers with experienced members |
+| TRAIN-04 | Mentor assignment | Pair new members with experienced members |
 | TRAIN-05 | Completion verification | Mentor sign-off for practical steps |
 | TRAIN-06 | Certification management | Track certifications and expiry |
 | TRAIN-07 | Resource library | Centralized training materials |
@@ -397,7 +397,7 @@ Home screen with key metrics, upcoming duties, and quick actions.
 - Advanced analytics dashboard
 - Mobile native app (React Native)
 - Multi-campus support
-- Volunteer hour tracking
+- Member hour tracking
 - Gamification (badges, leaderboards)
 
 ### Technical Debt Considerations

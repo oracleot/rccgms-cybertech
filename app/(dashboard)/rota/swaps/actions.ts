@@ -104,7 +104,7 @@ export async function createSwapRequest(
 
   const swapRequestData = swapRequest as { id: string }
 
-  // TODO: Send notification to target user or all eligible volunteers
+  // TODO: Send notification to target user or all eligible members
 
   revalidatePath("/rota/swaps")
   revalidatePath("/rota/my-schedule")

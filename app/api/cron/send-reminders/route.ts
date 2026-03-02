@@ -6,7 +6,7 @@ import { processPendingNotifications } from "@/lib/notifications/notification-se
  * Cron endpoint to send duty reminders and process pending notifications
  * 
  * This should be called daily by Vercel Cron or an external scheduler.
- * It sends reminders to volunteers who have upcoming service assignments,
+ * It sends reminders to members who have upcoming service assignments,
  * and also processes any queued notifications.
  * 
  * Expected to be called at ~8:00 AM local time daily.

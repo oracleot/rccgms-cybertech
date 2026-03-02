@@ -47,14 +47,14 @@ export default async function DashboardPage() {
 
   // Get stats for admin/leader
   let stats = {
-    totalVolunteers: 0,
+    totalMembers: 0,
     activeEquipment: 0,
     upcomingServices: 0,
     pendingSwaps: 0,
   }
 
   if (profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader") {
-    const [volunteers, equipment, services, swaps] = await Promise.all([
+    const [members, equipment, services, swaps] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase
         .from("equipment")
@@ -72,14 +72,14 @@ export default async function DashboardPage() {
     ])
 
     stats = {
-      totalVolunteers: volunteers.count ?? 0,
+      totalMembers: members.count ?? 0,
       activeEquipment: equipment.count ?? 0,
       upcomingServices: services.count ?? 0,
       pendingSwaps: swaps.count ?? 0,
     }
   }
 
-  const firstName = profile?.name?.split(" ")[0] ?? "Volunteer"
+  const firstName = profile?.name?.split(" ")[0] ?? "Member"
 
   return (
     <div className="space-y-6">
@@ -117,10 +117,10 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  <NumberTicker value={stats.totalVolunteers} />
+                  <NumberTicker value={stats.totalMembers} />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Active volunteers
+                  Active members
                 </p>
               </CardContent>
             </Card>

@@ -21,7 +21,7 @@ const POSITIONS = [
   { id: 4, name: "Graphics Operator", icon: "🖥️", assigned: null },
 ];
 
-const VOLUNTEERS = [
+const MEMBERS = [
   { initials: "JD", name: "John Doe", color: "hsl(262 83% 58%)" },
   { initials: "SM", name: "Sarah Miller", color: "hsl(221 83% 53%)" },
   { initials: "MJ", name: "Mike Johnson", color: "hsl(142 76% 36%)" },
@@ -71,7 +71,7 @@ export const AssignmentScene: React.FC = () => {
     };
   };
 
-  // Assignment animation - volunteers appear with more time
+  // Assignment animation - members appear with more time
   const assignmentProgress = interpolate(frame, [120, 220], [0, 4], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -148,7 +148,7 @@ export const AssignmentScene: React.FC = () => {
               margin: 0,
             }}
           >
-            Assign Volunteers to Positions
+            Assign Members to Positions
           </h2>
         </div>
         <p
@@ -159,7 +159,7 @@ export const AssignmentScene: React.FC = () => {
             marginLeft: 64,
           }}
         >
-          Drag and drop volunteers or select from the dropdown
+          Drag and drop members or select from the dropdown
         </p>
       </div>
 
@@ -205,7 +205,7 @@ export const AssignmentScene: React.FC = () => {
       >
         {POSITIONS.map((position, index) => {
           const isAssigned = assignmentProgress > index;
-          const volunteer = VOLUNTEERS[index];
+          const member = MEMBERS[index];
           const cardAnim = getCardAnimation(index);
           
           // Individual assignment animation
@@ -275,9 +275,9 @@ export const AssignmentScene: React.FC = () => {
                             }}
                           >
                             <Avatar
-                              initials={volunteer.initials}
+                              initials={member.initials}
                               size={36}
-                              backgroundColor={volunteer.color}
+                              backgroundColor={member.color}
                             />
                             <span
                               style={{
@@ -287,7 +287,7 @@ export const AssignmentScene: React.FC = () => {
                                 fontWeight: 500,
                               }}
                             >
-                              {volunteer.name}
+                              {member.name}
                             </span>
                           </div>
                         ) : (
@@ -367,7 +367,7 @@ export const AssignmentScene: React.FC = () => {
             color: theme.colors.foreground,
           }}
         >
-          Leaders and Admins can assign volunteers based on availability and skills
+          Leaders and Admins can assign members based on availability and skills
         </span>
       </div>
     </AbsoluteFill>

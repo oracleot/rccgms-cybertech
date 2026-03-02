@@ -258,7 +258,7 @@ export function RotaCalendar() {
                         <RotaStatusBadge status={event.status} />
                       </div>
                       <span className="text-sm text-muted-foreground">
-                        {event.assignmentCount} volunteers assigned
+                        {event.assignmentCount} members assigned
                       </span>
                     </button>
                   ))}

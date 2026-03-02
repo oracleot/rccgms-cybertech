@@ -45,7 +45,7 @@ export async function GET(
       "swap_requests", "equipment_categories", "equipment",
       "equipment_checkouts", "equipment_maintenance",
       "rundowns", "rundown_items",
-      "onboarding_tracks", "onboarding_steps", "volunteer_progress", "step_completions",
+      "onboarding_tracks", "onboarding_steps", "member_progress", "step_completions",
       "notifications", "notification_preferences",
       "social_posts", "social_integrations",
       "livestream_templates", "livestream_history",

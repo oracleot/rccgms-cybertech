@@ -44,7 +44,7 @@ public/
 │   ├── onboarding_steps
 │   ├── onboarding_tracks
 │   ├── step_completions
-│   └── volunteer_progress
+│   └── member_progress
 │
 ├── Design Requests (1 table)
 │   └── design_requests

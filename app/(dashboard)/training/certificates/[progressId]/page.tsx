@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: CertificatePageProps) {
   const supabase = await createClient()
   
   const { data: progress } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select("track:onboarding_tracks(name)")
     .eq("id", progressId)
     .single()
@@ -67,7 +67,7 @@ export default async function CertificatePage({ params }: CertificatePageProps) 
 
   // Get the progress record
   const { data: progressRaw } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select(`
       *,
       track:onboarding_tracks(

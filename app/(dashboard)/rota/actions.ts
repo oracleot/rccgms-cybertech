@@ -165,7 +165,7 @@ export async function updateRotaAssignments(input: UpdateAssignmentsInput): Prom
 }
 
 /**
- * Publish a rota (makes it visible to all volunteers)
+ * Publish a rota (makes it visible to all members)
  */
 export async function publishRota(input: PublishRotaInput): Promise<ActionResult> {
   try {
@@ -214,7 +214,7 @@ export async function publishRota(input: PublishRotaInput): Promise<ActionResult
     }
 
     // Send notifications if requested
-    if (parsed.data.notifyVolunteers) {
+    if (parsed.data.notifyMembers) {
       // TODO: Implement notification sending via lib/notifications
       // This will be implemented in a future phase
     }

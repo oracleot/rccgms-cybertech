@@ -19,7 +19,7 @@ The existing `profiles` table remains unchanged. The `name` field may be null fo
 | auth_user_id | uuid | FK to auth.users |
 | name | text | User's full name (nullable for new invites) |
 | email | text | User's email address |
-| role | text | 'admin' \| 'leader' \| 'volunteer' |
+| role | text | 'admin' \| 'leader' \| 'member' |
 | phone | text | User's phone number (optional) |
 | ... | ... | Other existing fields |
 

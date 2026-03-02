@@ -61,10 +61,10 @@ ORDER BY count DESC`,
   },
   {
     label: "Rota assignments this month",
-    sql: `SELECT r.date, p.name as volunteer, pos.name as position
+    sql: `SELECT r.date, p.name as member, pos.name as position
 FROM rota_assignments ra
 JOIN rotas r ON ra.rota_id = r.id
-JOIN profiles p ON ra.volunteer_id = p.id
+JOIN profiles p ON ra.user_id = p.id
 LEFT JOIN positions pos ON ra.position_id = pos.id
 WHERE r.date >= CURRENT_DATE - INTERVAL '30 days'
 ORDER BY r.date DESC`,

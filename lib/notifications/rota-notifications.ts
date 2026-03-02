@@ -48,7 +48,7 @@ interface ReminderAssignment {
 }
 
 /**
- * Queue notifications for all assigned volunteers when a rota is published
+ * Queue notifications for all assigned members when a rota is published
  */
 export async function sendRotaPublishedNotifications(rotaId: string): Promise<{
   queued: number
