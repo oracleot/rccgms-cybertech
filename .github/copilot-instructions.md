@@ -197,7 +197,7 @@ When testing the app (auth-protected routes), use the accounts inside `.github/d
 ## Specifications
 
 Detailed specifications live in `specs/001-cyber-tech-app-build/`:
-- [spec.md](specs/001-cyber-tech-app-build/spec.md) - User stories and requirements
-- [data-model.md](specs/001-cyber-tech-app-build/data-model.md) - Database schema with all RLS policies
-- [contracts/](specs/001-cyber-tech-app-build/contracts/) - API endpoint specifications per module
-- [quickstart.md](specs/001-cyber-tech-app-build/quickstart.md) - Developer setup guide
+- [spec.md](../specs/001-cyber-tech-app-build/spec.md) - User stories and requirements
+- [data-model.md](../specs/001-cyber-tech-app-build/data-model.md) - Database schema with all RLS policies
+- [contracts/](../specs/001-cyber-tech-app-build/contracts/) - API endpoint specifications per module
+- [quickstart.md](../specs/001-cyber-tech-app-build/quickstart.md) - Developer setup guide

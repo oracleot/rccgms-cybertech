@@ -12,8 +12,9 @@ import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import { TestModePanel } from "@/components/admin/test-mode-panel"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
 import type { UserRole } from "@/lib/constants"
+import type { Metadata } from "next"
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "User Management | Admin | Cyber Tech",
   description: "Manage team members, roles, and permissions",
 }
