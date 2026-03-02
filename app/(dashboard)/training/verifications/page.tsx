@@ -11,7 +11,7 @@ import type { VerificationRequest } from "@/types/training"
 
 export const metadata = {
   title: "Verifications | Training",
-  description: "Review and verify volunteer training completions",
+  description: "Review and verify member training completions",
 }
 
 export default async function VerificationsPage() {
@@ -31,7 +31,7 @@ export default async function VerificationsPage() {
 
   const profile = profileData as { id: string; role: string } | null
 
-  if (!profile || (profile.role !== "leader" && profile.role !== "admin")) {
+  if (!profile || (profile.role !== "leader" && profile.role !== "lead_developer" && profile.role !== "admin")) {
     redirect("/training")
   }
 
@@ -40,10 +40,10 @@ export default async function VerificationsPage() {
     .from("step_completions")
     .select(`
       id,
-      volunteer_progress_id,
+      member_progress_id,
       step_id,
       completed_at,
-      progress:volunteer_progress(
+      progress:member_progress(
         id,
         user_id,
         track_id,
@@ -57,7 +57,7 @@ export default async function VerificationsPage() {
 
   interface CompletionRow {
     id: string
-    volunteer_progress_id: string
+    member_progress_id: string
     step_id: string
     completed_at: string
     progress: {
@@ -77,7 +77,7 @@ export default async function VerificationsPage() {
     .filter(c => c.step?.type === "practical" || c.step?.type === "shadowing")
     .map(c => ({
       id: c.id,
-      progressId: c.volunteer_progress_id,
+      progressId: c.member_progress_id,
       stepId: c.step_id,
       userId: c.progress?.user_id || "",
       userName: c.progress?.user?.name || "Unknown",
@@ -118,7 +118,7 @@ export default async function VerificationsPage() {
               </AnimatedGradientText>
             </h1>
             <p className="text-muted-foreground">
-              Review and verify volunteer step completions
+              Review and verify member step completions
             </p>
           </div>
           {verificationRequests.length > 0 && (
@@ -142,7 +142,7 @@ export default async function VerificationsPage() {
           <EmptyState
             icon={<ClipboardCheck className="h-12 w-12" />}
             title="No Pending Verifications"
-            description="All volunteer step completions have been reviewed. Check back later for new requests."
+            description="All member step completions have been reviewed. Check back later for new requests."
           />
         </BlurFade>
       )}

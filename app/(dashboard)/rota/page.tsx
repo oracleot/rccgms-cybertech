@@ -14,8 +14,8 @@ export default function RotaPage() {
   const [view, setView] = useState<"calendar" | "list">("calendar")
   const { user } = useUser()
 
-  const canCreateRota = user?.role === "admin" || user?.role === "leader"
-  const isLeaderOrAdmin = user?.role === "admin" || user?.role === "leader"
+  const canCreateRota = user?.role === "admin" || user?.role === "lead_developer" || user?.role === "developer" || user?.role === "leader"
+  const isLeaderOrAdmin = user?.role === "admin" || user?.role === "lead_developer" || user?.role === "developer" || user?.role === "leader"
 
   return (
     <div className="flex flex-col gap-6">

@@ -38,7 +38,7 @@ export function LeaderSwapDashboard({ className }: LeaderSwapDashboardProps) {
       if (!profile) return
       
       const profileData = profile as { id: string; role: string }
-      if (profileData.role !== "admin" && profileData.role !== "leader") {
+      if (profileData.role !== "admin" && profileData.role !== "lead_developer" && profileData.role !== "leader") {
         return
       }
 

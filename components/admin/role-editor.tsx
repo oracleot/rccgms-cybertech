@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
-import { Shield, Loader2, Star, Building2 } from "lucide-react"
+import { Shield, Loader2, Star, Building2, Beaker } from "lucide-react"
 import { toast } from "sonner"
 import {
   Dialog,
@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useTestMode } from "@/contexts/test-mode-context"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
 import type { UserRole } from "@/lib/constants"
 import { updateUserRole } from "./actions"
@@ -39,6 +40,7 @@ interface RoleEditorModalProps {
   userId: string
   users: UserWithDepartments[]
   departments: Department[]
+  currentUserRole: UserRole // Add current user's role for permission checks
 }
 
 function getInitials(name: string): string {
@@ -52,8 +54,10 @@ function getInitials(name: string): string {
 
 const roleDescriptions: Record<string, string> = {
   admin: "Full access to all features including user management and system settings",
+  lead_developer: "Senior technical role — can manage developers and has full admin-level access",
+  developer: "Technical/backend access with content management and read-only user viewing",
   leader: "Can manage rotas, equipment, rundowns, and approve swap requests",
-  volunteer: "Can view schedules, submit availability, and request swaps",
+  member: "Can view schedules, submit availability, and request swaps",
 }
 
 interface DepartmentAssignment {
@@ -65,11 +69,13 @@ export function RoleEditorModal({
   userId,
   users,
   departments,
+  currentUserRole,
 }: RoleEditorModalProps) {
   const router = useRouter()
   const user = users.find((u) => u.id === userId)
   const [isPending, startTransition] = useTransition()
-  const [role, setRole] = useState<UserRole>(user?.role as UserRole || "volunteer")
+  const [role, setRole] = useState<UserRole>(user?.role as UserRole || "member")
+  const { isTestMode, simulateRoleChange } = useTestMode()
   
   // Initialize department assignments from user_departments or fallback to legacy
   const getInitialAssignments = (): DepartmentAssignment[] => {
@@ -90,6 +96,62 @@ export function RoleEditorModal({
 
   if (!user) {
     return null
+  }
+
+  // Permission checks for UI
+  const isTargetUserAdmin = user.role === "admin"
+  const isCurrentUserLeader = currentUserRole === "leader"
+  const isDeveloper = currentUserRole === "developer"
+  const isDeveloperOrLead = currentUserRole === "developer" || currentUserRole === "lead_developer"
+  const canEditThisUser = !(isCurrentUserLeader && isTargetUserAdmin)
+
+  // Available roles based on current user's permissions
+  const availableRoles: { value: UserRole; label: string; description: string }[] = [
+    {
+      value: "member",
+      label: "Member",
+      description: roleDescriptions.member,
+    },
+    {
+      value: "leader",
+      label: "Leader",
+      description: roleDescriptions.leader,
+    },
+  ]
+
+  // Admins can assign all roles; lead developers can assign up to lead_developer;
+  // developers can see all roles in test mode (simulated only)
+  if (currentUserRole === "admin" || (isDeveloperOrLead && isTestMode)) {
+    availableRoles.push(
+      {
+        value: "developer",
+        label: "Developer",
+        description: roleDescriptions.developer,
+      },
+      {
+        value: "lead_developer",
+        label: "Lead Developer",
+        description: roleDescriptions.lead_developer,
+      },
+      {
+        value: "admin",
+        label: "Admin",
+        description: roleDescriptions.admin,
+      }
+    )
+  } else if (currentUserRole === "lead_developer") {
+    availableRoles.push(
+      {
+        value: "developer",
+        label: "Developer",
+        description: roleDescriptions.developer,
+      },
+      {
+        value: "lead_developer",
+        label: "Lead Developer",
+        description: roleDescriptions.lead_developer,
+      }
+    )
   }
 
   const handleClose = () => {
@@ -121,6 +183,25 @@ export function RoleEditorModal({
   }
 
   const handleSave = () => {
+    // If developer/lead_developer in test mode, simulate the change
+    if (isDeveloperOrLead && isTestMode) {
+      const previousRole = user.role as UserRole
+      simulateRoleChange(user.id, user.name, previousRole, role)
+      toast.success("Change simulated", {
+        description: "This is a test simulation - no changes were made to the database",
+      })
+      handleClose()
+      return
+    }
+
+    // Developer without test mode cannot make changes
+    if (isDeveloper && !isTestMode) {
+      toast.error("Read-only access", {
+        description: "Developers can only make changes in test mode",
+      })
+      return
+    }
+
     startTransition(async () => {
       // First update role and primary department
       const primaryDept = assignments.find(a => a.isPrimary)
@@ -167,9 +248,17 @@ export function RoleEditorModal({
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
             Edit User Role & Departments
+            {isDeveloperOrLead && isTestMode && (
+              <Badge variant="outline" className="ml-auto gap-1 text-orange-600 border-orange-300">
+                <Beaker className="h-3 w-3" />
+                Test Mode
+              </Badge>
+            )}
           </DialogTitle>
           <DialogDescription>
-            Change role and department assignments for this user
+            {isDeveloperOrLead && isTestMode 
+              ? "Changes will be simulated only - not applied to production database"
+              : "Change role and department assignments for this user"}
           </DialogDescription>
         </DialogHeader>
 
@@ -189,19 +278,39 @@ export function RoleEditorModal({
           {/* Role Selection */}
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="leader">Leader</SelectItem>
-                <SelectItem value="volunteer">Volunteer</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {roleDescriptions[role]}
-            </p>
+            {!canEditThisUser ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                <p className="font-medium">Cannot modify admin users</p>
+                <p className="text-xs mt-1">Leaders cannot change roles for admin users.</p>
+              </div>
+            ) : (
+              <>
+                <Select
+                  value={role}
+                  onValueChange={(v) => setRole(v as UserRole)}
+                  disabled={!canEditThisUser}
+                >
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableRoles.map((roleOption) => (
+                      <SelectItem key={roleOption.value} value={roleOption.value}>
+                        {roleOption.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {roleDescriptions[role]}
+                </p>
+                {isCurrentUserLeader && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                    As a leader, you can assign member and leader roles only.
+                  </p>
+                )}
+              </>
+            )}
           </div>
 
           <Separator />
@@ -285,9 +394,12 @@ export function RoleEditorModal({
           <Button variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isPending}>
+          <Button 
+            onClick={handleSave} 
+            disabled={isPending || (!canEditThisUser && !(isDeveloperOrLead && isTestMode))}
+          >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
+            {isDeveloperOrLead && isTestMode ? "Simulate Change" : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>

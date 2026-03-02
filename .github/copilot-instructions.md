@@ -90,14 +90,16 @@ const { completion, complete, isLoading } = useCompletion({ api: "/api/ai/..." }
 ## Database Conventions
 
 ### User Roles
-Three roles with distinct permissions: `admin` > `leader` > `volunteer`
+Five roles with distinct permissions: `admin` > `lead_developer` > `developer` > `leader` > `member`
 - **Admin**: Full access, user management, system settings
+- **Lead Developer**: Admin-lite with technical and management permissions
+- **Developer**: Technical/backend read-only permissions
 - **Leader**: Create/edit rotas, approve swaps, manage team
-- **Volunteer**: View schedules, submit availability, request swaps
+- **Member**: View schedules, submit availability, request swaps
 
 ### Key Entities
 - `profiles` (linked to `auth.users`) → `departments` → `positions`
-- `rotas` → `rota_assignments` (links volunteers to positions)
+- `rotas` → `rota_assignments` (links members to positions)
 - `equipment` → `equipment_checkouts` (auto-updates status via trigger)
 - `rundowns` → `rundown_items` (ordered by `order` column)
 

@@ -82,7 +82,7 @@ export function RotaDetailClient({
   const handlePublish = async () => {
     setIsPublishing(true)
     try {
-      const result = await publishRota({ rotaId, notifyVolunteers: true })
+      const result = await publishRota({ rotaId, notifyMembers: true })
       if (result.success) {
         toast.success("Rota published successfully")
         router.refresh()
@@ -116,7 +116,7 @@ export function RotaDetailClient({
   if (assignments.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No volunteers have been assigned yet.
+        No members have been assigned yet.
       </div>
     )
   }

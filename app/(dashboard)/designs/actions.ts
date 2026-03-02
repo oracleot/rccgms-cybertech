@@ -142,7 +142,7 @@ export async function unclaimRequest(requestId: string): Promise<ActionResult> {
 
   // Only the assignee or an admin can unclaim
   const isAssignee = request.assigned_to === profile.id
-  const isAdmin = profile.role === "admin"
+  const isAdmin = profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer"
   
   if (!isAssignee && !isAdmin) {
     return { success: false, error: "You can only unclaim requests assigned to you" }
@@ -203,19 +203,28 @@ export async function reassignRequest(
     return { success: false, error: "Profile not found" }
   }
 
-  if (profile.role !== "admin" && profile.role !== "leader") {
+  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
     return { success: false, error: "Only admins and leaders can reassign requests" }
   }
 
-  // Verify new assignee exists
+  // Verify new assignee exists and get their role
   const { data: newAssignee } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, role")
     .eq("id", newAssigneeId)
     .single()
 
   if (!newAssignee) {
     return { success: false, error: "Assignee not found" }
+  }
+
+  // Permission validation:
+  // - Leaders can only assign to members or other leaders
+  // - Admins/lead_developers can assign to any role
+  if (profile.role === "leader") {
+    if (newAssignee.role !== "member" && newAssignee.role !== "leader") {
+      return { success: false, error: "Leaders can only assign designs to members or other leaders" }
+    }
   }
 
   // Reassign
@@ -501,7 +510,7 @@ export async function deleteRequest(requestId: string): Promise<ActionResult> {
     return { success: false, error: "Profile not found" }
   }
 
-  if (profile.role !== "admin" && profile.role !== "leader") {
+  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
     return { success: false, error: "Only admins and leaders can delete requests" }
   }
 

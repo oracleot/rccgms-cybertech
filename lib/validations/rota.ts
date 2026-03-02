@@ -86,7 +86,7 @@ export type UpdateAssignmentStatusInput = z.infer<typeof updateAssignmentStatusS
 // Publish rota schema
 export const publishRotaSchema = z.object({
   rotaId: z.string().uuid(),
-  notifyVolunteers: z.boolean().default(true),
+  notifyMembers: z.boolean().default(true),
 })
 
 export type PublishRotaInput = z.infer<typeof publishRotaSchema>

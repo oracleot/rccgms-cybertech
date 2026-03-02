@@ -165,7 +165,7 @@ export const SwapRequestScene: React.FC = () => {
             marginLeft: 64,
           }}
         >
-          Can't make it? Request to swap with another volunteer
+          Can't make it? Request to swap with another member
         </p>
       </div>
 

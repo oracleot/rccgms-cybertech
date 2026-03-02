@@ -22,7 +22,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
-interface VolunteerSelectorProps {
+interface MemberSelectorProps {
   value?: string
   onValueChange: (value: string) => void
   departmentId?: string
@@ -33,7 +33,7 @@ interface VolunteerSelectorProps {
   showAvailabilityBadge?: boolean
 }
 
-interface VolunteerOption {
+interface MemberOption {
   id: string
   name: string
   email: string
@@ -56,23 +56,23 @@ interface AvailabilityQueryResult {
   notes: string | null
 }
 
-export function VolunteerSelector({
+export function MemberSelector({
   value,
   onValueChange,
   departmentId,
   positionId: _positionId,
   date,
-  placeholder = "Select volunteer...",
+  placeholder = "Select member...",
   disabled = false,
   showAvailabilityBadge = true,
-}: VolunteerSelectorProps) {
+}: MemberSelectorProps) {
   const [open, setOpen] = useState(false)
-  const [volunteers, setVolunteers] = useState<VolunteerOption[]>([])
+  const [members, setMembers] = useState<MemberOption[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    async function fetchVolunteers() {
+    async function fetchMembers() {
       setIsLoading(true)
       setError(null)
       
@@ -110,12 +110,12 @@ export function VolunteerSelector({
         }
 
         // Filter by department if provided, but also include users without a department
-        // This allows assigning volunteers who haven't been assigned to a department yet
+        // This allows assigning members who haven't been assigned to a department yet
         const filteredProfiles = departmentId 
           ? profiles.filter(p => p.department_id === departmentId || p.department_id === null)
           : profiles
 
-        const options: VolunteerOption[] = filteredProfiles.map((p) => ({
+        const options: MemberOption[] = filteredProfiles.map((p) => ({
           id: p.id,
           name: p.name || p.email || "Unknown",
           email: p.email || "",
@@ -134,25 +134,25 @@ export function VolunteerSelector({
           return 0
         })
 
-        setVolunteers(options)
+        setMembers(options)
       } catch (err) {
-        console.error("Error fetching volunteers:", err)
+        console.error("Error fetching members:", err)
         setError(err instanceof Error ? err.message : "Unknown error")
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchVolunteers()
+    fetchMembers()
   }, [departmentId, date])
 
-  const selectedVolunteer = volunteers.find((v) => v.id === value)
+  const selectedMember = members.find((v) => v.id === value)
 
   // Helper to render availability badge
-  const renderAvailabilityBadge = (volunteer: VolunteerOption) => {
-    if (!showAvailabilityBadge || volunteer.isAvailable === undefined) return null
+  const renderAvailabilityBadge = (member: MemberOption) => {
+    if (!showAvailabilityBadge || member.isAvailable === undefined) return null
     
-    if (volunteer.isAvailable) {
+    if (member.isAvailable) {
       return (
         <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs px-1.5 py-0">
           <CalendarCheck className="h-3 w-3 mr-0.5" />
@@ -179,16 +179,16 @@ export function VolunteerSelector({
           className="w-full justify-between"
           disabled={disabled || isLoading}
         >
-          {selectedVolunteer ? (
+          {selectedMember ? (
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={selectedVolunteer.avatarUrl || undefined} />
+                <AvatarImage src={selectedMember.avatarUrl || undefined} />
                 <AvatarFallback>
                   <User className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
-              <span className="truncate">{selectedVolunteer.name}</span>
-              {showAvailabilityBadge && selectedVolunteer.isAvailable === false && (
+              <span className="truncate">{selectedMember.name}</span>
+              {showAvailabilityBadge && selectedMember.isAvailable === false && (
                 <CalendarX className="h-3 w-3 text-red-500" />
               )}
             </div>
@@ -200,7 +200,7 @@ export function VolunteerSelector({
       </PopoverTrigger>
       <PopoverContent className="w-[320px] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search volunteers..." />
+          <CommandInput placeholder="Search members..." />
           <CommandList>
             <CommandEmpty>
               {error ? (
@@ -208,45 +208,45 @@ export function VolunteerSelector({
               ) : isLoading ? (
                 "Loading..."
               ) : (
-                "No volunteers found"
+                "No members found"
               )}
             </CommandEmpty>
             <CommandGroup>
-              {volunteers.map((volunteer) => (
+              {members.map((member) => (
                 <CommandItem
-                  key={volunteer.id}
-                  value={volunteer.name}
+                  key={member.id}
+                  value={member.name}
                   onSelect={() => {
-                    onValueChange(volunteer.id)
+                    onValueChange(member.id)
                     setOpen(false)
                   }}
                   className={cn(
                     "flex items-center justify-between",
-                    volunteer.isAvailable === false && "opacity-60"
+                    member.isAvailable === false && "opacity-60"
                   )}
                 >
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <Avatar className="h-6 w-6 flex-shrink-0">
-                      <AvatarImage src={volunteer.avatarUrl || undefined} />
+                      <AvatarImage src={member.avatarUrl || undefined} />
                       <AvatarFallback>
                         <User className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col min-w-0">
-                      <span className="truncate">{volunteer.name}</span>
-                      {volunteer.isAvailable === false && volunteer.availabilityNotes && (
+                      <span className="truncate">{member.name}</span>
+                      {member.isAvailable === false && member.availabilityNotes && (
                         <span className="text-xs text-muted-foreground truncate">
-                          {volunteer.availabilityNotes}
+                          {member.availabilityNotes}
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                    {renderAvailabilityBadge(volunteer)}
+                    {renderAvailabilityBadge(member)}
                     <Check
                       className={cn(
                         "h-4 w-4",
-                        value === volunteer.id ? "opacity-100" : "opacity-0"
+                        value === member.id ? "opacity-100" : "opacity-0"
                       )}
                     />
                   </div>

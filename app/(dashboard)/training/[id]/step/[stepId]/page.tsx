@@ -66,7 +66,7 @@ export default async function StepPage({ params }: StepPageProps) {
 
   // Get user's progress for this track
   const { data: progressData } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select("*")
     .eq("user_id", profile.id)
     .eq("track_id", trackId)
@@ -108,7 +108,7 @@ export default async function StepPage({ params }: StepPageProps) {
   const { data: completionsData } = await supabase
     .from("step_completions")
     .select("step_id, mentor_verified_by")
-    .eq("volunteer_progress_id", progress.id)
+    .eq("member_progress_id", progress.id)
 
   const completions = (completionsData || []) as Array<{ step_id: string; mentor_verified_by: string | null }>
   const completionMap = new Map(completions.map(c => [c.step_id, c]))

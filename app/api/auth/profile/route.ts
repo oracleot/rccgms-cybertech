@@ -46,7 +46,7 @@ export async function GET() {
       avatar_url,
       role,
       department_id,
-      departments (
+      departments!fk_profiles_department (
         id,
         name
       )
@@ -203,7 +203,7 @@ export async function PATCH(request: NextRequest) {
       avatar_url,
       role,
       department_id,
-      departments (
+      departments!fk_profiles_department (
         id,
         name
       )

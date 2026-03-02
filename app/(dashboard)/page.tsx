@@ -41,7 +41,7 @@ export default async function DashboardHomePage() {
   }
 
   const isLeaderOrAdmin =
-    profile.role === "admin" || profile.role === "leader"
+    profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer" || profile.role === "leader"
 
   const today = startOfDay(new Date())
   const nextWeek = addDays(today, 7)
@@ -149,8 +149,8 @@ export default async function DashboardHomePage() {
     assignedThisSunday: number
   }> = []
 
-  let totalVolunteers = 0
-  let activeVolunteers = 0
+  let totalMembers = 0
+  let activeMembers = 0
   let upcomingServices = 0
 
   if (isLeaderOrAdmin) {
@@ -315,13 +315,13 @@ export default async function DashboardHomePage() {
         }
       }) ?? []
 
-    // Get volunteer counts
-    const { count: volunteerCount } = await supabase
+    // Get member counts
+    const { count: memberCount } = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
 
-    totalVolunteers = volunteerCount ?? 0
-    activeVolunteers = availableUserIds.size
+    totalMembers = memberCount ?? 0
+    activeMembers = availableUserIds.size
 
     // Get upcoming services count
     const { count: serviceCount } = await supabase
@@ -338,7 +338,7 @@ export default async function DashboardHomePage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">
-          Welcome back, {profile.name?.split(" ")[0] ?? "Volunteer"}
+          Welcome back, {profile.name?.split(" ")[0] ?? "Member"}
         </h1>
         <p className="text-muted-foreground">
           Here&apos;s what&apos;s happening with your tech team
@@ -353,8 +353,8 @@ export default async function DashboardHomePage() {
             <div className="lg:col-span-2">
               <TeamOverview
                 departments={departments}
-                totalVolunteers={totalVolunteers}
-                activeVolunteers={activeVolunteers}
+                totalMembers={totalMembers}
+                activeMembers={activeMembers}
                 upcomingServices={upcomingServices}
               />
             </div>

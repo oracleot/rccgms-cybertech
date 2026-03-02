@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { requireAdmin } from "@/lib/auth/guards"
+import { requireLeader } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 import { UserTable } from "@/components/admin/user-table"
 import { RoleEditorModal } from "@/components/admin/role-editor"
@@ -9,7 +9,9 @@ import { InviteUserModal } from "@/components/admin/invite-user-modal"
 import { UserDepartmentsModal } from "@/components/admin/user-departments-modal"
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
+import { TestModePanel } from "@/components/admin/test-mode-panel"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
+import type { UserRole } from "@/lib/constants"
 
 export const metadata = {
   title: "User Management | Admin | Cyber Tech",
@@ -90,7 +92,8 @@ interface UsersPageProps {
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
-  await requireAdmin()
+  const currentUser = await requireLeader() // Allow both leaders and admins
+  const currentUserRole = currentUser.profile.role as UserRole
   const params = await searchParams
   const [users, departments] = await Promise.all([getUsers(), getDepartments()])
   const editUserId = params.edit
@@ -103,19 +106,28 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground">
-            Manage team members, roles, and permissions
+            {currentUserRole === "developer" || currentUserRole === "lead_developer"
+              ? "View team members and their roles (read-only access)" 
+              : "Manage team members, roles, and permissions"}
           </p>
         </div>
-        <Button asChild>
-          <a href="/admin/users?invite=true">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Invite User
-          </a>
-        </Button>
+        {currentUserRole !== "developer" && currentUserRole !== "lead_developer" && (
+          <Button asChild>
+            <a href="/admin/users?invite=true">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Invite User
+            </a>
+          </Button>
+        )}
       </div>
 
+      {/* Test Mode Panel - only for developers */}
+      {(currentUserRole === "developer" || currentUserRole === "lead_developer") && (
+        <TestModePanel />
+      )}
+
       <Suspense fallback={<LoadingSkeleton className="h-96" />}>
-        <UserTable users={users} departments={departments} />
+        <UserTable users={users} departments={departments} currentUserRole={currentUserRole as "admin" | "lead_developer" | "developer" | "leader"} />
       </Suspense>
 
       {/* Role Editor Modal - shown when edit param is present */}
@@ -124,6 +136,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           userId={editUserId}
           users={users}
           departments={departments}
+          currentUserRole={currentUserRole}
         />
       )}
 

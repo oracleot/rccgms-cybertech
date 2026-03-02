@@ -117,7 +117,7 @@ export function RotaList() {
               <div className="flex items-center gap-4">
                 <RotaStatusBadge status={rota.status} />
                 <span className="text-sm text-muted-foreground">
-                  {rota.assignments.length} volunteers assigned
+                  {rota.assignments.length} members assigned
                 </span>
                 {rota.service?.location && (
                   <span className="text-sm text-muted-foreground">

@@ -34,22 +34,28 @@ export function getAppUrl(): string {
 // ===================
 export const USER_ROLES = {
   ADMIN: "admin",
+  LEAD_DEVELOPER: "lead_developer",
+  DEVELOPER: "developer",
   LEADER: "leader",
-  VOLUNTEER: "volunteer",
+  MEMBER: "member",
 } as const
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES]
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
+  lead_developer: "Lead Developer",
+  developer: "Developer",
   leader: "Team Leader",
-  volunteer: "Volunteer",
+  member: "Member",
 }
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  admin: 3,
+  admin: 5,
+  lead_developer: 4,
+  developer: 3,
   leader: 2,
-  volunteer: 1,
+  member: 1,
 }
 
 // ===================
@@ -348,7 +354,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   DASHBOARD: "/dashboard",
-  PROFILE: "/settings",
+  PROFILE: "/profile",
   NOTIFICATIONS: "/settings",  // Points to settings page with notification preferences
   ROTA: "/rota",
   ROTA_NEW: "/rota/new",
@@ -372,4 +378,5 @@ export const ROUTES = {
   ADMIN_DEPARTMENTS: "/admin/departments",
   ADMIN_NOTIFICATIONS: "/admin/notifications",
   ADMIN_TRAINING: "/admin/training",
+  ADMIN_DEVELOPER_TOOLS: "/admin/developer",
 } as const

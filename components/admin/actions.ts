@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { requireAdmin } from "@/lib/auth/guards"
+import { requireAdmin, requireLeader, requireLeadDeveloper } from "@/lib/auth/guards"
+import { logAuditEvent } from "@/lib/audit-log"
 import type { UserRole } from "@/lib/constants"
 
 interface UpdateUserRoleInput {
@@ -15,8 +16,55 @@ export async function updateUserRole(
   input: UpdateUserRoleInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    // Get current user's role
+    const currentUser = await requireLeader() // Allow leaders and admins
+    const currentUserRole = currentUser.profile.role
+    
     const supabase = createAdminClient()
+
+    // Get target user's current role
+    const { data: targetUser, error: fetchError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", input.userId)
+      .single()
+
+    if (fetchError || !targetUser) {
+      return { success: false, error: "Target user not found" }
+    }
+
+    // Permission checks based on current user's role
+    if (currentUserRole === "leader") {
+      // Leaders cannot assign admin, lead_developer, or developer roles
+      if (input.role === "admin" || input.role === "lead_developer" || input.role === "developer") {
+        return { success: false, error: "Leaders cannot assign admin or developer roles" }
+      }
+      
+      // Leaders cannot modify existing admins, lead_developers, or developers
+      if (targetUser.role === "admin" || targetUser.role === "lead_developer" || targetUser.role === "developer") {
+        return { success: false, error: "Leaders cannot modify admin or developer users" }
+      }
+      
+      // Leaders can only assign to members and leaders
+      if (input.role !== "member" && input.role !== "leader") {
+        return { success: false, error: "Leaders can only assign member or leader roles" }
+      }
+    }
+    
+    // Developers cannot use this action (read-only access to user management)
+    if (currentUserRole === "developer") {
+      return { success: false, error: "Developers have read-only access to user management" }
+    }
+
+    // Lead developers can manage developers and below, but not admins or other lead developers
+    if (currentUserRole === "lead_developer") {
+      if (input.role === "admin") {
+        return { success: false, error: "Lead developers cannot assign admin role" }
+      }
+      if (targetUser.role === "admin") {
+        return { success: false, error: "Lead developers cannot modify admin users" }
+      }
+    }
 
     const { error } = await supabase
       .from("profiles")
@@ -29,6 +77,21 @@ export async function updateUserRole(
     if (error) {
       return { success: false, error: error.message }
     }
+
+    // Audit log
+    await logAuditEvent({
+      actorId: currentUser.profile.id,
+      actorName: currentUser.profile.name,
+      actorRole: currentUserRole,
+      action: "role_change",
+      targetType: "user",
+      targetId: input.userId,
+      details: {
+        previous_role: targetUser.role,
+        new_role: input.role,
+        department_id: input.departmentId,
+      },
+    })
 
     revalidatePath("/admin/users")
     return { success: true }
@@ -49,7 +112,7 @@ export async function createDepartment(
   input: CreateDepartmentInput
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -68,6 +131,19 @@ export async function createDepartment(
     }
 
     const result = data as { id: string }
+
+    // Audit log
+    const admin = await requireLeadDeveloper()
+    await logAuditEvent({
+      actorId: admin.profile.id,
+      actorName: admin.profile.name,
+      actorRole: admin.profile.role,
+      action: "department_create",
+      targetType: "department",
+      targetId: result.id,
+      targetName: input.name,
+    })
+
     revalidatePath("/admin/departments")
     return { success: true, id: result.id }
   } catch (error) {
@@ -88,7 +164,7 @@ export async function updateDepartment(
   input: UpdateDepartmentInput
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const updateData: Record<string, unknown> = {}
@@ -137,6 +213,17 @@ export async function deleteDepartment(
       return { success: false, error: error.message }
     }
 
+    // Audit log
+    const admin = await requireAdmin()
+    await logAuditEvent({
+      actorId: admin.profile.id,
+      actorName: admin.profile.name,
+      actorRole: admin.profile.role,
+      action: "department_delete",
+      targetType: "department",
+      targetId: id,
+    })
+
     revalidatePath("/admin/departments")
     return { success: true }
   } catch (error) {
@@ -149,15 +236,15 @@ interface CreatePositionInput {
   departmentId: string
   name: string
   description?: string
-  minVolunteers?: number
-  maxVolunteers?: number
+  minMembers?: number
+  maxMembers?: number
 }
 
 export async function createPosition(
   input: CreatePositionInput
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -166,8 +253,8 @@ export async function createPosition(
         department_id: input.departmentId,
         name: input.name,
         description: input.description || null,
-        min_volunteers: input.minVolunteers || 1,
-        max_volunteers: input.maxVolunteers || 1,
+        min_members: input.minMembers || 1,
+        max_members: input.maxMembers || 1,
       } as Record<string, unknown>)
       .select("id")
       .single()
@@ -189,7 +276,7 @@ export async function deletePosition(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { error } = await supabase.from("positions").delete().eq("id", id)
@@ -210,7 +297,7 @@ export async function retryNotification(
   notificationId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     // Reset the notification status to pending so it gets picked up by the next cron run
@@ -242,7 +329,7 @@ export async function retryAllFailedNotifications(): Promise<{
   count?: number
 }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     // Get count first
@@ -316,6 +403,18 @@ export async function deleteUser(
 
     // Delete the profile (in case cascade didn't work)
     await supabase.from("profiles").delete().eq("id", userId)
+
+    // Audit log
+    const adminUser = await requireAdmin()
+    await logAuditEvent({
+      actorId: adminUser.profile.id,
+      actorName: adminUser.profile.name,
+      actorRole: adminUser.profile.role,
+      action: "user_delete",
+      targetType: "user",
+      targetId: userId,
+      targetName: (profile as { role: string } | null)?.role || "unknown",
+    })
 
     revalidatePath("/admin/users")
     return { success: true }

@@ -47,7 +47,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   // Get the progress record
   const { data: progressData } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select(`
       *,
       track:onboarding_tracks(
@@ -66,7 +66,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   // Verify user owns this progress or is admin
-  if (progress.user_id !== profile.id && profile.role !== "admin") {
+  if (progress.user_id !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
   }
 

@@ -9,7 +9,7 @@
 
 ### User Story 1 - Admin Invites New Team Member (Priority: P1)
 
-An admin needs to add a new volunteer, leader, or admin to the Cyber Tech platform. Since self-registration is disabled, the admin sends an invitation through the admin panel. The invited user receives an email with a magic link that logs them directly into the platform.
+An admin needs to add a new member, leader, or admin to the Cyber Tech platform. Since self-registration is disabled, the admin sends an invitation through the admin panel. The invited user receives an email with a magic link that logs them directly into the platform.
 
 **Why this priority**: This is the only way new users can join the platform since self-registration is removed. Without this flow, no new users can be added.
 

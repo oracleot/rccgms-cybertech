@@ -15,7 +15,7 @@ Cyber Tech is a comprehensive web application designed to automate and streamlin
 |------|-------------|-----------|
 | **Tech Lead/Admin** | Oversees all tech operations | Full access to all features, user management, analytics |
 | **Team Leaders** | Manage specific areas (sound, cameras, etc.) | Rota creation, team member management, rundown editing |
-| **Volunteers** | Serve on scheduled Sundays | View schedules, submit availability, access training |
+| **Members** | Serve on scheduled Sundays | View schedules, submit availability, access training |
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -39,52 +39,52 @@ As a tech department member, I want to securely sign up, log in, and access the 
 
 ### User Story 2 - Rota Management & Scheduling (Priority: P1)
 
-As a Team Leader, I want to create and manage weekly service rotas so that volunteers know when and where they are serving, reducing last-minute coordination chaos.
+As a Team Leader, I want to create and manage weekly service rotas so that members know when and where they are serving, reducing last-minute coordination chaos.
 
 **Why this priority**: Rota management is the core operational need identified by the Tech Lead persona. It directly addresses the pain point of spending hours on WhatsApp coordinating schedules.
 
-**Independent Test**: Can be fully tested by creating a rota for an upcoming Sunday, assigning volunteers to positions, publishing it, and verifying that assigned volunteers receive notifications. Delivers immediate operational value.
+**Independent Test**: Can be fully tested by creating a rota for an upcoming Sunday, assigning members to positions, publishing it, and verifying that assigned members receive notifications. Delivers immediate operational value.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Team Leader on the rota page, **When** they select a service date, **Then** they see all available positions with min/max volunteer requirements
-2. **Given** a rota with positions displayed, **When** the Leader assigns a volunteer via dropdown or drag-drop, **Then** the assignment is saved and the position shows the volunteer's name
-3. **Given** a complete rota in draft status, **When** the Leader clicks "Publish", **Then** all assigned volunteers receive email notifications
-4. **Given** a volunteer viewing their dashboard, **When** they check "My Schedule", **Then** they see all their upcoming assignments for the next 4 weeks
-5. **Given** an assigned volunteer, **When** they submit availability as unavailable for a date, **Then** Leaders are notified of the conflict
+1. **Given** a Team Leader on the rota page, **When** they select a service date, **Then** they see all available positions with min/max member requirements
+2. **Given** a rota with positions displayed, **When** the Leader assigns a member via dropdown or drag-drop, **Then** the assignment is saved and the position shows the member's name
+3. **Given** a complete rota in draft status, **When** the Leader clicks "Publish", **Then** all assigned members receive email notifications
+4. **Given** a member viewing their dashboard, **When** they check "My Schedule", **Then** they see all their upcoming assignments for the next 4 weeks
+5. **Given** an assigned member, **When** they submit availability as unavailable for a date, **Then** Leaders are notified of the conflict
 
 ---
 
-### User Story 3 - Volunteer Availability Submission (Priority: P1)
+### User Story 3 - Member Availability Submission (Priority: P1)
 
-As a Volunteer, I want to submit my availability for upcoming Sundays so that Leaders can schedule me appropriately and I don't get assigned when unavailable.
+As a Member, I want to submit my availability for upcoming Sundays so that Leaders can schedule me appropriately and I don't get assigned when unavailable.
 
 **Why this priority**: Availability tracking is essential for effective rota creation and prevents scheduling conflicts that lead to last-minute scrambles.
 
-**Independent Test**: Can be fully tested by a volunteer accessing the availability calendar, marking dates as available/unavailable, and verifying Leaders can see this when creating rotas.
+**Independent Test**: Can be fully tested by a member accessing the availability calendar, marking dates as available/unavailable, and verifying Leaders can see this when creating rotas.
 
 **Acceptance Scenarios**:
 
-1. **Given** a logged-in Volunteer, **When** they access the availability page, **Then** they see a calendar-based picker for upcoming weeks
-2. **Given** the availability calendar, **When** the Volunteer marks a date as unavailable with an optional note, **Then** the status is saved and visible to Leaders
-3. **Given** a Leader creating a rota, **When** they select a volunteer for assignment, **Then** they see that volunteer's availability status for the selected date
+1. **Given** a logged-in Member, **When** they access the availability page, **Then** they see a calendar-based picker for upcoming weeks
+2. **Given** the availability calendar, **When** the Member marks a date as unavailable with an optional note, **Then** the status is saved and visible to Leaders
+3. **Given** a Leader creating a rota, **When** they select a member for assignment, **Then** they see that member's availability status for the selected date
 
 ---
 
 ### User Story 4 - Duty Swap Requests (Priority: P2)
 
-As a Volunteer, I want to request a duty swap with another team member when I can no longer serve on my assigned date, so that my responsibilities are covered without burdening the Team Leader.
+As a Member, I want to request a duty swap with another team member when I can no longer serve on my assigned date, so that my responsibilities are covered without burdening the Team Leader.
 
-**Why this priority**: Swap requests are a key quality-of-life feature that reduces Leader workload and empowers volunteers to manage their commitments.
+**Why this priority**: Swap requests are a key quality-of-life feature that reduces Leader workload and empowers members to manage their commitments.
 
-**Independent Test**: Can be fully tested by an assigned volunteer initiating a swap request, another volunteer accepting it, and a Leader approving the swap with all parties receiving notifications.
+**Independent Test**: Can be fully tested by an assigned member initiating a swap request, another member accepting it, and a Leader approving the swap with all parties receiving notifications.
 
 **Acceptance Scenarios**:
 
-1. **Given** an assigned Volunteer viewing their assignment, **When** they click "Request Swap", **Then** they can select a target volunteer and provide a reason
-2. **Given** a swap request sent, **When** the target volunteer views their pending requests, **Then** they can accept or decline the swap
+1. **Given** an assigned Member viewing their assignment, **When** they click "Request Swap", **Then** they can select a target member and provide a reason
+2. **Given** a swap request sent, **When** the target member views their pending requests, **Then** they can accept or decline the swap
 3. **Given** an accepted swap, **When** the Leader reviews pending requests, **Then** they can approve or reject the swap
-4. **Given** an approved swap, **When** the workflow completes, **Then** both volunteers and the Leader receive confirmation notifications
+4. **Given** an approved swap, **When** the workflow completes, **Then** both members and the Leader receive confirmation notifications
 
 ---
 
@@ -144,7 +144,7 @@ As a Team Leader, I want to track all tech department equipment, manage checkout
 
 ### User Story 8 - Dashboard & Quick Actions (Priority: P2)
 
-As a Volunteer, I want to see my upcoming duties and quick actions on my dashboard, so that I can quickly understand my commitments and access common tasks.
+As a Member, I want to see my upcoming duties and quick actions on my dashboard, so that I can quickly understand my commitments and access common tasks.
 
 **Why this priority**: The dashboard is the daily touchpoint for all users, providing at-a-glance awareness and efficient navigation.
 
@@ -152,7 +152,7 @@ As a Volunteer, I want to see my upcoming duties and quick actions on my dashboa
 
 **Acceptance Scenarios**:
 
-1. **Given** a logged-in Volunteer, **When** they view the dashboard, **Then** they see their next 4 weeks of duty assignments
+1. **Given** a logged-in Member, **When** they view the dashboard, **Then** they see their next 4 weeks of duty assignments
 2. **Given** the dashboard, **When** quick action buttons are clicked (e.g., "Submit Availability"), **Then** they navigate to the appropriate page
 3. **Given** a Leader dashboard, **When** viewing, **Then** they also see pending swap requests and equipment alerts
 
@@ -174,9 +174,9 @@ As a Leader, I want to browse photos from Google Drive, generate AI-assisted cap
 
 ---
 
-### User Story 10 - Volunteer Training & Onboarding (Priority: P3)
+### User Story 10 - Member Training & Onboarding (Priority: P3)
 
-As a new Volunteer, I want to complete a structured training program for my role so that I'm prepared to serve effectively and can track my progress toward certification.
+As a new Member, I want to complete a structured training program for my role so that I'm prepared to serve effectively and can track my progress toward certification.
 
 **Why this priority**: Training is important for team quality but is less time-sensitive than operational features. It builds long-term team capability.
 
@@ -184,17 +184,17 @@ As a new Volunteer, I want to complete a structured training program for my role
 
 **Acceptance Scenarios**:
 
-1. **Given** a new Volunteer, **When** they view available training tracks, **Then** they see role-specific paths (Camera Operations, Sound, etc.) with step counts
-2. **Given** an enrolled Volunteer, **When** they complete a video or quiz step, **Then** their progress is updated and next step unlocked
+1. **Given** a new Member, **When** they view available training tracks, **Then** they see role-specific paths (Camera Operations, Sound, etc.) with step counts
+2. **Given** an enrolled Member, **When** they complete a video or quiz step, **Then** their progress is updated and next step unlocked
 3. **Given** a practical step completed, **When** a mentor verifies completion, **Then** the step is marked complete with mentor attribution
-4. **Given** all steps complete, **When** the final certification is issued, **Then** the Volunteer's profile reflects their certified status
+4. **Given** all steps complete, **When** the final certification is issued, **Then** the Member's profile reflects their certified status
 
 ---
 
 ### Edge Cases
 
-- What happens when a volunteer is assigned but later marks themselves unavailable? The system should notify the Leader of the conflict and highlight the assignment.
-- How does the system handle double-booking (same volunteer, same time, different positions)? The system should warn during assignment and prevent overlapping assignments.
+- What happens when a member is assigned but later marks themselves unavailable? The system should notify the Leader of the conflict and highlight the assignment.
+- How does the system handle double-booking (same member, same time, different positions)? The system should warn during assignment and prevent overlapping assignments.
 - What happens when equipment is overdue for return? The system should send reminder notifications and flag the item on the dashboard.
 - How does the system handle failed AI generation requests? Display a user-friendly error message with retry option; don't lose form input.
 - What happens when a user loses internet during description generation? The partial streamed content should be preserved; user can retry to continue.
@@ -208,7 +208,7 @@ As a new Volunteer, I want to complete a structured training program for my role
 - **FR-001**: System MUST allow users to sign up with email and password with email verification required
 - **FR-002**: System MUST allow users to log in with email and password, with session persisting across browser sessions
 - **FR-003**: System MUST allow users to reset password via email link that expires in 1 hour
-- **FR-004**: System MUST support three user roles: Admin, Leader, and Volunteer with distinct permission sets
+- **FR-004**: System MUST support three user roles: Admin, Leader, and Member with distinct permission sets
 - **FR-005**: Admins MUST be able to invite new members via email invitation with signup link
 - **FR-006**: Users MUST be able to update their profile (name, phone, avatar)
 - **FR-007**: System MUST enforce role-based access control on all protected resources
@@ -218,15 +218,15 @@ As a new Volunteer, I want to complete a structured training program for my role
 - **FR-008**: System MUST display rotas in calendar view with month and week options
 - **FR-009**: Leaders MUST be able to create new rotas by selecting a service date and assigning members to positions
 - **FR-010**: System MUST support five service positions: Projection, Streaming, Sound, Cameras, Time Management
-- **FR-011**: Each position MUST have configurable min/max volunteer requirements
+- **FR-011**: Each position MUST have configurable min/max member requirements
 - **FR-012**: Leaders MUST be able to assign members via drag-drop or dropdown selection
-- **FR-013**: Volunteers MUST be able to submit availability via calendar-based picker
+- **FR-013**: Members MUST be able to submit availability via calendar-based picker
 - **FR-014**: System MUST support duty swap request workflow: Request → Accept/Decline → Approve → Notify
 - **FR-015**: System MUST send automated reminders via email (required) and SMS (optional)
 - **FR-064**: System MUST log notification delivery failures and display them in the admin dashboard
 - **FR-065**: Admins MUST be able to manually retry failed notifications from the dashboard
 - **FR-016**: Users MUST be able to configure notification timing (1 week, 3 days, 1 day, morning of service)
-- **FR-017**: Rotas MUST have draft/published status; drafts not visible to Volunteers
+- **FR-017**: Rotas MUST have draft/published status; drafts not visible to Members
 - **FR-018**: System MUST maintain assignment history for reference
 
 **Livestream Description Generator**
@@ -270,13 +270,13 @@ As a new Volunteer, I want to complete a structured training program for my role
 - **FR-048**: System MUST provide training tracks organized by department/role
 - **FR-049**: System MUST support step types: Video, Document, Quiz, Shadowing, Practical
 - **FR-050**: System MUST display visual progress indicators
-- **FR-051**: System MUST support mentor assignment for new volunteers
+- **FR-051**: System MUST support mentor assignment for new members
 - **FR-052**: Practical steps MUST require mentor sign-off for completion
 - **FR-053**: System MUST track certifications with expiry dates
 - **FR-054**: System MUST provide centralized resource library for training materials
 
 **Dashboard**
-- **FR-055**: Volunteers MUST see their upcoming duties for next 4 weeks on dashboard
+- **FR-055**: Members MUST see their upcoming duties for next 4 weeks on dashboard
 - **FR-056**: Dashboard MUST provide quick action buttons for common tasks
 - **FR-057**: Leaders MUST see team overview, pending requests, and equipment alerts
 - **FR-058**: Dashboard MUST display countdown to next service
@@ -290,14 +290,14 @@ As a new Volunteer, I want to complete a structured training program for my role
 
 ### Key Entities
 
-- **Profile**: Represents a user account with name, email, phone, avatar, role (Admin/Leader/Volunteer), department assignment, and notification preferences
+- **Profile**: Represents a user account with name, email, phone, avatar, role (Admin/Leader/Member), department assignment, and notification preferences
 - **Department**: Organizational unit (Sound, Cameras, Projection, Streaming, Time Management) with a designated leader
-- **Position**: A specific role within a service (e.g., Camera 1, Main Sound) with min/max volunteer requirements
+- **Position**: A specific role within a service (e.g., Camera 1, Main Sound) with min/max member requirements
 - **Service**: A recurring event type (Sunday Service, Special Event) with day, time, and location
 - **Rota**: A schedule for a specific service date containing position assignments, with draft/published status
-- **Rota Assignment**: Links a volunteer to a position for a specific rota, with confirmation status
-- **Availability**: A volunteer's availability status for a specific date with optional notes
-- **Swap Request**: A request to exchange duty assignments between volunteers, with approval workflow
+- **Rota Assignment**: Links a member to a position for a specific rota, with confirmation status
+- **Availability**: A member's availability status for a specific date with optional notes
+- **Swap Request**: A request to exchange duty assignments between members, with approval workflow
 - **Livestream**: Generated content for a service including YouTube/Facebook descriptions and metadata
 - **Equipment**: A physical item with name, category, serial number, status, QR code, and maintenance history
 - **Equipment Checkout**: A record of equipment being borrowed, including who, when, and expected return
@@ -306,7 +306,7 @@ As a new Volunteer, I want to complete a structured training program for my role
 - **Song**: Worship song with title, artist, key, tempo, lyrics, and chord chart
 - **Training Track**: A learning path for a specific role with ordered steps and estimated duration
 - **Training Step**: An individual learning unit within a track with type, content, and completion requirements
-- **Volunteer Progress**: A volunteer's enrollment and completion status within a training track
+- **Member Progress**: A member's enrollment and completion status within a training track
 - **Notification**: System-generated messages sent via email or SMS for reminders and updates
 
 ## Success Criteria *(mandatory)*
@@ -316,13 +316,13 @@ As a new Volunteer, I want to complete a structured training program for my role
 - **SC-001**: Leaders can create a complete rota in under 5 minutes (down from 30 minutes baseline)
 - **SC-002**: Zero missed duty incidents per month (down from 2/month baseline) due to automated reminders and visibility
 - **SC-003**: Livestream description generation takes under 2 minutes including review (down from 15 minutes baseline)
-- **SC-004**: 80% of new volunteers complete their training track within 30 days of joining
+- **SC-004**: 80% of new members complete their training track within 30 days of joining
 - **SC-005**: User satisfaction rating of 4.5/5 or higher in quarterly surveys
 - **SC-006**: Application pages load within 2 seconds on standard mobile connections
-- **SC-007**: 95% of assigned volunteers confirm their duty before service day
+- **SC-007**: 95% of assigned members confirm their duty before service day
 - **SC-008**: Equipment checkout/return cycle takes under 30 seconds via QR scanning
 - **SC-009**: System supports 50 concurrent users without performance degradation
-- **SC-010**: 90% of swap requests are resolved without Leader intervention (volunteer-to-volunteer acceptance)
+- **SC-010**: 90% of swap requests are resolved without Leader intervention (member-to-member acceptance)
 
 ## Clarifications
 
@@ -337,8 +337,8 @@ As a new Volunteer, I want to complete a structured training program for my role
 - The initial Admin account is pre-seeded during deployment; credentials are shared securely with the Tech Lead
 - Users have access to modern web browsers (Chrome, Safari, Firefox, Edge) on desktop or mobile devices
 - The church has existing Google Workspace with Drive for storing service photos
-- Volunteers have personal email addresses and optionally mobile phones for SMS
-- The tech department has approximately 20-50 active volunteers across all roles
+- Members have personal email addresses and optionally mobile phones for SMS
+- The tech department has approximately 20-50 active members across all roles
 - Services occur primarily on Sundays with occasional special events
 - Leaders have consistent internet access for administrative tasks
 - The existing WhatsApp coordination will be phased out as adoption increases
