@@ -29,11 +29,11 @@ export default async function DashboardLayout({
     .eq("auth_user_id", user.id)
     .single() as { data: { id: string; name: string; role: string; avatar_url: string | null } | null }
 
-  const userRole = (profile?.role ?? "member") as "admin" | "developer" | "leader" | "member"
+  const userRole = (profile?.role ?? "member") as "admin" | "lead_developer" | "developer" | "leader" | "member"
 
   return (
     <SidebarProvider>
-      <AppSidebar userRole={userRole as "admin" | "developer" | "leader" | "member"} />
+      <AppSidebar userRole={userRole as "admin" | "lead_developer" | "developer" | "leader" | "member"} />
       <SidebarInset>
         <Header
           user={

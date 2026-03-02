@@ -24,7 +24,7 @@ export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string }
 
-type Role = "admin" | "developer" | "leader" | "member"
+type Role = "admin" | "lead_developer" | "developer" | "leader" | "member"
 
 interface Profile {
   id: string

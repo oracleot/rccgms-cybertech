@@ -74,7 +74,7 @@ export interface TrainingProfile {
   id: string
   name: string
   email: string
-  role: "admin" | "developer" | "leader" | "member"
+  role: "admin" | "lead_developer" | "developer" | "leader" | "member"
 }
 
 // Track with department info

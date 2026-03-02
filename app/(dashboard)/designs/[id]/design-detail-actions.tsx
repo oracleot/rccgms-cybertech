@@ -26,7 +26,7 @@ interface DesignDetailActionsProps {
   isAssigned: boolean
   isAssignee: boolean
   isAdminOrLeader: boolean
-  currentUserRole: "admin" | "developer" | "leader" | "member"
+  currentUserRole: "admin" | "lead_developer" | "developer" | "leader" | "member"
   currentAssigneeId: string | null
 }
 
@@ -126,7 +126,7 @@ export function DesignDetailActions({
               </DropdownMenuItem>
             )}
 
-            {isAdminOrLeader && !isTerminal && (currentUserRole === \"admin\" || currentUserRole === \"developer\" || currentUserRole === \"leader\") && (
+            {isAdminOrLeader && !isTerminal && (currentUserRole === "admin" || currentUserRole === "lead_developer" || currentUserRole === "developer" || currentUserRole === "leader") && (
               <DropdownMenuItem onClick={() => setShowReassignModal(true)}>
                 <UserCog className="h-4 w-4 mr-2" />
                 Reassign

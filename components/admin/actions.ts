@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { requireAdmin } from "@/lib/auth/guards"
+import { requireAdmin, requireLeader } from "@/lib/auth/guards"
+import { logAuditEvent } from "@/lib/audit-log"
 import type { UserRole } from "@/lib/constants"
 
 interface UpdateUserRoleInput {
@@ -34,13 +35,13 @@ export async function updateUserRole(
 
     // Permission checks based on current user's role
     if (currentUserRole === "leader") {
-      // Leaders cannot assign admin or developer roles
-      if (input.role === "admin" || input.role === "developer") {
+      // Leaders cannot assign admin, lead_developer, or developer roles
+      if (input.role === "admin" || input.role === "lead_developer" || input.role === "developer") {
         return { success: false, error: "Leaders cannot assign admin or developer roles" }
       }
       
-      // Leaders cannot modify existing admins or developers
-      if (targetUser.role === "admin" || targetUser.role === "developer") {
+      // Leaders cannot modify existing admins, lead_developers, or developers
+      if (targetUser.role === "admin" || targetUser.role === "lead_developer" || targetUser.role === "developer") {
         return { success: false, error: "Leaders cannot modify admin or developer users" }
       }
       
@@ -55,6 +56,16 @@ export async function updateUserRole(
       return { success: false, error: "Developers have read-only access to user management" }
     }
 
+    // Lead developers can manage developers and below, but not admins or other lead developers
+    if (currentUserRole === "lead_developer") {
+      if (input.role === "admin") {
+        return { success: false, error: "Lead developers cannot assign admin role" }
+      }
+      if (targetUser.role === "admin") {
+        return { success: false, error: "Lead developers cannot modify admin users" }
+      }
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -66,6 +77,21 @@ export async function updateUserRole(
     if (error) {
       return { success: false, error: error.message }
     }
+
+    // Audit log
+    await logAuditEvent({
+      actorId: currentUser.profile.id,
+      actorName: currentUser.profile.name,
+      actorRole: currentUserRole,
+      action: "role_change",
+      targetType: "user",
+      targetId: input.userId,
+      details: {
+        previous_role: targetUser.role,
+        new_role: input.role,
+        department_id: input.departmentId,
+      },
+    })
 
     revalidatePath("/admin/users")
     return { success: true }
@@ -105,6 +131,19 @@ export async function createDepartment(
     }
 
     const result = data as { id: string }
+
+    // Audit log
+    const admin = await requireAdmin()
+    await logAuditEvent({
+      actorId: admin.profile.id,
+      actorName: admin.profile.name,
+      actorRole: admin.profile.role,
+      action: "department_create",
+      targetType: "department",
+      targetId: result.id,
+      targetName: input.name,
+    })
+
     revalidatePath("/admin/departments")
     return { success: true, id: result.id }
   } catch (error) {
@@ -173,6 +212,17 @@ export async function deleteDepartment(
     if (error) {
       return { success: false, error: error.message }
     }
+
+    // Audit log
+    const admin = await requireAdmin()
+    await logAuditEvent({
+      actorId: admin.profile.id,
+      actorName: admin.profile.name,
+      actorRole: admin.profile.role,
+      action: "department_delete",
+      targetType: "department",
+      targetId: id,
+    })
 
     revalidatePath("/admin/departments")
     return { success: true }
@@ -353,6 +403,18 @@ export async function deleteUser(
 
     // Delete the profile (in case cascade didn't work)
     await supabase.from("profiles").delete().eq("id", userId)
+
+    // Audit log
+    const adminUser = await requireAdmin()
+    await logAuditEvent({
+      actorId: adminUser.profile.id,
+      actorName: adminUser.profile.name,
+      actorRole: adminUser.profile.role,
+      action: "user_delete",
+      targetType: "user",
+      targetId: userId,
+      targetName: (profile as { role: string } | null)?.role || "unknown",
+    })
 
     revalidatePath("/admin/users")
     return { success: true }

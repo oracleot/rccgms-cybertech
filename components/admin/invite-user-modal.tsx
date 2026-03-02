@@ -124,7 +124,7 @@ export function InviteUserModal({ departments }: InviteUserModalProps) {
               <Select
                 value={selectedRole}
                 onValueChange={(value) =>
-                  setValue("role", value as "member" | "leader" | "developer" | "admin")
+                  setValue("role", value as "member" | "leader" | "developer" | "lead_developer" | "admin")
                 }
               >
                 <SelectTrigger>
@@ -134,6 +134,7 @@ export function InviteUserModal({ departments }: InviteUserModalProps) {
                   <SelectItem value="member">Member</SelectItem>
                   <SelectItem value="leader">Leader</SelectItem>
                   <SelectItem value="developer">Developer</SelectItem>
+                  <SelectItem value="lead_developer">Lead Developer</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>

@@ -54,6 +54,7 @@ function getInitials(name: string): string {
 
 const roleDescriptions: Record<string, string> = {
   admin: "Full access to all features including user management and system settings",
+  lead_developer: "Senior technical role — can manage developers and has full admin-level access",
   developer: "Technical/backend access with content management and read-only user viewing",
   leader: "Can manage rotas, equipment, rundowns, and approve swap requests",
   member: "Can view schedules, submit availability, and request swaps",
@@ -101,6 +102,7 @@ export function RoleEditorModal({
   const isTargetUserAdmin = user.role === "admin"
   const isCurrentUserLeader = currentUserRole === "leader"
   const isDeveloper = currentUserRole === "developer"
+  const isDeveloperOrLead = currentUserRole === "developer" || currentUserRole === "lead_developer"
   const canEditThisUser = !(isCurrentUserLeader && isTargetUserAdmin)
 
   // Available roles based on current user's permissions
@@ -117,8 +119,9 @@ export function RoleEditorModal({
     },
   ]
 
-  // Only admins can see/assign admin and developer roles
-  if (currentUserRole === "admin") {
+  // Admins can assign all roles; lead developers can assign up to lead_developer;
+  // developers can see all roles in test mode (simulated only)
+  if (currentUserRole === "admin" || (isDeveloperOrLead && isTestMode)) {
     availableRoles.push(
       {
         value: "developer",
@@ -126,9 +129,27 @@ export function RoleEditorModal({
         description: roleDescriptions.developer,
       },
       {
+        value: "lead_developer",
+        label: "Lead Developer",
+        description: roleDescriptions.lead_developer,
+      },
+      {
         value: "admin",
         label: "Admin",
         description: roleDescriptions.admin,
+      }
+    )
+  } else if (currentUserRole === "lead_developer") {
+    availableRoles.push(
+      {
+        value: "developer",
+        label: "Developer",
+        description: roleDescriptions.developer,
+      },
+      {
+        value: "lead_developer",
+        label: "Lead Developer",
+        description: roleDescriptions.lead_developer,
       }
     )
   }
@@ -162,8 +183,8 @@ export function RoleEditorModal({
   }
 
   const handleSave = () => {
-    // If developer in test mode, simulate the change
-    if (isDeveloper && isTestMode) {
+    // If developer/lead_developer in test mode, simulate the change
+    if (isDeveloperOrLead && isTestMode) {
       const previousRole = user.role as UserRole
       simulateRoleChange(user.id, user.name, previousRole, role)
       toast.success("Change simulated", {
@@ -227,7 +248,7 @@ export function RoleEditorModal({
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
             Edit User Role & Departments
-            {isDeveloper && isTestMode && (
+            {isDeveloperOrLead && isTestMode && (
               <Badge variant="outline" className="ml-auto gap-1 text-orange-600 border-orange-300">
                 <Beaker className="h-3 w-3" />
                 Test Mode
@@ -235,7 +256,7 @@ export function RoleEditorModal({
             )}
           </DialogTitle>
           <DialogDescription>
-            {isDeveloper && isTestMode 
+            {isDeveloperOrLead && isTestMode 
               ? "Changes will be simulated only - not applied to production database"
               : "Change role and department assignments for this user"}
           </DialogDescription>
@@ -375,10 +396,10 @@ export function RoleEditorModal({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isPending || (!canEditThisUser && !(isDeveloper && isTestMode))}
+            disabled={isPending || (!canEditThisUser && !(isDeveloperOrLead && isTestMode))}
           >
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isDeveloper && isTestMode ? "Simulate Change" : "Save Changes"}
+            {isDeveloperOrLead && isTestMode ? "Simulate Change" : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>

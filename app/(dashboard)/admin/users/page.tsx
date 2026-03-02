@@ -106,7 +106,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground">
-            {currentUserRole === "developer" 
+            {currentUserRole === "developer"
               ? "View team members and their roles (read-only access)" 
               : "Manage team members, roles, and permissions"}
           </p>
@@ -122,12 +122,12 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
       </div>
 
       {/* Test Mode Panel - only for developers */}
-      {currentUserRole === "developer" && (
+      {(currentUserRole === "developer" || currentUserRole === "lead_developer") && (
         <TestModePanel />
       )}
 
       <Suspense fallback={<LoadingSkeleton className="h-96" />}>
-        <UserTable users={users} departments={departments} currentUserRole={currentUserRole} />
+        <UserTable users={users} departments={departments} currentUserRole={currentUserRole as "admin" | "lead_developer" | "developer" | "leader"} />
       </Suspense>
 
       {/* Role Editor Modal - shown when edit param is present */}

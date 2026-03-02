@@ -263,7 +263,7 @@ export async function DELETE(
       .eq("auth_user_id", user.id)
       .single()
 
-    if (!profile || (profile.role !== "admin" && profile.role !== "leader")) {
+    if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader")) {
       return NextResponse.json(
         { error: "Only admins and leaders can delete requests" },
         { status: 403 }

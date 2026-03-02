@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 
 export interface CurrentProfile {
   id: string
-  role: "admin" | "developer" | "leader" | "member"
+  role: "admin" | "lead_developer" | "developer" | "leader" | "member"
   name: string
   email: string
   auth_user_id: string
@@ -63,7 +63,7 @@ export async function requireCurrentProfile(): Promise<CurrentProfile> {
  * @param roles - Array of allowed roles
  * @returns true if user has one of the roles
  */
-export async function hasRole(roles: Array<"admin" | "developer" | "leader" | "member">): Promise<boolean> {
+export async function hasRole(roles: Array<"admin" | "lead_developer" | "developer" | "leader" | "member">): Promise<boolean> {
   const profile = await getCurrentProfile()
   return profile !== null && roles.includes(profile.role)
 }

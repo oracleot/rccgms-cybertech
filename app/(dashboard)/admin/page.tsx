@@ -50,7 +50,7 @@ async function getAdminStats(): Promise<AdminStats> {
 export default async function AdminPage() {
   const currentUser = await requireAdminOrDeveloper()
   const stats = await getAdminStats()
-  const isDeveloper = currentUser.profile.role === "developer"
+  const isDeveloper = currentUser.profile.role === "developer" || currentUser.profile.role === "lead_developer"
 
   const adminSections = [
     {

@@ -49,6 +49,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { deleteUser } from "./actions"
+import { useTestMode } from "@/contexts/test-mode-context"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
 
 interface UserWithDepartments extends Profile {
@@ -59,11 +60,12 @@ interface UserWithDepartments extends Profile {
 interface UserTableProps {
   users: UserWithDepartments[]
   departments: Department[]
-  currentUserRole: "admin" | "developer" | "leader"
+  currentUserRole: "admin" | "lead_developer" | "developer" | "leader"
 }
 
 const roleColors: Record<string, string> = {
   admin: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  lead_developer: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   developer: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   leader: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   member: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -91,6 +93,8 @@ export function UserTable({ users, departments, currentUserRole }: UserTableProp
   } | null>(null)
   
   const isDeveloper = currentUserRole === "developer"
+  const isDeveloperOrLead = currentUserRole === "developer" || currentUserRole === "lead_developer"
+  const { isTestMode } = useTestMode()
 
   const handleDeleteUser = () => {
     if (!deleteConfirm) return
@@ -149,8 +153,10 @@ export function UserTable({ users, departments, currentUserRole }: UserTableProp
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="lead_developer">Lead Developer</SelectItem>
+            <SelectItem value="developer">Developer</SelectItem>
             <SelectItem value="leader">Leader</SelectItem>
-            <SelectItem value="volunteer">Volunteer</SelectItem>
+            <SelectItem value="member">Member</SelectItem>
           </SelectContent>
         </Select>
         <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -227,7 +233,7 @@ export function UserTable({ users, departments, currentUserRole }: UserTableProp
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        {isDeveloper ? (
+                        {isDeveloper && !isTestMode ? (
                           <>
                             <TooltipProvider>
                               <Tooltip>
@@ -238,7 +244,7 @@ export function UserTable({ users, departments, currentUserRole }: UserTableProp
                                   </DropdownMenuItem>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Developers have read-only access to user management</p>
+                                  <p>Enable Test Mode to simulate changes</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -251,7 +257,7 @@ export function UserTable({ users, departments, currentUserRole }: UserTableProp
                                   </DropdownMenuItem>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Developers have read-only access to user management</p>
+                                  <p>Enable Test Mode to simulate changes</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -261,13 +267,13 @@ export function UserTable({ users, departments, currentUserRole }: UserTableProp
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/users?edit=${user.id}`}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                Edit Role
+                                {isDeveloperOrLead && isTestMode ? "Edit Role (Simulated)" : "Edit Role"}
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/users?departments=${user.id}`}>
                                 <Building2 className="mr-2 h-4 w-4" />
-                                Manage Departments
+                                {isDeveloperOrLead && isTestMode ? "Manage Departments (Simulated)" : "Manage Departments"}
                               </Link>
                             </DropdownMenuItem>
                           </>

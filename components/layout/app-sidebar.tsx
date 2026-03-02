@@ -17,7 +17,6 @@ import {
   Shield,
   Palette,
   Code2,
-  UserCircle,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
@@ -76,19 +75,7 @@ const navItems = [
     href: ROUTES.TRAINING,
     icon: GraduationCap,
   },
-  {
-    title: "Profile",
-    href: ROUTES.PROFILE,
-    icon: UserCircle,
-  },
-  {
-    title: "Settings",
-    href: ROUTES.SETTINGS,
-    icon: Settings,
-  },
 ]
-
-const leaderItems: typeof navItems = []
 
 const adminItems = [
   {
@@ -119,7 +106,7 @@ const adminItems = [
 ]
 
 interface AppSidebarProps {
-  userRole?: "admin" | "developer" | "leader" | "member"
+  userRole?: "admin" | "lead_developer" | "developer" | "leader" | "member"
 }
 
 export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
@@ -206,53 +193,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {(userRole === "admin" || userRole === "developer" || userRole === "leader") && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Management</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {leaderItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.href)}
-                      className={cn(
-                        "relative transition-all duration-200 ease-out",
-                        "hover:bg-violet-50 dark:hover:bg-violet-900/20",
-                        "hover:translate-x-0.5",
-                        isActive(item.href) && [
-                          "bg-violet-100 dark:bg-violet-900/30",
-                          "text-violet-700 dark:text-violet-300",
-                          "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
-                          "before:h-6 before:w-1 before:rounded-r-full",
-                          "before:bg-gradient-to-b before:from-violet-500 before:to-indigo-600"
-                        ]
-                      )}
-                    >
-                      <Link href={item.href} className="group/link">
-                        <item.icon className={cn(
-                          "h-4 w-4 transition-all duration-200",
-                          "group-hover/link:scale-110",
-                          isActive(item.href) 
-                            ? "text-violet-600 dark:text-violet-400" 
-                            : "group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400"
-                        )} />
-                        <span className={cn(
-                          "transition-colors duration-200",
-                          isActive(item.href) && "font-medium"
-                        )}>
-                          {item.title}
-                        </span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {(userRole === "admin" || userRole === "developer") && (
+        {(userRole === "admin" || userRole === "lead_developer" || userRole === "developer") && (
           <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -300,7 +241,43 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="px-2 py-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive(ROUTES.SETTINGS)}
+              className={cn(
+                "relative transition-all duration-200 ease-out",
+                "hover:bg-violet-50 dark:hover:bg-violet-900/20",
+                "hover:translate-x-0.5",
+                isActive(ROUTES.SETTINGS) && [
+                  "bg-violet-100 dark:bg-violet-900/30",
+                  "text-violet-700 dark:text-violet-300",
+                  "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
+                  "before:h-6 before:w-1 before:rounded-r-full",
+                  "before:bg-gradient-to-b before:from-violet-500 before:to-indigo-600"
+                ]
+              )}
+            >
+              <Link href={ROUTES.SETTINGS} className="group/link">
+                <Settings className={cn(
+                  "h-4 w-4 transition-all duration-200",
+                  "group-hover/link:scale-110",
+                  isActive(ROUTES.SETTINGS)
+                    ? "text-violet-600 dark:text-violet-400"
+                    : "group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400"
+                )} />
+                <span className={cn(
+                  "transition-colors duration-200",
+                  isActive(ROUTES.SETTINGS) && "font-medium"
+                )}>
+                  Settings
+                </span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="px-2 py-2">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} RCCG Morning Star
           </p>

@@ -368,6 +368,7 @@ export function DeveloperToolsClient({
                         className={cn(
                           "h-full rounded-full transition-all duration-500",
                           role === "admin" && "bg-red-500",
+                          role === "lead_developer" && "bg-orange-500",
                           role === "developer" && "bg-violet-500",
                           role === "leader" && "bg-blue-500",
                           role === "member" && "bg-green-500"

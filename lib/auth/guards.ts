@@ -65,24 +65,31 @@ export async function requireAdmin() {
 }
 
 /**
- * Require admin or developer role (for read-only admin access)
+ * Require admin or lead developer role
  */
 export async function requireAdminOrDeveloper() {
-  return requireRole([USER_ROLES.ADMIN, USER_ROLES.DEVELOPER])
+  return requireRole([USER_ROLES.ADMIN, USER_ROLES.LEAD_DEVELOPER, USER_ROLES.DEVELOPER])
+}
+
+/**
+ * Require lead developer or admin role (for managing developers)
+ */
+export async function requireLeadDeveloper() {
+  return requireRole([USER_ROLES.ADMIN, USER_ROLES.LEAD_DEVELOPER])
 }
 
 /**
  * Require leader, developer, or admin role
  */
 export async function requireLeader() {
-  return requireRole([USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.LEADER])
+  return requireRole([USER_ROLES.ADMIN, USER_ROLES.LEAD_DEVELOPER, USER_ROLES.DEVELOPER, USER_ROLES.LEADER])
 }
 
 /**
  * Require any authenticated user
  */
 export async function requireAuth() {
-  return requireRole([USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.LEADER, USER_ROLES.MEMBER])
+  return requireRole([USER_ROLES.ADMIN, USER_ROLES.LEAD_DEVELOPER, USER_ROLES.DEVELOPER, USER_ROLES.LEADER, USER_ROLES.MEMBER])
 }
 
 /**
@@ -135,7 +142,8 @@ export async function hasMinimumRole(minRole: UserRole): Promise<boolean> {
   if (!profile) return false
 
   const roleHierarchy: Record<UserRole, number> = {
-    [USER_ROLES.ADMIN]: 4,
+    [USER_ROLES.ADMIN]: 5,
+    [USER_ROLES.LEAD_DEVELOPER]: 4,
     [USER_ROLES.DEVELOPER]: 3,
     [USER_ROLES.LEADER]: 2,
     [USER_ROLES.MEMBER]: 1,
