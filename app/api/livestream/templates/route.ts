@@ -48,7 +48,7 @@ export async function GET() {
       .single()
 
     const profileRole = (profile as { role: string } | null)?.role
-    if (!profileRole || profileRole !== "admin") {
+    if (!profileRole || (profileRole !== "admin" && profileRole !== "lead_developer")) {
       return NextResponse.json(
         { error: "FORBIDDEN", message: "Admin access required" },
         { status: 403 }
@@ -132,7 +132,7 @@ export async function PUT(request: NextRequest) {
       .single()
 
     const profileData = profile as { id: string; role: string } | null
-    if (!profileData || profileData.role !== "admin") {
+    if (!profileData || (profileData.role !== "admin" && profileData.role !== "lead_developer")) {
       return NextResponse.json(
         { error: "FORBIDDEN", message: "Admin access required" },
         { status: 403 }

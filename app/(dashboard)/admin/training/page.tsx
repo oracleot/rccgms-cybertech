@@ -29,7 +29,7 @@ export default async function AdminTrainingPage() {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !["admin", "developer"].includes(profile.role)) {
     redirect("/training")
   }
 
@@ -40,7 +40,7 @@ export default async function AdminTrainingPage() {
       *,
       department:departments(id, name),
       steps:onboarding_steps(count),
-      enrollments:volunteer_progress(count)
+      enrollments:member_progress(count)
     `)
     .order("name", { ascending: true })
 
@@ -79,7 +79,7 @@ export default async function AdminTrainingPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Training Management</h1>
           <p className="text-muted-foreground">
-            Create and manage training tracks for volunteers
+            Create and manage training tracks for members
           </p>
         </div>
         <Button asChild>
@@ -148,7 +148,7 @@ export default async function AdminTrainingPage() {
         <EmptyState
           icon={<GraduationCap className="h-12 w-12" />}
           title="No Training Tracks"
-          description="Create your first training track to help volunteers learn and grow."
+          description="Create your first training track to help members learn and grow."
           action={
             <Button asChild>
               <Link href="/admin/training/new">

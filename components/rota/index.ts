@@ -1,7 +1,7 @@
 export { RotaCalendar } from "./rota-calendar"
 export { RotaList } from "./rota-list"
 export { RotaStatusBadge } from "./rota-status-badge"
-export { VolunteerSelector } from "./volunteer-selector"
+export { MemberSelector } from "./member-selector"
 export { PositionAssignment } from "./position-assignment"
 export { UpcomingAssignments } from "./upcoming-assignments"
 export { AvailabilityCalendar } from "./availability-calendar"

@@ -171,10 +171,11 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     updateTimerState(newElapsed)
   }
 
-  // Calculate max slider value (duration + overtime buffer)
-  const maxSliderValue = durationSeconds 
-    ? durationSeconds + OVERTIME_BUFFER_SECONDS 
-    : 3600 // Default to 1 hour if no duration
+  // Slider max = scheduled duration (so slider reaches 100% when time runs out)
+  // Extends automatically when in overtime so the thumb stays at the end
+  const maxSliderValue = durationSeconds
+    ? Math.max(durationSeconds, elapsed)
+    : Math.max(3600, elapsed)
 
   return (
     <Card className="space-y-3 px-4 py-3">
@@ -215,6 +216,7 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
             {remaining === 0 ? "Over time" : `${formatDuration(remaining)} remaining`}
           </div>
         )}
+      </div>
       
       {/* Timer Slider */}
       <div className="space-y-2">

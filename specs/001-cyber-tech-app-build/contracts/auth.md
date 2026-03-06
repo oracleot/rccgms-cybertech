@@ -86,7 +86,7 @@ Invite a new user to the platform (Admin only).
 {
   email: string,       // Required: invitee email
   name: string,        // Required: invitee name
-  role: 'leader' | 'volunteer',  // Required: assigned role
+  role: 'leader' | 'member',  // Required: assigned role
   departmentId?: string  // Optional: department assignment
 }
 ```
@@ -143,7 +143,7 @@ Get current user's profile.
   name: string,
   phone: string | null,
   avatarUrl: string | null,
-  role: 'admin' | 'leader' | 'volunteer',
+  role: 'admin' | 'leader' | 'member',
   department: {
     id: string,
     name: string
@@ -234,7 +234,7 @@ import { z } from 'zod'
 export const inviteUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.enum(['leader', 'volunteer']),
+  role: z.enum(['leader', 'member']),
   departmentId: z.string().uuid().optional(),
 })
 

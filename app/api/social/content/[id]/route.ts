@@ -98,7 +98,7 @@ export async function PATCH(
     }
 
     // Only creator or admin can update
-    if (existingPost.created_by !== profile.id && profile.role !== "admin") {
+    if (existingPost.created_by !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
       return NextResponse.json(
         { error: "You can only update your own content" },
         { status: 403 }
@@ -199,7 +199,7 @@ export async function DELETE(
     }
 
     // Only creator or admin can delete
-    if (existingPost.created_by !== profile.id && profile.role !== "admin") {
+    if (existingPost.created_by !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
       return NextResponse.json(
         { error: "You can only delete your own content" },
         { status: 403 }

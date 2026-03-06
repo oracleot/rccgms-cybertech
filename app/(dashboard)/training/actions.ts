@@ -46,7 +46,7 @@ export async function enrollInTrack(formData: FormData) {
 
   // Check if already enrolled
   const { data: existingData } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select("id")
     .eq("user_id", profile.id)
     .eq("track_id", parsed.data.trackId)
@@ -59,7 +59,7 @@ export async function enrollInTrack(formData: FormData) {
   // Create enrollment
    
   const { error } = await (supabase
-    .from("volunteer_progress") as ReturnType<typeof supabase.from>)
+    .from("member_progress") as ReturnType<typeof supabase.from>)
       .insert({
       user_id: profile.id,
       track_id: parsed.data.trackId,
@@ -110,7 +110,7 @@ export async function completeStep(formData: FormData) {
   }
 
   const { data: progressData } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select("id, track_id, user_id")
     .eq("id", parsed.data.progressId)
     .eq("user_id", profile.id)
@@ -126,7 +126,7 @@ export async function completeStep(formData: FormData) {
   const { data: existingCompletion } = await supabase
     .from("step_completions")
     .select("id")
-    .eq("volunteer_progress_id", parsed.data.progressId)
+    .eq("member_progress_id", parsed.data.progressId)
     .eq("step_id", parsed.data.stepId)
     .single()
 
@@ -151,7 +151,7 @@ export async function completeStep(formData: FormData) {
   const { error } = await (supabase
     .from("step_completions") as ReturnType<typeof supabase.from>)
       .insert({
-      volunteer_progress_id: parsed.data.progressId,
+      member_progress_id: parsed.data.progressId,
       step_id: parsed.data.stepId,
       completed_at: new Date().toISOString(),
       score: parsed.data.score,
@@ -173,7 +173,7 @@ export async function completeStep(formData: FormData) {
   const { data: completionsData } = await supabase
     .from("step_completions")
     .select("step_id")
-    .eq("volunteer_progress_id", progress.id)
+    .eq("member_progress_id", progress.id)
 
   const completions = (completionsData || []) as Array<{ step_id: string }>
   const completedIds = new Set(completions.map(c => c.step_id))
@@ -183,7 +183,7 @@ export async function completeStep(formData: FormData) {
   // If all required steps completed, mark track as complete
   if (allRequiredCompleted && requiredSteps.length > 0) {
     await (supabase
-      .from("volunteer_progress") as ReturnType<typeof supabase.from>)
+      .from("member_progress") as ReturnType<typeof supabase.from>)
         .update({
         status: "completed",
         completed_at: new Date().toISOString(),
@@ -226,7 +226,7 @@ export async function verifyStep(formData: FormData) {
 
   const profile = profileData as { id: string; role: string } | null
 
-  if (!profile || (profile.role !== "leader" && profile.role !== "admin")) {
+  if (!profile || (profile.role !== "leader" && profile.role !== "lead_developer" && profile.role !== "admin")) {
     return { error: "Only leaders and admins can verify steps" }
   }
 
@@ -289,7 +289,7 @@ export async function createTrack(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can create tracks" }
   }
 
@@ -343,7 +343,7 @@ export async function updateTrack(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can update tracks" }
   }
 
@@ -401,7 +401,7 @@ export async function createStep(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can create steps" }
   }
 
@@ -460,7 +460,7 @@ export async function updateStep(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can update steps" }
   }
 
@@ -532,7 +532,7 @@ export async function deleteStep(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can delete steps" }
   }
 
@@ -587,7 +587,7 @@ export async function reorderSteps(formData: FormData) {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
     return { error: "Only admins can reorder steps" }
   }
 

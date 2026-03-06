@@ -50,7 +50,7 @@ export function createClient() {
 ### RLS Policy Pattern
 
 ```sql
--- Example: Volunteers see only published rotas, Leaders/Admins see all
+-- Example: Members see only published rotas, Leaders/Admins see all
 CREATE POLICY "view_rotas" ON rotas FOR SELECT USING (
   status = 'published' 
   OR EXISTS (

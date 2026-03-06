@@ -2,7 +2,7 @@
 
 > Your guide to using the Cyber Tech app for managing our church's tech department
 
-Welcome to Cyber Tech! This guide will help you get started and make the most of the app. Whether you're a volunteer checking your schedule or a leader managing the team, you'll find everything you need here.
+Welcome to Cyber Tech! This guide will help you get started and make the most of the app. Whether you're a member checking your schedule or a leader managing the team, you'll find everything you need here.
 
 ---
 
@@ -145,20 +145,20 @@ Choose how you want to be notified about your duties and updates:
 
 Cyber Tech has three user roles with different levels of access:
 
-### 👤 Volunteer
+### 👤 Member
 
 **What you can do:**
 - View your schedule and upcoming duties
 - Update your availability
-- Request duty swaps with other volunteers
+- Request duty swaps with other members
 - Update your profile and notification preferences
 - Track your training progress
 
 ### 👥 Leader
 
-**Everything a Volunteer can do, plus:**
+**Everything a Member can do, plus:**
 - Create and publish rotas (schedules)
-- Assign volunteers to positions
+- Assign members to positions
 - Approve or decline swap requests
 - View team availability
 - Manage equipment checkouts
@@ -183,7 +183,7 @@ As an admin, you can invite new members to join Cyber Tech:
 2. Click **Users** to open User Management
 3. Click **Invite User** (top right)
 4. Enter the new user's email address
-5. Select their role (Volunteer, Leader, or Admin)
+5. Select their role (Member, Leader, or Admin)
 6. Choose their department (optional)
 7. Click **Send Invitation**
 
@@ -192,7 +192,7 @@ The new user will receive an email with a **magic link**. When they click the li
 2. If this is their first time, they'll be prompted to enter their name
 3. They'll be redirected to their dashboard
 
-> 💡 **Tip**: Most new users should start as Volunteers. You can always upgrade their role later.
+> 💡 **Tip**: Most new users should start as Members. You can always upgrade their role later.
 
 > 📧 **Email Delivery Note**: Invitation emails are sent from your configured email service. If users report emails going to spam, consider setting up a custom SMTP provider like Resend or SendGrid for better deliverability.
 
@@ -229,13 +229,13 @@ Manage all team members, their roles, and department assignments.
 The user table shows all team members with:
 
 - **Name and email** with profile picture
-- **Role** badge (Admin, Leader, or Volunteer)
+- **Role** badge (Admin, Leader, or Member)
 - **Department** assignment
 - **Phone number** (if provided)
 
 Use the filters to narrow down the list:
 - **Search box** – Find users by name or email
-- **Role filter** – Show only Admins, Leaders, or Volunteers
+- **Role filter** – Show only Admins, Leaders, or Members
 - **Department filter** – Show only users in a specific department
 
 ### Editing a User's Role
@@ -244,7 +244,7 @@ Use the filters to narrow down the list:
 2. Click the **⋮** menu on the right
 3. Select **Edit Role**
 4. In the modal, update:
-   - **Role** – Volunteer, Leader, or Admin
+   - **Role** – Member, Leader, or Admin
    - **Departments** – Select one or more departments (see below)
 5. Click **Save Changes**
 
@@ -254,7 +254,7 @@ Use the filters to narrow down the list:
 
 ### Assigning Multiple Departments
 
-Users can belong to multiple departments, which is perfect for volunteers who serve across teams (e.g., someone who helps with both Sound and Cameras).
+Users can belong to multiple departments, which is perfect for members who serve across teams (e.g., someone who helps with both Sound and Cameras).
 
 #### From the Edit Role Modal
 
@@ -288,7 +288,7 @@ In the user table, you'll see department badges:
 #### Tips for Multi-Department Assignment
 
 - ✅ Set the most relevant department as primary
-- ✅ Use for volunteers who help across multiple teams
+- ✅ Use for members who help across multiple teams
 - ✅ Leaders can be assigned to departments they oversee
 - ✅ Primary department syncs with legacy features for compatibility
 
@@ -331,7 +331,7 @@ If invited users are having trouble:
 
 ## 🔧 Department Management
 
-Departments group volunteers by team (Sound, Cameras, Streaming, etc.). Each department has positions that volunteers can be assigned to on rotas.
+Departments group members by team (Sound, Cameras, Streaming, etc.). Each department has positions that members can be assigned to on rotas.
 
 ### Accessing Departments
 
@@ -458,7 +458,7 @@ This helps you navigate between admin sections quickly.
 ## 🔧 Admin Tips & Best Practices
 
 **User Management:**
-- ✅ Start new users as Volunteers and promote as needed
+- ✅ Start new users as Members and promote as needed
 - ✅ Assign users to departments so they appear in the right rota positions
 - ✅ Review user roles periodically
 
@@ -490,17 +490,17 @@ Setting your availability helps leaders know when you're able to serve. By marki
 
 ### What You Can Do
 
-**👤 Volunteers:**
+**👤 Members:**
 - View your availability calendar
 - Mark specific dates as available or unavailable
 - Add notes explaining why you're unavailable
 - Bulk-select multiple dates (like all Sundays in a month)
 
 **👥 Leaders & 🔧 Admins:**
-- Everything volunteers can do, plus:
-- View team availability across all volunteers
+- Everything members can do, plus:
+- View team availability across all members
 - Filter by department to see specific team availability
-- Use availability info when assigning volunteers to rotas
+- Use availability info when assigning members to rotas
 
 ---
 
@@ -585,27 +585,27 @@ You'll see a grid showing:
 #### Sunday Summary
 
 At the bottom, you'll see a quick summary for Sundays showing:
-- Number of available volunteers
+- Number of available members
 - Percentage of team available
 - Color-coded badges (green = 75%+, yellow = 50-75%, red = <50%)
 
 ---
 
-### Availability in Volunteer Selection
+### Availability in Member Selection
 
-When leaders assign volunteers to positions, they'll see availability:
+When leaders assign members to positions, they'll see availability:
 
-- **"Available" badge** (green) – Volunteer has marked themselves available
-- **"Unavailable" badge** (red) – Volunteer has marked themselves unavailable
-- **No badge** – Volunteer hasn't set availability for this date
+- **"Available" badge** (green) – Member has marked themselves available
+- **"Unavailable" badge** (red) – Member has marked themselves unavailable
+- **No badge** – Member hasn't set availability for this date
 
-> ⚠️ **Note for Leaders**: Volunteers marked as unavailable appear dimmed but can still be selected if absolutely necessary. Try to respect availability preferences when possible!
+> ⚠️ **Note for Leaders**: Members marked as unavailable appear dimmed but can still be selected if absolutely necessary. Try to respect availability preferences when possible!
 
 ---
 
 ### Availability Tips & Best Practices
 
-**For Volunteers:**
+**For Members:**
 - ✅ Set your availability at least 2 weeks in advance
 - ✅ Use the "Next 4 Sundays" quick action for easy planning
 - ✅ Add notes when you're unavailable – it helps leaders understand
@@ -616,7 +616,7 @@ When leaders assign volunteers to positions, they'll see availability:
 - ✅ Check team availability before creating rotas
 - ✅ Use the department filter to see relevant team members
 - ✅ Hover over "Unavailable" cells to see notes
-- ✅ Contact volunteers with no availability set to remind them
+- ✅ Contact members with no availability set to remind them
 - ✅ Respect unavailability when possible – it builds team trust
 
 ---
@@ -646,14 +646,14 @@ The rota is your service schedule – it shows who's serving in which position f
 
 ### What You Can Do
 
-**👤 Volunteers:**
+**👤 Members:**
 - View the service schedule in calendar or list view
 - See your personal upcoming duties
 - Check who else is serving on any given Sunday
 
 **👥 Leaders & 🔧 Admins:**
 - Create new rotas for upcoming services
-- Assign volunteers to positions
+- Assign members to positions
 - Publish rotas to notify the team
 - Edit or delete draft rotas
 
@@ -729,29 +729,29 @@ Ready to schedule your team for an upcoming service?
 4. **Choose the date** using the date picker
 5. Click **Create Rota**
 
-You'll be taken to the rota detail page where you can start assigning volunteers.
+You'll be taken to the rota detail page where you can start assigning members.
 
 > 💡 **Tip**: You can also click on any empty date in the calendar view to start a new rota for that date.
 
 ---
 
-### 👥 Assigning Volunteers to Positions (Leaders & Admins)
+### 👥 Assigning Members to Positions (Leaders & Admins)
 
 Once you've created a rota:
 
 1. Open the rota detail page
 2. You'll see all positions organized by department
-3. For each position, click on **Select volunteer**
+3. For each position, click on **Select member**
 4. Choose a team member from the dropdown
 5. Repeat for all positions you want to fill
 
 **Helpful features:**
-- Volunteers are shown with their availability status
+- Members are shown with their availability status
 - Names marked as "Unavailable" have indicated they can't serve that day
 - Use the search box to quickly find team members
 - You can drag and drop to rearrange positions
 
-> ⚠️ **Remember**: Volunteers won't see the schedule until you publish the rota!
+> ⚠️ **Remember**: Members won't see the schedule until you publish the rota!
 
 ---
 
@@ -765,12 +765,12 @@ When you're ready to share the schedule with the team:
 4. Confirm by clicking **Yes, Publish**
 
 **What happens when you publish:**
-- 📧 All assigned volunteers receive an email notification
+- 📧 All assigned members receive an email notification
 - 📅 The rota appears on everyone's "My Schedule" page
 - 🟢 The calendar shows the service in green (published)
 - 🔒 The schedule is locked (no more changes without unpublishing)
 
-> 💡 **Tip**: Double-check your assignments before publishing – volunteers will be notified immediately!
+> 💡 **Tip**: Double-check your assignments before publishing – members will be notified immediately!
 
 ---
 
@@ -806,7 +806,7 @@ Click **View all** to see your complete schedule.
 
 ### Rota Tips & Best Practices
 
-**For Volunteers:**
+**For Members:**
 - ✅ Check your schedule every week
 - ✅ Enable email notifications so you don't miss assignments
 - ✅ Submit your availability in advance (coming soon!)
@@ -814,7 +814,7 @@ Click **View all** to see your complete schedule.
 
 **For Leaders:**
 - ✅ Create rotas at least 2 weeks in advance
-- ✅ Check volunteer availability before assigning
+- ✅ Check member availability before assigning
 - ✅ Publish rotas early so the team can plan
 - ✅ Fill critical positions first (Sound, Camera Lead, etc.)
 - ❌ Don't assign the same person to every service – spread the load
@@ -824,7 +824,7 @@ Click **View all** to see your complete schedule.
 ### Common Questions
 
 **Q: I don't see any rotas on the calendar?**  
-A: There may not be any published rotas yet for upcoming services. If you're a volunteer, you'll only see published schedules. Leaders and admins can also see drafts.
+A: There may not be any published rotas yet for upcoming services. If you're a member, you'll only see published schedules. Leaders and admins can also see drafts.
 
 **Q: Why can't I see the "New Rota" button?**  
 A: Only Leaders and Admins can create rotas. If you need to create schedules, ask an Admin to upgrade your role.
@@ -833,7 +833,7 @@ A: Only Leaders and Admins can create rotas. If you need to create schedules, as
 A: Check your spam folder. Also, make sure email notifications are enabled in your Settings → Notification Preferences.
 
 **Q: How do I change my assignment?**  
-A: Volunteers can't change their own assignments directly. You can request a swap with another volunteer (coming soon!) or contact your team leader.
+A: Members can't change their own assignments directly. You can request a swap with another member (coming soon!) or contact your team leader.
 
 **Q: Can I see past rotas?**  
 A: Yes! Use the calendar arrows to navigate to previous months, or check the list view for past services.
@@ -845,7 +845,7 @@ A: Yes! Use the calendar arrows to navigate to previous months, or check the lis
 Plan the order of service, timing, and cues so everyone knows what is happening next.
 
 ### What You Can Do
-- 👤 **Volunteers**: View rundowns and follow along in Live View on service day
+- 👤 **Members**: View rundowns and follow along in Live View on service day
 - 👥 **Leaders**: Create rundowns, add items with durations and notes, reorder items, and run Live View
 - 🔧 **Admins**: Everything leaders can do, plus oversight across all services
 
@@ -876,7 +876,7 @@ Plan the order of service, timing, and cues so everyone knows what is happening 
 4. A loud alert loops ~1 minute before an item ends; choose the sound, preview it, and stop it with the **Stop alert** button
 5. The timer shows elapsed vs planned time for the active item
 6. See **Up next** and the full list so the team stays in sync
-7. 👤 **Volunteers** are sent straight to Live View (builder is leader/admin only)
+7. 👤 **Members** are sent straight to Live View (builder is leader/admin only)
 
 > Note: Alerts loop until you tap **Stop alert**. Some browsers require a click/tap before playing audio—hit **Preview** to unlock audio if you don't hear it.
 
@@ -949,8 +949,8 @@ When a song item is active:
 
 ### Common Questions
 
-**Q: Can volunteers edit rundowns?**  
-A: Volunteers can view; only Leaders and Admins can add, edit, or delete items.
+**Q: Can members edit rundowns?**  
+A: Members can view; only Leaders and Admins can add, edit, or delete items.
 
 **Q: Do changes save automatically?**  
 A: Yes—reordering and edits are saved as soon as you make them.
@@ -966,7 +966,7 @@ Track where gear is, who has it, and when it is due back.
 
 ### What You Can Do
 - 👥 **Leaders**: Add new equipment, check items out/in, log maintenance, print QR labels, delete equipment, return borrowed items to owners.
-- 👤 **Volunteers**: Scan a QR to open an item, view details, and return what you borrowed.
+- 👤 **Members**: Scan a QR to open an item, view details, and return what you borrowed.
 
 ### Adding New Equipment (Leaders)
 1. Go to **Equipment** in the dashboard.
@@ -1045,7 +1045,7 @@ If equipment was borrowed from someone outside the church:
 
 ### Common Questions
 **Q: Who can add or edit equipment?**
-A: Leaders and Admins. Volunteers can view and return their own checkouts.
+A: Leaders and Admins. Members can view and return their own checkouts.
 
 **Q: Do I need to scan the QR to check out?**
 A: No. QR is optional. You can open the item from the list and check out there.
@@ -1078,7 +1078,7 @@ The dashboard adapts based on your role:
 - **Notifications** – Recent updates and alerts
 
 **👥 Leaders & 🔧 Admins Also See:**
-- **Team Overview** – Volunteer counts and department availability
+- **Team Overview** – Member counts and department availability
 - **Pending Swap Requests** – Swaps waiting for your approval
 - **Equipment Alerts** – Overdue items and upcoming maintenance
 
@@ -1134,8 +1134,8 @@ Common tasks are just one click away. The actions shown depend on your role:
 
 Get a quick pulse on your team:
 
-- **Total volunteers** in the system
-- **Available volunteers** for this Sunday
+- **Total members** in the system
+- **Available members** for this Sunday
 - **Upcoming services** with published rotas
 - **Department breakdown** showing:
   - Number of members per department
@@ -1153,7 +1153,7 @@ Stay on top of duty swaps:
 - Shows count of pending requests
 - Lists requesters with their avatar/initials
 - Shows position and service date
-- **"Needs Approval"** badge for swaps accepted by volunteers
+- **"Needs Approval"** badge for swaps accepted by members
 - Click **Manage** to approve or reject swaps
 
 ---
@@ -1348,7 +1348,7 @@ Admins can customize the AI prompts:
 
 ### Common Questions
 
-**Q: Can volunteers use the livestream generator?**  
+**Q: Can members use the livestream generator?**  
 A: No, this feature is for Leaders and Admins only.
 
 **Q: Does it post directly to YouTube/Facebook?**  
@@ -1694,15 +1694,15 @@ Sometimes life happens and you can't serve on a day you're scheduled. The Duty S
 
 ### What You Can Do
 
-**👤 Volunteers:**
-- Request to swap your assigned duty with another volunteer
-- Accept or decline swap requests from other volunteers
+**👤 Members:**
+- Request to swap your assigned duty with another member
+- Accept or decline swap requests from other members
 - View all your pending swap requests
 - Track the status of your requests
 
 **👥 Leaders & 🔧 Admins:**
-- Everything volunteers can do, plus:
-- Approve or reject swap requests after volunteers agree
+- Everything members can do, plus:
+- Approve or reject swap requests after members agree
 - View all pending swaps needing approval
 
 ---
@@ -1711,11 +1711,11 @@ Sometimes life happens and you can't serve on a day you're scheduled. The Duty S
 
 The swap process has three steps to ensure everyone is on the same page:
 
-1. **Request**: You request a swap, optionally targeting a specific volunteer
-2. **Accept**: Another volunteer accepts your request
+1. **Request**: You request a swap, optionally targeting a specific member
+2. **Accept**: Another member accepts your request
 3. **Approve**: A leader reviews and approves the swap
 
-Once approved, the duty is officially transferred and both volunteers are notified.
+Once approved, the duty is officially transferred and both members are notified.
 
 ---
 
@@ -1728,12 +1728,12 @@ When you can't serve on a scheduled day:
 3. Find the assignment you want to swap
 4. Click **Request Swap** (or the swap icon)
 5. In the modal that appears:
-   - **Select a volunteer** to request the swap from, OR
+   - **Select a member** to request the swap from, OR
    - Choose **Open Request** to let anyone accept it
    - Optionally add a **reason** (e.g., "Family commitment")
 6. Click **Send Request**
 
-The targeted volunteer (or all volunteers if open) will be notified.
+The targeted member (or all members if open) will be notified.
 
 > 💡 **Tip**: It's good practice to add a reason for your swap request. It helps others understand your situation.
 
@@ -1772,10 +1772,10 @@ Each request shows its current status:
 
 | Status | What it means |
 |--------|--------------|
-| 🟡 **Pending** | Waiting for volunteer to accept/decline |
-| 🔵 **Accepted** | Volunteer accepted, waiting for leader approval |
+| 🟡 **Pending** | Waiting for member to accept/decline |
+| 🔵 **Accepted** | Member accepted, waiting for leader approval |
 | ✅ **Approved** | Swap completed – duty has been transferred |
-| ❌ **Declined** | Volunteer declined the request |
+| ❌ **Declined** | Member declined the request |
 | 🚫 **Rejected** | Leader rejected the swap |
 
 ---
@@ -1795,15 +1795,15 @@ Leaders have the final say on swap requests:
 6. Or click **Reject** if there's a problem
 
 When you approve:
-- ✅ The duty is transferred to the new volunteer
-- 📧 Both volunteers receive confirmation emails
+- ✅ The duty is transferred to the new member
+- 📧 Both members receive confirmation emails
 - 📅 The rota is automatically updated
 
 ---
 
 ### Swap Request Tips & Best Practices
 
-**For Volunteers:**
+**For Members:**
 - ✅ Request swaps as early as possible – don't wait until the last minute
 - ✅ Always add a reason for your request
 - ✅ Target a specific person if you know they're available
@@ -1811,8 +1811,8 @@ When you approve:
 - ❌ Don't request swaps just to avoid serving – your team counts on you!
 
 **For Leaders:**
-- ✅ Review swap requests promptly so volunteers aren't left waiting
-- ✅ Check that the accepting volunteer is qualified for the position
+- ✅ Review swap requests promptly so members aren't left waiting
+- ✅ Check that the accepting member is qualified for the position
 - ✅ Approve swaps before the service date whenever possible
 - ✅ Communicate if you need to reject a swap and explain why
 
@@ -1835,8 +1835,8 @@ A: Contact your team leader immediately. They may be able to reassign the duty.
 **Q: How will I know when my swap is approved?**  
 A: You'll receive an email notification when a leader approves or rejects your swap.
 
-**Q: Can leaders swap duties for volunteers directly?**  
-A: Leaders can edit the rota directly if needed. The swap system is designed for volunteer-initiated changes.
+**Q: Can leaders swap duties for members directly?**  
+A: Leaders can edit the rota directly if needed. The swap system is designed for member-initiated changes.
 
 ---
 
@@ -1855,7 +1855,7 @@ Create, schedule, and manage social media content for your church with AI-powere
 - Manage your content calendar
 - View and edit scheduled content
 
-**👤 Volunteers:**
+**👤 Members:**
 - View scheduled and published posts (read-only)
 
 ---
@@ -2063,8 +2063,8 @@ If a post fails to publish:
 
 ### Common Questions
 
-**Q: Can volunteers create social posts?**  
-A: No, only Leaders and Admins can create and schedule posts. Volunteers can view published content.
+**Q: Can members create social posts?**  
+A: No, only Leaders and Admins can create and schedule posts. Members can view published content.
 
 **Q: Does it auto-post to social platforms?**  
 A: Not yet. The system generates content and schedules it, but you'll need to copy and post manually for now. Direct API posting is coming soon.

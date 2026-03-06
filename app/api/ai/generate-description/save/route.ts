@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     const profileData = profile as { id: string; role: string } | null
-    if (!profileData || !["admin", "leader"].includes(profileData.role)) {
+    if (!profileData || !["admin", "lead_developer", "leader"].includes(profileData.role)) {
       return NextResponse.json(
         { error: "FORBIDDEN", message: "Leader or Admin access required" },
         { status: 403 }

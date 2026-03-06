@@ -9,7 +9,7 @@
 
 This document outlines planned improvements for the Cyber Tech church management app based on a comprehensive codebase review. The app is currently ~90% complete with solid architecture. Three major enhancement initiatives have been scoped:
 
-1. **AI Assistant Panel** — Intelligent volunteer suggestions for rota scheduling
+1. **AI Assistant Panel** — Intelligent member suggestions for rota scheduling
 2. **Offline PWA Support** — View-only schedule caching for reliability
 3. **Planning Center Integration** — Import teams and schedules from Planning Center Online
 
@@ -28,7 +28,7 @@ This document outlines planned improvements for the Cyber Tech church management
 | Equipment (US7) | 95% ✅ | Complete CRUD, QR codes, checkout/return, maintenance |
 | Social (US9) | 90% ✅ | Direct uploads working; platform publishing not implemented |
 | Training (US10) | 80% ⚠️ | Tracks, steps, enrollment working; **quiz not implemented** |
-| Dashboard (US8) | 95% ✅ | All widgets for volunteer and leader/admin roles |
+| Dashboard (US8) | 95% ✅ | All widgets for member and leader/admin roles |
 | Admin | 95% ✅ | User management, departments, positions, notifications |
 
 **Overall: ~90% Complete**
@@ -41,7 +41,7 @@ This document outlines planned improvements for the Cyber Tech church management
 2. **Swap Request Notifications** — 5 TODOs in `app/api/rota/swaps/actions.ts` for notification sending
 3. **Rota Publishing Notifications** — TODO at `app/api/rota/actions.ts` line 218
 4. **Song Library Management UI** — Schema exists but no admin interface
-5. **Assignment Confirmation by Volunteers** — Schema has `confirmation_status` but no UI
+5. **Assignment Confirmation by Members** — Schema has `confirmation_status` but no UI
 
 #### Medium Priority
 
@@ -64,12 +64,12 @@ This document outlines planned improvements for the Cyber Tech church management
 
 ### Initiative 1: AI Rota Assistant Panel
 
-**Goal:** Help leaders quickly fill rota positions with intelligent volunteer suggestions
+**Goal:** Help leaders quickly fill rota positions with intelligent member suggestions
 
 #### User Flow
 1. Leader opens rota assignment modal for a position
 2. Clicks "AI Suggest" button to open side panel
-3. AI analyzes available volunteers and their assignment history
+3. AI analyzes available members and their assignment history
 4. Streaming suggestions appear with reasoning
 5. Leader clicks copy icon to use suggestion in assignment form
 
@@ -84,7 +84,7 @@ This document outlines planned improvements for the Cyber Tech church management
   positionId: string,
   date: string,
   context: {
-    availableVolunteers: Array<{
+    availableMembers: Array<{
       id: string,
       name: string,
       isAvailable: boolean
@@ -97,11 +97,11 @@ This document outlines planned improvements for the Cyber Tech church management
   }
 }
 
-// Response: Streaming text with volunteer recommendations
+// Response: Streaming text with member recommendations
 ```
 
 **Prompt Context:**
-- List of volunteers marked available for that date
+- List of members marked available for that date
 - Past 3 months of assignments for the position
 - No skills/certifications (simplified scope)
 
@@ -118,7 +118,7 @@ This document outlines planned improvements for the Cyber Tech church management
 
 ### Initiative 2: Offline PWA Support
 
-**Goal:** Allow volunteers to view their schedules even without internet connection
+**Goal:** Allow members to view their schedules even without internet connection
 
 #### Scope Decision: View-Only
 

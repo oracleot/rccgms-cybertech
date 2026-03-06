@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { VolunteerSelector } from "@/components/rota/volunteer-selector"
+import { MemberSelector } from "@/components/rota/member-selector"
 import type { Position, Department } from "@/types/auth"
 
 interface Assignment {
@@ -124,7 +124,7 @@ function SortableAssignment({
         )
       ) : (
         <div className="w-48">
-          <VolunteerSelector
+          <MemberSelector
             value={assignment.userId || undefined}
             onValueChange={onUserChange}
             departmentId={assignment.departmentId}
@@ -245,7 +245,7 @@ export function PositionAssignment({
       <CardHeader>
         <CardTitle className="text-lg">Position Assignments</CardTitle>
         <CardDescription>
-          Drag to reorder, assign volunteers to each position
+          Drag to reorder, assign members to each position
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

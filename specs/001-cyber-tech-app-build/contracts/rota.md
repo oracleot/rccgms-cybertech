@@ -35,7 +35,7 @@ const { data: rotas } = await supabase
   .lte('date', endDate)
   .order('date', { ascending: true })
 
-// RLS: Returns only published rotas for volunteers, all for admin/leader
+// RLS: Returns only published rotas for members, all for admin/leader
 ```
 
 ### Get Single Rota
@@ -115,7 +115,7 @@ const { error } = await supabase
 await sendRotaPublishedNotifications(rotaId)
 ```
 
-### Get My Schedule (Volunteer)
+### Get My Schedule (Member)
 
 ```typescript
 const { data: assignments } = await supabase

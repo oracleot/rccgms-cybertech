@@ -40,7 +40,7 @@ export default async function RundownDetailPage({ params }: RundownPageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  let role = "volunteer"
+  let role = "member"
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -93,7 +93,7 @@ export default async function RundownDetailPage({ params }: RundownPageProps) {
       : null,
   }))
 
-  const canEdit = role === "admin" || role === "leader"
+  const canEdit = role === "admin" || role === "lead_developer" || role === "developer" || role === "leader"
 
   if (!canEdit) {
     redirect(`/rundown/${id}/live`)

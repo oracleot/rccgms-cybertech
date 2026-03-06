@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-type Role = "admin" | "leader" | "volunteer"
+type Role = "admin" | "lead_developer" | "developer" | "leader" | "member"
 
 interface Profile {
   id: string
@@ -29,7 +29,7 @@ async function requireLeaderOrAdmin() {
     .eq("auth_user_id", user.id)
     .single<Profile>()
 
-  if (!profile || (profile.role !== "admin" && profile.role !== "leader")) {
+  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader")) {
     return { error: "FORBIDDEN" as const, status: 403 }
   }
 

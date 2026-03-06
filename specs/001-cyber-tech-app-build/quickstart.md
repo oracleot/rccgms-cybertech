@@ -127,7 +127,7 @@ Open [http://localhost:3000](http://localhost:3000)
 The app has three roles with different permissions:
 - **Admin**: Full access to everything including user management
 - **Leader**: Can manage rotas, approve swaps, manage equipment
-- **Volunteer**: Can view schedules, submit availability, request swaps
+- **Member**: Can view schedules, submit availability, request swaps
 
 ### Testing by Feature
 
@@ -146,7 +146,7 @@ The app has three roles with different permissions:
 - **Create Rota** (Leader/Admin): Click "New Rota" to create a service rota
 - **My Schedule** (`/rota/my-schedule`): View your personal assignments
 - **Availability** (`/rota/availability`): Mark dates you're available/unavailable
-- **Swap Requests** (`/rota/swaps`): Request to swap duties with another volunteer
+- **Swap Requests** (`/rota/swaps`): Request to swap duties with another member
 
 #### 4. Equipment Management (`/equipment`)
 - **Browse Equipment**: View all equipment in inventory
@@ -331,7 +331,7 @@ supabase gen types typescript --local > types/database.ts
    - Automatic refresh token handling
 
 3. **Role-Based Access**:
-   - Roles: `admin`, `leader`, `volunteer`
+   - Roles: `admin`, `leader`, `member`
    - Checked via `profiles.role` column
    - RLS policies enforce access at database level
 

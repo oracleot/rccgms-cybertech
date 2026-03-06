@@ -108,7 +108,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **Read the existing user guide** to understand the established format and style
    - **Add/update section for the feature being implemented**, following the existing patterns:
      - Use the same heading hierarchy (## for main sections, ### for subsections)
-     - Include "What You Can Do" section with role-based permissions (👤 Volunteer, 👥 Leader, 🔧 Admin)
+     - Include "What You Can Do" section with role-based permissions (👤 Member, 👥 Leader, 🔧 Admin)
      - Document step-by-step workflows with numbered lists
      - Add tables for status guides, notification types, or feature comparisons
      - Include "Tips & Best Practices" with ✅ and ❌ bullets

@@ -41,7 +41,7 @@ export function RotaCalendar() {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
-  const canCreateRota = user?.role === "admin" || user?.role === "leader"
+  const canCreateRota = user?.role === "admin" || user?.role === "lead_developer" || user?.role === "developer" || user?.role === "leader"
 
   const fetchRotas = useCallback(async (month: Date) => {
     setIsLoading(true)
@@ -258,7 +258,7 @@ export function RotaCalendar() {
                         <RotaStatusBadge status={event.status} />
                       </div>
                       <span className="text-sm text-muted-foreground">
-                        {event.assignmentCount} volunteers assigned
+                        {event.assignmentCount} members assigned
                       </span>
                     </button>
                   ))}

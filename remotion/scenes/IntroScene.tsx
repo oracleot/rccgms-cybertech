@@ -171,7 +171,7 @@ export const IntroScene: React.FC = () => {
           transform: `translateY(${interpolate(subtitleY, [0, 1], [20, 0])}px)`,
         }}
       >
-        Schedule volunteers for church services with ease
+        Schedule members for church services with ease
       </p>
 
       {/* Icons row with floating animation */}

@@ -36,7 +36,7 @@ export default async function MyProgressPage() {
 
   // Get all progress records for this user
   const { data: progressRaw } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select(`
       *,
       track:onboarding_tracks(
@@ -74,7 +74,7 @@ export default async function MyProgressPage() {
     const { data: completions } = await supabase
       .from("step_completions")
       .select("id")
-      .eq("volunteer_progress_id", progress.id)
+      .eq("member_progress_id", progress.id)
 
     const totalSteps = steps?.length || 0
     const completedSteps = completions?.length || 0

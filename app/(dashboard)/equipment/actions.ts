@@ -24,7 +24,7 @@ export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string }
 
-type Role = "admin" | "leader" | "volunteer"
+type Role = "admin" | "lead_developer" | "developer" | "leader" | "member"
 
 interface Profile {
   id: string
@@ -62,7 +62,7 @@ async function getProfile(): Promise<ActionResult<Profile>> {
 }
 
 function requireLeader(profile: Profile): ActionResult<Profile> {
-  if (profile.role === "admin" || profile.role === "leader") {
+  if (profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer" || profile.role === "leader") {
     return { success: true, data: profile }
   }
   return { success: false, error: "Only leaders and admins can perform this action" }

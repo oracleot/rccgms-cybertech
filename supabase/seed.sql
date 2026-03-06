@@ -23,31 +23,31 @@ INSERT INTO departments (id, name, description, color) VALUES
 
 -- Positions for each department
 -- Sound Department
-INSERT INTO positions (id, name, department_id, description, min_volunteers, max_volunteers) VALUES
+INSERT INTO positions (id, name, department_id, description, min_members, max_members) VALUES
   ('b13ff7c0-9114-4682-aeb2-94e98e39644a', 'Main Sound', '349301a8-8e6a-4e3d-85cf-ca8c466328fa', 'Primary audio mixer', 1, 1),
   ('6075c34a-09f0-458b-9b65-af8e070d9a4c', 'Sound Assistant', '349301a8-8e6a-4e3d-85cf-ca8c466328fa', 'Assists main sound operator', 0, 1),
   ('9fd464e2-dd7d-47c7-a251-745dd924102c', 'Monitors', '349301a8-8e6a-4e3d-85cf-ca8c466328fa', 'Stage monitors and in-ear mixes', 0, 1);
 
 -- Cameras Department
-INSERT INTO positions (id, name, department_id, description, min_volunteers, max_volunteers) VALUES
+INSERT INTO positions (id, name, department_id, description, min_members, max_members) VALUES
   ('d368d10a-d220-4da2-8edd-acf22d1ab380', 'Camera 1', '0920d4f9-70af-4ae0-bb27-3c90b9a59274', 'Main camera operator', 1, 1),
   ('d52f6bec-1370-4a4a-ad60-622a2b545a3d', 'Camera 2', '0920d4f9-70af-4ae0-bb27-3c90b9a59274', 'Secondary camera operator', 0, 1),
   ('2fee8752-a5a7-41e2-aec8-4ede5c469a8e', 'Camera 3', '0920d4f9-70af-4ae0-bb27-3c90b9a59274', 'Wide shot camera', 0, 1),
   ('63dc54c9-c133-4012-9efa-9187ec9c4a3d', 'PTZ Operator', '0920d4f9-70af-4ae0-bb27-3c90b9a59274', 'Remote camera control', 0, 1);
 
 -- Projection Department
-INSERT INTO positions (id, name, department_id, description, min_volunteers, max_volunteers) VALUES
+INSERT INTO positions (id, name, department_id, description, min_members, max_members) VALUES
   ('41a5daec-09dc-45f5-803c-e823dd7c3d70', 'Lyrics', '9148030c-9f02-4a9f-b08a-7c94cf1b9770', 'Song lyrics operator', 1, 1),
   ('661c2c4d-85f4-414a-a85a-f5763d3f4509', 'Slides', '9148030c-9f02-4a9f-b08a-7c94cf1b9770', 'Presentation slides', 0, 1);
 
 -- Streaming Department
-INSERT INTO positions (id, name, department_id, description, min_volunteers, max_volunteers) VALUES
+INSERT INTO positions (id, name, department_id, description, min_members, max_members) VALUES
   ('a02e3dc3-d557-47cf-9404-62d2f3b08459', 'Stream Producer', '1c23a977-8c77-453f-8ab3-a830748992b4', 'Live stream director', 1, 1),
   ('f726facb-8c7d-4988-b5a6-62d5c97a3952', 'Graphics', '1c23a977-8c77-453f-8ab3-a830748992b4', 'Lower thirds and graphics', 0, 1),
   ('fd9c75d8-68c1-4138-9cb5-22fbe5118cae', 'Chat Moderator', '1c23a977-8c77-453f-8ab3-a830748992b4', 'Monitors online chat', 0, 2);
 
 -- Time Management Department
-INSERT INTO positions (id, name, department_id, description, min_volunteers, max_volunteers) VALUES
+INSERT INTO positions (id, name, department_id, description, min_members, max_members) VALUES
   ('5daefed9-48b3-45a6-80fb-113d9170b354', 'Timer', '4241efeb-6bb4-48d0-acd8-d36626b10280', 'Service timing and cues', 1, 1);
 
 -- Services

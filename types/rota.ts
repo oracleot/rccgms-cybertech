@@ -84,7 +84,7 @@ export interface CreateSwapRequestData {
   reason?: string
 }
 
-// My schedule item (volunteer view)
+// My schedule item (member view)
 export interface MyScheduleItem {
   id: string
   date: string

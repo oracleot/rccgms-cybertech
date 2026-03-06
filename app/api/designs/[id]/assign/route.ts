@@ -105,7 +105,7 @@ export async function POST(
 
       // Only the assignee or an admin can unclaim
       const isAssignee = existingRequest.assigned_to === profile.id
-      const isAdmin = profile.role === "admin"
+      const isAdmin = profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer"
       
       if (!isAssignee && !isAdmin) {
         return NextResponse.json(
@@ -147,7 +147,7 @@ export async function POST(
     // Handle reassign (admin/leader only)
     if (action === "reassign") {
       // Check role
-      if (profile.role !== "admin" && profile.role !== "leader") {
+      if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
         return NextResponse.json(
           { error: "Only admins and leaders can reassign requests" },
           { status: 403 }

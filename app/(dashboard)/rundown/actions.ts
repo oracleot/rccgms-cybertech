@@ -75,7 +75,7 @@ async function requireProfile(): Promise<RequireProfileResult> {
 }
 
 function assertLeaderOrAdmin(profile: Profile) {
-  return profile.role === "admin" || profile.role === "leader"
+  return profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer" || profile.role === "leader"
 }
 
 export async function createRundown(
@@ -92,7 +92,7 @@ export async function createRundown(
 
     const { supabase, profile } = result
 
-    // All authenticated users (including volunteers) can create rundowns
+    // All authenticated users (any role) can create rundowns
 
     const { data, error } = await supabase
       .from("rundowns")
@@ -315,18 +315,26 @@ export async function reorderRundownItems(
       return { success: false, error: "Only admins and leaders can reorder items" }
     }
 
+    // Use individual UPDATE calls instead of upsert
+    // (upsert fails because NOT NULL columns like type/title aren't in the payload)
     const updates = parsed.data.itemIds.map((id, index) => ({
       id,
-      rundown_id: parsed.data.rundownId,
       order: index + 1,
     }))
 
-    const { error } = await supabase
-      .from("rundown_items")
-      .upsert(updates as never, { onConflict: "id", ignoreDuplicates: false })
+    const results = await Promise.all(
+      updates.map(({ id, order }) =>
+        supabase
+          .from("rundown_items")
+          .update({ order })
+          .eq("id", id)
+          .eq("rundown_id", parsed.data.rundownId)
+      )
+    )
 
-    if (error) {
-      console.error("Error reordering rundown items:", error)
+    const failedResult = results.find((r) => r.error)
+    if (failedResult?.error) {
+      console.error("Error reordering rundown items:", failedResult.error)
       return { success: false, error: "Failed to reorder items" }
     }
 

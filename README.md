@@ -125,7 +125,7 @@ specs/                   # Project specifications
 |------|-------------|
 | **Admin** | Full access, user management, system settings |
 | **Leader** | Create/edit rotas, approve swaps, manage team |
-| **Volunteer** | View schedules, submit availability, request swaps |
+| **Member** | View schedules, submit availability, request swaps |
 
 ---
 

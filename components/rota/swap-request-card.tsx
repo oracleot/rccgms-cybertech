@@ -418,7 +418,7 @@ export function SwapRequestCard({
           <DialogHeader>
             <DialogTitle>Reject Swap Request</DialogTitle>
             <DialogDescription>
-              Provide a reason for rejecting this swap between {request.requester.name} and {request.targetUser?.name || "the volunteer"}.
+              Provide a reason for rejecting this swap between {request.requester.name} and {request.targetUser?.name || "the member"}.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

@@ -29,7 +29,7 @@ export default async function NewTrackPage() {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !["admin", "developer"].includes(profile.role)) {
     redirect("/training")
   }
 
@@ -54,7 +54,7 @@ export default async function NewTrackPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Create Training Track</h1>
         <p className="text-muted-foreground">
-          Set up a new learning path for volunteers
+          Set up a new learning path for members
         </p>
       </div>
 

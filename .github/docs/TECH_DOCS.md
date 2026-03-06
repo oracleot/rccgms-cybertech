@@ -171,7 +171,7 @@ erDiagram
     PROFILES ||--o{ ROTA_ASSIGNMENTS : has
     PROFILES ||--o{ AVAILABILITY : submits
     PROFILES ||--o{ EQUIPMENT_CHECKOUTS : makes
-    PROFILES ||--o{ VOLUNTEER_PROGRESS : tracks
+    PROFILES ||--o{ MEMBER_PROGRESS : tracks
     PROFILES }|--|| DEPARTMENTS : belongs_to
     
     DEPARTMENTS ||--o{ POSITIONS : has
@@ -191,7 +191,7 @@ erDiagram
     SONGS ||--o{ RUNDOWN_ITEMS : referenced_by
     
     ONBOARDING_TRACKS ||--o{ ONBOARDING_STEPS : contains
-    ONBOARDING_TRACKS ||--o{ VOLUNTEER_PROGRESS : enrolled_in
+    ONBOARDING_TRACKS ||--o{ MEMBER_PROGRESS : enrolled_in
     ONBOARDING_STEPS ||--o{ STEP_COMPLETIONS : completed_as
 
     PROFILES {
@@ -222,8 +222,8 @@ erDiagram
         string name
         uuid department_id FK
         string description
-        int min_volunteers
-        int max_volunteers
+        int min_members
+        int max_members
         timestamp created_at
     }
 
@@ -406,7 +406,7 @@ erDiagram
         int pass_score
     }
 
-    VOLUNTEER_PROGRESS {
+    MEMBER_PROGRESS {
         uuid id PK
         uuid user_id FK
         uuid track_id FK
@@ -417,7 +417,7 @@ erDiagram
 
     STEP_COMPLETIONS {
         uuid id PK
-        uuid volunteer_progress_id FK
+        uuid member_progress_id FK
         uuid step_id FK
         timestamp completed_at
         int score

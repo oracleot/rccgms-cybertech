@@ -229,7 +229,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       case "approve": {
-        if (profile.role !== "admin" && profile.role !== "leader") {
+        if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
           return NextResponse.json(
             { error: "Only leaders can approve swap requests" },
             { status: 403 }
@@ -297,7 +297,7 @@ export async function PATCH(request: NextRequest) {
       }
 
       case "reject": {
-        if (profile.role !== "admin" && profile.role !== "leader") {
+        if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
           return NextResponse.json(
             { error: "Only leaders can reject swap requests" },
             { status: 403 }
@@ -403,7 +403,7 @@ export async function GET(request: NextRequest) {
       query = query.eq("requester_id", profile.id)
     } else if (type === "pending-approval") {
       // Leaders only
-      if (profile.role !== "admin" && profile.role !== "leader") {
+      if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
         return NextResponse.json({ error: "Not authorized" }, { status: 403 })
       }
       query = query.eq("status", "accepted")

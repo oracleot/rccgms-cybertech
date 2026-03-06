@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useTestMode } from "@/contexts/test-mode-context"
 import type { Profile, Department, UserDepartment } from "@/types/auth"
 
 interface UserWithDepartments extends Profile {
@@ -54,6 +55,7 @@ export function UserDepartmentsModal({
   const router = useRouter()
   const user = users.find((u) => u.id === userId)
   const [isPending, startTransition] = useTransition()
+  const { isTestMode, simulateDepartmentChange } = useTestMode()
   
   // Initialize with current department assignments
   const initialAssignments: DepartmentAssignment[] = user?.user_departments?.map(ud => ({
@@ -105,6 +107,19 @@ export function UserDepartmentsModal({
   }
 
   const handleSave = async () => {
+    if (isTestMode) {
+      // In test mode, simulate the change without hitting the API
+      const oldDepts = (user.user_departments || []).map(ud => ud.department?.name).filter(Boolean).join(", ") || "None"
+      const newDepts = assignments.map(a => {
+        const dept = departments.find(d => d.id === a.departmentId)
+        return dept?.name || "Unknown"
+      }).join(", ") || "None"
+      simulateDepartmentChange(user.id, user.name, oldDepts, newDepts)
+      toast.success("Department change simulated (Test Mode)")
+      handleClose()
+      return
+    }
+
     startTransition(async () => {
       try {
         const response = await fetch("/api/admin/user-departments", {
@@ -255,7 +270,7 @@ export function UserDepartmentsModal({
           </Button>
           <Button onClick={handleSave} disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
+            {isTestMode ? "Simulate Change" : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
