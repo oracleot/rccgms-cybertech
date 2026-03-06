@@ -26,7 +26,7 @@ export default async function HistoryPage() {
     .single()
 
   const profileRole = (profile as { role: string } | null)?.role
-  if (!profileRole || !["admin", "leader"].includes(profileRole)) {
+  if (!profileRole || !["admin", "lead_developer", "leader"].includes(profileRole)) {
     redirect("/dashboard")
   }
 
