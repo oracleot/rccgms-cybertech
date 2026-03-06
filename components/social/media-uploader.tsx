@@ -8,7 +8,7 @@
  * pre-configured in next.config.js image domains.
  */
 
-/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @next/next/no-img-element -- blob URLs from local file uploads can't use next/image */
 
 import { useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"

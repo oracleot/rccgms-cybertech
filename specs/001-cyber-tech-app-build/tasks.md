@@ -63,7 +63,7 @@ Based on plan.md structure:
 - [x] T022 [P] Create migration for equipment tables (equipment, equipment_categories, equipment_checkouts, equipment_maintenance) in supabase/migrations/008_equipment.sql
 - [x] T023 [P] Create migration for rundowns and rundown_items tables in supabase/migrations/009_rundowns.sql
 - [x] T024 [P] Create migration for songs table in supabase/migrations/010_songs.sql
-- [x] T025 [P] Create migration for training tables (onboarding_tracks, onboarding_steps, volunteer_progress, step_completions) in supabase/migrations/011_training.sql
+- [x] T025 [P] Create migration for training tables (onboarding_tracks, onboarding_steps, member_progress, step_completions) in supabase/migrations/011_training.sql
 - [x] T026 [P] Create migration for notifications and notification_preferences tables in supabase/migrations/012_notifications.sql
 - [x] T027 [P] Create migration for social_posts and social_integrations tables in supabase/migrations/013_social.sql
 - [x] T028 Create migration for database triggers (profile creation, equipment status, timestamps) in supabase/migrations/014_triggers.sql
@@ -140,9 +140,9 @@ Based on plan.md structure:
 
 ## Phase 4: User Story 2 - Rota Management & Scheduling (Priority: P1)
 
-**Goal**: Enable Team Leaders to create and manage weekly service rotas so volunteers know when and where they are serving
+**Goal**: Enable Team Leaders to create and manage weekly service rotas so members know when and where they are serving
 
-**Independent Test**: Create a rota for an upcoming Sunday, assign volunteers to positions, publish it, verify assigned volunteers receive notifications
+**Independent Test**: Create a rota for an upcoming Sunday, assign members to positions, publish it, verify assigned members receive notifications
 
 ### Implementation for User Story 2
 
@@ -153,13 +153,13 @@ Based on plan.md structure:
 - [X] T077 [P] [US2] Create new rota form page in app/(dashboard)/rota/new/page.tsx
 - [X] T077b [US2] Create rota edit page in app/(dashboard)/rota/[id]/edit/page.tsx
 - [X] T078 [US2] Create position assignment component with drag-drop in components/rota/position-assignment.tsx
-- [X] T079 [P] [US2] Create volunteer selector dropdown in components/rota/volunteer-selector.tsx
+- [X] T079 [P] [US2] Create member selector dropdown in components/rota/member-selector.tsx
 - [X] T080 [P] [US2] Create rota status badge component in components/rota/rota-status-badge.tsx
 - [X] T081 [US2] Implement createRota server action in app/(dashboard)/rota/actions.ts
 - [X] T082 [P] [US2] Implement updateRotaAssignments server action in app/(dashboard)/rota/actions.ts
 - [X] T083 [P] [US2] Implement publishRota server action in app/(dashboard)/rota/actions.ts
 - [X] T084 [P] [US2] Implement deleteRota server action in app/(dashboard)/rota/actions.ts
-- [X] T085 [US2] Create "My Schedule" view for volunteers in app/(dashboard)/rota/my-schedule/page.tsx
+- [X] T085 [US2] Create "My Schedule" view for members in app/(dashboard)/rota/my-schedule/page.tsx
 - [X] T086 [P] [US2] Create upcoming assignments card component in components/rota/upcoming-assignments.tsx
 - [X] T087 [US2] Create notification service for rota publishing in lib/notifications/rota-notifications.ts
 - [X] T088 [US2] Create email template for rota assignment in emails/rota-assignment.tsx
@@ -168,9 +168,9 @@ Based on plan.md structure:
 
 ---
 
-## Phase 5: User Story 3 - Volunteer Availability Submission (Priority: P1) ✅
+## Phase 5: User Story 3 - Member Availability Submission (Priority: P1) ✅
 
-**Goal**: Enable volunteers to submit their availability for upcoming Sundays so Leaders can schedule appropriately
+**Goal**: Enable members to submit their availability for upcoming Sundays so Leaders can schedule appropriately
 
 **Independent Test**: Access the availability calendar, mark dates as available/unavailable, verify Leaders can see this when creating rotas
 
@@ -183,7 +183,7 @@ Based on plan.md structure:
 - [X] T093 [P] [US3] Implement getMyAvailability server action in app/(dashboard)/rota/availability/actions.ts
 - [X] T094 [US3] Create team availability view for Leaders in app/(dashboard)/rota/team-availability/page.tsx
 - [X] T095 [P] [US3] Create availability grid component showing team member availability in components/rota/team-availability-grid.tsx
-- [X] T096 [US3] Integrate availability data into volunteer selector in components/rota/volunteer-selector.tsx (update)
+- [X] T096 [US3] Integrate availability data into member selector in components/rota/member-selector.tsx (update)
 
 **Checkpoint**: User Story 3 (Availability) is fully functional and testable independently ✅
 
@@ -191,9 +191,9 @@ Based on plan.md structure:
 
 ## Phase 6: User Story 4 - Duty Swap Requests (Priority: P2) ✅
 
-**Goal**: Enable volunteers to request duty swaps with other team members when they can no longer serve on their assigned date
+**Goal**: Enable members to request duty swaps with other team members when they can no longer serve on their assigned date
 
-**Independent Test**: Initiate a swap request, have another volunteer accept it, have a Leader approve the swap, verify all parties receive notifications
+**Independent Test**: Initiate a swap request, have another member accept it, have a Leader approve the swap, verify all parties receive notifications
 
 ### Implementation for User Story 4
 
@@ -205,7 +205,7 @@ Based on plan.md structure:
 - [X] T102 [P] [US4] Implement declineSwapRequest server action in app/(dashboard)/rota/swaps/actions.ts
 - [X] T103 [P] [US4] Implement approveSwapRequest server action (leader) in app/(dashboard)/rota/swaps/actions.ts
 - [X] T104 [P] [US4] Implement rejectSwapRequest server action (leader) in app/(dashboard)/rota/swaps/actions.ts
-- [X] T105 [US4] Create my swap requests page for volunteers in app/(dashboard)/rota/swaps/page.tsx
+- [X] T105 [US4] Create my swap requests page for members in app/(dashboard)/rota/swaps/page.tsx
 - [X] T106 [P] [US4] Create Leader swap approval dashboard section in components/rota/leader-swap-dashboard.tsx
 - [X] T107 [US4] Create email template for swap request notification in emails/swap-request.tsx
 - [X] T108 [P] [US4] Create email template for swap approval notification in emails/swap-approved.tsx
@@ -322,7 +322,7 @@ Based on plan.md structure:
 
 ## Phase 10: User Story 8 - Dashboard & Quick Actions (Priority: P2) ✅
 
-**Goal**: Enable volunteers to see upcoming duties and quick actions on their dashboard for efficient access
+**Goal**: Enable members to see upcoming duties and quick actions on their dashboard for efficient access
 
 **Independent Test**: Log in and verify dashboard shows upcoming assignments, quick action buttons work, role-appropriate widgets display
 
@@ -374,9 +374,9 @@ Based on plan.md structure:
 
 ---
 
-## Phase 12: User Story 10 - Volunteer Training & Onboarding (Priority: P3) ✅
+## Phase 12: User Story 10 - Member Training & Onboarding (Priority: P3) ✅
 
-**Goal**: Enable new volunteers to complete structured training programs and track progress toward certification
+**Goal**: Enable new members to complete structured training programs and track progress toward certification
 
 **Independent Test**: Enroll in a training track, complete steps (videos, self-study), request mentor verification, receive certification
 
@@ -461,7 +461,7 @@ Based on plan.md structure:
 
 ## Phase 15: Multi-Department User Assignment
 
-**Purpose**: Enable users to be assigned to multiple departments (e.g., a volunteer serving in both Sound and Media)
+**Purpose**: Enable users to be assigned to multiple departments (e.g., a member serving in both Sound and Media)
 
 **⚠️ Schema Change Required**: This requires a database migration to create a junction table
 
@@ -519,7 +519,7 @@ Based on plan.md structure:
 - rundown_items (009_rundowns.sql)
 - onboarding_tracks (011_training.sql)
 - onboarding_steps (011_training.sql)
-- volunteer_progress (011_training.sql)
+- member_progress (011_training.sql)
 - step_completions (011_training.sql)
 - notifications (012_notifications.sql)
 - notification_preferences (012_notifications.sql)

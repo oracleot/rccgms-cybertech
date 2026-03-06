@@ -49,7 +49,7 @@ export const completeProfileSchema = z.object({
     "id": "uuid",
     "name": "John Doe",
     "email": "user@example.com",
-    "role": "volunteer"
+    "role": "member"
   }
 }
 ```

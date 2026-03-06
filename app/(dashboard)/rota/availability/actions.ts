@@ -281,7 +281,7 @@ export async function getTeamAvailability(
     const profile = profileData as { id: string; role: string }
 
     // Only leaders and admins can view team availability
-    if (profile.role !== "admin" && profile.role !== "leader") {
+    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
       return { success: false, error: "Only leaders and admins can view team availability" }
     }
 

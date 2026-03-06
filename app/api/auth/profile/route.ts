@@ -15,7 +15,7 @@ interface ProfileWithDepartment {
 }
 
 // Helper to work around Supabase type inference issues
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client type workaround
 type AnySupabaseClient = SupabaseClient<any, any, any>
 
 /**
@@ -46,7 +46,7 @@ export async function GET() {
       avatar_url,
       role,
       department_id,
-      departments (
+      departments!fk_profiles_department (
         id,
         name
       )
@@ -203,7 +203,7 @@ export async function PATCH(request: NextRequest) {
       avatar_url,
       role,
       department_id,
-      departments (
+      departments!fk_profiles_department (
         id,
         name
       )

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import confetti from "canvas-confetti"
+import { Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
 import { useDisplayReceiver } from "@/hooks/use-display-sync"
@@ -188,9 +189,9 @@ function EndOfServiceConfetti({ textColor }: { textColor: string }) {
   return (
     <div className="animate-in fade-in duration-700 text-center">
       <h1
-        className="font-bold animate-[breathe_3s_ease-in-out_infinite]"
+        className="font-bold animate-[breathe_3s_ease-in-out_infinite] leading-none"
         style={{
-          fontSize: "clamp(5rem, 18vw, 20rem)",
+          fontSize: "clamp(4rem, 15vw, 22vh)",
           textShadow: `0 0 5rem ${textColor}40, 0 0 10rem ${textColor}20`,
           letterSpacing: "0.1em",
         }}
@@ -207,7 +208,7 @@ function EndOfServiceConfetti({ textColor }: { textColor: string }) {
  */
 export function DisplayView({
   rundownId,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future offline support
   initialItems,
   initialSettings,
   serviceName,
@@ -224,7 +225,11 @@ export function DisplayView({
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [showTransitionScreen, setShowTransitionScreen] = useState(false)
   const [transitionData, setTransitionData] = useState<TransitionPayload | null>(null)
+  const [isRedFlash, setIsRedFlash] = useState(false)
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false)
+  const [isTimeoutBlinkRed, setIsTimeoutBlinkRed] = useState(false)
   const prevItemIdRef = useRef<string | null>(null)
+  const hasFlashedRef = useRef(false)
   
   // Independent timer management (doesn't rely on control window)
   const timerStartTimeRef = useRef<number | null>(null)
@@ -262,6 +267,8 @@ export function DisplayView({
         timerDurationRef.current = 0
         setIsTimerActive(false)
         setTimer({ elapsed: 0, remaining: 0, isRunning: false })
+        setIsRedFlash(false)
+        hasFlashedRef.current = false
         break
 
       case "TIMER_UPDATE":
@@ -315,24 +322,14 @@ export function DisplayView({
   // Initialize display receiver
   useDisplayReceiver(rundownId, handleMessage)
 
-  // Auto-fullscreen if requested via query parameter (from multi-screen selection)
+  // Show fullscreen prompt if requested via query parameter (from multi-screen selection)
+  // Fullscreen API requires a user gesture, so we show a click overlay instead of auto-requesting
   useEffect(() => {
     if (typeof window === 'undefined') return
 
     const params = new URLSearchParams(window.location.search)
     if (params.get('autoFullscreen') === 'true') {
-      // Small delay to ensure page is fully loaded
-      const timer = setTimeout(() => {
-        try {
-          document.documentElement.requestFullscreen?.().catch((err) => {
-            console.log('Fullscreen request failed (user interaction may be required):', err)
-          })
-        } catch (error) {
-          console.log('Fullscreen not available:', error)
-        }
-      }, 500)
-
-      return () => clearTimeout(timer)
+      setShowFullscreenPrompt(true)
     }
   }, [])
 
@@ -406,6 +403,58 @@ export function DisplayView({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
+  // Red flash effect when timer reaches zero — a bright visual cue instead of sound
+  useEffect(() => {
+    if (
+      timer.isRunning &&
+      timer.remaining <= 0 &&
+      timer.elapsed > 0 &&
+      !hasFlashedRef.current
+    ) {
+      hasFlashedRef.current = true
+      setIsRedFlash(true)
+
+      // Flash 3 times: on  →  off  →  on  →  off  →  on  →  off
+      const timers: NodeJS.Timeout[] = []
+      timers.push(setTimeout(() => setIsRedFlash(false), 400))
+      timers.push(setTimeout(() => setIsRedFlash(true), 600))
+      timers.push(setTimeout(() => setIsRedFlash(false), 1000))
+      timers.push(setTimeout(() => setIsRedFlash(true), 1200))
+      timers.push(setTimeout(() => setIsRedFlash(false), 1600))
+
+      return () => timers.forEach(clearTimeout)
+    }
+  }, [timer.isRunning, timer.remaining, timer.elapsed])
+
+  // Blinking red "TIME OUT!" text — escalates after 45 seconds of operator inaction
+  const hasNextItemInTransition = transitionData?.nextItem != null
+  useEffect(() => {
+    if (!showTransitionScreen || !hasNextItemInTransition) {
+      setIsTimeoutBlinkRed(false)
+      return
+    }
+
+    const startTime = Date.now()
+    let timeoutId: NodeJS.Timeout
+
+    const tick = () => {
+      const elapsedMs = Date.now() - startTime
+      const isUrgent = elapsedMs > 45_000 // 45 seconds → faster blinking
+      const interval = isUrgent ? 300 : 800
+
+      setIsTimeoutBlinkRed((prev) => !prev)
+      timeoutId = setTimeout(tick, interval)
+    }
+
+    // Start blinking after a brief pause
+    timeoutId = setTimeout(tick, 800)
+
+    return () => {
+      clearTimeout(timeoutId)
+      setIsTimeoutBlinkRed(false)
+    }
+  }, [showTransitionScreen, hasNextItemInTransition])
+
   // Transition class based on settings
   const transitionClass = useMemo(() => {
     switch (settings.transitionEffect) {
@@ -421,7 +470,7 @@ export function DisplayView({
   return (
     <div
       className={cn(
-        "h-screen w-full flex flex-col overflow-hidden",
+        "h-screen w-full flex flex-col overflow-hidden relative",
         transitionClass
       )}
       style={{
@@ -430,6 +479,33 @@ export function DisplayView({
         fontFamily: settings.fontFamily,
       }}
     >
+      {/* Bright red flash overlay — visual alert when time runs out */}
+      <div
+        className={cn(
+          "absolute inset-0 z-50 pointer-events-none transition-opacity duration-150",
+          isRedFlash ? "opacity-100" : "opacity-0"
+        )}
+        style={{ backgroundColor: "#ff0000" }}
+      />
+
+      {/* Fullscreen prompt overlay — requires user gesture to enter fullscreen */}
+      {showFullscreenPrompt && (
+        <div
+          className="absolute inset-0 z-[60] flex items-center justify-center cursor-pointer bg-black/90 animate-in fade-in duration-300"
+          onClick={() => {
+            document.documentElement.requestFullscreen?.()
+              .then(() => setShowFullscreenPrompt(false))
+              .catch(() => setShowFullscreenPrompt(false))
+          }}
+        >
+          <div className="text-center text-white space-y-4">
+            <Maximize2 className="h-20 w-20 mx-auto animate-pulse" />
+            <p className="text-3xl font-bold">Tap to Enter Fullscreen</p>
+            <p className="text-sm opacity-50">Press Esc to exit later</p>
+          </div>
+        </div>
+      )}
+
       {/* Logo (optional) */}
       {settings.logoUrl && (
         <div className="absolute top-4 right-4 h-16 w-auto">
@@ -446,7 +522,7 @@ export function DisplayView({
       {/* Main content area */}
       <div
         className={cn(
-          "flex-1 flex flex-col items-center justify-center px-8 py-12",
+          "flex-1 flex flex-col items-center justify-center px-8 py-6 min-h-0",
           isTransitioning && settings.transitionEffect === "fade" && "opacity-0",
           isTransitioning && settings.transitionEffect === "slide" && "translate-y-4"
         )}
@@ -479,13 +555,19 @@ export function DisplayView({
             {/* Next item info or End of service */}
             {transitionData.nextItem ? (
               <>
-                {/* TIME OUT - BIG with breathing effect (only for mid-service transitions) */}
+                {/* TIME OUT - BIG with blinking red that escalates after 45s */}
                 <h1
-                  className="font-bold mb-12 animate-[breathe_3s_ease-in-out_infinite]"
+                  className={cn(
+                    "font-bold mb-8 leading-none transition-colors duration-150",
+                    !isTimeoutBlinkRed && "animate-[breathe_3s_ease-in-out_infinite]"
+                  )}
                   style={{ 
-                    fontSize: "clamp(80px, 18vw, 300px)",
-                    textShadow: `0 0 80px ${settings.textColor}40, 0 0 160px ${settings.textColor}20`,
+                    fontSize: "clamp(60px, 15vw, 22vh)",
+                    textShadow: isTimeoutBlinkRed
+                      ? "0 0 80px #ef444460, 0 0 160px #ef444430"
+                      : `0 0 80px ${settings.textColor}40, 0 0 160px ${settings.textColor}20`,
                     letterSpacing: "0.1em",
+                    color: isTimeoutBlinkRed ? "#ef4444" : undefined,
                   }}
                 >
                   TIME OUT!

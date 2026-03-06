@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { requireAdmin } from "@/lib/auth/guards"
+import { requireLeadDeveloper } from "@/lib/auth/guards"
 
 export async function retryNotification(
   notificationId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { error } = await supabase
@@ -39,7 +39,7 @@ export async function retryAllFailedNotifications(): Promise<{
   count?: number
 }> {
   try {
-    await requireAdmin()
+    await requireLeadDeveloper()
     const supabase = createAdminClient()
 
     const { count } = await supabase

@@ -7,7 +7,7 @@
  * Google Drive URLs with dynamic origins that can't be pre-configured.
  */
 
-/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @next/next/no-img-element -- Google Drive URLs with dynamic origins */
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -114,7 +114,7 @@ export function ScheduledPosts({ status = "all" }: ScheduledPostsProps) {
 
   useEffect(() => {
     fetchPosts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchPosts is stable, only re-fetch when status changes
   }, [status])
 
   async function handleDelete(id: string) {

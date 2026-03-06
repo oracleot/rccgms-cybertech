@@ -2,7 +2,6 @@ import { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { ROUTES } from "@/lib/constants"
-import { ProfileForm } from "./_components/profile-form"
 import { DisplaySettings } from "./_components/display-settings"
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
 import { ChangePassword } from "@/components/settings/change-password"
@@ -11,17 +10,7 @@ import { Separator } from "@/components/ui/separator"
 
 export const metadata: Metadata = {
   title: "Settings | Cyber Tech",
-  description: "Manage your profile and notification preferences",
-}
-
-interface ProfileWithDepartment {
-  id: string
-  name: string
-  phone: string | null
-  avatar_url: string | null
-  role: string
-  department_id: string | null
-  departments: { id: string; name: string } | null
+  description: "Manage your account settings and preferences",
 }
 
 export default async function SettingsPage() {
@@ -35,81 +24,35 @@ export default async function SettingsPage() {
     redirect(ROUTES.LOGIN)
   }
 
-  // Fetch profile with department
+  // Fetch profile ID for notification preferences
   const { data: profileData } = await supabase
     .from("profiles")
-    .select(`
-      id,
-      name,
-      phone,
-      avatar_url,
-      role,
-      department_id,
-      departments (
-        id,
-        name
-      )
-    `)
+    .select("id, role")
     .eq("auth_user_id", user.id)
     .single()
 
-  const profile = profileData as unknown as ProfileWithDepartment | null
-
-  if (!profile) {
+  if (!profileData) {
     redirect(ROUTES.LOGIN)
   }
-
-  // Fetch departments for selection
-  const { data: departments } = await supabase
-    .from("departments")
-    .select("id, name")
-    .order("name")
 
   // Fetch notification preferences
   const { data: notificationPrefs } = await supabase
     .from("notification_preferences")
     .select("*")
-    .eq("user_id", profile.id)
-
-  const profileFormData = {
-    id: profile.id,
-    email: user.email || "",
-    name: profile.name,
-    phone: profile.phone,
-    avatarUrl: profile.avatar_url,
-    role: profile.role,
-    departmentId: profile.department_id,
-    department: profile.departments,
-  }
+    .eq("user_id", profileData.id)
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
-          Manage your account settings and preferences
+          Manage your account preferences and security
         </p>
       </div>
 
       <Separator />
 
       <div className="grid gap-6">
-        {/* Profile Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>
-              Update your personal information and profile picture
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ProfileForm
-              profile={profileFormData}
-              departments={(departments as { id: string; name: string }[]) || []}
-            />
-          </CardContent>
-        </Card>
-
         {/* Security Section */}
         <Card>
           <CardHeader>
@@ -146,7 +89,7 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <NotificationPreferences
-              profileId={profile.id}
+              profileId={profileData.id}
               preferences={((notificationPrefs || []).map((pref) => ({
                 id: pref.id,
                 profile_id: pref.user_id,

@@ -214,7 +214,7 @@ function NewRotaForm() {
       <div>
         <h1 className="text-2xl font-bold">Create New Rota</h1>
         <p className="text-muted-foreground">
-          Schedule a new service and assign volunteers
+          Schedule a new service and assign members
         </p>
       </div>
 

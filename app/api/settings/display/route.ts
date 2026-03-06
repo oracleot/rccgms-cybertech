@@ -59,7 +59,7 @@ export async function GET() {
 
     // Fetch display settings
     // Note: display_settings table not in generated types until migration is applied
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- display_settings not in generated types
     const supabaseAny = supabase as any
     const result: DisplaySettingsResult = await supabaseAny
       .from("display_settings")
@@ -164,7 +164,7 @@ export async function PUT(request: Request) {
 
     // Upsert display settings
     // Note: display_settings table not in generated types until migration is applied
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- display_settings not in generated types
     const supabaseAny = supabase as any
     const result: DisplaySettingsResult = await supabaseAny
       .from("display_settings")

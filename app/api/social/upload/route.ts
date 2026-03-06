@@ -6,7 +6,7 @@ import { randomUUID } from "crypto"
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client type workaround
 type AnySupabaseClient = SupabaseClient<any, any, any>
 
 interface ProfileData {

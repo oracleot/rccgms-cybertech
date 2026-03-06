@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, Clock } from "lucide-react"
+import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, SkipBack, Clock } from "lucide-react"
 
 import { cn, formatDuration } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
@@ -325,6 +325,19 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     })
   }, [currentIndex, orderedItems, nextItem, sendMessage, serviceName])
 
+  // Handler to go back to previous item
+  const handleGoToPrevious = useCallback(() => {
+    if (currentIndex <= 0) return
+    
+    stopAlert()
+    setElapsed(0)
+    setWarned(false)
+    setIsInTransition(false)
+    
+    // Update index - this will trigger the useEffect that broadcasts the item change
+    setCurrentIndex((idx) => Math.max(idx - 1, 0))
+  }, [currentIndex])
+
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
     const item = orderedItems[currentIndex]
@@ -334,7 +347,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
       setWarned(true)
       startAlertLoop(selectedSound)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- startAlertLoop is stable, including it causes infinite loop
   }, [elapsed, started, currentIndex, orderedItems, warned, selectedSound])
 
   useEffect(() => () => stopAlert(), [])
@@ -379,6 +392,12 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
             <Play className="mr-2 h-4 w-4" />
             Start service
           </Button>
+          {started && !isInTransition && currentIndex > 0 && (
+            <Button variant="outline" size="sm" onClick={handleGoToPrevious}>
+              <SkipBack className="mr-2 h-4 w-4" />
+              Go to previous
+            </Button>
+          )}
           {started && !isInTransition && nextItem && (
             <Button variant="outline" size="sm" onClick={handleSkipToNext}>
               <SkipForward className="mr-2 h-4 w-4" />
@@ -563,7 +582,20 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
         )}
         <Card className={cn(!nextItem && "opacity-50")}> 
           <CardHeader>
-            <CardTitle className="text-base">All items</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">All items</CardTitle>
+              {started && !isInTransition && currentIndex > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleGoToPrevious}
+                  title="Go to previous item"
+                >
+                  <SkipBack className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-2 max-h-[260px] overflow-y-auto">
             {orderedItems.map((item, idx) => (

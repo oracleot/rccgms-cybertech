@@ -104,7 +104,7 @@ export async function createSwapRequest(
 
   const swapRequestData = swapRequest as { id: string }
 
-  // TODO: Send notification to target user or all eligible volunteers
+  // TODO: Send notification to target user or all eligible members
 
   revalidatePath("/rota/swaps")
   revalidatePath("/rota/my-schedule")
@@ -278,7 +278,7 @@ export async function approveSwapRequest(id: string): Promise<ActionResult> {
   }
 
   const profileData = profile as { id: string; role: string }
-  if (profileData.role !== "admin" && profileData.role !== "leader") {
+  if (profileData.role !== "admin" && profileData.role !== "lead_developer" && profileData.role !== "leader") {
     return { success: false, error: "Only leaders can approve swap requests" }
   }
 
@@ -376,7 +376,7 @@ export async function rejectSwapRequest(id: string): Promise<ActionResult> {
   }
 
   const profileData = profile as { id: string; role: string }
-  if (profileData.role !== "admin" && profileData.role !== "leader") {
+  if (profileData.role !== "admin" && profileData.role !== "lead_developer" && profileData.role !== "leader") {
     return { success: false, error: "Only leaders can reject swap requests" }
   }
 
@@ -582,7 +582,7 @@ export async function getPendingApprovals(): Promise<ActionResult<SwapRequestWit
   }
 
   const profileData = profile as { id: string; role: string }
-  if (profileData.role !== "admin" && profileData.role !== "leader") {
+  if (profileData.role !== "admin" && profileData.role !== "lead_developer" && profileData.role !== "leader") {
     return { success: false, error: "Only leaders can view pending approvals" }
   }
 

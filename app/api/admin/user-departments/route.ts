@@ -18,7 +18,7 @@ import { revalidatePath } from "next/cache"
 // GET /api/admin/user-departments - Get user department assignments
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/user-departments - Assign user to departments (replace all)
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const body = await request.json()
 
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     const { userId, departments } = parsed.data
 
-    // Get current user for assigned_by
+    // Get current user for assigned_by using the helper
     const serverSupabase = await createClient()
     const { data: authData } = await serverSupabase.auth.getUser()
     const authUserId = authData?.user?.id
@@ -97,34 +97,52 @@ export async function POST(request: NextRequest) {
       assignedById = (currentUser as { id: string } | null)?.id || null
     }
 
-    // Start a transaction-like operation
-    // First, delete all existing department assignments for this user
-    const { error: deleteError } = await supabase
+    // Get current department IDs for this user
+    const { data: existingAssignments } = await supabase
       .from("user_departments")
-      .delete()
+      .select("department_id")
       .eq("user_id", userId)
+    
+    const existingDeptIds = new Set(
+      (existingAssignments || []).map(a => (a as { department_id: string }).department_id)
+    )
+    const newDeptIds = new Set(departments.map(d => d.departmentId))
 
-    if (deleteError) {
-      return NextResponse.json({ error: deleteError.message }, { status: 500 })
+    // Delete departments that are no longer assigned
+    const toDelete = [...existingDeptIds].filter(id => !newDeptIds.has(id))
+    if (toDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("user_departments")
+        .delete()
+        .eq("user_id", userId)
+        .in("department_id", toDelete)
+
+      if (deleteError) {
+        return NextResponse.json({ error: deleteError.message }, { status: 500 })
+      }
     }
 
-    // Then insert new assignments if any
+    // Upsert new/updated assignments
     if (departments.length > 0) {
       // Ensure only one is marked as primary
       const hasPrimary = departments.some(d => d.isPrimary)
-      const assignmentsToInsert = departments.map((d, index) => ({
+      const assignmentsToUpsert = departments.map((d, index) => ({
         user_id: userId,
         department_id: d.departmentId,
         is_primary: d.isPrimary || (!hasPrimary && index === 0), // First one is primary if none specified
         assigned_by: assignedById,
       }))
 
-      const { error: insertError } = await supabase
+      // Use upsert with ON CONFLICT for atomic insert-or-update
+      const { error: upsertError } = await supabase
         .from("user_departments")
-        .insert(assignmentsToInsert as Record<string, unknown>[])
+        .upsert(assignmentsToUpsert as Record<string, unknown>[], {
+          onConflict: "user_id,department_id",
+          ignoreDuplicates: false, // Update existing rows
+        })
 
-      if (insertError) {
-        return NextResponse.json({ error: insertError.message }, { status: 500 })
+      if (upsertError) {
+        return NextResponse.json({ error: upsertError.message }, { status: 500 })
       }
     }
 
@@ -142,7 +160,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/user-departments - Add user to a single department
 export async function PUT(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const body = await request.json()
 
@@ -205,7 +223,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/user-departments - Remove user from department
 export async function DELETE(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
@@ -243,7 +261,7 @@ export async function DELETE(request: NextRequest) {
 // PATCH /api/admin/user-departments - Set primary department
 export async function PATCH(request: NextRequest) {
   try {
-    await requireRole(["admin", "leader"])
+    await requireRole(["admin", "lead_developer", "leader"])
     const supabase = createAdminClient()
     const body = await request.json()
 

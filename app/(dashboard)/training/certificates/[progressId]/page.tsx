@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: CertificatePageProps) {
   const supabase = await createClient()
   
   const { data: progress } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select("track:onboarding_tracks(name)")
     .eq("id", progressId)
     .single()
@@ -67,7 +67,7 @@ export default async function CertificatePage({ params }: CertificatePageProps) 
 
   // Get the progress record
   const { data: progressRaw } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select(`
       *,
       track:onboarding_tracks(
@@ -85,8 +85,8 @@ export default async function CertificatePage({ params }: CertificatePageProps) 
     notFound()
   }
 
-  // Verify user owns this progress or is admin
-  if (progress.user_id !== profile.id && profile.role !== "admin") {
+  // Verify user owns this progress or is admin/lead_developer
+  if (progress.user_id !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
     redirect("/training/my-progress")
   }
 

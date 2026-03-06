@@ -61,7 +61,7 @@ export default async function RotaDetailPage({ params }: RotaDetailPageProps) {
 
   // Get current user's role
   const { data: { user } } = await supabase.auth.getUser()
-  let userRole = "volunteer"
+  let userRole = "member"
   
   if (user) {
     const { data: profile } = await supabase
@@ -98,7 +98,7 @@ export default async function RotaDetailPage({ params }: RotaDetailPageProps) {
   // Type assertion for the complex query result
   const rota = data as unknown as RotaData
 
-  const canEdit = userRole === "admin" || userRole === "leader"
+  const canEdit = userRole === "admin" || userRole === "lead_developer" || userRole === "developer" || userRole === "leader"
 
   return (
     <div className="flex flex-col gap-6">
@@ -176,7 +176,7 @@ export default async function RotaDetailPage({ params }: RotaDetailPageProps) {
         <CardHeader>
           <CardTitle className="text-lg">Team Assignments</CardTitle>
           <CardDescription>
-            {rota.assignments?.length || 0} volunteers assigned
+            {rota.assignments?.length || 0} members assigned
           </CardDescription>
         </CardHeader>
         <CardContent>

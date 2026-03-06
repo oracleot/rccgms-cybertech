@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     const profileData = profile as { id: string; role: string } | null
-    if (!profileData || !["admin", "leader"].includes(profileData.role)) {
+    if (!profileData || !["admin", "lead_developer", "leader"].includes(profileData.role)) {
       return NextResponse.json(
         { error: "FORBIDDEN", message: "Leader or Admin access required" },
         { status: 403 }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const { rotaId, title, platform, content, speaker, scripture, metadata } = parsed.data
 
     // Check if a livestream already exists for this rota
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic structure from DB query
     let existingLivestream: any = null
     if (rotaId) {
       const { data } = await supabase

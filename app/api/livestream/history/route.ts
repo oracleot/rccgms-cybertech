@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       .single()
 
     const profileRole = (profile as { role: string } | null)?.role
-    if (!profileRole || !["admin", "leader"].includes(profileRole)) {
+    if (!profileRole || !["admin", "lead_developer", "leader"].includes(profileRole)) {
       return NextResponse.json(
         { error: "FORBIDDEN", message: "Leader or Admin access required" },
         { status: 403 }

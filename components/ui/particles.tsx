@@ -127,17 +127,17 @@ export const Particles: React.FC<ParticlesProps> = ({
       }
       window.removeEventListener("resize", handleResize)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only re-run on color change
   }, [color])
 
   useEffect(() => {
     onMouseMove()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only re-run on mouse position change
   }, [mousePosition.x, mousePosition.y])
 
   useEffect(() => {
     initCanvas()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only re-run on refresh prop
   }, [refresh])
 
   const initCanvas = () => {

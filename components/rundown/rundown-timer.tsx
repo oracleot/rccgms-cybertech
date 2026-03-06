@@ -5,20 +5,25 @@
  * Uses Date.now() for accurate elapsed time tracking
  */
 
-/* eslint-disable react-hooks/purity */
+/* eslint-disable react-hooks/purity -- uses Date.now() for real-time elapsed tracking */
 
 import { useEffect, useRef, useState } from "react"
-import { Pause, Play, RotateCcw, Timer } from "lucide-react"
+import { Pause, Play, RotateCcw, Timer, FastForward, Rewind } from "lucide-react"
 
 import { formatDuration } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Slider } from "@/components/ui/slider"
 
 interface RundownTimerProps {
   durationSeconds?: number
   autoStart?: boolean
   onTick?: (seconds: number) => void
 }
+
+// Timer control constants
+const TIME_SKIP_SECONDS = 15 // Seconds to skip when rewinding or fast-forwarding
+const OVERTIME_BUFFER_SECONDS = 300 // Allow 5 minutes over the scheduled time
 
 export function RundownTimer({ durationSeconds, autoStart = false, onTick }: RundownTimerProps) {
   // Track the autoStart value we last processed to detect changes
@@ -128,28 +133,106 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
     onTickRef.current?.(0)
   }
 
+  // Helper function to update timer state when adjusting elapsed time
+  const updateTimerState = (newElapsed: number) => {
+    setElapsed(newElapsed)
+
+    // Update the base times based on whether timer is running
+    if (isRunning && startTimeRef.current !== null) {
+      // Recalculate start time to maintain the new elapsed value
+      const now = Date.now()
+      startTimeRef.current = now - newElapsed * 1000
+      pausedElapsedRef.current = 0
+    } else {
+      // Timer is paused, just update paused elapsed
+      pausedElapsedRef.current = newElapsed
+    }
+
+    onTickRef.current?.(newElapsed)
+  }
+
+  // Fast-forward and rewind handlers
+  const handleRewind = () => {
+    const newElapsed = Math.max(0, elapsed - TIME_SKIP_SECONDS)
+    updateTimerState(newElapsed)
+  }
+
+  const handleFastForward = () => {
+    const maxElapsed = durationSeconds 
+      ? durationSeconds + OVERTIME_BUFFER_SECONDS 
+      : elapsed + TIME_SKIP_SECONDS
+    const newElapsed = Math.min(maxElapsed, elapsed + TIME_SKIP_SECONDS)
+    updateTimerState(newElapsed)
+  }
+
+  // Handle slider change
+  const handleSliderChange = (value: number[]) => {
+    const newElapsed = value[0] ?? 0
+    updateTimerState(newElapsed)
+  }
+
+  // Slider max = scheduled duration (so slider reaches 100% when time runs out)
+  // Extends automatically when in overtime so the thumb stays at the end
+  const maxSliderValue = durationSeconds
+    ? Math.max(durationSeconds, elapsed)
+    : Math.max(3600, elapsed)
+
   return (
-    <Card className="flex items-center gap-4 px-4 py-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Timer className="h-4 w-4" />
-        <span className="font-medium text-foreground">{formatDuration(elapsed)}</span>
+    <Card className="space-y-3 px-4 py-3">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Timer className="h-4 w-4" />
+          <span className="font-medium text-foreground">{formatDuration(elapsed)}</span>
+          {remaining !== null && (
+            <span className="text-muted-foreground">/ {formatDuration(durationSeconds || 0)}</span>
+          )}
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleRewind}
+            title="Rewind 15 seconds"
+          >
+            <Rewind className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={handlePauseResume}>
+            {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleFastForward}
+            title="Fast-forward 15 seconds"
+          >
+            <FastForward className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleReset}>
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
         {remaining !== null && (
-          <span className="text-muted-foreground">/ {formatDuration(durationSeconds || 0)}</span>
+          <div className="text-xs text-muted-foreground">
+            {remaining === 0 ? "Over time" : `${formatDuration(remaining)} remaining`}
+          </div>
         )}
       </div>
-      <div className="ml-auto flex items-center gap-2">
-        <Button variant="outline" size="icon" onClick={handlePauseResume}>
-          {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={handleReset}>
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-      </div>
-      {remaining !== null && (
-        <div className="text-xs text-muted-foreground">
-          {remaining === 0 ? "Over time" : `${formatDuration(remaining)} remaining`}
+      
+      {/* Timer Slider */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>0:00</span>
+          <span>Drag to adjust time</span>
+          <span>{formatDuration(maxSliderValue)}</span>
         </div>
-      )}
+        <Slider
+          value={[elapsed]}
+          onValueChange={handleSliderChange}
+          max={maxSliderValue}
+          step={1}
+          className="cursor-pointer"
+        />
+      </div>
     </Card>
   )
 }

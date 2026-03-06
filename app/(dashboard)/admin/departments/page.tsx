@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { requireAdmin } from "@/lib/auth/guards"
+import { requireAdminOrDeveloper } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 import { PositionManager } from "@/components/admin/position-manager"
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
@@ -58,7 +58,7 @@ interface DepartmentsPageProps {
 }
 
 export default async function DepartmentsPage({ searchParams }: DepartmentsPageProps) {
-  await requireAdmin()
+  await requireAdminOrDeveloper()
   const params = await searchParams
   const [departments, leaders] = await Promise.all([getDepartments(), getLeaders()])
   const showAddForm = params.add === "true"

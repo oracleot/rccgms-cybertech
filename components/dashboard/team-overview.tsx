@@ -22,20 +22,20 @@ interface DepartmentStats {
 
 interface TeamOverviewProps {
   departments: DepartmentStats[]
-  totalVolunteers: number
-  activeVolunteers: number
+  totalMembers: number
+  activeMembers: number
   upcomingServices: number
 }
 
 export function TeamOverview({
   departments,
-  totalVolunteers,
-  activeVolunteers,
+  totalMembers,
+  activeMembers,
   upcomingServices,
 }: TeamOverviewProps) {
   const overallAvailability =
-    totalVolunteers > 0
-      ? Math.round((activeVolunteers / totalVolunteers) * 100)
+    totalMembers > 0
+      ? Math.round((activeMembers / totalMembers) * 100)
       : 0
 
   return (
@@ -62,13 +62,13 @@ export function TeamOverview({
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col items-center justify-center rounded-lg border p-3">
             <Users className="h-5 w-5 text-muted-foreground mb-1" />
-            <span className="text-2xl font-bold">{totalVolunteers}</span>
+            <span className="text-2xl font-bold">{totalMembers}</span>
             <span className="text-xs text-muted-foreground">Total</span>
           </div>
           <div className="flex flex-col items-center justify-center rounded-lg border p-3">
             <UserCheck className="h-5 w-5 text-green-600 mb-1" />
             <span className="text-2xl font-bold text-green-600">
-              {activeVolunteers}
+              {activeMembers}
             </span>
             <span className="text-xs text-muted-foreground">Available</span>
           </div>

@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { requireAdmin } from "@/lib/auth/guards"
+import { requireAdminOrDeveloper } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata = {
@@ -48,8 +48,9 @@ async function getAdminStats(): Promise<AdminStats> {
 }
 
 export default async function AdminPage() {
-  await requireAdmin()
+  const currentUser = await requireAdminOrDeveloper()
   const stats = await getAdminStats()
+  const isDeveloper = currentUser.profile.role === "developer" || currentUser.profile.role === "lead_developer"
 
   const adminSections = [
     {
@@ -99,6 +100,23 @@ export default async function AdminPage() {
           Manage users, departments, and system settings
         </p>
       </div>
+
+      {/* Developer read-only mode banner */}
+      {isDeveloper && (
+        <Card className="border-blue-500/50 bg-blue-500/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <Settings className="h-5 w-5" />
+              Developer Mode (Read-Only)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              You have read-only access to admin features. You can view users, system logs, and technical settings, but cannot modify user accounts or critical system settings.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Alert for failed notifications */}
       {stats.failedNotifications > 0 && (

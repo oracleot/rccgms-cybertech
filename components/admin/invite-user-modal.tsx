@@ -48,7 +48,7 @@ export function InviteUserModal({ departments }: InviteUserModalProps) {
     resolver: zodResolver(inviteUserSchema),
     defaultValues: {
       email: "",
-      role: "volunteer",
+      role: "member",
       department_id: undefined,
     },
   })
@@ -111,7 +111,7 @@ export function InviteUserModal({ departments }: InviteUserModalProps) {
               <Input
                 id="email"
                 type="email"
-                placeholder="volunteer@example.com"
+                placeholder="member@example.com"
                 {...register("email")}
               />
               {errors.email && (
@@ -124,15 +124,17 @@ export function InviteUserModal({ departments }: InviteUserModalProps) {
               <Select
                 value={selectedRole}
                 onValueChange={(value) =>
-                  setValue("role", value as "volunteer" | "leader" | "admin")
+                  setValue("role", value as "member" | "leader" | "developer" | "lead_developer" | "admin")
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="volunteer">Volunteer</SelectItem>
+                  <SelectItem value="member">Member</SelectItem>
                   <SelectItem value="leader">Leader</SelectItem>
+                  <SelectItem value="developer">Developer</SelectItem>
+                  <SelectItem value="lead_developer">Lead Developer</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>

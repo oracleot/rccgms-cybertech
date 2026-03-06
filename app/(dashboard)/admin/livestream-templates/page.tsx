@@ -24,10 +24,10 @@ export default async function LivestreamTemplatesPage() {
     .eq("auth_user_id", user.id)
     .single()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- profile type inference issue
   const profileRole = (profile as any)?.role as string | undefined
-  // Only admins can access this page
-  if (!profileRole || profileRole !== "admin") {
+  // Only admin and lead_developer can manage livestream templates
+  if (!profileRole || !["admin", "lead_developer"].includes(profileRole)) {
     redirect("/dashboard")
   }
 

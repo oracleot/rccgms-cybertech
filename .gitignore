@@ -56,3 +56,8 @@ supabase/.branches/
 # Misc
 .github/docs/test-credentials
 learning/
+
+# Skills
+**/skills/**
+
+notes.md

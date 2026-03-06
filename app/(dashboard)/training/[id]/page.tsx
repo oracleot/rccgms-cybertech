@@ -87,7 +87,7 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
 
   // Get user's progress for this track
   const { data: progressData } = await supabase
-    .from("volunteer_progress")
+    .from("member_progress")
     .select("*")
     .eq("user_id", profile.id)
     .eq("track_id", id)
@@ -108,7 +108,7 @@ export default async function TrackDetailPage({ params }: TrackDetailPageProps) 
     const { data: completionData } = await supabase
       .from("step_completions")
       .select("step_id, mentor_verified_by")
-      .eq("volunteer_progress_id", progress.id)
+      .eq("member_progress_id", progress.id)
     
     completions = (completionData || []) as Array<{ step_id: string; mentor_verified_by: string | null }>
   }
