@@ -29,7 +29,8 @@ export default async function AdminTrainingPage() {
 
   const profile = profileData as { role: string } | null
 
-  if (!profile || !["admin", "developer"].includes(profile.role)) {
+  // Only allow roles that can manage training; others see read-only training view
+  if (!profile || !["admin", "lead_developer", "leader"].includes(profile.role)) {
     redirect("/training")
   }
 
