@@ -297,7 +297,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
                       >
                         <div className="h-12 w-12 rounded bg-green-100 dark:bg-green-900 flex items-center justify-center overflow-hidden shrink-0">
                           {isImage ? (
-                            // eslint-disable-next-line @next/next/no-img-element
+                            // eslint-disable-next-line @next/next/no-img-element -- rendering user-uploaded images from Supabase storage
                             <img
                               src={publicUrl}
                               alt={file.name}

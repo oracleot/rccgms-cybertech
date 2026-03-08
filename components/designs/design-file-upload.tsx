@@ -111,7 +111,7 @@ export function DesignFileUpload({
       setFiles(updated)
       onFilesChange(updated)
     },
-    [files, onFilesChange]
+    [files, onFilesChange, supabaseClient]
   )
 
   const handleDrop = useCallback(
@@ -206,7 +206,7 @@ export function DesignFileUpload({
               {/* Thumbnail */}
               <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden shrink-0">
                 {file.path.match(/\.(png|jpg|jpeg|webp)$/i) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                  // eslint-disable-next-line @next/next/no-img-element -- rendering user-uploaded images from Supabase storage
                   <img
                     src={getPublicUrl(file.path)}
                     alt={file.name}

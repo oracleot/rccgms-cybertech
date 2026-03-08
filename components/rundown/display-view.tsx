@@ -329,6 +329,7 @@ export function DisplayView({
 
     const params = new URLSearchParams(window.location.search)
     if (params.get('autoFullscreen') === 'true') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount initialization from URL search params
       setShowFullscreenPrompt(true)
     }
   }, [])
@@ -412,6 +413,7 @@ export function DisplayView({
       !hasFlashedRef.current
     ) {
       hasFlashedRef.current = true
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- immediate visual flash cue required when timer hits zero
       setIsRedFlash(true)
 
       // Flash 3 times: on  →  off  →  on  →  off  →  on  →  off
@@ -430,6 +432,7 @@ export function DisplayView({
   const hasNextItemInTransition = transitionData?.nextItem != null
   useEffect(() => {
     if (!showTransitionScreen || !hasNextItemInTransition) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset blink state when transition screen is dismissed
       setIsTimeoutBlinkRed(false)
       return
     }
