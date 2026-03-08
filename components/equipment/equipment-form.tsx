@@ -181,7 +181,7 @@ export function EquipmentForm({ className }: EquipmentFormProps) {
                 name="serialNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Serial number</FormLabel>
+                    <FormLabel>Serial number <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl>
                       <Input placeholder="SN12345" {...field} />
                     </FormControl>
@@ -195,7 +195,7 @@ export function EquipmentForm({ className }: EquipmentFormProps) {
                 name="model"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Model</FormLabel>
+                    <FormLabel>Model <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl>
                       <Input placeholder="SRG-X400" {...field} />
                     </FormControl>
@@ -209,7 +209,7 @@ export function EquipmentForm({ className }: EquipmentFormProps) {
                 name="manufacturer"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Manufacturer</FormLabel>
+                    <FormLabel>Manufacturer <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Sony" {...field} />
                     </FormControl>
@@ -223,7 +223,7 @@ export function EquipmentForm({ className }: EquipmentFormProps) {
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Location</FormLabel>
+                    <FormLabel>Location <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Tech closet" {...field} />
                     </FormControl>
@@ -237,7 +237,7 @@ export function EquipmentForm({ className }: EquipmentFormProps) {
                 name="purchaseDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Purchase date</FormLabel>
+                    <FormLabel>Purchase date <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -251,7 +251,7 @@ export function EquipmentForm({ className }: EquipmentFormProps) {
                 name="purchasePrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Purchase price</FormLabel>
+                    <FormLabel>Purchase price <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -274,7 +274,7 @@ export function EquipmentForm({ className }: EquipmentFormProps) {
                 name="warrantyExpires"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Warranty expires</FormLabel>
+                    <FormLabel>Warranty expires <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
