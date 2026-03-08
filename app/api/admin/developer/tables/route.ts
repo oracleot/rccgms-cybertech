@@ -35,7 +35,7 @@ export async function GET() {
 
     if (tablesError) {
       // Fallback: query information_schema directly via raw SQL
-      const { data: _rawTables, error: rawError } = await adminClient
+      const { error: rawError } = await adminClient
         .from("profiles")
         .select("id")
         .limit(0)
