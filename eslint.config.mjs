@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Remotion directory excluded from tsconfig and not part of Next.js build
+    "remotion/**",
   ]),
   // Custom rules
   {
