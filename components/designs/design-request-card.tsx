@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Calendar, Clock, User, UserCheck } from "lucide-react"
+import { Calendar, Clock, GitBranch, User, UserCheck } from "lucide-react"
 import { format, formatDistanceToNow, isPast } from "date-fns"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -96,6 +96,13 @@ export function DesignRequestCard({
               {isPastDeadline && " (Past due)"}
             </Badge>
           )}
+
+          {request.subIssueCount && request.subIssueCount > 0 ? (
+            <Badge variant="outline" className="flex items-center gap-1">
+              <GitBranch className="h-3 w-3" />
+              {request.subIssueCount} sub-issue{request.subIssueCount > 1 ? "s" : ""}
+            </Badge>
+          ) : null}
         </div>
       </CardContent>
 

@@ -135,6 +135,18 @@ export function RaiseSubIssueModal({
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="sub-needed-by">Needed By (optional)</Label>
+            <Input
+              id="sub-needed-by"
+              type="date"
+              {...register("neededBy")}
+            />
+            {errors.neededBy && (
+              <p className="text-sm text-destructive">{errors.neededBy.message}</p>
+            )}
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel

@@ -227,6 +227,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Fetch sub-issue counts for parent requests
+    const parentIds = (data || []).map((r) => r.id)
+    const subIssueCounts: Record<string, number> = {}
+    if (parentIds.length > 0) {
+      const { data: subCounts } = await supabase
+        .from("design_requests")
+        .select("parent_id")
+        .in("parent_id", parentIds)
+
+      if (subCounts) {
+        for (const sub of subCounts) {
+          if (sub.parent_id) {
+            subIssueCounts[sub.parent_id] = (subIssueCounts[sub.parent_id] || 0) + 1
+          }
+        }
+      }
+    }
+
     // Transform data to match expected format
     const transformedData = (data || []).map((request) => ({
       id: request.id,
@@ -245,6 +263,7 @@ export async function GET(request: NextRequest) {
             name: request.assignee.name,
           }
         : null,
+      subIssueCount: subIssueCounts[request.id] || 0,
       createdAt: request.created_at,
       isArchived: request.is_archived,
     }))

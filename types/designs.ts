@@ -53,6 +53,7 @@ export interface DesignRequestListItem {
     name: string
   } | null
   assigneeCount?: number
+  subIssueCount?: number
   createdAt: string
   isArchived: boolean
 }
