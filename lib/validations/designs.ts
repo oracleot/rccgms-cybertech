@@ -70,8 +70,8 @@ export const deliverableFileSchema = z.object({
   name: z.string(),
   path: z.string(),
   size: z.number(),
-  uploadedBy: z.string(),
-  uploadedAt: z.string(),
+  uploadedBy: z.string().uuid(),
+  uploadedAt: z.string().datetime(),
 })
 
 export type DeliverableFile = z.infer<typeof deliverableFileSchema>

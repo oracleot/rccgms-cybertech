@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, RefreshCw, UserCheck, UserX, CheckCircle, Trash2, UserCog, GitBranch } from "lucide-react"
+import { MoreHorizontal, RefreshCw, UserCheck, UserX, CheckCircle, Send, Trash2, UserCog, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,14 +11,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { ClaimModal } from "@/components/designs/claim-modal"
 import { UpdateStatusModal } from "@/components/designs/update-status-modal"
 import { CompleteModal } from "@/components/designs/complete-modal"
 import { DeleteModal } from "@/components/designs/delete-modal"
 import { ReassignModal } from "@/components/designs/reassign-modal"
 import { RaiseSubIssueModal } from "@/components/designs/raise-sub-issue-modal"
+import { approveRequest } from "@/app/(dashboard)/designs/actions"
 import type { DesignRequestStatus, DesignPriority } from "@/types/designs"
 import type { DeliverableFile } from "@/lib/validations/designs"
+import { toast } from "sonner"
 
 interface DesignDetailActionsProps {
   requestId: string
@@ -61,16 +73,46 @@ export function DesignDetailActions({
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showReassignModal, setShowReassignModal] = useState(false)
   const [showSubIssueModal, setShowSubIssueModal] = useState(false)
+  const [showApproveDialog, setShowApproveDialog] = useState(false)
+  const [isApproving, setIsApproving] = useState(false)
 
   const isTerminal = currentStatus === "completed" || currentStatus === "cancelled"
   const canApprove = ["admin", "lead_developer", "leader"].includes(currentUserRole)
-  const canComplete = (isAssignee || canApprove) && currentStatus === "review"
   const canClaim = !isAssigned && !isTerminal
+  
+  // Submit for Review: assignee when in_progress or revision_requested
+  const canSubmitForReview = isAssignee && (currentStatus === "in_progress" || currentStatus === "revision_requested")
+  // Approve: senior roles when in review
+  const canApproveRequest = canApprove && currentStatus === "review"
   // Unclaim: admin (free) or developer (with reason). No self-unclaim.
-  const canUnclaim = isAssigned && !isTerminal && (currentUserRole === "admin" || currentUserRole === "developer")
+  const canUnclaim = isAssigned && !isTerminal && !isAssignee && (currentUserRole === "admin" || currentUserRole === "developer")
+  // Update Status: assignee or admin/leader/lead_developer
+  const canUpdateStatus = !isTerminal && (isAssignee || isAdminOrLeader)
+  // Reassign: admin/leader/lead_developer only (developer cannot at DB level)
+  const canReassign = isAdminOrLeader && !isTerminal
+  // Raise Sub-issue: team members, not for sub-issues or terminal
+  const canRaiseSubIssue = !parentId && !isTerminal && ["admin", "lead_developer", "leader", "developer"].includes(currentUserRole)
 
   const handleRefresh = () => {
     router.refresh()
+  }
+
+  const handleApprove = async () => {
+    setIsApproving(true)
+    try {
+      const result = await approveRequest(requestId)
+      if (result.success) {
+        toast.success("Request approved and completed")
+        setShowApproveDialog(false)
+        handleRefresh()
+      } else {
+        toast.error(result.error || "Failed to approve")
+      }
+    } catch {
+      toast.error("Something went wrong")
+    } finally {
+      setIsApproving(false)
+    }
   }
 
   return (
@@ -91,19 +133,30 @@ export function DesignDetailActions({
           </Button>
         )}
 
-        {canComplete && (
+        {canSubmitForReview && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setShowCompleteModal(true)}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Submit for Review
+          </Button>
+        )}
+
+        {canApproveRequest && (
           <Button
             variant="default"
             size="sm"
             className="bg-green-600 hover:bg-green-700"
-            onClick={() => setShowCompleteModal(true)}
+            onClick={() => setShowApproveDialog(true)}
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Complete
+            Approve
           </Button>
         )}
 
-        {!isTerminal && (isAssignee || isAdminOrLeader) && (
+        {canUpdateStatus && (
           <Button
             variant="outline"
             size="sm"
@@ -141,14 +194,14 @@ export function DesignDetailActions({
               </DropdownMenuItem>
             )}
 
-            {isAdminOrLeader && !isTerminal && (currentUserRole === "admin" || currentUserRole === "lead_developer" || currentUserRole === "developer" || currentUserRole === "leader") && (
+            {canReassign && (
               <DropdownMenuItem onClick={() => setShowReassignModal(true)}>
                 <UserCog className="h-4 w-4 mr-2" />
                 Reassign
               </DropdownMenuItem>
             )}
 
-            {!parentId && !isTerminal && ["admin", "lead_developer", "leader", "developer"].includes(currentUserRole) && (
+            {canRaiseSubIssue && (
               <DropdownMenuItem onClick={() => setShowSubIssueModal(true)}>
                 <GitBranch className="h-4 w-4 mr-2" />
                 Raise Sub-issue
@@ -248,6 +301,28 @@ export function DesignDetailActions({
           handleRefresh()
         }}
       />
+
+      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve Design Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark &quot;{requestTitle}&quot; as completed and notify the requester
+              that their design is ready. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleApprove}
+              disabled={isApproving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isApproving ? "Approving..." : "Approve & Complete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

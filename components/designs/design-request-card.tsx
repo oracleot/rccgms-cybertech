@@ -34,7 +34,7 @@ export function DesignRequestCard({
   const isUnclaimed = !request.assignee
   
   // Unclaim: admin (free) or developer (with reason). No self-unclaim.
-  const canUnclaim = request.assignee && (currentUserRole === "admin" || currentUserRole === "developer")
+  const canUnclaim = request.assignee && request.assignee.id !== currentUserProfileId && (currentUserRole === "admin" || currentUserRole === "developer")
 
   const handleClaimClick = (e: React.MouseEvent, action: "claim" | "unclaim") => {
     e.preventDefault()

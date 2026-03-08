@@ -14,7 +14,6 @@ import {
   FileText,
   CheckCircle2,
   AlertTriangle,
-  Download,
   ImageIcon,
   Star,
   Timer,
@@ -30,6 +29,7 @@ import { Separator } from "@/components/ui/separator"
 import { DesignStatusBadge } from "@/components/designs/design-status-badge"
 import { DesignPriorityBadge } from "@/components/designs/design-priority-badge"
 import { DesignDetailActions } from "./design-detail-actions"
+import { FileShareButtons } from "./_components/file-share-buttons"
 import { cn } from "@/lib/utils"
 
 interface DesignDetailPageProps {
@@ -130,7 +130,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
   const isPastDeadline = request.needed_by && isPast(new Date(request.needed_by))
   const isPastInternalDeadline = request.deadline && isPast(new Date(request.deadline))
   const isAssignee = profile?.id === request.assigned_to
-  const isAdminOrLeader = profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader"
+  const isAdminOrLeader = profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "leader"
   const currentUserRole = (profile?.role as "admin" | "lead_developer" | "developer" | "leader" | "member") || "member"
 
   return (
@@ -148,7 +148,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
       {/* Main content grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column - Main details */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Title and badges */}
           <Card>
             <CardHeader>
@@ -315,15 +315,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
                             {(file.size / 1024).toFixed(0)} KB
                           </p>
                         </div>
-                        <a
-                          href={publicUrl}
-                          download={file.name}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
-                        >
-                          <Download className="h-4 w-4" />
-                        </a>
+                        <FileShareButtons publicUrl={publicUrl} fileName={file.name} />
                       </div>
                     )
                   })}
@@ -387,7 +379,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <pre className="text-sm whitespace-pre-wrap text-muted-foreground font-mono bg-muted/50 rounded-md p-4">
+                <pre className="text-sm whitespace-pre-wrap break-all text-muted-foreground font-mono bg-muted/50 rounded-md p-4 overflow-hidden">
                   {request.internal_notes}
                 </pre>
               </CardContent>

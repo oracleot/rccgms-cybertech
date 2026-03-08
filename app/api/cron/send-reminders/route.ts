@@ -38,26 +38,33 @@ export async function GET(request: NextRequest) {
       `[Cron] Pending notifications: ${pendingResult.processed} processed, ${pendingResult.sent} sent, ${pendingResult.failed} failed`
     )
 
-    // 2. Send duty reminders
-    console.log("[Cron] Sending duty reminders...")
-    const reminderResult = await sendRotaReminders()
-    console.log(
-      `[Cron] Duty reminders: ${reminderResult.sent.email} emails, ${reminderResult.sent.sms} SMS, ${reminderResult.failed} failed`
-    )
-
-    // 3. Send design deadline reminders
+    // 2. Send design deadline reminders (before processing pending so they get sent this run)
     console.log("[Cron] Checking design deadlines...")
     const deadlineResult = await sendDesignDeadlineReminders()
     console.log(
       `[Cron] Design deadlines: ${deadlineResult.checked} checked, ${deadlineResult.reminded} reminders sent`
     )
 
+    // 3. Send duty reminders
+    console.log("[Cron] Sending duty reminders...")
+    const reminderResult = await sendRotaReminders()
+    console.log(
+      `[Cron] Duty reminders: ${reminderResult.sent.email} emails, ${reminderResult.sent.sms} SMS, ${reminderResult.failed} failed`
+    )
+
+    // 4. Process pending notifications (including newly created deadline reminders)
+    console.log("[Cron] Processing pending notifications...")
+    const pendingResult2 = await processPendingNotifications()
+    console.log(
+      `[Cron] Second pass: ${pendingResult2.processed} processed, ${pendingResult2.sent} sent, ${pendingResult2.failed} failed`
+    )
+
     return NextResponse.json({
       success: true,
       pendingNotifications: {
-        processed: pendingResult.processed,
-        sent: pendingResult.sent,
-        failed: pendingResult.failed,
+        processed: pendingResult.processed + pendingResult2.processed,
+        sent: pendingResult.sent + pendingResult2.sent,
+        failed: pendingResult.failed + pendingResult2.failed,
       },
       dutyReminders: {
         sent: reminderResult.sent,

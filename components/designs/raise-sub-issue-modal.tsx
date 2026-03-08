@@ -70,7 +70,7 @@ export function RaiseSubIssueModal({
         reset()
         onSuccess()
       } else {
-        toast.error(result.error || "Failed to create sub-issue")
+        toast.error("error" in result ? result.error : "Failed to create sub-issue")
       }
     } catch {
       toast.error("Something went wrong")

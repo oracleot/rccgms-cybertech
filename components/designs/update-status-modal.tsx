@@ -40,7 +40,7 @@ interface UpdateStatusModalProps {
 const allowedTransitions: Record<DesignRequestStatus, DesignRequestStatus[]> = {
   pending: ["in_progress", "cancelled"],
   in_progress: ["review", "cancelled"],
-  review: ["completed", "revision_requested", "in_progress", "cancelled"],
+  review: ["revision_requested", "in_progress", "cancelled"],
   revision_requested: ["in_progress", "cancelled"],
   completed: [], // Terminal state
   cancelled: [], // Terminal state

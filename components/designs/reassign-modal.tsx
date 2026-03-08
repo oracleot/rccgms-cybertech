@@ -139,7 +139,9 @@ export function ReassignModal({
         // Removing — if they were lead, auto-promote first remaining
         const remaining = prev.filter((a) => a.profileId !== userId)
         if (existing.isLead && remaining.length > 0) {
-          remaining[0].isLead = true
+          return remaining.map((assignee, index) =>
+            index === 0 ? { ...assignee, isLead: true } : { ...assignee }
+          )
         }
         return remaining
       }
@@ -242,6 +244,7 @@ export function ReassignModal({
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => toggleUser(user.id)}
+                          onClick={(e) => e.stopPropagation()}
                         />
                         <Avatar className="h-7 w-7">
                           <AvatarFallback className="text-xs">

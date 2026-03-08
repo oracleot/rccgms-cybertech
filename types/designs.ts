@@ -52,7 +52,7 @@ export interface DesignRequestListItem {
     id: string
     name: string
   } | null
-  assigneeCount: number
+  assigneeCount?: number
   createdAt: string
   isArchived: boolean
 }
