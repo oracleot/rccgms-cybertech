@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Beaker, Clock, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,27 +12,21 @@ const TEST_MODE_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
 export function TestModeBanner() {
   const { isTestMode, toggleTestMode, testChanges } = useTestMode()
   const [elapsed, setElapsed] = useState(0)
-  const [startTime, setStartTime] = useState<number | null>(null)
+  const startTimeRef = useRef<number | null>(null)
 
-  // Track when test mode starts
+  // Timer tick + auto-expire (ref tracks start time without causing cascading renders)
   useEffect(() => {
-    if (isTestMode && !startTime) {
-      setStartTime(Date.now())
-      setElapsed(0)
-    }
     if (!isTestMode) {
-      setStartTime(null)
-      setElapsed(0)
+      startTimeRef.current = null
+      return
     }
-  }, [isTestMode, startTime])
 
-  // Timer tick + auto-expire
-  useEffect(() => {
-    if (!isTestMode || !startTime) return
+    if (!startTimeRef.current) {
+      startTimeRef.current = Date.now()
+    }
 
     const interval = setInterval(() => {
-      const now = Date.now()
-      const diff = now - startTime
+      const diff = Date.now() - (startTimeRef.current ?? Date.now())
       setElapsed(diff)
 
       if (diff >= TEST_MODE_TIMEOUT_MS) {
@@ -41,7 +35,7 @@ export function TestModeBanner() {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [isTestMode, startTime, toggleTestMode])
+  }, [isTestMode, toggleTestMode])
 
   if (!isTestMode) return null
 

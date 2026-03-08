@@ -31,8 +31,7 @@ export async function GET(request: NextRequest) {
   const simulated = searchParams.get("simulated")
   const offset = (page - 1) * limit
 
-  // Use admin client — audit_log is not in generated types yet
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- audit_log table is not in generated types yet
   const adminClient = createAdminClient() as any
 
   let query = adminClient

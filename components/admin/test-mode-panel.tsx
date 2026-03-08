@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Beaker, X, RotateCcw, AlertCircle } from "lucide-react"
+import { Beaker, RotateCcw, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
+
 import { useTestMode } from "@/contexts/test-mode-context"
 import { ROLE_LABELS } from "@/lib/constants"
 

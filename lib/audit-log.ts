@@ -21,7 +21,7 @@ export async function logAuditEvent(entry: AuditLogEntry): Promise<void> {
   try {
     const supabase = createAdminClient()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- audit_log table is not in generated types yet
     await (supabase as any).from("audit_log").insert({
       actor_id: entry.actorId,
       actor_name: entry.actorName,

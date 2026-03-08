@@ -41,7 +41,7 @@ interface PaginationInfo {
   totalPages: number
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic table rows have unknown column shapes
 type RowData = Record<string, any>
 
 export function TableBrowser() {
