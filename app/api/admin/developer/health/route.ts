@@ -28,7 +28,7 @@ export async function GET() {
     // Database health check
     const dbStart = Date.now()
     const adminClient = createAdminClient()
-    const { data: _dbCheck, error: dbError } = await adminClient
+    const { error: dbError } = await adminClient
       .from("profiles")
       .select("id")
       .limit(1)

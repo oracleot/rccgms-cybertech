@@ -18,6 +18,7 @@ export function TestModeBanner() {
   useEffect(() => {
     if (!isTestMode) {
       startTimeRef.current = null
+      setElapsed(0)
       return
     }
 
