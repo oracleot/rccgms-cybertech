@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { completeDesignRequestSchema } from "@/lib/validations/designs"
 
 /**
- * POST /api/designs/[id]/complete - Complete a design request with deliverable
+ * POST /api/designs/[id]/complete - Approve and complete a design request (senior roles only)
  */
 export async function POST(
   request: NextRequest,
@@ -11,7 +10,6 @@ export async function POST(
 ) {
   const supabase = await createClient()
 
-  // Check authentication
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -22,18 +20,6 @@ export async function POST(
 
   try {
     const { id: requestId } = await params
-    const body = await request.json()
-
-    // Validate input
-    const parsed = completeDesignRequestSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.issues[0].message },
-        { status: 400 }
-      )
-    }
-
-    const { deliverableFiles } = parsed.data
 
     // Get user profile
     const { data: profile } = await supabase
@@ -46,10 +32,18 @@ export async function POST(
       return NextResponse.json({ error: "Profile not found" }, { status: 404 })
     }
 
-    // Get current request to validate
+    // Only admin, leader, or lead_developer can approve
+    if (!["admin", "lead_developer", "leader"].includes(profile.role)) {
+      return NextResponse.json(
+        { error: "Only admins, leaders, and lead developers can approve requests" },
+        { status: 403 }
+      )
+    }
+
+    // Get current request
     const { data: existingRequest, error: fetchError } = await supabase
       .from("design_requests")
-      .select("status, assigned_to")
+      .select("status")
       .eq("id", requestId)
       .single()
 
@@ -67,48 +61,32 @@ export async function POST(
       )
     }
 
-    // Only assignee, admin, leader, or lead_developer can complete
-    const isAssignee = existingRequest.assigned_to === profile.id
-    const canApprove = ["admin", "lead_developer", "leader"].includes(profile.role)
-    if (!isAssignee && !canApprove) {
-      return NextResponse.json(
-        { error: "You don't have permission to complete this request" },
-        { status: 403 }
-      )
-    }
-
-    // Status must be review to complete
+    // Status must be review to approve
     if (existingRequest.status !== "review") {
       return NextResponse.json(
-        {
-          error:
-            "Request must be in 'Review' status before completing. Update status to 'Review' first.",
-        },
+        { error: "Request must be in 'Review' status before approving." },
         { status: 400 }
       )
     }
 
-    // Complete the request
+    // Approve: mark as completed
     const completedAt = new Date().toISOString()
     const { error: updateError } = await supabase
       .from("design_requests")
       .update({
         status: "completed",
-        deliverable_files: deliverableFiles,
         completed_at: completedAt,
         updated_at: completedAt,
       })
       .eq("id", requestId)
 
     if (updateError) {
-      console.error("Error completing request:", updateError)
+      console.error("Error approving request:", updateError)
       return NextResponse.json(
-        { error: "Failed to complete request" },
+        { error: "Failed to approve request" },
         { status: 500 }
       )
     }
-
-    // TODO: Queue notification to requester with deliverable link
 
     return NextResponse.json(
       { success: true, completedAt },

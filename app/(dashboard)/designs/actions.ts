@@ -27,7 +27,7 @@ const allowedTransitions: Record<string, string[]> = {
   pending: ["in_progress", "cancelled"],
   submitted: ["in_progress", "cancelled"],
   in_progress: ["review", "cancelled"],
-  review: ["revision_requested", "in_progress", "completed", "cancelled"],
+  review: ["revision_requested", "in_progress", "cancelled"],
   revision_requested: ["in_progress", "cancelled"],
   completed: [], // Terminal state
   cancelled: [], // Terminal state
@@ -544,16 +544,14 @@ export async function updateRequest(
 }
 
 /**
- * Complete / approve a design request
- * Allowed: assignee, admin, leader, lead_developer
+ * Approve a design request (senior roles only)
+ * Marks a reviewed request as completed
  */
-export async function completeRequest(
-  requestId: string,
-  deliverableFiles?: Array<{ name: string; path: string; size: number; uploadedBy: string; uploadedAt: string }>
+export async function approveRequest(
+  requestId: string
 ): Promise<ActionResult> {
   const supabase = await createClient()
 
-  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -562,7 +560,6 @@ export async function completeRequest(
     return { success: false, error: "Not authenticated" }
   }
 
-  // Get user profile with role
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, role")
@@ -573,10 +570,14 @@ export async function completeRequest(
     return { success: false, error: "Profile not found" }
   }
 
-  // Get current request to validate
+  // Only admin, leader, or lead_developer can approve
+  if (!["admin", "lead_developer", "leader"].includes(profile.role)) {
+    return { success: false, error: "Only admins, leaders, and lead developers can approve requests" }
+  }
+
   const { data: request, error: fetchError } = await supabase
     .from("design_requests")
-    .select("id, title, status, assigned_to, requester_name, requester_email, deliverable_files")
+    .select("id, title, status, requester_name, requester_email")
     .eq("id", requestId)
     .single()
 
@@ -585,42 +586,25 @@ export async function completeRequest(
     return { success: false, error: "Request not found" }
   }
 
-  // Only assignee, admin, leader, or lead_developer can complete/approve
-  const isAssignee = request.assigned_to === profile.id
-  const canApprove = ["admin", "lead_developer", "leader"].includes(profile.role)
-
-  if (!isAssignee && !canApprove) {
-    return { success: false, error: "You don't have permission to approve this request" }
-  }
-
-  // Status must be review to complete
   if (request.status !== "review") {
     return {
       success: false,
-      error: "Request must be in 'Review' status before completing. Update status to 'Review' first.",
+      error: "Request must be in 'Review' status before approving.",
     }
   }
 
-  // Build update - merge new files with existing if provided
-  const existingFiles = Array.isArray(request.deliverable_files) ? request.deliverable_files : []
-  const finalFiles = deliverableFiles && deliverableFiles.length > 0
-    ? deliverableFiles
-    : existingFiles
-
-  // Complete the request
   const { error: updateError } = await supabase
     .from("design_requests")
     .update({
       status: "completed",
-      deliverable_files: finalFiles,
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", requestId)
 
   if (updateError) {
-    console.error("Complete error:", updateError)
-    return { success: false, error: "Failed to complete request" }
+    console.error("Approve error:", updateError)
+    return { success: false, error: "Failed to approve request" }
   }
 
   // Send notification to requester

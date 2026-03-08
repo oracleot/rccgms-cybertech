@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Loader2, CheckCircle2 } from "lucide-react"
+import { Loader2, Send } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { DesignFileUpload } from "@/components/designs/design-file-upload"
-import { completeRequest } from "@/app/(dashboard)/designs/actions"
+import { updateRequest } from "@/app/(dashboard)/designs/actions"
 import type { DeliverableFile } from "@/lib/validations/designs"
 
 interface CompleteModalProps {
@@ -54,7 +54,10 @@ export function CompleteModal({
     setError(null)
 
     try {
-      const result = await completeRequest(requestId, files)
+      const result = await updateRequest(requestId, {
+        status: "review",
+        deliverableFiles: files,
+      })
 
       if (!result.success) {
         throw new Error(result.error)
@@ -79,12 +82,12 @@ export function CompleteModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            Complete Design Request
+            <Send className="h-5 w-5 text-blue-600" />
+            Submit for Review
           </DialogTitle>
           <DialogDescription>
-            Mark <span className="font-semibold">&quot;{requestTitle}&quot;</span> as
-            completed. Upload the final design files for the requester.
+            Upload the design files for <span className="font-semibold">&quot;{requestTitle}&quot;</span> and
+            submit for approval by an admin or leader.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,10 +119,9 @@ export function CompleteModal({
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || files.length === 0}
-            className="bg-green-600 hover:bg-green-700"
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Complete Request
+            Submit for Review
           </Button>
         </DialogFooter>
       </DialogContent>

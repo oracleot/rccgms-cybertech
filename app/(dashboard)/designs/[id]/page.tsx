@@ -14,7 +14,6 @@ import {
   FileText,
   CheckCircle2,
   AlertTriangle,
-  Download,
   ImageIcon,
   Star,
   Timer,
@@ -30,6 +29,7 @@ import { Separator } from "@/components/ui/separator"
 import { DesignStatusBadge } from "@/components/designs/design-status-badge"
 import { DesignPriorityBadge } from "@/components/designs/design-priority-badge"
 import { DesignDetailActions } from "./design-detail-actions"
+import { FileShareButtons } from "./_components/file-share-buttons"
 import { cn } from "@/lib/utils"
 
 interface DesignDetailPageProps {
@@ -315,15 +315,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
                             {(file.size / 1024).toFixed(0)} KB
                           </p>
                         </div>
-                        <a
-                          href={publicUrl}
-                          download={file.name}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
-                        >
-                          <Download className="h-4 w-4" />
-                        </a>
+                        <FileShareButtons publicUrl={publicUrl} fileName={file.name} />
                       </div>
                     )
                   })}
