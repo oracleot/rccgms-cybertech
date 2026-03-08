@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useMemo } from "react"
 import { Upload, X, Loader2, ImageIcon, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -32,6 +32,7 @@ export function DesignFileUpload({
   const [error, setError] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const supabaseClient = useMemo(() => createClient(), [])
 
   const uploadFiles = useCallback(
     async (selectedFiles: FileList | File[]) => {
@@ -59,7 +60,6 @@ export function DesignFileUpload({
       setIsUploading(true)
 
       try {
-        const supabase = createClient()
         const newFiles: DeliverableFile[] = []
 
         for (const file of fileArray) {
@@ -67,7 +67,7 @@ export function DesignFileUpload({
           const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
           const storagePath = `${requestId}/${uploaderId}/${timestamp}_${safeName}`
 
-          const { error: uploadError } = await supabase.storage
+          const { error: uploadError } = await supabaseClient.storage
             .from("design-files")
             .upload(storagePath, file, {
               cacheControl: "3600",
@@ -96,15 +96,14 @@ export function DesignFileUpload({
         setIsUploading(false)
       }
     },
-    [files, maxFiles, requestId, uploaderId, onFilesChange]
+    [files, maxFiles, requestId, uploaderId, onFilesChange, supabaseClient]
   )
 
   const removeFile = useCallback(
     async (index: number) => {
       const file = files[index]
       try {
-        const supabase = createClient()
-        await supabase.storage.from("design-files").remove([file.path])
+        await supabaseClient.storage.from("design-files").remove([file.path])
       } catch {
         // Best effort removal from storage
       }
@@ -137,11 +136,10 @@ export function DesignFileUpload({
     setDragActive(false)
   }
 
-  const getPublicUrl = (path: string) => {
-    const supabase = createClient()
-    const { data } = supabase.storage.from("design-files").getPublicUrl(path)
+  const getPublicUrl = useCallback((path: string) => {
+    const { data } = supabaseClient.storage.from("design-files").getPublicUrl(path)
     return data.publicUrl
-  }
+  }, [supabaseClient])
 
   return (
     <div className="space-y-3">

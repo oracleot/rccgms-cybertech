@@ -85,7 +85,7 @@ export function DesignDetailActions({
   // Approve: senior roles when in review
   const canApproveRequest = canApprove && currentStatus === "review"
   // Unclaim: admin (free) or developer (with reason). No self-unclaim.
-  const canUnclaim = isAssigned && !isTerminal && (currentUserRole === "admin" || currentUserRole === "developer")
+  const canUnclaim = isAssigned && !isTerminal && !isAssignee && (currentUserRole === "admin" || currentUserRole === "developer")
   // Update Status: assignee or admin/leader/lead_developer
   const canUpdateStatus = !isTerminal && (isAssignee || isAdminOrLeader)
   // Reassign: admin/leader/lead_developer only (developer cannot at DB level)

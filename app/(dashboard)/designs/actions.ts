@@ -91,7 +91,7 @@ export async function claimRequest(requestId: string): Promise<ActionResult> {
   }
 
   // Also insert into junction table as lead assignee
-  await supabase
+  const { error: upsertError } = await supabase
     .from("design_request_assignments")
     .upsert(
       {
@@ -103,6 +103,10 @@ export async function claimRequest(requestId: string): Promise<ActionResult> {
       },
       { onConflict: "request_id,profile_id" }
     )
+
+  if (upsertError) {
+    console.error("Failed to sync assignment junction table:", upsertError)
+  }
 
   // Send notification to requester
   try {
@@ -182,6 +186,11 @@ export async function unclaimRequest(
 
   if (!request.assigned_to) {
     return { success: false, error: "Request is not assigned to anyone" }
+  }
+
+  // Block self-unclaim: designers cannot unclaim their own requests
+  if (request.assigned_to === profile.id) {
+    return { success: false, error: "You cannot unclaim a request assigned to yourself" }
   }
 
   const isTerminal = request.status === "completed" || request.status === "cancelled"
@@ -577,7 +586,7 @@ export async function approveRequest(
 
   const { data: request, error: fetchError } = await supabase
     .from("design_requests")
-    .select("id, title, status, requester_name, requester_email")
+    .select("id, title, status, requester_name, requester_email, deliverable_files")
     .eq("id", requestId)
     .single()
 
@@ -590,6 +599,15 @@ export async function approveRequest(
     return {
       success: false,
       error: "Request must be in 'Review' status before approving.",
+    }
+  }
+
+  // Require at least one deliverable file before completing
+  const files = Array.isArray(request.deliverable_files) ? request.deliverable_files : []
+  if (files.length === 0) {
+    return {
+      success: false,
+      error: "At least one deliverable file is required before approving this request.",
     }
   }
 
