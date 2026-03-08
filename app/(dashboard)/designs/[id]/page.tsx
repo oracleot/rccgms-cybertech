@@ -148,7 +148,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
       {/* Main content grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left column - Main details */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {/* Title and badges */}
           <Card>
             <CardHeader>
@@ -387,7 +387,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <pre className="text-sm whitespace-pre-wrap text-muted-foreground font-mono bg-muted/50 rounded-md p-4">
+                <pre className="text-sm whitespace-pre-wrap break-all text-muted-foreground font-mono bg-muted/50 rounded-md p-4 overflow-hidden">
                   {request.internal_notes}
                 </pre>
               </CardContent>
