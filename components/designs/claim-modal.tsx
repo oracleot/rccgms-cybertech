@@ -11,12 +11,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { claimRequest, unclaimRequest } from "@/app/(dashboard)/designs/actions"
 
 interface ClaimModalProps {
   requestId: string
   requestTitle: string
   action: "claim" | "unclaim"
+  currentUserRole?: string
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
@@ -26,27 +29,35 @@ export function ClaimModal({
   requestId,
   requestTitle,
   action,
+  currentUserRole = "member",
   isOpen,
   onClose,
   onSuccess,
 }: ClaimModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [reason, setReason] = useState("")
+
+  const isDeveloperUnclaim = action === "unclaim" && currentUserRole === "developer"
 
   const handleSubmit = async () => {
+    if (isDeveloperUnclaim && !reason.trim()) {
+      setError("Please provide a reason for unclaiming this request")
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
     try {
       const result = action === "claim"
         ? await claimRequest(requestId)
-        : await unclaimRequest(requestId)
+        : await unclaimRequest(requestId, isDeveloperUnclaim ? reason.trim() : undefined)
 
       if (!result.success) {
         throw new Error(result.error)
       }
 
-      // Only call onSuccess - parent will handle closing modal and refreshing
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong")
@@ -55,10 +66,16 @@ export function ClaimModal({
     }
   }
 
+  const handleClose = () => {
+    setReason("")
+    setError(null)
+    onClose()
+  }
+
   const isClaim = action === "claim"
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -89,6 +106,27 @@ export function ClaimModal({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Reason field for developer unclaim */}
+        {isDeveloperUnclaim && (
+          <div className="space-y-2 py-2">
+            <Label htmlFor="unclaim-reason">
+              Reason <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="unclaim-reason"
+              placeholder="Explain why this request needs to be unclaimed (e.g., incident, mistake)..."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={3}
+              className="resize-none"
+              maxLength={500}
+            />
+            <p className="text-xs text-muted-foreground">
+              Developers must provide a reason for unclaiming. This will be logged in the internal notes.
+            </p>
+          </div>
+        )}
+
         {error && (
           <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
             {error}
@@ -96,7 +134,7 @@ export function ClaimModal({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button

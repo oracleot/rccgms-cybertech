@@ -109,6 +109,55 @@ export type Database = {
           },
         ]
       }
+      design_request_assignments: {
+        Row: {
+          id: string
+          request_id: string
+          profile_id: string
+          is_lead: boolean
+          assigned_at: string
+          assigned_by: string | null
+        }
+        Insert: {
+          id?: string
+          request_id: string
+          profile_id: string
+          is_lead?: boolean
+          assigned_at?: string
+          assigned_by?: string | null
+        }
+        Update: {
+          id?: string
+          request_id?: string
+          profile_id?: string
+          is_lead?: boolean
+          assigned_at?: string
+          assigned_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_request_assignments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "design_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_request_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_request_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       design_requests: {
         Row: {
           assigned_at: string | null
@@ -116,12 +165,17 @@ export type Database = {
           assigned_to: string | null
           completed_at: string | null
           created_at: string
+          deadline: string | null
+          delay_reason: string | null
+          deliverable_files: Json | null
           deliverable_url: string | null
           description: string
           id: string
           internal_notes: string | null
           is_archived: boolean | null
           needed_by: string | null
+          parent_id: string | null
+          reminders_sent: Json | null
           priority: Database["public"]["Enums"]["design_priority"]
           reference_urls: Json | null
           request_type:
@@ -142,14 +196,19 @@ export type Database = {
           assigned_to?: string | null
           completed_at?: string | null
           created_at?: string
+          deadline?: string | null
+          delay_reason?: string | null
+          deliverable_files?: Json | null
           deliverable_url?: string | null
           description: string
           id?: string
           internal_notes?: string | null
           is_archived?: boolean | null
           needed_by?: string | null
+          parent_id?: string | null
           priority?: Database["public"]["Enums"]["design_priority"]
           reference_urls?: Json | null
+          reminders_sent?: Json | null
           request_type?:
             | Database["public"]["Enums"]["design_request_type"]
             | null
@@ -168,14 +227,19 @@ export type Database = {
           assigned_to?: string | null
           completed_at?: string | null
           created_at?: string
+          deadline?: string | null
+          delay_reason?: string | null
+          deliverable_files?: Json | null
           deliverable_url?: string | null
           description?: string
           id?: string
           internal_notes?: string | null
           is_archived?: boolean | null
           needed_by?: string | null
+          parent_id?: string | null
           priority?: Database["public"]["Enums"]["design_priority"]
           reference_urls?: Json | null
+          reminders_sent?: Json | null
           request_type?:
             | Database["public"]["Enums"]["design_request_type"]
             | null

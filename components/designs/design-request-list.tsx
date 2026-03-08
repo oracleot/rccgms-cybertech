@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { DesignRequestListItem } from "@/types/designs"
 import { DesignRequestCard } from "./design-request-card"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -27,7 +28,10 @@ export function DesignRequestList() {
   // Get current user info for permission checks
   const { user, isLoading: isUserLoading } = useUser()
   const currentUserProfileId = user?.id
-  const isAdmin = user?.role === "admin" || user?.role === "lead_developer" || user?.role === "developer"
+  const currentUserRole = user?.role || "member"
+  
+  // Active/Completed toggle
+  const [viewMode, setViewMode] = useState<"active" | "completed">("active")
   
   // Filters
   const [search, setSearch] = useState("")
@@ -48,6 +52,7 @@ export function DesignRequestList() {
       if (statusFilter !== "all") params.set("status", statusFilter)
       if (priorityFilter !== "all") params.set("priority", priorityFilter)
       if (includeArchived) params.set("includeArchived", "true")
+      params.set("viewMode", viewMode)
 
       const response = await fetch(`/api/designs?${params.toString()}`)
       
@@ -62,7 +67,7 @@ export function DesignRequestList() {
     } finally {
       setIsLoading(false)
     }
-  }, [debouncedSearch, statusFilter, priorityFilter, includeArchived])
+  }, [debouncedSearch, statusFilter, priorityFilter, includeArchived, viewMode])
 
   useEffect(() => {
     fetchRequests()
@@ -83,6 +88,14 @@ export function DesignRequestList() {
 
   return (
     <div className="space-y-6">
+      {/* Active / Completed Toggle */}
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "active" | "completed")}>
+        <TabsList>
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Filters */}
       <Card className="p-4">
         <div className="space-y-4">
@@ -208,7 +221,7 @@ export function DesignRequestList() {
                 key={request.id} 
                 request={request}
                 currentUserProfileId={currentUserProfileId}
-                isAdmin={isAdmin}
+                currentUserRole={currentUserRole}
                 onUpdate={fetchRequests}
               />
             ))}
