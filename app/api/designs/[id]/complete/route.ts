@@ -33,12 +33,12 @@ export async function POST(
       )
     }
 
-    const { deliverableUrl } = parsed.data
+    const { deliverableFiles } = parsed.data
 
     // Get user profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, role")
       .eq("auth_user_id", user.id)
       .single()
 
@@ -67,10 +67,12 @@ export async function POST(
       )
     }
 
-    // Only the assignee can complete
-    if (existingRequest.assigned_to !== profile.id) {
+    // Only assignee, admin, leader, or lead_developer can complete
+    const isAssignee = existingRequest.assigned_to === profile.id
+    const canApprove = ["admin", "lead_developer", "leader"].includes(profile.role)
+    if (!isAssignee && !canApprove) {
       return NextResponse.json(
-        { error: "Only the assigned designer can complete this request" },
+        { error: "You don't have permission to complete this request" },
         { status: 403 }
       )
     }
@@ -92,7 +94,7 @@ export async function POST(
       .from("design_requests")
       .update({
         status: "completed",
-        deliverable_url: deliverableUrl,
+        deliverable_files: deliverableFiles,
         completed_at: completedAt,
         updated_at: completedAt,
       })

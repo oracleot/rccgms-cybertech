@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal, RefreshCw, UserCheck, UserX, CheckCircle, Trash2, UserCog } from "lucide-react"
+import { MoreHorizontal, RefreshCw, UserCheck, UserX, CheckCircle, Trash2, UserCog, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -16,7 +16,9 @@ import { UpdateStatusModal } from "@/components/designs/update-status-modal"
 import { CompleteModal } from "@/components/designs/complete-modal"
 import { DeleteModal } from "@/components/designs/delete-modal"
 import { ReassignModal } from "@/components/designs/reassign-modal"
+import { RaiseSubIssueModal } from "@/components/designs/raise-sub-issue-modal"
 import type { DesignRequestStatus, DesignPriority } from "@/types/designs"
+import type { DeliverableFile } from "@/lib/validations/designs"
 
 interface DesignDetailActionsProps {
   requestId: string
@@ -28,6 +30,11 @@ interface DesignDetailActionsProps {
   isAdminOrLeader: boolean
   currentUserRole: "admin" | "lead_developer" | "developer" | "leader" | "member"
   currentAssigneeId: string | null
+  currentUserId: string
+  existingFiles?: DeliverableFile[]
+  currentAssignments?: Array<{ profile_id: string; is_lead: boolean }>
+  currentDeadline?: string | null
+  parentId?: string | null
 }
 
 export function DesignDetailActions({
@@ -40,6 +47,11 @@ export function DesignDetailActions({
   isAdminOrLeader,
   currentUserRole,
   currentAssigneeId,
+  currentUserId,
+  existingFiles = [],
+  currentAssignments,
+  currentDeadline,
+  parentId,
 }: DesignDetailActionsProps) {
   const router = useRouter()
   const [showClaimModal, setShowClaimModal] = useState(false)
@@ -48,11 +60,14 @@ export function DesignDetailActions({
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showReassignModal, setShowReassignModal] = useState(false)
+  const [showSubIssueModal, setShowSubIssueModal] = useState(false)
 
   const isTerminal = currentStatus === "completed" || currentStatus === "cancelled"
-  const canComplete = isAssignee && currentStatus === "review"
+  const canApprove = ["admin", "lead_developer", "leader"].includes(currentUserRole)
+  const canComplete = (isAssignee || canApprove) && currentStatus === "review"
   const canClaim = !isAssigned && !isTerminal
-  const canUnclaim = isAssignee && !isTerminal
+  // Unclaim: admin (free) or developer (with reason). No self-unclaim.
+  const canUnclaim = isAssigned && !isTerminal && (currentUserRole === "admin" || currentUserRole === "developer")
 
   const handleRefresh = () => {
     router.refresh()
@@ -133,6 +148,13 @@ export function DesignDetailActions({
               </DropdownMenuItem>
             )}
 
+            {!parentId && !isTerminal && ["admin", "lead_developer", "leader", "developer"].includes(currentUserRole) && (
+              <DropdownMenuItem onClick={() => setShowSubIssueModal(true)}>
+                <GitBranch className="h-4 w-4 mr-2" />
+                Raise Sub-issue
+              </DropdownMenuItem>
+            )}
+
             {isAdminOrLeader && (
               <>
                 <DropdownMenuSeparator />
@@ -154,6 +176,7 @@ export function DesignDetailActions({
         requestId={requestId}
         requestTitle={requestTitle}
         action={claimAction}
+        currentUserRole={currentUserRole}
         isOpen={showClaimModal}
         onClose={() => setShowClaimModal(false)}
         onSuccess={() => {
@@ -167,6 +190,7 @@ export function DesignDetailActions({
         requestTitle={requestTitle}
         currentStatus={currentStatus}
         currentPriority={currentPriority}
+        uploaderId={currentUserId}
         isOpen={showStatusModal}
         onClose={() => setShowStatusModal(false)}
         onSuccess={() => {
@@ -178,6 +202,8 @@ export function DesignDetailActions({
       <CompleteModal
         requestId={requestId}
         requestTitle={requestTitle}
+        uploaderId={currentUserId}
+        existingFiles={existingFiles}
         isOpen={showCompleteModal}
         onClose={() => setShowCompleteModal(false)}
         onSuccess={() => {
@@ -201,11 +227,24 @@ export function DesignDetailActions({
         requestId={requestId}
         requestTitle={requestTitle}
         currentAssigneeId={currentAssigneeId}
-        currentUserRole={currentUserRole as "admin" | "leader"}
+        currentUserRole={currentUserRole as "admin" | "leader" | "lead_developer" | "developer"}
+        currentAssignments={currentAssignments}
+        currentDeadline={currentDeadline}
         isOpen={showReassignModal}
         onClose={() => setShowReassignModal(false)}
         onSuccess={() => {
           setShowReassignModal(false)
+          handleRefresh()
+        }}
+      />
+
+      <RaiseSubIssueModal
+        parentId={requestId}
+        parentTitle={requestTitle}
+        isOpen={showSubIssueModal}
+        onClose={() => setShowSubIssueModal(false)}
+        onSuccess={() => {
+          setShowSubIssueModal(false)
           handleRefresh()
         }}
       />

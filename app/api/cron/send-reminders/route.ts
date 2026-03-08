@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sendRotaReminders } from "@/lib/notifications/rota-notifications"
 import { processPendingNotifications } from "@/lib/notifications/notification-service"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 /**
  * Cron endpoint to send duty reminders and process pending notifications
@@ -44,6 +45,13 @@ export async function GET(request: NextRequest) {
       `[Cron] Duty reminders: ${reminderResult.sent.email} emails, ${reminderResult.sent.sms} SMS, ${reminderResult.failed} failed`
     )
 
+    // 3. Send design deadline reminders
+    console.log("[Cron] Checking design deadlines...")
+    const deadlineResult = await sendDesignDeadlineReminders()
+    console.log(
+      `[Cron] Design deadlines: ${deadlineResult.checked} checked, ${deadlineResult.reminded} reminders sent`
+    )
+
     return NextResponse.json({
       success: true,
       pendingNotifications: {
@@ -54,6 +62,10 @@ export async function GET(request: NextRequest) {
       dutyReminders: {
         sent: reminderResult.sent,
         failed: reminderResult.failed,
+      },
+      designDeadlines: {
+        checked: deadlineResult.checked,
+        reminded: deadlineResult.reminded,
       },
       timestamp: new Date().toISOString(),
     })
@@ -67,6 +79,84 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+/**
+ * Check design request deadlines and send reminders at key thresholds:
+ * - "due_soon": less than 24 hours remaining
+ * - "overdue": past the deadline
+ */
+async function sendDesignDeadlineReminders() {
+  const supabase = createAdminClient()
+  const now = new Date()
+
+  // Get all design requests with deadlines that are not completed/cancelled
+  const { data: requests, error } = await supabase
+    .from("design_requests")
+    .select(`
+      id, title, deadline, reminders_sent, assigned_to,
+      assignee:profiles!design_requests_assigned_to_fkey(name, email)
+    `)
+    .not("deadline", "is", null)
+    .not("status", "in", '("completed","cancelled")')
+    .not("assigned_to", "is", null)
+
+  if (error || !requests) {
+    console.error("[Cron] Error fetching design deadlines:", error)
+    return { checked: 0, reminded: 0 }
+  }
+
+  let reminded = 0
+
+  for (const request of requests) {
+    const deadline = new Date(request.deadline!)
+    const hoursRemaining = (deadline.getTime() - now.getTime()) / (1000 * 60 * 60)
+    const sentReminders: string[] = Array.isArray(request.reminders_sent)
+      ? (request.reminders_sent as string[])
+      : []
+
+    let reminderType: string | null = null
+
+    if (hoursRemaining < 0 && !sentReminders.includes("overdue")) {
+      reminderType = "overdue"
+    } else if (hoursRemaining > 0 && hoursRemaining <= 24 && !sentReminders.includes("due_soon")) {
+      reminderType = "due_soon"
+    }
+
+    if (!reminderType) continue
+
+    const assignee = request.assignee as unknown as { name: string; email: string } | null
+    if (!assignee?.email) continue
+
+    // Log reminder to notifications table
+    try {
+      await supabase.from("notifications").insert({
+        type: "design_deadline",
+        recipient_id: request.assigned_to,
+        title: reminderType === "overdue"
+          ? `Design request "${request.title}" is overdue`
+          : `Design request "${request.title}" is due within 24 hours`,
+        body: reminderType === "overdue"
+          ? `The deadline has passed. Please update the status or provide a delay reason.`
+          : `The deadline is ${deadline.toLocaleDateString()}. Please ensure it's on track.`,
+        channel: "email",
+        status: "pending",
+      })
+
+      // Update reminders_sent to avoid duplicate sends
+      const updatedReminders = [...sentReminders, reminderType]
+      await supabase
+        .from("design_requests")
+        .update({ reminders_sent: updatedReminders })
+        .eq("id", request.id)
+
+      reminded++
+    } catch (err) {
+      console.error(`[Cron] Failed to send deadline reminder for ${request.id}:`, err)
+    }
+  }
+
+  return { checked: requests.length, reminded }
 }
 
 // Also support POST for flexibility

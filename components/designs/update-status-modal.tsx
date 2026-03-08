@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Loader2, RefreshCw } from "lucide-react"
 import {
   Dialog,
@@ -22,12 +22,15 @@ import {
 } from "@/components/ui/select"
 import type { DesignRequestStatus, DesignPriority } from "@/types/designs"
 import { updateRequest } from "@/app/(dashboard)/designs/actions"
+import { DesignFileUpload } from "@/components/designs/design-file-upload"
+import type { DeliverableFile } from "@/lib/validations/designs"
 
 interface UpdateStatusModalProps {
   requestId: string
   requestTitle: string
   currentStatus: DesignRequestStatus
   currentPriority: DesignPriority
+  uploaderId: string
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
@@ -37,7 +40,7 @@ interface UpdateStatusModalProps {
 const allowedTransitions: Record<DesignRequestStatus, DesignRequestStatus[]> = {
   pending: ["in_progress", "cancelled"],
   in_progress: ["review", "cancelled"],
-  review: ["revision_requested", "in_progress", "cancelled"],
+  review: ["completed", "revision_requested", "in_progress", "cancelled"],
   revision_requested: ["in_progress", "cancelled"],
   completed: [], // Terminal state
   cancelled: [], // Terminal state
@@ -64,6 +67,7 @@ export function UpdateStatusModal({
   requestTitle,
   currentStatus,
   currentPriority,
+  uploaderId,
   isOpen,
   onClose,
   onSuccess,
@@ -72,11 +76,17 @@ export function UpdateStatusModal({
   const [priority, setPriority] = useState<DesignPriority>(currentPriority)
   const [internalNotes, setInternalNotes] = useState("")
   const [revisionNotes, setRevisionNotes] = useState("")
+  const [deliverableFiles, setDeliverableFiles] = useState<DeliverableFile[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const allowedStatuses = allowedTransitions[currentStatus] || []
   const isRevisionRequest = status === "revision_requested"
+  const isReviewTransition = status === "review" && currentStatus !== "review"
+
+  const handleFilesChange = useCallback((files: DeliverableFile[]) => {
+    setDeliverableFiles(files)
+  }, [])
 
   const handleSubmit = async () => {
     // Validate revision notes required for revision_requested status
@@ -94,6 +104,7 @@ export function UpdateStatusModal({
         priority: priority !== currentPriority ? priority : undefined,
         internalNotes: internalNotes.trim() || undefined,
         revisionNotes: revisionNotes.trim() || undefined,
+        deliverableFiles: isReviewTransition && deliverableFiles.length > 0 ? deliverableFiles : undefined,
       })
 
       if (!result.success) {
@@ -114,6 +125,7 @@ export function UpdateStatusModal({
     setPriority(currentPriority)
     setInternalNotes("")
     setRevisionNotes("")
+    setDeliverableFiles([])
     setError(null)
     onClose()
   }
@@ -198,6 +210,22 @@ export function UpdateStatusModal({
               />
               <p className="text-xs text-muted-foreground">
                 These notes will be visible to the requester and appended with a timestamp.
+              </p>
+            </div>
+          )}
+
+          {/* File Upload for Review transition */}
+          {isReviewTransition && (
+            <div className="space-y-2">
+              <Label>Design Files (optional)</Label>
+              <DesignFileUpload
+                requestId={requestId}
+                uploaderId={uploaderId}
+                onFilesChange={handleFilesChange}
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-muted-foreground">
+                Upload files now, or add them later when completing.
               </p>
             </div>
           )}

@@ -144,6 +144,7 @@ export async function GET(request: NextRequest) {
       priority,
       assignedTo,
       search,
+      viewMode,
       includeArchived,
       limit,
       offset,
@@ -162,6 +163,8 @@ export async function GET(request: NextRequest) {
         requester_name,
         requester_email,
         needed_by,
+        deadline,
+        parent_id,
         assigned_to,
         is_archived,
         created_at,
@@ -176,7 +179,15 @@ export async function GET(request: NextRequest) {
         "pending" | "in_progress" | "completed" | "cancelled" | "review" | "revision_requested"
       >
       query = query.in("status", statuses)
+    } else if (viewMode === "completed") {
+      query = query.in("status", ["completed", "cancelled"])
+    } else {
+      // Active view: exclude completed and cancelled by default
+      query = query.neq("status", "completed").neq("status", "cancelled")
     }
+
+    // Exclude sub-issues from the top-level list
+    query = query.is("parent_id", null)
 
     // Filter by priority
     if (priority) {
@@ -226,6 +237,8 @@ export async function GET(request: NextRequest) {
       requesterName: request.requester_name,
       requesterEmail: request.requester_email,
       neededBy: request.needed_by,
+      deadline: request.deadline,
+      parentId: request.parent_id,
       assignee: request.assignee
         ? {
             id: request.assignee.id,

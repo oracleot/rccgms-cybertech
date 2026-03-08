@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { Loader2, CheckCircle2 } from "lucide-react"
 import {
   Dialog,
@@ -11,13 +11,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DesignFileUpload } from "@/components/designs/design-file-upload"
 import { completeRequest } from "@/app/(dashboard)/designs/actions"
+import type { DeliverableFile } from "@/lib/validations/designs"
 
 interface CompleteModalProps {
   requestId: string
   requestTitle: string
+  uploaderId: string
+  existingFiles?: DeliverableFile[]
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
@@ -26,26 +29,24 @@ interface CompleteModalProps {
 export function CompleteModal({
   requestId,
   requestTitle,
+  uploaderId,
+  existingFiles = [],
   isOpen,
   onClose,
   onSuccess,
 }: CompleteModalProps) {
-  const [deliverableUrl, setDeliverableUrl] = useState("")
+  const [files, setFiles] = useState<DeliverableFile[]>(existingFiles)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async () => {
-    // Basic validation
-    if (!deliverableUrl.trim()) {
-      setError("Please enter a deliverable URL")
-      return
-    }
+  const handleFilesChange = useCallback((updated: DeliverableFile[]) => {
+    setFiles(updated)
+    setError(null)
+  }, [])
 
-    // URL validation
-    try {
-      new URL(deliverableUrl)
-    } catch {
-      setError("Please enter a valid URL (e.g., https://drive.google.com/...)")
+  const handleSubmit = async () => {
+    if (files.length === 0) {
+      setError("Please upload at least one design file")
       return
     }
 
@@ -53,7 +54,7 @@ export function CompleteModal({
     setError(null)
 
     try {
-      const result = await completeRequest(requestId, deliverableUrl.trim())
+      const result = await completeRequest(requestId, files)
 
       if (!result.success) {
         throw new Error(result.error)
@@ -68,7 +69,7 @@ export function CompleteModal({
   }
 
   const handleClose = () => {
-    setDeliverableUrl("")
+    setFiles(existingFiles)
     setError(null)
     onClose()
   }
@@ -83,26 +84,22 @@ export function CompleteModal({
           </DialogTitle>
           <DialogDescription>
             Mark <span className="font-semibold">&quot;{requestTitle}&quot;</span> as
-            completed. You must provide a link to the final deliverable files.
+            completed. Upload the final design files for the requester.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="deliverableUrl">
-              Deliverable URL <span className="text-red-500">*</span>
+            <Label>
+              Design Files <span className="text-red-500">*</span>
             </Label>
-            <Input
-              id="deliverableUrl"
-              placeholder="https://drive.google.com/..."
-              value={deliverableUrl}
-              onChange={(e) => setDeliverableUrl(e.target.value)}
-              type="url"
+            <DesignFileUpload
+              requestId={requestId}
+              uploaderId={uploaderId}
+              existingFiles={existingFiles}
+              onFilesChange={handleFilesChange}
+              disabled={isSubmitting}
             />
-            <p className="text-xs text-muted-foreground">
-              Paste the Google Drive link to the final design files. Make sure the link
-              is accessible to anyone with the link.
-            </p>
           </div>
         </div>
 
@@ -118,7 +115,7 @@ export function CompleteModal({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || files.length === 0}
             className="bg-green-600 hover:bg-green-700"
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -65,10 +65,22 @@ export type CreateDesignRequestInput = z.infer<
   typeof createDesignRequestSchema
 >
 
+// Deliverable file metadata schema
+export const deliverableFileSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  size: z.number(),
+  uploadedBy: z.string(),
+  uploadedAt: z.string(),
+})
+
+export type DeliverableFile = z.infer<typeof deliverableFileSchema>
+
 // Claim/unclaim/reassign schema
 export const assignDesignRequestSchema = z.object({
   action: z.enum(["claim", "unclaim", "reassign"]),
   assigneeId: z.string().uuid().optional(),
+  reason: z.string().max(500, "Reason must be less than 500 characters").optional(),
 })
 
 export type AssignDesignRequestInput = z.infer<
@@ -87,15 +99,22 @@ export const updateDesignRequestSchema = z.object({
     .string()
     .max(1000, "Revision notes must be less than 1000 characters")
     .optional(),
+  deliverableFiles: z
+    .array(deliverableFileSchema)
+    .max(5, "Maximum 5 deliverable files allowed")
+    .optional(),
 })
 
 export type UpdateDesignRequestInput = z.infer<
   typeof updateDesignRequestSchema
 >
 
-// Complete with deliverable schema
+// Complete with deliverable schema (files required)
 export const completeDesignRequestSchema = z.object({
-  deliverableUrl: z.string().url("Please enter a valid URL"),
+  deliverableFiles: z
+    .array(deliverableFileSchema)
+    .min(1, "At least one deliverable file is required")
+    .max(5, "Maximum 5 deliverable files allowed"),
 })
 
 export type CompleteDesignRequestInput = z.infer<
@@ -109,12 +128,48 @@ export const deleteDesignRequestSchema = z.object({
 
 export type DeleteDesignRequestInput = z.infer<typeof deleteDesignRequestSchema>
 
+// Multi-assignee reassign schema
+export const reassignMultiSchema = z.object({
+  assignees: z
+    .array(
+      z.object({
+        profileId: z.string().uuid(),
+        isLead: z.boolean(),
+      })
+    )
+    .min(1, "At least one assignee is required")
+    .refine(
+      (arr) => arr.filter((a) => a.isLead).length === 1,
+      "Exactly one lead assignee is required"
+    ),
+  deadline: z.string().datetime().nullable().optional(),
+})
+
+export type ReassignMultiInput = z.infer<typeof reassignMultiSchema>
+
+// Create sub-issue schema
+export const createSubIssueSchema = z.object({
+  parentId: z.string().uuid(),
+  title: z
+    .string()
+    .min(5, "Title must be at least 5 characters")
+    .max(200, "Title must be less than 200 characters"),
+  description: z
+    .string()
+    .min(10, "Please provide more details (at least 10 characters)")
+    .max(2000, "Description must be less than 2000 characters"),
+  priority: designPrioritySchema.optional(),
+})
+
+export type CreateSubIssueInput = z.infer<typeof createSubIssueSchema>
+
 // List/filter query schema
 export const designRequestQuerySchema = z.object({
   status: z.string().optional(),
   priority: z.string().optional(),
   assignedTo: z.string().uuid().optional(),
   search: z.string().optional(),
+  viewMode: z.enum(["active", "completed"]).default("active"),
   includeArchived: z
     .string()
     .transform((val) => val === "true")
