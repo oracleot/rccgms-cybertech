@@ -268,8 +268,8 @@ export async function reassignRequest(
     return { success: false, error: "Profile not found" }
   }
 
-  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-    return { success: false, error: "Only admins and leaders can reassign requests" }
+  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader" && profile.role !== "developer") {
+    return { success: false, error: "Only admins, leaders, and developers can reassign requests" }
   }
 
   // Multi-assignee path
@@ -750,6 +750,7 @@ export async function createSubIssue(
       description: parsed.data.description,
       priority: parsed.data.priority || "medium",
       parent_id: parsed.data.parentId,
+      needed_by: parsed.data.neededBy || null,
       requester_name: parent.requester_name,
       requester_email: parent.requester_email,
       requester_phone: parent.requester_phone,

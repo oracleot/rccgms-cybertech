@@ -159,6 +159,7 @@ export const createSubIssueSchema = z.object({
     .min(10, "Please provide more details (at least 10 characters)")
     .max(2000, "Description must be less than 2000 characters"),
   priority: designPrioritySchema.optional(),
+  neededBy: z.string().date().optional(),
 })
 
 export type CreateSubIssueInput = z.infer<typeof createSubIssueSchema>

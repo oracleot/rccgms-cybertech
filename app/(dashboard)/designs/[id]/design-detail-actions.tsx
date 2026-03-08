@@ -88,8 +88,8 @@ export function DesignDetailActions({
   const canUnclaim = isAssigned && !isTerminal && !isAssignee && (currentUserRole === "admin" || currentUserRole === "developer")
   // Update Status: assignee or admin/leader/lead_developer
   const canUpdateStatus = !isTerminal && (isAssignee || isAdminOrLeader)
-  // Reassign: admin/leader/lead_developer only (developer cannot at DB level)
-  const canReassign = isAdminOrLeader && !isTerminal
+  // Reassign: admin/leader/lead_developer/developer (only members cannot)
+  const canReassign = !isTerminal && ["admin", "lead_developer", "leader", "developer"].includes(currentUserRole)
   // Raise Sub-issue: team members, not for sub-issues or terminal
   const canRaiseSubIssue = !parentId && !isTerminal && ["admin", "lead_developer", "leader", "developer"].includes(currentUserRole)
 
