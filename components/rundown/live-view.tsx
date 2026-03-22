@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RundownTimer } from "@/components/rundown/rundown-timer"
 import { DisplayControls } from "@/components/rundown/display-controls"
 import type { RundownEditorItem } from "./types"
@@ -338,6 +339,35 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     setCurrentIndex((idx) => Math.max(idx - 1, 0))
   }, [currentIndex])
 
+  // Handler to jump to a specific item by index
+  const handleGoToItem = useCallback((targetIndex: number) => {
+    if (targetIndex < 0 || targetIndex >= orderedItems.length) return
+    if (targetIndex === currentIndex && started) return
+
+    stopAlert()
+    setElapsed(0)
+    setWarned(false)
+    setIsInTransition(false)
+
+    // Start service if not already started
+    if (!started) {
+      setStarted(true)
+    }
+
+    setCurrentIndex(targetIndex)
+
+    // Exit any active transition on display
+    sendMessage({
+      type: "TRANSITION",
+      payload: {
+        isInTransition: false,
+        completedItem: null,
+        nextItem: null,
+        serviceName: serviceName || null,
+      },
+    })
+  }, [currentIndex, orderedItems.length, started, sendMessage, serviceName])
+
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
     const item = orderedItems[currentIndex]
@@ -563,59 +593,76 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
         </Card>
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-2">
-        {nextItem && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Up next</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{nextItem.title}</p>
-                  <p className="text-sm text-muted-foreground capitalize">{nextItem.type}</p>
-                </div>
-                <span className="text-sm text-muted-foreground">{formatDuration(nextItem.durationSeconds)}</span>
+      <Card>
+        <CardHeader className="pb-0">
+          <Tabs defaultValue="all-items">
+            <TabsList>
+              <TabsTrigger value="all-items">All items</TabsTrigger>
+              <TabsTrigger value="up-next">Up next</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all-items">
+              <div className="space-y-2 max-h-[260px] overflow-y-auto py-3">
+                {orderedItems.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleGoToItem(idx)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm text-left transition-colors",
+                      "hover:bg-accent hover:border-accent-foreground/20 cursor-pointer",
+                      idx === currentIndex && started && "border-primary bg-primary/5 font-semibold",
+                      idx < currentIndex && started && "opacity-60"
+                    )}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{item.title}</span>
+                      <span className="text-xs text-muted-foreground capitalize">{item.type}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{formatDuration(item.durationSeconds)}</span>
+                  </button>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
-        <Card className={cn(!nextItem && "opacity-50")}> 
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">All items</CardTitle>
-              {started && !isInTransition && currentIndex > 0 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleGoToPrevious}
-                  title="Go to previous item"
-                >
-                  <SkipBack className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-[260px] overflow-y-auto">
-            {orderedItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className={cn(
-                  "flex items-center justify-between rounded-md border px-3 py-2 text-sm",
-                  idx === currentIndex && "border-primary bg-primary/5"
+            </TabsContent>
+            <TabsContent value="up-next">
+              <div className="py-3">
+                {currentItem && started ? (
+                  <div className="space-y-3">
+                    <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
+                      <p className="text-xs text-muted-foreground mb-1">Now on display</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold">{currentItem.title}</p>
+                          <p className="text-sm text-muted-foreground capitalize">{currentItem.type}</p>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{formatDuration(currentItem.durationSeconds)}</span>
+                      </div>
+                    </div>
+                    {nextItem && (
+                      <div className="rounded-md border px-3 py-2">
+                        <p className="text-xs text-muted-foreground mb-1">Up next</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{nextItem.title}</p>
+                            <p className="text-sm text-muted-foreground capitalize">{nextItem.type}</p>
+                          </div>
+                          <span className="text-sm text-muted-foreground">{formatDuration(nextItem.durationSeconds)}</span>
+                        </div>
+                      </div>
+                    )}
+                    {!nextItem && !isInTransition && (
+                      <p className="text-sm text-muted-foreground text-center py-4">This is the last item.</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {orderedItems.length === 0 ? "No items in this rundown." : "Start the service to see display info."}
+                  </p>
                 )}
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium">{item.title}</span>
-                  <span className="text-xs text-muted-foreground capitalize">{item.type}</span>
-                </div>
-                <span className="text-xs text-muted-foreground">{formatDuration(item.durationSeconds)}</span>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+            </TabsContent>
+          </Tabs>
+        </CardHeader>
+      </Card>
     </div>
   )
 }
