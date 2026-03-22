@@ -60,4 +60,5 @@ learning/
 # Skills
 **/skills/**
 
-notes.mdpackage-lock.json
+notes.md
+package-lock.json
