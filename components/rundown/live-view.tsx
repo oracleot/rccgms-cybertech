@@ -342,7 +342,6 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
   // Handler to jump to a specific item by index
   const handleGoToItem = useCallback((targetIndex: number) => {
     if (targetIndex < 0 || targetIndex >= orderedItems.length) return
-    if (targetIndex === currentIndex && started) return
 
     stopAlert()
     setElapsed(0)
@@ -366,7 +365,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
         serviceName: serviceName || null,
       },
     })
-  }, [currentIndex, orderedItems.length, started, sendMessage, serviceName])
+  }, [orderedItems.length, started, sendMessage, serviceName])
 
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
@@ -595,7 +594,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
       <Card>
         <CardHeader className="pb-0">
-          <Tabs defaultValue="all-items">
+          <Tabs defaultValue="all-items" aria-label="Rundown navigation">
             <TabsList>
               <TabsTrigger value="all-items">All items</TabsTrigger>
               <TabsTrigger value="up-next">Up next</TabsTrigger>
@@ -607,6 +606,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
                     key={item.id}
                     type="button"
                     onClick={() => handleGoToItem(idx)}
+                    aria-label={`Go to ${item.title}`}
                     className={cn(
                       "flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm text-left transition-colors",
                       "hover:bg-accent hover:border-accent-foreground/20 cursor-pointer",
