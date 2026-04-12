@@ -116,6 +116,36 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     [orderedItems, itemsWithSongs]
   )
 
+  // Build enriched nextItem payload for transition messages
+  const buildNextItemPayload = useCallback(
+    (item: RundownEditorItem | undefined) => {
+      if (!item) return null
+
+      let song = null
+      if (item.type === "song" && item.songId && itemsWithSongs) {
+        const songData = itemsWithSongs.get(item.songId)
+        if (songData) {
+          song = {
+            id: songData.id,
+            title: songData.title,
+            lyrics: songData.lyrics,
+            key: songData.key,
+          }
+        }
+      }
+
+      return {
+        id: item.id,
+        title: item.title,
+        type: item.type,
+        durationSeconds: item.durationSeconds,
+        notes: item.notes || null,
+        song,
+      }
+    },
+    [itemsWithSongs]
+  )
+
   // Broadcast item change when current index changes
   useEffect(() => {
     if (currentItem?.id !== prevItemIdRef.current) {
@@ -265,17 +295,12 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
             title: item.title,
             type: item.type,
           },
-          nextItem: nextItem ? {
-            id: nextItem.id,
-            title: nextItem.title,
-            type: nextItem.type,
-            durationSeconds: nextItem.durationSeconds,
-          } : null,
+          nextItem: buildNextItemPayload(nextItem),
           serviceName: serviceName || null,
         },
       })
     }
-  }, [elapsed, started, currentIndex, orderedItems, isInTransition, sendMessage, serviceName, nextItem])
+  }, [elapsed, started, currentIndex, orderedItems, isInTransition, sendMessage, serviceName, nextItem, buildNextItemPayload])
 
   // Handler to start next item from transition
   const handleStartNextItem = useCallback(() => {
@@ -315,16 +340,11 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
           title: item.title,
           type: item.type,
         } : null,
-        nextItem: nextItem ? {
-          id: nextItem.id,
-          title: nextItem.title,
-          type: nextItem.type,
-          durationSeconds: nextItem.durationSeconds,
-        } : null,
+        nextItem: buildNextItemPayload(nextItem),
         serviceName: serviceName || null,
       },
     })
-  }, [currentIndex, orderedItems, nextItem, sendMessage, serviceName])
+  }, [currentIndex, orderedItems, nextItem, sendMessage, serviceName, buildNextItemPayload])
 
   // Handler to go back to previous item
   const handleGoToPrevious = useCallback(() => {

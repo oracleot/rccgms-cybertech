@@ -185,6 +185,13 @@ export interface TransitionPayload {
     title: string
     type: string
     durationSeconds: number
+    notes: string | null
+    song?: {
+      id: string
+      title: string
+      lyrics: string | null
+      key: string | null
+    } | null
   } | null
   serviceName: string | null
 }
