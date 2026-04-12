@@ -269,7 +269,7 @@ export function DesignRequestNewEmail({
                   margin: "0",
                 }}
               >
-                This email was sent by Cyber Tech.
+                This email was sent by Fusion.
                 <br />
                 You received this because you&apos;re a member of the design team.
               </p>

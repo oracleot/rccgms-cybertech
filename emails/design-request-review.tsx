@@ -180,7 +180,7 @@ export function DesignRequestReviewEmail({
                   margin: "0",
                 }}
               >
-                This email was sent by Cyber Tech.
+                This email was sent by Fusion.
                 <br />
                 You received this because you submitted a design request.
               </p>

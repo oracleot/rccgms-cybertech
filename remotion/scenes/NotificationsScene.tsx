@@ -156,7 +156,7 @@ export const NotificationsScene: React.FC = () => {
                     color: theme.colors.primaryForeground,
                   }}
                 >
-                  Cyber Tech
+                  Fusion
                 </div>
                 <div
                   style={{

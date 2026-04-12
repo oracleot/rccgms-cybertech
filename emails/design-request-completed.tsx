@@ -191,7 +191,7 @@ export function DesignRequestCompletedEmail({
                   margin: "24px 0 0",
                 }}
               >
-                Thank you for using Cyber Tech for your design needs! If you need
+                Thank you for using Fusion for your design needs! If you need
                 any minor tweaks or have questions, please contact the design team.
               </p>
             </td>
@@ -213,7 +213,7 @@ export function DesignRequestCompletedEmail({
                   margin: "0",
                 }}
               >
-                This email was sent by Cyber Tech.
+                This email was sent by Fusion.
                 <br />
                 You received this because you submitted a design request.
               </p>

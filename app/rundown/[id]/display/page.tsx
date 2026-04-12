@@ -26,8 +26,8 @@ export async function generateMetadata({
 
   return {
     title: rundownData?.title
-      ? `Display: ${rundownData.title} | Cyber Tech`
-      : "Display | Cyber Tech",
+      ? `Display: ${rundownData.title} | Fusion`
+      : "Display | Fusion",
     description: "Extended display for service rundown projection",
     // PWA metadata for fullscreen capability
     appleWebApp: {

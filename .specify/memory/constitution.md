@@ -12,7 +12,7 @@ Templates requiring updates:
 Follow-up TODOs: None
 -->
 
-# Cyber Tech Constitution
+# Fusion Constitution
 
 **Church Tech Department Management Platform**
 

@@ -1,13 +1,13 @@
 import type { MetadataRoute } from "next"
 
 /**
- * PWA Manifest for Cyber Tech
+ * PWA Manifest for Fusion
  * Defines the app's appearance when installed on devices
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Cyber Tech - Church Tech Management",
-    short_name: "Cyber Tech",
+    name: "Fusion - Church Tech Management",
+    short_name: "Fusion",
     description: "Church tech department management app for scheduling, equipment tracking, and service coordination",
     start_url: "/",
     display: "standalone",

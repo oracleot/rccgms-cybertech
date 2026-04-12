@@ -231,7 +231,7 @@ export default function LoginPage() {
               </TextAnimate>
             </CardTitle>
             <CardDescription className="text-white/50 mt-2">
-              Sign in to your Cyber Tech account
+              Sign in to your Fusion account
             </CardDescription>
           </div>
         </CardHeader>

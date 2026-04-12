@@ -300,7 +300,7 @@ export function SwapNotificationEmail({
                   margin: "0",
                 }}
               >
-                This email was sent by Cyber Tech.
+                This email was sent by Fusion.
                 <br />
                 You can manage your notification preferences in the app settings.
               </p>

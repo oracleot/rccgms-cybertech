@@ -141,7 +141,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
             "font-semibold transition-colors duration-200",
             "group-hover:text-violet-600 dark:group-hover:text-violet-400"
           )}>
-            Cyber Tech
+            Fusion
           </span>
         </div>
       </SidebarHeader>
