@@ -101,7 +101,7 @@ function AcceptInviteContent() {
         return
       }
 
-      toast.success("Welcome to Cyber Tech! Your profile is ready.")
+      toast.success("Welcome to Fusion! Your profile is ready.")
       router.push(ROUTES.DASHBOARD)
     } catch (_error) {
       toast.error("An unexpected error occurred. Please try again.")
@@ -153,7 +153,7 @@ function AcceptInviteContent() {
     <Card className="w-full">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">
-          Welcome to Cyber Tech!
+          Welcome to Fusion!
         </CardTitle>
         <CardDescription>
           Complete your profile to get started

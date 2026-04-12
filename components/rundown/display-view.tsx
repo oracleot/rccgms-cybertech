@@ -588,15 +588,55 @@ export function DisplayView({
                   Up Next
                 </div>
 
-                {/* Next item title */}
-                <h2
-                  className="font-semibold mb-4 animate-in slide-in-from-bottom-4 duration-700"
-                  style={{ 
-                    fontSize: "clamp(36px, 6vw, 100px)",
-                  }}
-                >
-                  {transitionData.nextItem.title}
-                </h2>
+                {/* Next item preview with full context */}
+                <div className="max-w-6xl mx-auto flex flex-col items-center">
+                  {/* Item type badge */}
+                  <div
+                    className="mb-4 px-4 py-1.5 rounded-full text-sm uppercase tracking-wider opacity-60"
+                    style={{
+                      fontSize: Math.max(16, settings.fontSize * 0.3),
+                      backgroundColor: `${settings.textColor}15`,
+                    }}
+                  >
+                    {transitionData.nextItem.type}
+                  </div>
+
+                  {/* Next item title */}
+                  <h2
+                    className="font-bold mb-6 animate-in slide-in-from-bottom-4 duration-700 text-center"
+                    style={{ 
+                      fontSize: "clamp(36px, 6vw, 100px)",
+                    }}
+                  >
+                    {transitionData.nextItem.title}
+                  </h2>
+
+                  {/* Song lyrics preview (first verse) or notes */}
+                  {transitionData.nextItem.type === "song" && transitionData.nextItem.song?.lyrics ? (
+                    (() => {
+                      const nextParsedLyrics = parseLyrics(transitionData.nextItem.song.lyrics)
+                      return nextParsedLyrics.verses.length > 0 ? (
+                        <LyricsDisplay
+                          lyrics={nextParsedLyrics}
+                          currentVerseIndex={0}
+                          fontSize={settings.fontSize}
+                          textColor={settings.textColor}
+                          songKey={transitionData.nextItem.song.key}
+                        />
+                      ) : null
+                    })()
+                  ) : (
+                    /* Notes for non-song items */
+                    transitionData.nextItem.notes && (
+                      <p
+                        className="text-center opacity-80 max-w-4xl"
+                        style={{ fontSize: Math.max(20, settings.fontSize * 0.6) }}
+                      >
+                        {transitionData.nextItem.notes}
+                      </p>
+                    )
+                  )}
+                </div>
               </>
             ) : (
               /* End of service - SERVICE OVER with confetti (no TIME OUT) */

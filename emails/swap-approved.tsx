@@ -87,7 +87,7 @@ export function SwapApprovedEmail({
           <Hr style={hr} />
 
           <Text style={footer}>
-            This email was sent by Cyber Tech - Church Tech Department Management.
+            This email was sent by Fusion - Church Tech Department Management.
             If you have questions, please contact your team leader.
           </Text>
         </Container>

@@ -1,5 +1,5 @@
 -- ===========================================
--- Seed Data: Cyber Tech
+-- Seed Data: Fusion
 -- ===========================================
 -- Run this after migrations to populate initial data
 

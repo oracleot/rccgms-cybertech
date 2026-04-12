@@ -188,7 +188,7 @@ export const OutroScene: React.FC = () => {
           opacity: fadeIn(frame, 60, 15),
         }}
       >
-        Cyber Tech • Church Tech Department Management
+        Fusion • Church Tech Department Management
       </div>
     </AbsoluteFill>
   );
