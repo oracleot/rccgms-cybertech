@@ -39,6 +39,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
   const [currentIndex, setCurrentIndex] = useState(0)
   const [elapsed, setElapsed] = useState(0)
   const [started, setStarted] = useState(false)
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
   const [warned, setWarned] = useState(false)
   const [selectedSound, setSelectedSound] = useState<string>(ALERT_SOUNDS[0]?.id ?? "beep")
   const [isAlerting, setIsAlerting] = useState(false)
@@ -169,10 +170,10 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
       payload: {
         elapsed,
         remaining,
-        isRunning: started,
+        isRunning: isTimerRunning,
       },
     })
-  }, [elapsed, started, currentItem, sendMessage])
+  }, [elapsed, isTimerRunning, started, currentItem, sendMessage])
 
   const stopAlert = () => {
     const handle = audioHandle.current
@@ -554,6 +555,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
               durationSeconds={currentItem.durationSeconds}
               autoStart={started}
               onTick={setElapsed}
+              onRunningChange={setIsTimerRunning}
             />
             <div className="text-sm text-muted-foreground flex items-center gap-2">
               <span>Elapsed: {formatDuration(elapsed)}</span>

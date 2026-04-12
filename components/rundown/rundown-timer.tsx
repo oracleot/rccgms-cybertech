@@ -19,25 +19,28 @@ interface RundownTimerProps {
   durationSeconds?: number
   autoStart?: boolean
   onTick?: (seconds: number) => void
+  onRunningChange?: (isRunning: boolean) => void
 }
 
 // Timer control constants
 const TIME_SKIP_SECONDS = 15 // Seconds to skip when rewinding or fast-forwarding
 const OVERTIME_BUFFER_SECONDS = 300 // Allow 5 minutes over the scheduled time
 
-export function RundownTimer({ durationSeconds, autoStart = false, onTick }: RundownTimerProps) {
+export function RundownTimer({ durationSeconds, autoStart = false, onTick, onRunningChange }: RundownTimerProps) {
   // Track the autoStart value we last processed to detect changes
   const lastAutoStartRef = useRef(autoStart)
   const [isRunning, setIsRunning] = useState(autoStart)
   const [elapsed, setElapsed] = useState(0)
   const onTickRef = useRef(onTick)
+  const onRunningChangeRef = useRef(onRunningChange)
   const startTimeRef = useRef<number | null>(autoStart ? Date.now() : null)
   const pausedElapsedRef = useRef<number>(0)
 
-  // Keep onTick ref up to date without triggering effect
+  // Keep callback refs up to date without triggering effect
   useEffect(() => {
     onTickRef.current = onTick
-  }, [onTick])
+    onRunningChangeRef.current = onRunningChange
+  }, [onTick, onRunningChange])
 
   // Handle autoStart changes using a ref comparison to avoid setState in effect
   if (autoStart !== lastAutoStartRef.current) {
@@ -112,6 +115,7 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
 
   // Handle pause: store elapsed time
   const handlePauseResume = () => {
+    const newIsRunning = !isRunning
     if (isRunning) {
       // Pausing: save current elapsed time
       pausedElapsedRef.current = elapsed
@@ -120,7 +124,8 @@ export function RundownTimer({ durationSeconds, autoStart = false, onTick }: Run
       // Resuming: set new start time
       startTimeRef.current = Date.now()
     }
-    setIsRunning((prev) => !prev)
+    setIsRunning(newIsRunning)
+    onRunningChangeRef.current?.(newIsRunning)
   }
 
   const remaining = durationSeconds ? Math.max(durationSeconds - elapsed, 0) : null
