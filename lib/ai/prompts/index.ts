@@ -16,7 +16,7 @@ export interface PromptData {
   serviceType: "sunday" | "special" | "midweek"
   serviceDate: string
   title: string
-  speaker: string
+  speaker?: string
   scripture?: string
   keyPoints?: string[]
   specialNotes?: string

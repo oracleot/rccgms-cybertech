@@ -9,9 +9,8 @@ Guidelines:
 - Include the service details clearly
 - Use a conversational, friendly tone
 - Include a call to action (watch, share, comment)
-- Add 3-5 relevant hashtags at the end
 - Keep total length under 500 characters for best engagement
-- Use emoji for warmth and visual appeal
+- Do NOT use asterisks (*), hashtags (#), markdown formatting, or bullet points of any kind
 
 Church: RCCG Morning Star
 `
@@ -20,7 +19,7 @@ export interface FacebookPromptData {
   serviceType: "sunday" | "special" | "midweek"
   serviceDate: string
   title: string
-  speaker: string
+  speaker?: string
   scripture?: string
   keyPoints?: string[]
   specialNotes?: string
@@ -28,26 +27,28 @@ export interface FacebookPromptData {
 
 export function buildFacebookPrompt(data: FacebookPromptData): string {
   const parts: string[] = []
-  
+
   parts.push(`Service Type: ${data.serviceType}`)
   parts.push(`Date: ${formatDate(data.serviceDate)}`)
   parts.push(`Title: ${data.title}`)
-  parts.push(`Speaker: ${data.speaker}`)
-  
+
+  if (data.speaker) {
+    parts.push(`Speaker: ${data.speaker}`)
+  }
+
   if (data.scripture) {
     parts.push(`Scripture: ${data.scripture}`)
   }
-  
+
   if (data.keyPoints && data.keyPoints.length > 0) {
-    // For Facebook, just include first 3 key points
     const points = data.keyPoints.slice(0, 3)
-    parts.push(`Key Points:\n${points.map((p) => `- ${p}`).join("\n")}`)
+    parts.push(`Key Points: ${points.join(", ")}`)
   }
-  
+
   if (data.specialNotes) {
     parts.push(`Special Notes: ${data.specialNotes}`)
   }
-  
+
   return parts.join("\n")
 }
 

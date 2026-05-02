@@ -17,7 +17,7 @@ export const generateDescriptionSchema = z.object({
   serviceDate: z.string().date("Please enter a valid date"),
   serviceType: serviceTypeSchema,
   title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
-  speaker: z.string().min(1, "Speaker is required").max(100, "Speaker name must be less than 100 characters"),
+  speaker: z.string().max(100, "Speaker name must be less than 100 characters").optional(),
   scripture: z.string().max(200).optional(),
   keyPoints: z.array(z.string().max(200)).max(10, "Maximum 10 key points").optional(),
   specialNotes: z.string().max(500).optional(),
