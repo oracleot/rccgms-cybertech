@@ -18,6 +18,7 @@ import { Slider } from "@/components/ui/slider"
 interface RundownTimerProps {
   durationSeconds?: number
   autoStart?: boolean
+  initialElapsed?: number
   onTick?: (seconds: number) => void
   onRunningChange?: (isRunning: boolean) => void
 }
@@ -26,15 +27,15 @@ interface RundownTimerProps {
 const TIME_SKIP_SECONDS = 15 // Seconds to skip when rewinding or fast-forwarding
 const OVERTIME_BUFFER_SECONDS = 300 // Allow 5 minutes over the scheduled time
 
-export function RundownTimer({ durationSeconds, autoStart = false, onTick, onRunningChange }: RundownTimerProps) {
+export function RundownTimer({ durationSeconds, autoStart = false, initialElapsed = 0, onTick, onRunningChange }: RundownTimerProps) {
   // Track the autoStart value we last processed to detect changes
   const lastAutoStartRef = useRef(autoStart)
   const [isRunning, setIsRunning] = useState(autoStart)
-  const [elapsed, setElapsed] = useState(0)
+  const [elapsed, setElapsed] = useState(initialElapsed)
   const onTickRef = useRef(onTick)
   const onRunningChangeRef = useRef(onRunningChange)
   const startTimeRef = useRef<number | null>(autoStart ? Date.now() : null)
-  const pausedElapsedRef = useRef<number>(0)
+  const pausedElapsedRef = useRef<number>(initialElapsed)
 
   // Keep callback refs up to date without triggering effect
   useEffect(() => {

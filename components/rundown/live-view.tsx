@@ -126,6 +126,21 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
   const { save: saveSession, load: loadSession, clear: clearSession } = useLiveSession(rundownId)
 
+  // Restored timer position — only applied once to the RundownTimer that matches the restored item index
+  const [restoredItemInfo, setRestoredItemInfo] = useState<{ index: number; elapsed: number } | null>(null)
+
+  // Ref-based snapshot for the save-on-hide handler (avoids stale closures)
+  const liveStateRef = useRef({
+    currentIndex,
+    started,
+    isInTransition,
+    currentVerseIndex,
+    elapsed,
+    isTimerRunning,
+    serviceName: serviceName ?? null,
+    rundownId,
+  })
+
   const currentItem = orderedItems[currentIndex]
   const nextItem = orderedItems[currentIndex + 1]
 
@@ -156,14 +171,38 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     sessionRestoredRef.current = true
     const saved = loadSession()
     if (!saved || !saved.started) return
-    setCurrentIndex(Math.min(saved.currentIndex, orderedItems.length - 1))
+
+    const restoredIndex = Math.min(saved.currentIndex, orderedItems.length - 1)
+
+    // Calculate how much time has passed since the session was last saved
+    let restoredElapsed = saved.elapsed ?? 0
+    if (saved.isTimerRunning) {
+      restoredElapsed = Math.floor(restoredElapsed + (Date.now() - saved.savedAt) / 1000)
+    }
+
+    setRestoredItemInfo({ index: restoredIndex, elapsed: restoredElapsed })
+    setCurrentIndex(restoredIndex)
     setStarted(saved.started)
     setIsInTransition(saved.isInTransition)
-    setCurrentVerseIndex(saved.currentVerseIndex)
+    setCurrentVerseIndex(saved.currentVerseIndex ?? 0)
   // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
   }, [])
 
-  // Persist session state when it changes
+  // Keep the ref snapshot in sync with latest state (for save-on-hide)
+  useEffect(() => {
+    liveStateRef.current = {
+      currentIndex,
+      started,
+      isInTransition,
+      currentVerseIndex,
+      elapsed,
+      isTimerRunning,
+      serviceName: serviceName ?? null,
+      rundownId,
+    }
+  })
+
+  // Save to session when key state changes (not on every elapsed tick)
   useEffect(() => {
     saveSession({
       rundownPath: `/rundown/${rundownId}/live`,
@@ -172,8 +211,37 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
       started,
       isInTransition,
       currentVerseIndex,
+      elapsed,
+      isTimerRunning,
     })
-  }, [currentIndex, started, isInTransition, currentVerseIndex, rundownId, serviceName, saveSession])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally exclude elapsed to avoid high-frequency saves
+  }, [currentIndex, started, isInTransition, currentVerseIndex, isTimerRunning, rundownId, serviceName, saveSession])
+
+  // Save latest elapsed when the user navigates away (tab hidden or page unload)
+  useEffect(() => {
+    const flush = () => {
+      const s = liveStateRef.current
+      if (!s.started) return
+      saveSession({
+        rundownPath: `/rundown/${s.rundownId}/live`,
+        serviceName: s.serviceName,
+        currentIndex: s.currentIndex,
+        started: s.started,
+        isInTransition: s.isInTransition,
+        currentVerseIndex: s.currentVerseIndex,
+        elapsed: s.elapsed,
+        isTimerRunning: s.isTimerRunning,
+      })
+    }
+    const onVisibility = () => { if (document.visibilityState === "hidden") flush() }
+    document.addEventListener("visibilitychange", onVisibility)
+    window.addEventListener("beforeunload", flush)
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility)
+      window.removeEventListener("beforeunload", flush)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- registered once, reads state via ref
+  }, [])
 
   // Build item payload for display sync
   const buildItemPayload = useCallback(
@@ -657,6 +725,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
               key={currentItem.id}
               durationSeconds={currentItem.durationSeconds}
               autoStart={started}
+              initialElapsed={restoredItemInfo?.index === currentIndex ? restoredItemInfo.elapsed : 0}
               onTick={setElapsed}
               onRunningChange={setIsTimerRunning}
             />

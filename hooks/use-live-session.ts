@@ -8,6 +8,8 @@ export interface LiveSessionState {
   started: boolean
   isInTransition: boolean
   currentVerseIndex: number
+  elapsed: number
+  isTimerRunning: boolean
   savedAt: number
 }
 
