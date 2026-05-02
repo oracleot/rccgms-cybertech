@@ -25,7 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Sparkles, Loader2, Copy, Check, RefreshCw, Smartphone } from "lucide-react"
+import { Sparkles, Loader2, Copy, Check, RefreshCw, Smartphone, Laptop, Tablet, Star, ThumbsUp } from "lucide-react"
 import { toast } from "sonner"
 import type { DeviceType } from "./platform-preview"
 
@@ -46,6 +46,10 @@ export function CaptionGenerator({
   const [includeEmojis, setIncludeEmojis] = useState(true)
   const [includeHashtags, setIncludeHashtags] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [feedbackRating, setFeedbackRating] = useState(0)
+  const [feedbackCorrection, setFeedbackCorrection] = useState("")
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
 
   const { completion, complete, isLoading } = useCompletion({
     api: "/api/ai/generate-caption",
@@ -59,6 +63,31 @@ export function CaptionGenerator({
   function handleDeviceChange(value: DeviceType) {
     setDevice(value)
     onDeviceChange?.(value)
+  }
+
+  async function handleSubmitFeedback() {
+    if (!completion || feedbackRating === 0) return
+    setIsSubmittingFeedback(true)
+    try {
+      await fetch("/api/ai/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feedbackType: "caption",
+          platform: "facebook",
+          contextUsed: context,
+          originalOutput: completion,
+          correctedOutput: feedbackCorrection.trim() || undefined,
+          rating: feedbackRating,
+        }),
+      })
+      setFeedbackSubmitted(true)
+      toast.success("Feedback submitted — thank you!")
+    } catch {
+      toast.error("Failed to submit feedback")
+    } finally {
+      setIsSubmittingFeedback(false)
+    }
   }
 
   async function handleGenerate() {
@@ -125,6 +154,18 @@ export function CaptionGenerator({
                   <span className="flex items-center gap-2">
                     <Smartphone className="h-4 w-4" />
                     Android
+                  </span>
+                </SelectItem>
+                <SelectItem value="tablet">
+                  <span className="flex items-center gap-2">
+                    <Tablet className="h-4 w-4" />
+                    Tablet
+                  </span>
+                </SelectItem>
+                <SelectItem value="laptop">
+                  <span className="flex items-center gap-2">
+                    <Laptop className="h-4 w-4" />
+                    Laptop
                   </span>
                 </SelectItem>
               </SelectContent>
@@ -233,18 +274,77 @@ export function CaptionGenerator({
       </CardContent>
 
       {completion && (
-        <CardFooter className="flex gap-2">
-          <Button variant="outline" onClick={handleCopy}>
-            {copied ? (
-              <Check className="h-4 w-4 mr-2" />
-            ) : (
-              <Copy className="h-4 w-4 mr-2" />
-            )}
-            {copied ? "Copied!" : "Copy"}
-          </Button>
-          <Button onClick={handleUseCaption} className="flex-1">
-            Use this caption
-          </Button>
+        <CardFooter className="flex flex-col gap-3 items-stretch">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCopy}>
+              {copied ? (
+                <Check className="h-4 w-4 mr-2" />
+              ) : (
+                <Copy className="h-4 w-4 mr-2" />
+              )}
+              {copied ? "Copied!" : "Copy"}
+            </Button>
+            <Button onClick={handleUseCaption} className="flex-1">
+              Use this caption
+            </Button>
+          </div>
+
+          {/* AI Feedback Section */}
+          {!feedbackSubmitted ? (
+            <div className="rounded-lg border border-dashed p-3 space-y-2">
+              <p className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
+                <ThumbsUp className="h-3.5 w-3.5" />
+                Help train our AI — rate this caption
+              </p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setFeedbackRating(star)}
+                    className="p-0.5 transition-colors"
+                  >
+                    <Star
+                      className={`h-5 w-5 ${star <= feedbackRating ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
+                    />
+                  </button>
+                ))}
+                {feedbackRating > 0 && (
+                  <span className="text-xs text-muted-foreground ml-1">
+                    {["", "Poor", "Fair", "Good", "Great", "Perfect"][feedbackRating]}
+                  </span>
+                )}
+              </div>
+              {feedbackRating > 0 && feedbackRating <= 3 && (
+                <textarea
+                  className="w-full text-xs rounded border p-2 resize-none bg-background min-h-[60px]"
+                  placeholder="How would you improve this caption? (optional)"
+                  value={feedbackCorrection}
+                  onChange={(e) => setFeedbackCorrection(e.target.value)}
+                />
+              )}
+              {feedbackRating > 0 && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSubmitFeedback}
+                  disabled={isSubmittingFeedback}
+                  className="w-full"
+                >
+                  {isSubmittingFeedback ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  Submit Feedback
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-2.5 text-xs text-green-700 dark:text-green-400 flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              Feedback received — this helps improve future captions!
+            </div>
+          )}
         </CardFooter>
       )}
     </Card>

@@ -5,6 +5,7 @@
 
 import { NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { openai } from "@ai-sdk/openai"
 import { streamText } from "ai"
 import { generateCaptionSchema } from "@/lib/validations/social"
@@ -58,18 +59,41 @@ export async function POST(request: NextRequest) {
     const limit = platformLimits[platform] || 500
     const platformPrompt = platformPrompts[platform] || platformPrompts.facebook
 
+    // Fetch approved few-shot examples from ML training feedback
+    let fewShotSection = ""
+    try {
+      const adminSupabase = createAdminClient()
+      const { data: examples } = await adminSupabase
+        .from("ai_feedback")
+        .select("context_used, corrected_output, original_output")
+        .eq("feedback_type", "caption")
+        .eq("is_approved", true)
+        .not("corrected_output", "is", null)
+        .order("approved_at", { ascending: false })
+        .limit(3)
+
+      if (examples && examples.length > 0) {
+        fewShotSection = "\n\nLearn from these highly-rated example captions for this church:\n"
+        examples.forEach((ex, i) => {
+          fewShotSection += `\nExample ${i + 1}:\nContext: ${ex.context_used || "Church content"}\nCaption: ${ex.corrected_output}\n`
+        })
+      }
+    } catch {
+      // Non-critical — continue without few-shot examples
+    }
+
     const prompt = `
       ${platformPrompt}
-      
+      ${fewShotSection}
       Content context: ${context}
       Tone: ${tone || "inspirational"}
       ${includeEmojis ? "Include relevant emojis to add warmth and personality." : "Do not include emojis."}
       ${includeHashtags ? "Include 3-5 relevant hashtags at the end (e.g., #ChurchFamily #Sunday #Faith)." : "Do not include hashtags."}
       Maximum length: ${limit} characters
-      
+
       This is for a Christian church context. Be authentic, welcoming, and appropriate.
       Focus on community, faith, and connection.
-      
+
       Generate only the caption text, nothing else.
     `
 

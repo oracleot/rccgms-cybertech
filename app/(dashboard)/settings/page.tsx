@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { ROUTES } from "@/lib/constants"
 import { DisplaySettings } from "./_components/display-settings"
@@ -7,6 +8,8 @@ import { NotificationPreferences } from "@/components/settings/notification-pref
 import { ChangePassword } from "@/components/settings/change-password"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import { Code2, Brain, ExternalLink } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Settings | Cyber Tech",
@@ -101,6 +104,42 @@ export default async function SettingsPage() {
             />
           </CardContent>
         </Card>
+
+        {/* Developer Settings — visible only to developer and lead_developer */}
+        {(profileData.role === "developer" || profileData.role === "lead_developer") && (
+          <Card className="border-violet-200 dark:border-violet-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-violet-700 dark:text-violet-400">
+                <Code2 className="h-5 w-5" />
+                Developer Settings
+              </CardTitle>
+              <CardDescription>
+                Tools and settings exclusive to the developer team
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button variant="outline" asChild className="justify-start gap-2">
+                  <Link href={ROUTES.ADMIN_DEVELOPER_TOOLS}>
+                    <Code2 className="h-4 w-4" />
+                    Developer Workshop
+                    <ExternalLink className="h-3.5 w-3.5 ml-auto opacity-50" />
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="justify-start gap-2">
+                  <Link href={ROUTES.ADMIN_ML_TRAINING}>
+                    <Brain className="h-4 w-4" />
+                    ML Training Dashboard
+                    <ExternalLink className="h-3.5 w-3.5 ml-auto opacity-50" />
+                  </Link>
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                These tools are only available to the developer team. Admin users do not have access.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

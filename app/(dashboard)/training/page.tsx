@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { GraduationCap, BookOpen, ChevronRight, Trophy, Sparkles } from "lucide-react"
+import { GraduationCap, BookOpen, ChevronRight, Trophy, Sparkles, BookPlus } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { TrackCard } from "@/components/training/track-card"
@@ -166,6 +166,12 @@ export default async function TrainingPage() {
                   </Link>
                 </Button>
               )}
+              <Button asChild variant="ghost" className="group" size="sm">
+                <Link href="/training/request">
+                  <BookPlus className="h-4 w-4 mr-1.5 transition-transform group-hover:scale-110" />
+                  Request a Course
+                </Link>
+              </Button>
             </div>
           </div>
           

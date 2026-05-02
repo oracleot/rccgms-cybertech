@@ -27,7 +27,7 @@ import {
 } from "lucide-react"
 import type { SocialPlatform } from "@/types/social"
 
-export type DeviceType = "iphone" | "android"
+export type DeviceType = "iphone" | "android" | "laptop" | "tablet"
 
 interface PlatformPreviewProps {
   content: string
@@ -139,11 +139,89 @@ function AndroidMockup({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** Laptop (MacBook-style) mockup wrapper component */
+function LaptopMockup({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex justify-center py-4">
+      <div className="relative">
+        {/* Lid / screen bezel */}
+        <div className="relative w-[480px] bg-gray-800 rounded-t-xl p-2 shadow-xl">
+          {/* Webcam dot */}
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-gray-600 rounded-full" />
+          {/* Browser chrome */}
+          <div className="rounded-t overflow-hidden">
+            <div className="bg-gray-100 dark:bg-gray-700 px-3 py-1.5 flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 bg-red-400 rounded-full" />
+                <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full" />
+                <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+              </div>
+              <div className="flex-1 bg-white dark:bg-gray-600 rounded text-[10px] px-2 py-0.5 text-center text-muted-foreground truncate">
+                fusion.rccgms.org/social
+              </div>
+            </div>
+            {/* Screen content */}
+            <div className="bg-white dark:bg-gray-900 overflow-y-auto" style={{ maxHeight: "340px" }}>
+              {children}
+            </div>
+          </div>
+        </div>
+        {/* Hinge */}
+        <div className="w-[480px] h-2 bg-gray-700 shadow-inner" />
+        {/* Base */}
+        <div className="w-[480px] h-3 bg-gray-600 rounded-b-sm shadow-lg" />
+        {/* Foot spread */}
+        <div className="w-[520px] h-1.5 bg-gray-500 rounded-b-xl mx-auto shadow-md" />
+      </div>
+    </div>
+  )
+}
+
+/** iPad-style tablet mockup wrapper component */
+function TabletMockup({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex justify-center py-4">
+      <div className="relative">
+        <div className="relative w-[360px] bg-gray-800 rounded-[24px] p-2.5 shadow-xl">
+          {/* Volume buttons */}
+          <div className="absolute -right-[3px] top-20 w-[3px] h-10 bg-gray-600 rounded-r-sm" />
+          <div className="absolute -right-[3px] top-36 w-[3px] h-6 bg-gray-600 rounded-r-sm" />
+          <div className="absolute -right-[3px] top-46 w-[3px] h-6 bg-gray-600 rounded-r-sm" />
+          {/* Top camera */}
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-600 rounded-full" />
+          {/* Screen */}
+          <div className="relative bg-white dark:bg-gray-900 rounded-[18px] overflow-hidden">
+            {/* Status bar */}
+            <div className="bg-white dark:bg-gray-900 px-4 py-1.5 flex items-center justify-between text-[10px] font-medium border-b border-gray-100 dark:border-gray-700">
+              <span>9:41</span>
+              <div className="flex items-center gap-1.5">
+                <Signal className="h-3 w-3" />
+                <Wifi className="h-3 w-3" />
+                <Battery className="h-3.5 w-3.5" />
+              </div>
+            </div>
+            {/* Content */}
+            <div className="overflow-y-auto" style={{ maxHeight: "460px" }}>
+              {children}
+            </div>
+          </div>
+          {/* Home bar */}
+          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-gray-600 rounded-full" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Device wrapper that selects the appropriate mockup */
 function DeviceMockup({ device, children }: { device: DeviceType; children: React.ReactNode }) {
   switch (device) {
     case "android":
       return <AndroidMockup>{children}</AndroidMockup>
+    case "laptop":
+      return <LaptopMockup>{children}</LaptopMockup>
+    case "tablet":
+      return <TabletMockup>{children}</TabletMockup>
     case "iphone":
     default:
       return <IPhoneMockup>{children}</IPhoneMockup>

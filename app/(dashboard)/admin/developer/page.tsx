@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import { requireAdminOrDeveloper } from "@/lib/auth/guards"
+import { requireDeveloperOnly } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { DeveloperToolsClient } from "./_components/developer-tools-client"
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function DeveloperToolsPage() {
-  const { user, profile } = await requireAdminOrDeveloper()
+  const { user, profile } = await requireDeveloperOnly()
   const supabase = await createClient()
 
   // Fetch all profiles for role overview

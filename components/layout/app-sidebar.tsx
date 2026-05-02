@@ -17,6 +17,7 @@ import {
   Shield,
   Palette,
   Code2,
+  Brain,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
@@ -77,32 +78,16 @@ const navItems = [
   },
 ]
 
-const adminItems = [
-  {
-    title: "Admin",
-    href: ROUTES.ADMIN,
-    icon: Shield,
-  },
-  {
-    title: "Users",
-    href: ROUTES.ADMIN_USERS,
-    icon: Users,
-  },
-  {
-    title: "Departments",
-    href: ROUTES.ADMIN_DEPARTMENTS,
-    icon: Building2,
-  },
-  {
-    title: "Notifications",
-    href: ROUTES.ADMIN_NOTIFICATIONS,
-    icon: Bell,
-  },
-  {
-    title: "Dev Tools",
-    href: ROUTES.ADMIN_DEVELOPER_TOOLS,
-    icon: Code2,
-  },
+const adminCoreItems = [
+  { title: "Admin", href: ROUTES.ADMIN, icon: Shield },
+  { title: "Users", href: ROUTES.ADMIN_USERS, icon: Users },
+  { title: "Departments", href: ROUTES.ADMIN_DEPARTMENTS, icon: Building2 },
+  { title: "Notifications", href: ROUTES.ADMIN_NOTIFICATIONS, icon: Bell },
+]
+
+const developerOnlyItems = [
+  { title: "Dev Tools", href: ROUTES.ADMIN_DEVELOPER_TOOLS, icon: Code2 },
+  { title: "ML Training", href: ROUTES.ADMIN_ML_TRAINING, icon: Brain },
 ]
 
 interface AppSidebarProps {
@@ -198,7 +183,10 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminItems.map((item) => (
+                {[
+                  ...adminCoreItems,
+                  ...(userRole === "lead_developer" || userRole === "developer" ? developerOnlyItems : []),
+                ].map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
@@ -220,8 +208,8 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
                         <item.icon className={cn(
                           "h-4 w-4 transition-all duration-200",
                           "group-hover/link:scale-110",
-                          isActive(item.href) 
-                            ? "text-violet-600 dark:text-violet-400" 
+                          isActive(item.href)
+                            ? "text-violet-600 dark:text-violet-400"
                             : "group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400"
                         )} />
                         <span className={cn(

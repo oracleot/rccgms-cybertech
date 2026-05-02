@@ -39,6 +39,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_feedback: {
+        Row: {
+          id: string
+          user_id: string
+          feedback_type: string
+          platform: string | null
+          context_used: string | null
+          original_output: string
+          corrected_output: string | null
+          rating: number | null
+          is_approved: boolean | null
+          approved_by: string | null
+          approved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          feedback_type: string
+          platform?: string | null
+          context_used?: string | null
+          original_output: string
+          corrected_output?: string | null
+          rating?: number | null
+          is_approved?: boolean | null
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          feedback_type?: string
+          platform?: string | null
+          context_used?: string | null
+          original_output?: string
+          corrected_output?: string | null
+          rating?: number | null
+          is_approved?: boolean | null
+          approved_by?: string | null
+          approved_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_feedback_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      course_requests: {
+        Row: {
+          id: string
+          requested_by: string
+          title: string
+          description: string | null
+          reason: string | null
+          status: string
+          reviewed_by: string | null
+          reviewed_at: string | null
+          review_notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          requested_by: string
+          title: string
+          description?: string | null
+          reason?: string | null
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          review_notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          requested_by?: string
+          title?: string
+          description?: string | null
+          reason?: string | null
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          review_notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       availability: {
         Row: {
           created_at: string | null

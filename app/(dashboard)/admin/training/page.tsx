@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, Plus, GraduationCap } from "lucide-react"
+import { ChevronLeft, Plus, GraduationCap, BookPlus, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/shared/empty-state"
+import { Separator } from "@/components/ui/separator"
+import { CourseRequestActions } from "./_components/course-request-actions"
 
 export const metadata = {
   title: "Manage Training | Admin",
@@ -30,7 +32,7 @@ export default async function AdminTrainingPage() {
   const profile = profileData as { role: string } | null
 
   // Only allow roles that can manage training; others see read-only training view
-  if (!profile || !["admin", "lead_developer", "leader"].includes(profile.role)) {
+  if (!profile || !["admin", "lead_developer", "developer", "leader"].includes(profile.role)) {
     redirect("/training")
   }
 
@@ -63,6 +65,29 @@ export default async function AdminTrainingPage() {
     .from("departments")
     .select("id, name")
     .order("name")
+
+  // Fetch pending course requests
+  const { data: courseRequestsRaw } = await supabase
+    .from("course_requests")
+    .select(`
+      id, title, description, reason, status, created_at,
+      requester:profiles!course_requests_requested_by_fkey(id, name, role)
+    `)
+    .order("created_at", { ascending: false })
+    .limit(20)
+
+  interface CourseRequestRow {
+    id: string
+    title: string
+    description: string | null
+    reason: string | null
+    status: string
+    created_at: string
+    requester: { id: string; name: string; role: string } | null
+  }
+
+  const courseRequests = (courseRequestsRaw || []) as CourseRequestRow[]
+  const pendingRequests = courseRequests.filter((r) => r.status === "pending")
 
   return (
     <div className="container max-w-6xl py-6 space-y-8">
@@ -160,6 +185,68 @@ export default async function AdminTrainingPage() {
           }
         />
       )}
+
+      {/* Course Requests Section */}
+      <Separator />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <BookPlus className="h-5 w-5 text-primary" />
+              Course Requests
+              {pendingRequests.length > 0 && (
+                <Badge variant="destructive" className="ml-1">{pendingRequests.length} pending</Badge>
+              )}
+            </h2>
+            <p className="text-sm text-muted-foreground">Member requests for new training courses</p>
+          </div>
+        </div>
+
+        {courseRequests.length > 0 ? (
+          <div className="grid gap-3">
+            {courseRequests.map((req) => (
+              <Card key={req.id} className={req.status === "pending" ? "border-amber-200 dark:border-amber-800" : ""}>
+                <CardContent className="pt-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium">{req.title}</p>
+                        <Badge
+                          variant={req.status === "pending" ? "outline" : req.status === "approved" ? "default" : "destructive"}
+                          className="capitalize"
+                        >
+                          {req.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
+                          {req.status === "approved" && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                          {req.status === "rejected" && <XCircle className="h-3 w-3 mr-1" />}
+                          {req.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        Requested by <span className="font-medium">{req.requester?.name ?? "Unknown"}</span>
+                        {" · "}
+                        {new Date(req.created_at).toLocaleDateString()}
+                      </p>
+                      {req.description && (
+                        <p className="text-sm mt-1">{req.description}</p>
+                      )}
+                      {req.reason && (
+                        <p className="text-xs text-muted-foreground mt-1 italic">&quot;{req.reason}&quot;</p>
+                      )}
+                    </div>
+                    {req.status === "pending" && (
+                      <CourseRequestActions requestId={req.id} />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground text-sm">
+            No course requests yet. Members can request courses from the Training page.
+          </div>
+        )}
+      </div>
     </div>
   )
 }

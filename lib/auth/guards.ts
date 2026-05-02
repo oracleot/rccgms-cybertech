@@ -76,6 +76,13 @@ export async function requireLeadDeveloper() {
 }
 
 /**
+ * Developer workshop only — lead_developer and developer, intentionally excludes admin
+ */
+export async function requireDeveloperOnly() {
+  return requireRole([USER_ROLES.LEAD_DEVELOPER, USER_ROLES.DEVELOPER])
+}
+
+/**
  * Require leader, developer, or admin role
  */
 export async function requireLeader() {
