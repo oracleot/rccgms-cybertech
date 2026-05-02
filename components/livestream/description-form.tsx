@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useCompletion } from "@ai-sdk/react"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, X, Loader2, Sparkles, Save } from "lucide-react"
+import { CalendarIcon, Plus, X, Loader2, Sparkles, Save, Star, ThumbsUp, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,6 +84,10 @@ export function DescriptionForm() {
   })
 
   const [isSaving, setIsSaving] = useState(false)
+  const [feedbackRating, setFeedbackRating] = useState(0)
+  const [feedbackCorrection, setFeedbackCorrection] = useState("")
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
 
   const handleAddKeyPoint = () => {
     if (newKeyPoint.trim() && keyPoints.length < 10) {
@@ -150,6 +154,41 @@ export function DescriptionForm() {
       toast.error(error instanceof Error ? error.message : "Failed to save description")
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleSubmitFeedback = async () => {
+    if (!completion || feedbackRating === 0) return
+    setIsSubmittingFeedback(true)
+    try {
+      const values = form.getValues()
+      const contextSummary = [
+        `Service: ${values.title}`,
+        `Speaker: ${values.speaker}`,
+        values.scripture ? `Scripture: ${values.scripture}` : null,
+        keyPoints.length > 0 ? `Key points: ${keyPoints.join(", ")}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ")
+
+      await fetch("/api/ai/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feedbackType: "description",
+          platform,
+          contextUsed: contextSummary,
+          originalOutput: completion,
+          correctedOutput: feedbackCorrection.trim() || undefined,
+          rating: feedbackRating,
+        }),
+      })
+      setFeedbackSubmitted(true)
+      toast.success("Feedback submitted — thank you!")
+    } catch {
+      toast.error("Failed to submit feedback")
+    } finally {
+      setIsSubmittingFeedback(false)
     }
   }
 
@@ -416,26 +455,92 @@ export function DescriptionForm() {
 
         {/* Action Buttons */}
         {completion && (
-          <div className="flex gap-2">
-            <CopyButton content={completion} title={form.watch("title")} className="flex-1" />
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex-1"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save to History
-                </>
-              )}
-            </Button>
-          </div>
+          <>
+            <div className="flex gap-2">
+              <CopyButton content={completion} title={form.watch("title")} className="flex-1" />
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex-1"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save to History
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* AI Feedback Panel */}
+            {!feedbackSubmitted ? (
+              <div className="rounded-lg border border-dashed p-3 space-y-2">
+                <p className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
+                  <ThumbsUp className="h-3.5 w-3.5" />
+                  Help train our AI — rate this description
+                </p>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      title={["", "Poor", "Fair", "Good", "Great", "Perfect"][star]}
+                      onClick={() => setFeedbackRating(star)}
+                      className="p-0.5 transition-colors"
+                    >
+                      <Star
+                        className={`h-5 w-5 ${
+                          star <= feedbackRating
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  {feedbackRating > 0 && (
+                    <span className="text-xs text-muted-foreground ml-1">
+                      {["", "Poor", "Fair", "Good", "Great", "Perfect"][feedbackRating]}
+                    </span>
+                  )}
+                </div>
+                {feedbackRating > 0 && feedbackRating <= 3 && (
+                  <textarea
+                    className="w-full text-xs rounded border p-2 resize-none bg-background min-h-[60px]"
+                    placeholder="How would you improve this description? (optional)"
+                    value={feedbackCorrection}
+                    onChange={(e) => setFeedbackCorrection(e.target.value)}
+                  />
+                )}
+                {feedbackRating > 0 && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSubmitFeedback}
+                    disabled={isSubmittingFeedback}
+                    className="w-full"
+                  >
+                    {isSubmittingFeedback ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    ) : (
+                      <ThumbsUp className="h-3.5 w-3.5 mr-1.5" />
+                    )}
+                    Submit Feedback
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-2.5 text-xs text-green-700 dark:text-green-400 flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                Feedback received — this helps improve future descriptions!
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
