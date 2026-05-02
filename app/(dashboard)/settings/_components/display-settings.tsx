@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -36,6 +37,12 @@ import {
 export function DisplaySettings() {
   const { settings, isLoading, error, updateSettings } = useDisplaySettings()
   const [isSaving, setIsSaving] = useState(false)
+  const [enableTimeoutFlash, setEnableTimeoutFlash] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('fusion_display_timeout_flash')
+    if (stored !== null) setEnableTimeoutFlash(stored === 'true')
+  }, [])
 
   const form = useForm<UpdateDisplaySettingsInput>({
     resolver: zodResolver(updateDisplaySettingsSchema),
@@ -66,6 +73,7 @@ export function DisplaySettings() {
   const onSubmit = async (data: UpdateDisplaySettingsInput) => {
     setIsSaving(true)
     try {
+      localStorage.setItem('fusion_display_timeout_flash', String(enableTimeoutFlash))
       const success = await updateSettings(data)
       if (success) {
         toast.success("Display settings saved")
@@ -287,6 +295,20 @@ export function DisplaySettings() {
                 <FormMessage />
               </FormItem>
             )}
+          />
+        </div>
+
+        {/* Timeout Flash Toggle */}
+        <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium">Timeout flash alert</p>
+            <p className="text-xs text-muted-foreground">
+              Flash the screen red when a timer reaches zero
+            </p>
+          </div>
+          <Switch
+            checked={enableTimeoutFlash}
+            onCheckedChange={setEnableTimeoutFlash}
           />
         </div>
 

@@ -57,7 +57,7 @@ function ProjectionTimer({
   const totalDuration = elapsed + remaining
   const progress = totalDuration > 0 ? Math.min((elapsed / totalDuration) * 100, 100) : 0
 
-  if (!isRunning) return null
+  if (!isRunning && elapsed === 0) return null
 
   return (
     <div className="flex flex-col items-center justify-center py-8">
@@ -137,7 +137,7 @@ function ProjectionTimer({
           color: !isCritical && !isOvertime ? `${textColor}80` : undefined,
         }}
       >
-        {isOvertime ? "OVERTIME" : isCritical ? "ENDING SOON" : "TIME REMAINING"}
+        {!isRunning ? "PAUSED" : isOvertime ? "OVERTIME" : isCritical ? "ENDING SOON" : "TIME REMAINING"}
       </div>
     </div>
   )
@@ -228,6 +228,7 @@ export function DisplayView({
   const [isRedFlash, setIsRedFlash] = useState(false)
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false)
   const [isTimeoutBlinkRed, setIsTimeoutBlinkRed] = useState(false)
+  const [enableTimeoutFlash, setEnableTimeoutFlash] = useState(false)
   const prevItemIdRef = useRef<string | null>(null)
   const hasFlashedRef = useRef(false)
   
@@ -334,6 +335,20 @@ export function DisplayView({
     }
   }, [])
 
+  // Load timeout flash preference from localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const stored = localStorage.getItem('fusion_display_timeout_flash')
+    if (stored !== null) setEnableTimeoutFlash(stored === 'true')
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'fusion_display_timeout_flash') {
+        setEnableTimeoutFlash(e.newValue === 'true')
+      }
+    }
+    window.addEventListener('storage', handler)
+    return () => window.removeEventListener('storage', handler)
+  }, [])
+
   // Independent timer loop - continues running even when control window is backgrounded
   useEffect(() => {
     // Clear any existing interval first
@@ -404,9 +419,10 @@ export function DisplayView({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
-  // Red flash effect when timer reaches zero — a bright visual cue instead of sound
+  // Red flash effect when timer reaches zero — optional visual cue, controlled via settings
   useEffect(() => {
     if (
+      enableTimeoutFlash &&
       timer.isRunning &&
       timer.remaining <= 0 &&
       timer.elapsed > 0 &&
@@ -426,7 +442,7 @@ export function DisplayView({
 
       return () => timers.forEach(clearTimeout)
     }
-  }, [timer.isRunning, timer.remaining, timer.elapsed])
+  }, [enableTimeoutFlash, timer.isRunning, timer.remaining, timer.elapsed])
 
   // Blinking red "TIME OUT!" text — escalates after 45 seconds of operator inaction
   const hasNextItemInTransition = transitionData?.nextItem != null
@@ -706,7 +722,7 @@ export function DisplayView({
             )}
 
             {/* Big creative timer display */}
-            {timer.isRunning && currentItem.durationSeconds > 0 && (
+            {(timer.isRunning || timer.elapsed > 0) && currentItem.durationSeconds > 0 && (
               <div className="mt-8 w-full max-w-2xl">
                 <ProjectionTimer
                   elapsed={timer.elapsed}
