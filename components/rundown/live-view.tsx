@@ -1,11 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, SkipBack, Clock } from "lucide-react"
+import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, SkipBack, Clock, Monitor } from "lucide-react"
 
 import { cn, formatDuration } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
 import { useDisplaySync } from "@/hooks/use-display-sync"
+import { useLiveSession } from "@/hooks/use-live-session"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -28,6 +29,79 @@ interface LiveViewProps {
   itemsWithSongs?: Map<string, { id: string; title: string; lyrics: string | null; key: string | null }>
 }
 
+function fmtTime(seconds: number): string {
+  const abs = Math.abs(seconds)
+  const m = Math.floor(abs / 60).toString().padStart(2, "0")
+  const s = (abs % 60).toString().padStart(2, "0")
+  return `${seconds < 0 ? "-" : ""}${m}:${s}`
+}
+
+interface MiniDisplayProps {
+  title: string
+  elapsed: number
+  durationSeconds: number
+  isRunning: boolean
+  isInTransition: boolean
+  nextTitle?: string
+}
+
+function MiniDisplayPreview({ title, elapsed, durationSeconds, isRunning, isInTransition, nextTitle }: MiniDisplayProps) {
+  const remaining = durationSeconds > 0 ? durationSeconds - elapsed : 0
+  const isWarning = remaining <= 120 && remaining > 60
+  const isCritical = remaining <= 60 && remaining > 0
+  const isOvertime = elapsed > durationSeconds && durationSeconds > 0
+
+  const timeColor = isOvertime
+    ? "text-red-400"
+    : isCritical
+    ? "text-amber-400"
+    : isWarning
+    ? "text-yellow-300"
+    : "text-white"
+
+  return (
+    <div className="rounded-lg bg-gray-950 border border-gray-700 overflow-hidden">
+      <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-900 border-b border-gray-700">
+        <Monitor className="h-3 w-3 text-gray-400" />
+        <span className="text-[10px] text-gray-400 font-medium">Display screen</span>
+        <span className={cn("ml-auto text-[9px]", isRunning ? "text-green-400" : "text-gray-500")}>
+          {isRunning ? "● LIVE" : "⏸ PAUSED"}
+        </span>
+      </div>
+
+      {isInTransition ? (
+        <div className="px-3 py-3 text-center space-y-1">
+          <p className="text-[10px] text-amber-400 font-bold tracking-widest uppercase">Time Out</p>
+          {nextTitle && (
+            <>
+              <p className="text-[9px] text-gray-500 uppercase tracking-wider">Up Next</p>
+              <p className="text-xs text-white font-semibold truncate">{nextTitle}</p>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="px-3 py-3 text-center space-y-1">
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider truncate">{title}</p>
+          <p className={cn("font-mono font-bold text-2xl leading-none tabular-nums", timeColor)}>
+            {durationSeconds > 0 ? fmtTime(remaining) : fmtTime(elapsed)}
+          </p>
+          <p className="text-[9px] text-gray-600">
+            {isOvertime ? "OVERTIME" : isCritical ? "ENDING SOON" : "TIME REMAINING"}
+          </p>
+          {durationSeconds > 0 && (
+            <div className="w-full h-0.5 bg-gray-800 rounded-full overflow-hidden mt-1">
+              <div
+                className={cn("h-full rounded-full transition-all", isOvertime ? "bg-red-500" : isCritical ? "bg-amber-500" : "bg-violet-500")}
+                style={{ width: `${Math.min(100, (elapsed / durationSeconds) * 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const ALERT_SOUNDS = [
   { id: "beep", label: "Classic beep", type: "sine" as OscillatorType, freq: 880 },
   { id: "chime", label: "Soft chime", type: "triangle" as OscillatorType, freq: 660 },
@@ -48,6 +122,9 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
   const audioHandle = useRef<{ ctx: AudioContext; intervalId?: number } | null>(null)
   const prevItemIdRef = useRef<string | null>(null)
+  const sessionRestoredRef = useRef(false)
+
+  const { save: saveSession, load: loadSession, clear: clearSession } = useLiveSession(rundownId)
 
   const currentItem = orderedItems[currentIndex]
   const nextItem = orderedItems[currentIndex + 1]
@@ -72,6 +149,31 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
   const { sendMessage, isDisplayConnected, displayCount } = useDisplaySync({
     rundownId,
   })
+
+  // Restore session state on mount (once)
+  useEffect(() => {
+    if (sessionRestoredRef.current) return
+    sessionRestoredRef.current = true
+    const saved = loadSession()
+    if (!saved || !saved.started) return
+    setCurrentIndex(Math.min(saved.currentIndex, orderedItems.length - 1))
+    setStarted(saved.started)
+    setIsInTransition(saved.isInTransition)
+    setCurrentVerseIndex(saved.currentVerseIndex)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
+  }, [])
+
+  // Persist session state when it changes
+  useEffect(() => {
+    saveSession({
+      rundownPath: `/rundown/${rundownId}/live`,
+      serviceName: serviceName ?? null,
+      currentIndex,
+      started,
+      isInTransition,
+      currentVerseIndex,
+    })
+  }, [currentIndex, started, isInTransition, currentVerseIndex, rundownId, serviceName, saveSession])
 
   // Build item payload for display sync
   const buildItemPayload = useCallback(
@@ -524,6 +626,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
                   setStarted(false)
                   setCurrentIndex(0)
                   setElapsed(0)
+                  clearSession()
                   sendMessage({
                     type: "TRANSITION",
                     payload: {
@@ -646,9 +749,20 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
               </div>
             </TabsContent>
             <TabsContent value="up-next">
-              <div className="py-3">
+              <div className="py-3 space-y-3">
                 {currentItem && started ? (
-                  <div className="space-y-3">
+                  <>
+                    {/* Mini display screen preview */}
+                    <MiniDisplayPreview
+                      title={currentItem.title}
+                      elapsed={elapsed}
+                      durationSeconds={currentItem.durationSeconds}
+                      isRunning={isTimerRunning}
+                      isInTransition={isInTransition}
+                      nextTitle={nextItem?.title}
+                    />
+
+                    {/* Current item */}
                     <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
                       <p className="text-xs text-muted-foreground mb-1">Now on display</p>
                       <div className="flex items-center justify-between">
@@ -659,6 +773,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
                         <span className="text-sm text-muted-foreground">{formatDuration(currentItem.durationSeconds)}</span>
                       </div>
                     </div>
+
                     {nextItem && (
                       <div className="rounded-md border px-3 py-2">
                         <p className="text-xs text-muted-foreground mb-1">Up next</p>
@@ -672,9 +787,9 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
                       </div>
                     )}
                     {!nextItem && !isInTransition && (
-                      <p className="text-sm text-muted-foreground text-center py-4">This is the last item.</p>
+                      <p className="text-sm text-muted-foreground text-center py-2">This is the last item.</p>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     {orderedItems.length === 0 ? "No items in this rundown." : "Start the service to see display info."}

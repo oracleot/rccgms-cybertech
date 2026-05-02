@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useCompletion } from "@ai-sdk/react"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, X, Loader2, Sparkles, Save, Star, ThumbsUp, Check } from "lucide-react"
+import { CalendarIcon, Plus, X, Loader2, Sparkles, Save, Star, ThumbsUp, Check, Pencil, Lock } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -53,7 +53,14 @@ const SERVICE_TYPES = [
   { value: "midweek", label: "Midweek Service" },
 ] as const
 
-export function DescriptionForm() {
+type UserRole = "admin" | "lead_developer" | "developer" | "leader" | "member"
+
+interface DescriptionFormProps {
+  userRole?: UserRole
+}
+
+export function DescriptionForm({ userRole = "member" }: DescriptionFormProps) {
+  const canTrainAI = userRole === "admin" || userRole === "lead_developer" || userRole === "developer"
   const [platform, setPlatform] = useState<Platform>("youtube")
   const [keyPoints, setKeyPoints] = useState<string[]>([])
   const [newKeyPoint, setNewKeyPoint] = useState("")
@@ -88,6 +95,11 @@ export function DescriptionForm() {
   const [feedbackCorrection, setFeedbackCorrection] = useState("")
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedText, setEditedText] = useState<string | null>(null)
+
+  // The active text — prefer manual edits over the streamed completion
+  const activeText = editedText ?? completion
 
   const handleAddKeyPoint = () => {
     if (newKeyPoint.trim() && keyPoints.length < 10) {
@@ -116,11 +128,18 @@ export function DescriptionForm() {
       return
     }
 
+    // Reset edits on new generation
+    setEditedText(null)
+    setIsEditing(false)
+    setFeedbackRating(0)
+    setFeedbackCorrection("")
+    setFeedbackSubmitted(false)
+
     await complete("", { body: result.data })
   }
 
   const handleSave = async () => {
-    if (!completion) {
+    if (!activeText) {
       toast.error("No description to save")
       return
     }
@@ -134,7 +153,7 @@ export function DescriptionForm() {
         body: JSON.stringify({
           title: values.title,
           platform,
-          content: completion,
+          content: activeText,
           speaker: values.speaker,
           scripture: values.scripture,
           metadata: {
@@ -158,7 +177,7 @@ export function DescriptionForm() {
   }
 
   const handleSubmitFeedback = async () => {
-    if (!completion || feedbackRating === 0) return
+    if (!activeText || feedbackRating === 0) return
     setIsSubmittingFeedback(true)
     try {
       const values = form.getValues()
@@ -178,7 +197,7 @@ export function DescriptionForm() {
           feedbackType: "description",
           platform,
           contextUsed: contextSummary,
-          originalOutput: completion,
+          originalOutput: activeText,
           correctedOutput: feedbackCorrection.trim() || undefined,
           rating: feedbackRating,
         }),
@@ -313,7 +332,7 @@ export function DescriptionForm() {
                 name="speaker"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Speaker</FormLabel>
+                    <FormLabel>Speaker <span className="text-muted-foreground font-normal text-xs">(Optional)</span></FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g., Pastor John Smith"
@@ -445,19 +464,59 @@ export function DescriptionForm() {
 
       {/* Preview Column */}
       <div className="flex flex-col gap-4">
-        <StreamingPreview
-          content={completion}
-          platform={platform}
-          title={form.watch("title")}
-          isLoading={isLoading}
-          error={error}
-        />
+        {/* Editable preview or streaming preview */}
+        {isEditing && activeText ? (
+          <Card>
+            <CardHeader className="border-b pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Edit Description</CardTitle>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditing(false)}
+                >
+                  <Check className="h-4 w-4 mr-1.5" />
+                  Done
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <Textarea
+                rows={14}
+                value={editedText ?? completion}
+                onChange={(e) => setEditedText(e.target.value)}
+                className="font-mono text-sm resize-none"
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <StreamingPreview
+            content={activeText}
+            platform={platform}
+            title={form.watch("title")}
+            isLoading={isLoading}
+            error={error}
+          />
+        )}
 
         {/* Action Buttons */}
-        {completion && (
+        {activeText && !isLoading && (
           <>
-            <div className="flex gap-2">
-              <CopyButton content={completion} title={form.watch("title")} className="flex-1" />
+            <div className="flex gap-2 flex-wrap">
+              <CopyButton content={activeText} title={form.watch("title")} className="flex-1" />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsEditing(!isEditing)
+                  if (!isEditing && editedText === null) setEditedText(completion)
+                }}
+                className="flex-1"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                {isEditing ? "Preview" : "Edit"}
+              </Button>
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
@@ -471,18 +530,18 @@ export function DescriptionForm() {
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Save to History
+                    Save
                   </>
                 )}
               </Button>
             </div>
 
-            {/* AI Feedback Panel */}
+            {/* AI Feedback Panel — rating for everyone, correction training only for admin/dev */}
             {!feedbackSubmitted ? (
               <div className="rounded-lg border border-dashed p-3 space-y-2">
                 <p className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
                   <ThumbsUp className="h-3.5 w-3.5" />
-                  Help train our AI — rate this description
+                  Rate this description
                 </p>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -508,14 +567,23 @@ export function DescriptionForm() {
                     </span>
                   )}
                 </div>
-                {feedbackRating > 0 && feedbackRating <= 3 && (
-                  <textarea
-                    className="w-full text-xs rounded border p-2 resize-none bg-background min-h-[60px]"
-                    placeholder="How would you improve this description? (optional)"
-                    value={feedbackCorrection}
-                    onChange={(e) => setFeedbackCorrection(e.target.value)}
-                  />
+
+                {/* Correction textarea — only shown to admin/developers */}
+                {canTrainAI && feedbackRating > 0 && feedbackRating <= 3 && (
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      Correction (trains AI — admin/dev only)
+                    </p>
+                    <textarea
+                      className="w-full text-xs rounded border p-2 resize-none bg-background min-h-[60px]"
+                      placeholder="Provide a corrected version to train the AI..."
+                      value={feedbackCorrection}
+                      onChange={(e) => setFeedbackCorrection(e.target.value)}
+                    />
+                  </div>
                 )}
+
                 {feedbackRating > 0 && (
                   <Button
                     type="button"
@@ -537,7 +605,7 @@ export function DescriptionForm() {
             ) : (
               <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-2.5 text-xs text-green-700 dark:text-green-400 flex items-center gap-2">
                 <Check className="h-4 w-4" />
-                Feedback received — this helps improve future descriptions!
+                Feedback received — thank you!
               </div>
             )}
           </>

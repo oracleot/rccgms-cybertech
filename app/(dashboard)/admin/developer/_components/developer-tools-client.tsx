@@ -22,6 +22,7 @@ import {
   Zap,
   Table2,
   Code,
+  Mail,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +34,7 @@ import { TestModePanel } from "@/components/admin/test-mode-panel"
 import { TableBrowser } from "./table-browser"
 import { SchemaInspector } from "./schema-inspector"
 import { SqlQueryRunner } from "./sql-query-runner"
+import { EmailBlast } from "./email-blast"
 
 interface HealthData {
   status: "healthy" | "degraded" | "error"
@@ -138,26 +140,30 @@ export function DeveloperToolsClient({
 
   return (
     <Tabs defaultValue="health" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="health" className="flex items-center gap-1 text-xs sm:text-sm">
           <Activity className="h-4 w-4" />
-          <span className="hidden sm:inline">System</span> Health
+          <span className="hidden sm:inline">Health</span>
         </TabsTrigger>
         <TabsTrigger value="database" className="flex items-center gap-1 text-xs sm:text-sm">
           <Database className="h-4 w-4" />
-          Overview
+          <span className="hidden sm:inline">DB</span>
         </TabsTrigger>
         <TabsTrigger value="browse" className="flex items-center gap-1 text-xs sm:text-sm">
           <Table2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Table</span> Browser
+          <span className="hidden sm:inline">Tables</span>
         </TabsTrigger>
         <TabsTrigger value="schema" className="flex items-center gap-1 text-xs sm:text-sm">
           <Code className="h-4 w-4" />
-          Schema
+          <span className="hidden sm:inline">Schema</span>
         </TabsTrigger>
         <TabsTrigger value="query" className="flex items-center gap-1 text-xs sm:text-sm">
           <Terminal className="h-4 w-4" />
-          SQL
+          <span className="hidden sm:inline">SQL</span>
+        </TabsTrigger>
+        <TabsTrigger value="email" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Mail className="h-4 w-4" />
+          <span className="hidden sm:inline">Email</span>
         </TabsTrigger>
       </TabsList>
 
@@ -524,6 +530,15 @@ export function DeveloperToolsClient({
       {/* SQL Query Console Tab */}
       <TabsContent value="query" className="space-y-4">
         <SqlQueryRunner />
+      </TabsContent>
+
+      {/* Email Blast Tab */}
+      <TabsContent value="email" className="space-y-4">
+        <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>This tool sends real emails to users. Use with care. Requires a configured <code className="font-mono text-xs">RESEND_API_KEY</code>.</span>
+        </div>
+        <EmailBlast />
       </TabsContent>
     </Tabs>
   )

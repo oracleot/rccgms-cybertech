@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileNav } from "@/components/layout/mobile-nav"
+import { LiveSessionBanner } from "@/components/rundown/live-session-banner"
 import { Toaster } from "@/components/ui/sonner"
 
 export default async function DashboardLayout({
@@ -46,6 +47,7 @@ export default async function DashboardLayout({
               : null
           }
         />
+        <LiveSessionBanner />
         <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
         <MobileNav />
       </SidebarInset>

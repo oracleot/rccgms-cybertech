@@ -142,36 +142,53 @@ function AndroidMockup({ children }: { children: React.ReactNode }) {
 /** Laptop (MacBook-style) mockup wrapper component */
 function LaptopMockup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex justify-center py-4">
-      <div className="relative">
-        {/* Lid / screen bezel */}
-        <div className="relative w-[480px] bg-gray-800 rounded-t-xl p-2 shadow-xl">
-          {/* Webcam dot */}
-          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-gray-600 rounded-full" />
-          {/* Browser chrome */}
-          <div className="rounded-t overflow-hidden">
-            <div className="bg-gray-100 dark:bg-gray-700 px-3 py-1.5 flex items-center gap-2">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 bg-red-400 rounded-full" />
-                <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full" />
-                <div className="w-2.5 h-2.5 bg-green-400 rounded-full" />
+    <div className="flex justify-center py-2">
+      <div className="relative" style={{ width: "min(480px, 100%)" }}>
+        {/* Screen lid */}
+        <div className="relative bg-gradient-to-b from-gray-700 to-gray-800 rounded-t-[12px] p-[10px] pb-0 shadow-2xl border border-gray-600">
+          {/* Webcam notch */}
+          <div className="absolute top-[5px] left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 bg-gray-500 rounded-full" />
+            <div className="w-1 h-1 bg-gray-600 rounded-full" />
+          </div>
+          {/* Inner bezel */}
+          <div className="rounded-t-[6px] overflow-hidden border border-gray-900/60">
+            {/* Browser tab bar */}
+            <div className="bg-gray-200 dark:bg-gray-600 px-2 py-1 flex items-center gap-1.5 border-b border-gray-300 dark:border-gray-500">
+              <div className="w-16 bg-white dark:bg-gray-700 rounded-t-sm text-[9px] px-2 py-0.5 text-muted-foreground truncate border-x border-t border-gray-300 dark:border-gray-500">
+                Fusion Social
               </div>
-              <div className="flex-1 bg-white dark:bg-gray-600 rounded text-[10px] px-2 py-0.5 text-center text-muted-foreground truncate">
+            </div>
+            {/* Browser chrome */}
+            <div className="bg-gray-100 dark:bg-gray-700 px-3 py-1.5 flex items-center gap-2 border-b border-gray-200 dark:border-gray-600">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 bg-red-400 rounded-full shadow-sm" />
+                <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-sm" />
+                <div className="w-2.5 h-2.5 bg-green-400 rounded-full shadow-sm" />
+              </div>
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </div>
+              <div className="flex-1 bg-white dark:bg-gray-600 rounded-full text-[10px] px-3 py-0.5 flex items-center gap-1.5 text-muted-foreground border border-gray-200 dark:border-gray-500">
+                <svg className="h-2.5 w-2.5 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
                 fusion.rccgms.org/social
               </div>
             </div>
             {/* Screen content */}
-            <div className="bg-white dark:bg-gray-900 overflow-y-auto" style={{ maxHeight: "340px" }}>
+            <div className="bg-white dark:bg-gray-900 overflow-y-auto max-h-[320px]">
               {children}
             </div>
           </div>
         </div>
-        {/* Hinge */}
-        <div className="w-[480px] h-2 bg-gray-700 shadow-inner" />
-        {/* Base */}
-        <div className="w-[480px] h-3 bg-gray-600 rounded-b-sm shadow-lg" />
-        {/* Foot spread */}
-        <div className="w-[520px] h-1.5 bg-gray-500 rounded-b-xl mx-auto shadow-md" />
+        {/* Hinge groove */}
+        <div className="h-[3px] bg-gradient-to-b from-gray-600 to-gray-700 shadow-inner" />
+        {/* Base / keyboard */}
+        <div className="bg-gradient-to-b from-gray-600 to-gray-700 rounded-b-[4px] h-4 flex items-center justify-center border border-gray-500">
+          <div className="w-16 h-1 bg-gray-500 rounded-full" />
+        </div>
+        {/* Trackpad */}
+        <div className="bg-gradient-to-b from-gray-500 to-gray-600 h-2 rounded-b-xl shadow-lg border-x border-b border-gray-400" style={{ width: "calc(100% + 16px)", marginLeft: "-8px" }} />
       </div>
     </div>
   )
@@ -182,31 +199,35 @@ function TabletMockup({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex justify-center py-4">
       <div className="relative">
-        <div className="relative w-[360px] bg-gray-800 rounded-[24px] p-2.5 shadow-xl">
-          {/* Volume buttons */}
-          <div className="absolute -right-[3px] top-20 w-[3px] h-10 bg-gray-600 rounded-r-sm" />
-          <div className="absolute -right-[3px] top-36 w-[3px] h-6 bg-gray-600 rounded-r-sm" />
-          <div className="absolute -right-[3px] top-46 w-[3px] h-6 bg-gray-600 rounded-r-sm" />
-          {/* Top camera */}
-          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-600 rounded-full" />
+        <div className="relative w-[360px] bg-gradient-to-b from-gray-700 to-gray-800 rounded-[20px] p-[10px] shadow-2xl border border-gray-600">
+          {/* Top camera bar */}
+          <div className="absolute top-[5px] left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gray-600 rounded-full" />
+            <div className="w-1 h-1 bg-gray-500 rounded-full" />
+          </div>
+          {/* Side buttons */}
+          <div className="absolute -right-[3px] top-16 w-[3px] h-8 bg-gray-500 rounded-r-sm" />
+          <div className="absolute -right-[3px] top-28 w-[3px] h-6 bg-gray-500 rounded-r-sm" />
+          <div className="absolute -right-[3px] top-38 w-[3px] h-6 bg-gray-500 rounded-r-sm" />
+          <div className="absolute -left-[3px] top-20 w-[3px] h-12 bg-gray-500 rounded-l-sm" />
           {/* Screen */}
-          <div className="relative bg-white dark:bg-gray-900 rounded-[18px] overflow-hidden">
+          <div className="relative bg-white dark:bg-gray-900 rounded-[12px] overflow-hidden border border-gray-900/30">
             {/* Status bar */}
-            <div className="bg-white dark:bg-gray-900 px-4 py-1.5 flex items-center justify-between text-[10px] font-medium border-b border-gray-100 dark:border-gray-700">
-              <span>9:41</span>
+            <div className="bg-gray-50 dark:bg-gray-800 px-4 py-1.5 flex items-center justify-between text-[10px] font-medium border-b border-gray-100 dark:border-gray-700">
+              <span className="font-semibold">9:41</span>
               <div className="flex items-center gap-1.5">
-                <Signal className="h-3 w-3" />
-                <Wifi className="h-3 w-3" />
-                <Battery className="h-3.5 w-3.5" />
+                <Signal className="h-2.5 w-2.5" />
+                <Wifi className="h-2.5 w-2.5" />
+                <Battery className="h-3 w-3" />
               </div>
             </div>
             {/* Content */}
-            <div className="overflow-y-auto" style={{ maxHeight: "460px" }}>
+            <div className="overflow-y-auto max-h-[440px]">
               {children}
             </div>
           </div>
-          {/* Home bar */}
-          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-gray-600 rounded-full" />
+          {/* Home indicator */}
+          <div className="absolute bottom-[5px] left-1/2 -translate-x-1/2 w-20 h-[3px] bg-gray-500 rounded-full" />
         </div>
       </div>
     </div>

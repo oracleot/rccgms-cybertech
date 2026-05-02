@@ -12,12 +12,20 @@ export const metadata = {
 
 export default async function LivestreamPage() {
   const supabase = await createClient()
-  
+
   // Check auth
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     redirect("/login")
   }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("auth_user_id", user.id)
+    .single()
+
+  const userRole = (profile?.role ?? "member") as "admin" | "lead_developer" | "developer" | "leader" | "member"
 
   return (
     <div className="space-y-6">
@@ -43,7 +51,7 @@ export default async function LivestreamPage() {
       </div>
 
       {/* Description Form */}
-      <DescriptionForm />
+      <DescriptionForm userRole={userRole} />
     </div>
   )
 }

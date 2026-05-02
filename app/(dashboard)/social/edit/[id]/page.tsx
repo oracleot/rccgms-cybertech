@@ -45,6 +45,8 @@ import {
   Clock,
   X,
   Smartphone,
+  Laptop,
+  Tablet,
 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
@@ -398,11 +400,23 @@ export default function EditPostPage() {
                       Android
                     </span>
                   </SelectItem>
+                  <SelectItem value="tablet">
+                    <span className="flex items-center gap-2">
+                      <Tablet className="h-4 w-4" />
+                      Tablet
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="laptop">
+                    <span className="flex items-center gap-2">
+                      <Laptop className="h-4 w-4" />
+                      Laptop
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             {selectedPlatforms.length > 0 ? (
               <PlatformPreview
                 content={content || "Your caption will appear here..."}
