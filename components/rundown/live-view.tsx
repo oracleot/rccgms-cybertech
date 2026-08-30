@@ -237,6 +237,8 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     document.addEventListener("visibilitychange", onVisibility)
     window.addEventListener("beforeunload", flush)
     return () => {
+      // Save on unmount (client-side navigation) so the timer continues correctly on return
+      flush()
       document.removeEventListener("visibilitychange", onVisibility)
       window.removeEventListener("beforeunload", flush)
     }
@@ -856,7 +858,9 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
                       </div>
                     )}
                     {!nextItem && !isInTransition && (
-                      <p className="text-sm text-muted-foreground text-center py-2">This is the last item.</p>
+                      <div className="rounded-md border border-dashed px-3 py-2 text-center">
+                        <p className="text-sm text-muted-foreground">No upcoming item</p>
+                      </div>
                     )}
                   </>
                 ) : (

@@ -3,7 +3,6 @@
 import Link from "next/link"
 import {
   CalendarDays,
-  Package,
   FileText,
   Users,
   Settings,
@@ -50,14 +49,6 @@ const QUICK_ACTIONS: QuickAction[] = [
     color: "blue",
   },
   {
-    href: "/equipment",
-    icon: <Package className="h-5 w-5" />,
-    title: "Checkout Equipment",
-    description: "Reserve gear for service",
-    roles: ["admin", "developer", "leader", "member"],
-    color: "green",
-  },
-  {
     href: "/rundown",
     icon: <FileText className="h-5 w-5" />,
     title: "View Rundowns",
@@ -96,14 +87,6 @@ const QUICK_ACTIONS: QuickAction[] = [
     description: "View team schedules",
     roles: ["admin", "developer", "leader"],
     color: "cyan",
-  },
-  {
-    href: "/equipment/new",
-    icon: <Package className="h-5 w-5" />,
-    title: "Add Equipment",
-    description: "Register new gear",
-    roles: ["admin", "developer", "leader"],
-    color: "emerald",
   },
   {
     href: "/admin",

@@ -7,7 +7,6 @@ import {
   Clapperboard,
   Home,
   MonitorPlay,
-  Package,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -28,11 +27,6 @@ const navItems = [
     title: "Livestream",
     href: ROUTES.LIVESTREAM,
     icon: MonitorPlay,
-  },
-  {
-    title: "Equipment",
-    href: ROUTES.EQUIPMENT,
-    icon: Package,
   },
   {
     title: "Rundown",

@@ -32,8 +32,11 @@ export function LiveSessionBanner() {
     setDismissed(false)
   }, [session?.rundownId])
 
-  // Don't show when already on the rundown page, or if dismissed, or no active session
+  // Hide entirely when on the exact live operator page; keep for all other pages
   if (!session || dismissed || pathname.startsWith(session.rundownPath)) return null
+
+  // When anywhere in the Rundown area, show the live indicator but not "Return to Operator"
+  const isOnRundown = pathname.startsWith("/rundown")
 
   return (
     <div
@@ -50,13 +53,15 @@ export function LiveSessionBanner() {
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <Link
-          href={session.rundownPath}
-          className="flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 px-2 py-0.5 text-xs transition-colors"
-        >
-          Return to Operator
-          <ArrowRight className="h-3 w-3" />
-        </Link>
+        {!isOnRundown && (
+          <Link
+            href={session.rundownPath}
+            className="flex items-center gap-1 rounded bg-white/20 hover:bg-white/30 px-2 py-0.5 text-xs transition-colors"
+          >
+            Return to Operator
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        )}
         <button
           onClick={() => setDismissed(true)}
           className="rounded p-0.5 hover:bg-white/20 transition-colors"
