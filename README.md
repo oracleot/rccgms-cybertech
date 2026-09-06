@@ -1,19 +1,6 @@
-```
-        ┌────────────────────────────┐
-        │  ▓▓▓▓  FUSION  ▓▓▓▓         │
-        │  ┌──────────────────────┐  │
-        │  │ >  rota   --sync     │  │
-        │  │ >  meetings --invite │  │
-        │  │ >  livestream --gen  │  │
-        │  │ >  _                 │  │
-        │  └──────────────────────┘  │
-        └──────────────┬─────────────┘
-                    ────┴────
-                 ───────────────
-```
-
-<h1 align="center">Fusion</h1>
-<p align="center"><em>The tech-team control room for RCCG Morning Star</em></p>
+<p align="center">
+  <img src=".github/assets/banner.svg" alt="Fusion" width="800">
+</p>
 
 <p align="center">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white">
