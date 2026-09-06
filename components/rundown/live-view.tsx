@@ -5,8 +5,7 @@ import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, SkipB
 
 import { cn, formatDuration } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
-import { useDisplaySync } from "@/hooks/use-display-sync"
-import { useLiveSession } from "@/hooks/use-live-session"
+import { useRundownLive, getElapsedMs, type RundownLiveItem } from "@/hooks/use-rundown-live"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -20,7 +19,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RundownTimer } from "@/components/rundown/rundown-timer"
 import { DisplayControls } from "@/components/rundown/display-controls"
 import type { RundownEditorItem } from "./types"
-import type { ItemChangePayload } from "@/types/rundown"
 
 interface LiveViewProps {
   rundownId: string
@@ -28,6 +26,8 @@ interface LiveViewProps {
   serviceName?: string | null
   itemsWithSongs?: Map<string, { id: string; title: string; lyrics: string | null; key: string | null }>
 }
+
+const TIME_SKIP_SECONDS = 15
 
 function fmtTime(seconds: number): string {
   const abs = Math.abs(seconds)
@@ -110,36 +110,63 @@ const ALERT_SOUNDS = [
 
 export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: LiveViewProps) {
   const orderedItems = useMemo(() => [...items].sort((a, b) => a.order - b.order), [items])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [elapsed, setElapsed] = useState(0)
-  const [started, setStarted] = useState(false)
-  const [isTimerRunning, setIsTimerRunning] = useState(false)
+
+  const {
+    sessions,
+    registerRundown,
+    startService,
+    pauseResume,
+    seekTo,
+    resetTimer,
+    rewind,
+    fastForward,
+    goToItem,
+    goToPrevious,
+    skipToNext,
+    startNextItem,
+    resetService,
+    setVerseIndex,
+    displayCounts,
+  } = useRundownLive()
+
   const [warned, setWarned] = useState(false)
   const [selectedSound, setSelectedSound] = useState<string>(ALERT_SOUNDS[0]?.id ?? "beep")
   const [isAlerting, setIsAlerting] = useState(false)
-  const [currentVerseIndex, setCurrentVerseIndex] = useState(0)
-  const [isInTransition, setIsInTransition] = useState(false)
 
   const audioHandle = useRef<{ ctx: AudioContext; intervalId?: number } | null>(null)
-  const prevItemIdRef = useRef<string | null>(null)
-  const sessionRestoredRef = useRef(false)
 
-  const { save: saveSession, load: loadSession, clear: clearSession } = useLiveSession(rundownId)
+  const rundownPath = `/rundown/${rundownId}/live`
 
-  // Restored timer position — only applied once to the RundownTimer that matches the restored item index
-  const [restoredItemInfo, setRestoredItemInfo] = useState<{ index: number; elapsed: number } | null>(null)
+  const liveItems: RundownLiveItem[] = useMemo(
+    () =>
+      orderedItems.map((item) => ({
+        id: item.id,
+        type: item.type,
+        title: item.title,
+        durationSeconds: item.durationSeconds,
+        notes: item.notes,
+        songId: item.songId,
+      })),
+    [orderedItems]
+  )
 
-  // Ref-based snapshot for the save-on-hide handler (avoids stale closures)
-  const liveStateRef = useRef({
-    currentIndex,
-    started,
-    isInTransition,
-    currentVerseIndex,
-    elapsed,
-    isTimerRunning,
-    serviceName: serviceName ?? null,
-    rundownId,
-  })
+  // Attach to (or create) this rundown's persistent session. Safe to call on
+  // every relevant-data change - it never touches timer/index state for a
+  // session that already exists.
+  useEffect(() => {
+    registerRundown(rundownId, rundownPath, liveItems, serviceName ?? null)
+  }, [registerRundown, rundownId, rundownPath, liveItems, serviceName])
+
+  const session = sessions[rundownId]
+  const currentIndex = session?.currentIndex ?? 0
+  const started = session?.started ?? false
+  const isInTransition = session?.isInTransition ?? false
+  const currentVerseIndex = session?.currentVerseIndex ?? 0
+  const isPaused = session?.isPaused ?? false
+  const elapsed = session ? Math.floor(getElapsedMs(session) / 1000) : 0
+  const isTimerRunning = started && !isPaused
+  const displayCount = displayCounts[rundownId] ?? 0
+  const isDisplayConnected = displayCount > 0
 
   const currentItem = orderedItems[currentIndex]
   const nextItem = orderedItems[currentIndex + 1]
@@ -159,193 +186,6 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     }
     return { verses: [] }
   }, [currentSong])
-
-  // Initialize display sync
-  const { sendMessage, isDisplayConnected, displayCount } = useDisplaySync({
-    rundownId,
-  })
-
-  // Restore session state on mount (once)
-  useEffect(() => {
-    if (sessionRestoredRef.current) return
-    sessionRestoredRef.current = true
-    const saved = loadSession()
-    if (!saved || !saved.started) return
-
-    const restoredIndex = Math.min(saved.currentIndex, orderedItems.length - 1)
-
-    // Calculate how much time has passed since the session was last saved
-    let restoredElapsed = saved.elapsed ?? 0
-    if (saved.isTimerRunning) {
-      restoredElapsed = Math.floor(restoredElapsed + (Date.now() - saved.savedAt) / 1000)
-    }
-
-    setRestoredItemInfo({ index: restoredIndex, elapsed: restoredElapsed })
-    setCurrentIndex(restoredIndex)
-    setStarted(saved.started)
-    setIsInTransition(saved.isInTransition)
-    setCurrentVerseIndex(saved.currentVerseIndex ?? 0)
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount only
-  }, [])
-
-  // Keep the ref snapshot in sync with latest state (for save-on-hide)
-  useEffect(() => {
-    liveStateRef.current = {
-      currentIndex,
-      started,
-      isInTransition,
-      currentVerseIndex,
-      elapsed,
-      isTimerRunning,
-      serviceName: serviceName ?? null,
-      rundownId,
-    }
-  })
-
-  // Save to session when key state changes (not on every elapsed tick)
-  useEffect(() => {
-    saveSession({
-      rundownPath: `/rundown/${rundownId}/live`,
-      serviceName: serviceName ?? null,
-      currentIndex,
-      started,
-      isInTransition,
-      currentVerseIndex,
-      elapsed,
-      isTimerRunning,
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally exclude elapsed to avoid high-frequency saves
-  }, [currentIndex, started, isInTransition, currentVerseIndex, isTimerRunning, rundownId, serviceName, saveSession])
-
-  // Save latest elapsed when the user navigates away (tab hidden or page unload)
-  useEffect(() => {
-    const flush = () => {
-      const s = liveStateRef.current
-      if (!s.started) return
-      saveSession({
-        rundownPath: `/rundown/${s.rundownId}/live`,
-        serviceName: s.serviceName,
-        currentIndex: s.currentIndex,
-        started: s.started,
-        isInTransition: s.isInTransition,
-        currentVerseIndex: s.currentVerseIndex,
-        elapsed: s.elapsed,
-        isTimerRunning: s.isTimerRunning,
-      })
-    }
-    const onVisibility = () => { if (document.visibilityState === "hidden") flush() }
-    document.addEventListener("visibilitychange", onVisibility)
-    window.addEventListener("beforeunload", flush)
-    return () => {
-      // Save on unmount (client-side navigation) so the timer continues correctly on return
-      flush()
-      document.removeEventListener("visibilitychange", onVisibility)
-      window.removeEventListener("beforeunload", flush)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- registered once, reads state via ref
-  }, [])
-
-  // Build item payload for display sync
-  const buildItemPayload = useCallback(
-    (index: number): ItemChangePayload => {
-      const item = orderedItems[index]
-      const next = orderedItems[index + 1]
-
-      let song = null
-      if (item?.type === "song" && item.songId && itemsWithSongs) {
-        const songData = itemsWithSongs.get(item.songId)
-        if (songData) {
-          song = {
-            id: songData.id,
-            title: songData.title,
-            lyrics: songData.lyrics,
-            key: songData.key,
-          }
-        }
-      }
-
-      return {
-        currentItemIndex: index,
-        item: item
-          ? {
-              id: item.id,
-              type: item.type,
-              title: item.title,
-              durationSeconds: item.durationSeconds,
-              notes: item.notes,
-              song,
-            }
-          : null,
-        nextItem: next
-          ? {
-              id: next.id,
-              type: next.type,
-              title: next.title,
-              durationSeconds: next.durationSeconds,
-            }
-          : undefined,
-      }
-    },
-    [orderedItems, itemsWithSongs]
-  )
-
-  // Build enriched nextItem payload for transition messages
-  const buildNextItemPayload = useCallback(
-    (item: RundownEditorItem | undefined) => {
-      if (!item) return null
-
-      let song = null
-      if (item.type === "song" && item.songId && itemsWithSongs) {
-        const songData = itemsWithSongs.get(item.songId)
-        if (songData) {
-          song = {
-            id: songData.id,
-            title: songData.title,
-            lyrics: songData.lyrics,
-            key: songData.key,
-          }
-        }
-      }
-
-      return {
-        id: item.id,
-        title: item.title,
-        type: item.type,
-        durationSeconds: item.durationSeconds,
-        notes: item.notes || null,
-        song,
-      }
-    },
-    [itemsWithSongs]
-  )
-
-  // Broadcast item change when current index changes
-  useEffect(() => {
-    if (currentItem?.id !== prevItemIdRef.current) {
-      prevItemIdRef.current = currentItem?.id ?? null
-      setCurrentVerseIndex(0) // Reset verse when item changes
-
-      sendMessage({
-        type: "ITEM_CHANGE",
-        payload: buildItemPayload(currentIndex),
-      })
-    }
-  }, [currentIndex, currentItem, sendMessage, buildItemPayload])
-
-  // Broadcast timer updates
-  useEffect(() => {
-    if (!started || !currentItem) return
-
-    const remaining = Math.max(0, currentItem.durationSeconds - elapsed)
-    sendMessage({
-      type: "TIMER_UPDATE",
-      payload: {
-        elapsed,
-        remaining,
-        isRunning: isTimerRunning,
-      },
-    })
-  }, [elapsed, isTimerRunning, started, currentItem, sendMessage])
 
   const stopAlert = () => {
     const handle = audioHandle.current
@@ -407,158 +247,53 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
   }
 
   const handleStart = () => {
-    setElapsed(0)
-    setStarted(true)
     setWarned(false)
     stopAlert()
-
-    // Broadcast initial state when service starts
-    sendMessage({
-      type: "ITEM_CHANGE",
-      payload: buildItemPayload(currentIndex),
-    })
+    startService(rundownId)
   }
 
-  // Handle verse navigation for songs
   const handlePrevVerse = useCallback(() => {
     if (currentVerseIndex > 0) {
-      const newIndex = currentVerseIndex - 1
-      setCurrentVerseIndex(newIndex)
-      sendMessage({
-        type: "LYRIC_ADVANCE",
-        payload: {
-          currentVerseIndex: newIndex,
-          totalVerses: parsedLyrics.verses.length,
-        },
-      })
+      setVerseIndex(rundownId, currentVerseIndex - 1, parsedLyrics.verses.length)
     }
-  }, [currentVerseIndex, parsedLyrics.verses.length, sendMessage])
+  }, [currentVerseIndex, parsedLyrics.verses.length, rundownId, setVerseIndex])
 
   const handleNextVerse = useCallback(() => {
     if (currentVerseIndex < parsedLyrics.verses.length - 1) {
-      const newIndex = currentVerseIndex + 1
-      setCurrentVerseIndex(newIndex)
-      sendMessage({
-        type: "LYRIC_ADVANCE",
-        payload: {
-          currentVerseIndex: newIndex,
-          totalVerses: parsedLyrics.verses.length,
-        },
-      })
+      setVerseIndex(rundownId, currentVerseIndex + 1, parsedLyrics.verses.length)
     }
-  }, [currentVerseIndex, parsedLyrics.verses.length, sendMessage])
+  }, [currentVerseIndex, parsedLyrics.verses.length, rundownId, setVerseIndex])
 
-  // Auto-transition when duration elapses (instead of auto-advancing)
-  useEffect(() => {
-    const item = orderedItems[currentIndex]
-    if (!started || !item) return
-    if (!item.durationSeconds || item.durationSeconds <= 0) return
-    if (elapsed >= item.durationSeconds && !isInTransition) {
-      stopAlert()
-      setIsInTransition(true)
-      
-      // Broadcast transition state to display
-      // For the last item, nextItem will be null, triggering "Service Complete" on display
-      sendMessage({
-        type: "TRANSITION",
-        payload: {
-          isInTransition: true,
-          completedItem: {
-            id: item.id,
-            title: item.title,
-            type: item.type,
-          },
-          nextItem: buildNextItemPayload(nextItem),
-          serviceName: serviceName || null,
-        },
-      })
-    }
-  }, [elapsed, started, currentIndex, orderedItems, isInTransition, sendMessage, serviceName, nextItem, buildNextItemPayload])
-
-  // Handler to start next item from transition
   const handleStartNextItem = useCallback(() => {
-    if (!isInTransition || currentIndex >= orderedItems.length - 1) return
-    
-    setIsInTransition(false)
-    setCurrentIndex((idx) => Math.min(idx + 1, orderedItems.length - 1))
-    setElapsed(0)
+    stopAlert()
     setWarned(false)
-    
-    // Broadcast that we're exiting transition
-    sendMessage({
-      type: "TRANSITION",
-      payload: {
-        isInTransition: false,
-        completedItem: null,
-        nextItem: null,
-        serviceName: serviceName || null,
-      },
-    })
-  }, [isInTransition, currentIndex, orderedItems.length, sendMessage, serviceName])
+    startNextItem(rundownId)
+  }, [rundownId, startNextItem])
 
-  // Handler to skip to next item (without waiting for timer)
   const handleSkipToNext = useCallback(() => {
-    if (currentIndex >= orderedItems.length - 1) return
-    
     stopAlert()
-    setIsInTransition(true)
-    
-    const item = orderedItems[currentIndex]
-    sendMessage({
-      type: "TRANSITION",
-      payload: {
-        isInTransition: true,
-        completedItem: item ? {
-          id: item.id,
-          title: item.title,
-          type: item.type,
-        } : null,
-        nextItem: buildNextItemPayload(nextItem),
-        serviceName: serviceName || null,
-      },
-    })
-  }, [currentIndex, orderedItems, nextItem, sendMessage, serviceName, buildNextItemPayload])
+    skipToNext(rundownId)
+  }, [rundownId, skipToNext])
 
-  // Handler to go back to previous item
   const handleGoToPrevious = useCallback(() => {
-    if (currentIndex <= 0) return
-    
     stopAlert()
-    setElapsed(0)
     setWarned(false)
-    setIsInTransition(false)
-    
-    // Update index - this will trigger the useEffect that broadcasts the item change
-    setCurrentIndex((idx) => Math.max(idx - 1, 0))
+    goToPrevious(rundownId)
+  }, [rundownId, goToPrevious])
+
+  const handleGoToItem = useCallback(
+    (targetIndex: number) => {
+      stopAlert()
+      setWarned(false)
+      goToItem(rundownId, targetIndex)
+    },
+    [rundownId, goToItem]
+  )
+
+  // Reset the "near end" audible warning whenever the current item changes
+  useEffect(() => {
+    setWarned(false)
   }, [currentIndex])
-
-  // Handler to jump to a specific item by index
-  const handleGoToItem = useCallback((targetIndex: number) => {
-    if (targetIndex < 0 || targetIndex >= orderedItems.length) return
-
-    stopAlert()
-    setElapsed(0)
-    setWarned(false)
-    setIsInTransition(false)
-
-    // Start service if not already started
-    if (!started) {
-      setStarted(true)
-    }
-
-    setCurrentIndex(targetIndex)
-
-    // Exit any active transition on display
-    sendMessage({
-      type: "TRANSITION",
-      payload: {
-        isInTransition: false,
-        completedItem: null,
-        nextItem: null,
-        serviceName: serviceName || null,
-      },
-    })
-  }, [orderedItems.length, started, sendMessage, serviceName])
 
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
@@ -654,8 +389,8 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
               </p>
             </div>
             <div className="flex justify-center">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 onClick={handleStartNextItem}
                 className="px-8"
               >
@@ -688,24 +423,13 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
               </p>
             </div>
             <div className="flex justify-center">
-              <Button 
+              <Button
                 variant="outline"
-                size="lg" 
+                size="lg"
                 onClick={() => {
-                  setIsInTransition(false)
-                  setStarted(false)
-                  setCurrentIndex(0)
-                  setElapsed(0)
-                  clearSession()
-                  sendMessage({
-                    type: "TRANSITION",
-                    payload: {
-                      isInTransition: false,
-                      completedItem: null,
-                      nextItem: null,
-                      serviceName: serviceName || null,
-                    },
-                  })
+                  stopAlert()
+                  setWarned(false)
+                  resetService(rundownId)
                 }}
                 className="px-8"
               >
@@ -724,12 +448,14 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
           </CardHeader>
           <CardContent className="space-y-3">
             <RundownTimer
-              key={currentItem.id}
               durationSeconds={currentItem.durationSeconds}
-              autoStart={started}
-              initialElapsed={restoredItemInfo?.index === currentIndex ? restoredItemInfo.elapsed : 0}
-              onTick={setElapsed}
-              onRunningChange={setIsTimerRunning}
+              elapsedSeconds={elapsed}
+              isRunning={isTimerRunning}
+              onPauseResume={() => pauseResume(rundownId)}
+              onSeek={(newElapsedSeconds) => seekTo(rundownId, newElapsedSeconds)}
+              onRewind={() => rewind(rundownId, TIME_SKIP_SECONDS)}
+              onFastForward={() => fastForward(rundownId, TIME_SKIP_SECONDS)}
+              onReset={() => resetTimer(rundownId)}
             />
             <div className="text-sm text-muted-foreground flex items-center gap-2">
               <span>Elapsed: {formatDuration(elapsed)}</span>
