@@ -33,11 +33,22 @@ export async function sendMagicLink(data: MagicLinkInput) {
 
   const supabase = await createClient()
   const appUrl = getAppUrl()
+  const next = encodeURIComponent(parsed.data.redirectTo || "/dashboard")
+
+  // Desktop shell: redirect through the app's custom URL scheme instead of
+  // the website, so the OS hands the clicked email link back to the Fusion
+  // app instead of just opening it in the default browser. The desktop
+  // app's deep-link handler rewrites this to the same /auth/callback route
+  // on the real site once it receives it (see desktop/src-tauri).
+  const emailRedirectTo =
+    parsed.data.platform === "desktop"
+      ? `fusion://auth-callback?type=magiclink&next=${next}`
+      : `${appUrl}/auth/callback?type=magiclink&next=${next}`
 
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
     options: {
-      emailRedirectTo: `${appUrl}/auth/callback?type=magiclink&next=${encodeURIComponent(parsed.data.redirectTo || "/dashboard")}`,
+      emailRedirectTo,
     },
   })
 
