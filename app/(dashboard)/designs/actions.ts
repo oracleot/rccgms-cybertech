@@ -227,10 +227,14 @@ export async function unclaimRequest(
   }
 
   // Also clear all assignments from junction table
-  await supabase
+  const { error: deleteAssignmentsError } = await supabase
     .from("design_request_assignments")
     .delete()
     .eq("request_id", requestId)
+
+  if (deleteAssignmentsError) {
+    console.error("Failed to clear assignment junction table on unclaim:", deleteAssignmentsError)
+  }
 
   revalidatePath("/designs")
   revalidatePath(`/designs/${requestId}`)
@@ -326,10 +330,15 @@ export async function reassignRequest(
     }
 
     // Replace all junction table entries
-    await supabase
+    const { error: deleteAssignmentsError } = await supabase
       .from("design_request_assignments")
       .delete()
       .eq("request_id", requestId)
+
+    if (deleteAssignmentsError) {
+      console.error("Reassign junction delete error:", deleteAssignmentsError)
+      return { success: false, error: "Failed to clear existing assignees" }
+    }
 
     const { error: insertError } = await supabase
       .from("design_request_assignments")
