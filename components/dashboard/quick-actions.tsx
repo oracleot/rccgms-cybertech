@@ -11,6 +11,7 @@ import {
   Plus,
   ArrowRight,
   Zap,
+  CalendarPlus,
 } from "lucide-react"
 import {
   Card,
@@ -49,12 +50,28 @@ const QUICK_ACTIONS: QuickAction[] = [
     color: "blue",
   },
   {
+    href: "/meetings",
+    icon: <Video className="h-5 w-5" />,
+    title: "View Meetings",
+    description: "Calls, planning & RSVPs",
+    roles: ["admin", "developer", "leader", "member"],
+    color: "cyan",
+  },
+  {
     href: "/rundown",
     icon: <FileText className="h-5 w-5" />,
     title: "View Rundowns",
     description: "Service order & timing",
     roles: ["admin", "developer", "leader", "member"],
     color: "amber",
+  },
+  {
+    href: "/meetings/new",
+    icon: <CalendarPlus className="h-5 w-5" />,
+    title: "Schedule Meeting",
+    description: "Invite the team to a call",
+    roles: ["admin", "lead_developer", "leader"],
+    color: "green",
   },
   {
     href: "/rota/new",

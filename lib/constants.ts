@@ -361,6 +361,8 @@ export const ROUTES = {
   ROTA_AVAILABILITY: "/rota/availability",
   ROTA_SWAPS: "/rota/swaps",
   ROTA_MY_SCHEDULE: "/rota/my-schedule",
+  MEETINGS: "/meetings",
+  MEETINGS_NEW: "/meetings/new",
   EQUIPMENT: "/equipment",
   EQUIPMENT_NEW: "/equipment/new",
   EQUIPMENT_SCAN: "/equipment/scan",

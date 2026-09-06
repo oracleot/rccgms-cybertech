@@ -13,6 +13,7 @@ import {
   X,
   AlertCircle,
   Sparkles,
+  Video,
 } from "lucide-react"
 import {
   Card,
@@ -49,6 +50,10 @@ const NOTIFICATION_ICONS: Record<NotificationType, React.ReactNode> = {
   design_request_review: <AlertCircle className="h-4 w-4" />,
   design_request_revision: <AlertCircle className="h-4 w-4 text-amber-600" />,
   design_request_completed: <Check className="h-4 w-4 text-green-600" />,
+  meeting_invited: <Video className="h-4 w-4" />,
+  meeting_updated: <Video className="h-4 w-4 text-amber-600" />,
+  meeting_cancelled: <X className="h-4 w-4 text-destructive" />,
+  meeting_reminder: <Video className="h-4 w-4 text-blue-600" />,
 }
 
 const NOTIFICATION_COLORS: Record<NotificationType, string> = {
@@ -66,6 +71,10 @@ const NOTIFICATION_COLORS: Record<NotificationType, string> = {
   design_request_review: "bg-purple-500/10 text-purple-500 border-purple-500/20",
   design_request_revision: "bg-amber-500/10 text-amber-500 border-amber-500/20",
   design_request_completed: "bg-green-500/10 text-green-500 border-green-500/20",
+  meeting_invited: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  meeting_updated: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  meeting_cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
+  meeting_reminder: "bg-blue-500/10 text-blue-500 border-blue-500/20",
 }
 
 function NotificationItemComponent({

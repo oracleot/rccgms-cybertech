@@ -29,6 +29,10 @@ export type NotificationType =
   | "design_request_review"
   | "design_request_revision"
   | "design_request_completed"
+  | "meeting_invited"
+  | "meeting_updated"
+  | "meeting_cancelled"
+  | "meeting_reminder"
 
 // Notification with user info
 export interface NotificationWithUser extends Notification {

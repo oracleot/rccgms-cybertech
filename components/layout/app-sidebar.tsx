@@ -17,6 +17,7 @@ import {
   Code2,
   Brain,
   Radio,
+  Video,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
@@ -38,6 +39,7 @@ import {
 const coreItems = [
   { title: "Home", href: ROUTES.HOME, icon: Home },
   { title: "Rota", href: ROUTES.ROTA, icon: CalendarDays },
+  { title: "Meetings", href: ROUTES.MEETINGS, icon: Video },
   { title: "Rundown", href: ROUTES.RUNDOWN, icon: Clapperboard },
 ]
 
