@@ -258,8 +258,8 @@ export async function deleteRota(rotaId: string): Promise<ActionResult> {
 
     const profile = profileData as { id: string; role: string }
 
-    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-      return { success: false, error: "Only admins and leaders can delete rotas" }
+    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "developer" && profile.role !== "leader") {
+      return { success: false, error: "Only admins, developers, and leaders can delete rotas" }
     }
 
     // Check rota status (only allow deleting drafts)

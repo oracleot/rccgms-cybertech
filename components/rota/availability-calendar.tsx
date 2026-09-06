@@ -175,30 +175,31 @@ export function AvailabilityCalendar({ className }: AvailabilityCalendarProps) {
 
         {/* Selection Actions */}
         {selectedDates.length > 0 && (
-          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-            <Badge variant="secondary">{selectedDates.length} selected</Badge>
-            <div className="flex-1" />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openBulkDialog("available")}
-              className="text-green-600 hover:text-green-700"
-            >
-              <CalendarCheck className="h-4 w-4 mr-1" />
-              Mark Available
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openBulkDialog("unavailable")}
-              className="text-red-600 hover:text-red-700"
-            >
-              <CalendarX className="h-4 w-4 mr-1" />
-              Mark Unavailable
-            </Button>
-            <Button variant="ghost" size="sm" onClick={clearSelection}>
-              Clear
-            </Button>
+          <div className="flex flex-col gap-2 p-3 bg-muted rounded-lg sm:flex-row sm:items-center sm:justify-between">
+            <Badge variant="secondary" className="w-fit">{selectedDates.length} selected</Badge>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openBulkDialog("available")}
+                className="text-green-600 hover:text-green-700"
+              >
+                <CalendarCheck className="h-4 w-4 mr-1" />
+                Mark Available
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openBulkDialog("unavailable")}
+                className="text-red-600 hover:text-red-700"
+              >
+                <CalendarX className="h-4 w-4 mr-1" />
+                Mark Unavailable
+              </Button>
+              <Button variant="ghost" size="sm" onClick={clearSelection}>
+                Clear
+              </Button>
+            </div>
           </div>
         )}
 
