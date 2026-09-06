@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sendRotaReminders } from "@/lib/notifications/rota-notifications"
+import { sendDueMeetingReminders } from "@/lib/notifications/meeting-notifications"
 import { processPendingNotifications } from "@/lib/notifications/notification-service"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -52,6 +53,13 @@ export async function GET(request: NextRequest) {
       `[Cron] Duty reminders: ${reminderResult.sent.email} emails, ${reminderResult.sent.sms} SMS, ${reminderResult.failed} failed`
     )
 
+    // 3b. Send meeting reminders
+    console.log("[Cron] Sending meeting reminders...")
+    const meetingReminderResult = await sendDueMeetingReminders()
+    console.log(
+      `[Cron] Meeting reminders: ${meetingReminderResult.sent} sent, ${meetingReminderResult.failed} failed`
+    )
+
     // 4. Process pending notifications (including newly created deadline reminders)
     console.log("[Cron] Processing pending notifications...")
     const pendingResult2 = await processPendingNotifications()
@@ -69,6 +77,10 @@ export async function GET(request: NextRequest) {
       dutyReminders: {
         sent: reminderResult.sent,
         failed: reminderResult.failed,
+      },
+      meetingReminders: {
+        sent: meetingReminderResult.sent,
+        failed: meetingReminderResult.failed,
       },
       designDeadlines: {
         checked: deadlineResult.checked,

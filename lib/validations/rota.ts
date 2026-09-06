@@ -90,3 +90,22 @@ export const publishRotaSchema = z.object({
 })
 
 export type PublishRotaInput = z.infer<typeof publishRotaSchema>
+
+// Public availability form: step 1 - verify the email belongs to an account
+export const verifyAvailabilityEmailSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+})
+
+export type VerifyAvailabilityEmailInput = z.infer<typeof verifyAvailabilityEmailSchema>
+
+// Public availability form: step 2 - submit availability for verified email
+export const publicAvailabilitySchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  dates: z.array(z.string().date()).min(1, "At least one date is required"),
+  isAvailable: z.boolean(),
+  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
+  // Honeypot field - real users never fill this in; checked (not validated) by the route handler
+  website: z.string().optional(),
+})
+
+export type PublicAvailabilityInput = z.infer<typeof publicAvailabilitySchema>

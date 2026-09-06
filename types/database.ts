@@ -160,6 +160,8 @@ export type Database = {
           id: string
           is_available: boolean
           notes: string | null
+          source: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -168,6 +170,8 @@ export type Database = {
           id?: string
           is_available: boolean
           notes?: string | null
+          source?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -176,6 +180,8 @@ export type Database = {
           id?: string
           is_available?: boolean
           notes?: string | null
+          source?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -676,6 +682,116 @@ export type Database = {
             columns: ["rota_id"]
             isOneToOne: false
             referencedRelation: "rotas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          agenda: string | null
+          cancelled_at: string | null
+          created_at: string
+          created_by: string
+          end_time: string
+          id: string
+          location: string | null
+          meeting_link: string | null
+          platform: Database["public"]["Enums"]["meeting_platform"]
+          reminder_lead_minutes: number
+          reminder_sent_at: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["meeting_status"]
+          timezone: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agenda?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          created_by: string
+          end_time: string
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          platform?: Database["public"]["Enums"]["meeting_platform"]
+          reminder_lead_minutes?: number
+          reminder_sent_at?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["meeting_status"]
+          timezone?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agenda?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          created_by?: string
+          end_time?: string
+          id?: string
+          location?: string | null
+          meeting_link?: string | null
+          platform?: Database["public"]["Enums"]["meeting_platform"]
+          reminder_lead_minutes?: number
+          reminder_sent_at?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["meeting_status"]
+          timezone?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_attendees: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          meeting_id: string
+          responded_at: string | null
+          response: Database["public"]["Enums"]["attendee_response"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          meeting_id: string
+          responded_at?: string | null
+          response?: Database["public"]["Enums"]["attendee_response"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          meeting_id?: string
+          responded_at?: string | null
+          response?: Database["public"]["Enums"]["attendee_response"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendees_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1617,6 +1733,14 @@ export type Database = {
         | "retired"
         | "returned"
       maintenance_type: "repair" | "cleaning" | "calibration" | "inspection"
+      meeting_platform:
+        | "zoom"
+        | "google_meet"
+        | "teams"
+        | "in_person"
+        | "other"
+      meeting_status: "scheduled" | "in_progress" | "completed" | "cancelled"
+      attendee_response: "pending" | "accepted" | "declined" | "tentative"
       notification_channel: "email" | "sms"
       notification_status: "pending" | "sent" | "failed" | "read"
       post_status: "draft" | "scheduled" | "published" | "failed"
@@ -1790,6 +1914,15 @@ export const Constants = {
         "returned",
       ],
       maintenance_type: ["repair", "cleaning", "calibration", "inspection"],
+      meeting_platform: [
+        "zoom",
+        "google_meet",
+        "teams",
+        "in_person",
+        "other",
+      ],
+      meeting_status: ["scheduled", "in_progress", "completed", "cancelled"],
+      attendee_response: ["pending", "accepted", "declined", "tentative"],
       notification_channel: ["email", "sms"],
       notification_status: ["pending", "sent", "failed", "read"],
       post_status: ["draft", "scheduled", "published", "failed"],
