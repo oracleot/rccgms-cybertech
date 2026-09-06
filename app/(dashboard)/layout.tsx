@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { LiveSessionBanner } from "@/components/rundown/live-session-banner"
+import { RundownLiveProvider } from "@/components/rundown/rundown-live-provider"
 import { Toaster } from "@/components/ui/sonner"
 
 export default async function DashboardLayout({
@@ -33,25 +34,27 @@ export default async function DashboardLayout({
   const userRole = (profile?.role ?? "member") as "admin" | "lead_developer" | "developer" | "leader" | "member"
 
   return (
-    <SidebarProvider>
-      <AppSidebar userRole={userRole as "admin" | "lead_developer" | "developer" | "leader" | "member"} />
-      <SidebarInset>
-        <Header
-          user={
-            profile
-              ? {
-                  name: profile.name,
-                  email: user.email ?? "",
-                  avatarUrl: profile.avatar_url,
-                }
-              : null
-          }
-        />
-        <LiveSessionBanner />
-        <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
-        <MobileNav />
-      </SidebarInset>
-      <Toaster />
-    </SidebarProvider>
+    <RundownLiveProvider>
+      <SidebarProvider>
+        <AppSidebar userRole={userRole as "admin" | "lead_developer" | "developer" | "leader" | "member"} />
+        <SidebarInset>
+          <Header
+            user={
+              profile
+                ? {
+                    name: profile.name,
+                    email: user.email ?? "",
+                    avatarUrl: profile.avatar_url,
+                  }
+                : null
+            }
+          />
+          <LiveSessionBanner />
+          <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">{children}</main>
+          <MobileNav />
+        </SidebarInset>
+        <Toaster />
+      </SidebarProvider>
+    </RundownLiveProvider>
   )
 }
