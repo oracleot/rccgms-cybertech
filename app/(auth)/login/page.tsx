@@ -30,6 +30,7 @@ import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { magicLinkSchema } from "@/lib/validations/auth"
 import { z } from "zod"
 import { ROUTES } from "@/lib/constants"
+import { isDesktopShell } from "@/lib/desktop-shell"
 import { sendMagicLink } from "./actions"
 
 // Form input type inferred from schema (before defaults applied)
@@ -54,7 +55,11 @@ export default function LoginPage() {
   async function onSubmit(data: MagicLinkFormInput) {
     setIsLoading(true)
     try {
-      const result = await sendMagicLink({ ...data, redirectTo })
+      const result = await sendMagicLink({
+        ...data,
+        redirectTo,
+        platform: isDesktopShell() ? "desktop" : "web",
+      })
 
       if (result?.error) {
         toast.error(result.error)
