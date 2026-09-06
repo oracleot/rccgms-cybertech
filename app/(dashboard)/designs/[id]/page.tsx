@@ -130,7 +130,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
   const isPastDeadline = request.needed_by && isPast(new Date(request.needed_by))
   const isPastInternalDeadline = request.deadline && isPast(new Date(request.deadline))
   const isAssignee = profile?.id === request.assigned_to
-  const isAdminOrLeader = profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "leader"
+  const isAdminOrLeader = profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader"
   const currentUserRole = (profile?.role as "admin" | "lead_developer" | "developer" | "leader" | "member") || "member"
 
   return (
@@ -152,8 +152,8 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
           {/* Title and badges */}
           <Card>
             <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-2 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <DesignStatusBadge status={request.status} />
                     <DesignPriorityBadge priority={request.priority} showIcon />
@@ -167,7 +167,7 @@ export default async function DesignDetailPage({ params }: DesignDetailPageProps
                     )}
                   </div>
                   <CardTitle className="text-2xl">{request.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-4 text-sm">
+                  <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
                       {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}

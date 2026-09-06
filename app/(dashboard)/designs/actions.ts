@@ -680,8 +680,8 @@ export async function deleteRequest(requestId: string): Promise<ActionResult> {
     return { success: false, error: "Profile not found" }
   }
 
-  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-    return { success: false, error: "Only admins and leaders can delete requests" }
+  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "developer" && profile.role !== "leader") {
+    return { success: false, error: "Only admins, developers, and leaders can delete requests" }
   }
 
   // Delete the request
