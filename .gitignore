@@ -53,6 +53,9 @@ supabase/.branches/
 # IDE
 .idea/
 
+# Claude Code (personal, machine-local settings)
+.claude/settings.local.json
+
 # Misc
 .github/docs/test-credentials
 learning/

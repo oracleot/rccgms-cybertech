@@ -1,32 +1,52 @@
-# Cyber Tech
+<p align="center">
+  <img src=".github/assets/banner.svg" alt="Fusion" width="800">
+</p>
 
-Church tech department management app for RCCG Morning Star. Built with Next.js 16, Supabase, and Vercel AI SDK.
+<p align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white">
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white">
+  <img alt="Tailwind CSS" src="https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/license-private-lightgrey">
+</p>
+
+Rotas, rundowns, livestreams, meetings — one app instead of five spreadsheets and a group chat. Built with Next.js 16, Supabase, and the Vercel AI SDK.
+
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Development](#development)
+- [Database Migrations](#database-migrations)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
 
 ## Features
 
 | Module | Description |
 |--------|-------------|
-| **Rota** | Weekly service scheduling with availability tracking and duty swaps |
-| **Equipment** | Inventory management with QR code scanning for check-in/out |
-| **Rundown** | Service order planning with live display mode |
-| **Livestream** | AI-powered YouTube/Facebook description generator |
-| **Designs** | Design request tracking and management |
-| **Training** | Training tracks and progress monitoring |
-| **Social** | Social media content management |
+| 📅 **Rota** | Weekly service scheduling, availability tracking, and duty swaps |
+| 🗓️ **Meetings** | Zoom/Google Meet/Teams/in-person meetings — RSVPs, reminders, calendar sync, and team availability-overlap scheduling |
+| 🌐 **Public Availability** | A no-sign-in form so anyone on the team can submit availability from a shared link |
+| 🎬 **Rundown** | Service order planning with a live operator/display mode |
+| 📡 **Livestream** | AI-generated YouTube/Facebook descriptions in a church-announcement format |
+| 🎨 **Designs** | Design request tracking, assignment, and file delivery |
+| 🎓 **Training** | Training tracks, step-by-step progress, and certificates |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ (LTS recommended)
-- pnpm 8+ (`npm install -g pnpm`)
-- Supabase CLI (`npm install -g supabase`)
+- Node.js 20+ (LTS recommended)
+- pnpm 9+ (`npm install -g pnpm`)
+- A [Supabase](https://supabase.com) project
 
 ### 1. Clone & Install
 
 ```bash
 git clone https://github.com/oracleot/rccgms-cybertech.git
-cd cyber-tech
+cd rccgms-cybertech
 pnpm install
 ```
 
@@ -58,11 +78,11 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### 3. Database Setup
 
 ```bash
-# Link to your Supabase project
-supabase link --project-ref your-project-ref
+# One-off CLI use (no global install needed)
+pnpm dlx supabase link --project-ref your-project-ref
 
 # Push migrations
-supabase db push
+pnpm dlx supabase db push
 ```
 
 ### 4. Run Development Server
@@ -73,35 +93,46 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-### Test Credentials
-
-See `.github/docs/test-credentials` for test accounts.
-
 ---
 
 ## Architecture
 
 ### Tech Stack
 
-- **Framework**: Next.js 16 (App Router)
-- **Database**: Supabase (PostgreSQL + Auth + RLS)
-- **Styling**: Tailwind CSS + shadcn/ui
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **Database**: Supabase (PostgreSQL + Auth + Row-Level Security)
+- **Styling**: Tailwind CSS v4 + shadcn/ui
 - **AI**: Vercel AI SDK + OpenAI
 - **Email**: React Email + Resend
+- **Calendar**: Hand-rolled RFC 5545 ICS generation + Google Calendar (optional)
 - **Validation**: Zod + React Hook Form
+
+### How a request flows
+
+```mermaid
+flowchart LR
+    Browser -->|Server Actions / fetch| NextJS[Next.js App Router]
+    NextJS -->|RLS-scoped| Supabase[(Supabase Postgres)]
+    NextJS --> Auth[Supabase Auth]
+    NextJS --> AI[Vercel AI SDK]
+    NextJS --> Email[Resend]
+    Cron[Vercel Cron] -->|reminders| NextJS
+```
 
 ### Project Structure
 
 ```
 app/
-├── (auth)/              # Public auth pages (login, register, etc.)
+├── (auth)/              # Public auth pages (login, accept-invite, etc.)
 ├── (dashboard)/         # Protected routes
 │   ├── admin/           # Admin-only pages
-│   ├── rota/            # Rota management
-│   ├── equipment/       # Equipment tracking
-│   ├── rundown/         # Service rundowns
-│   └── ...
-└── api/                 # API routes
+│   ├── rota/            # Rota + availability + swaps
+│   ├── meetings/        # Meetings, RSVPs, calendar sync
+│   ├── rundown/         # Service rundowns + live operator view
+│   ├── designs/         # Design request tracking
+│   └── training/        # Training tracks
+├── availability/        # Public (signed-out) availability form
+└── api/                 # API routes + cron jobs
 
 components/
 ├── ui/                  # shadcn/ui components
@@ -110,6 +141,8 @@ components/
 
 lib/
 ├── supabase/            # Supabase clients (client, server, admin)
+├── calendar/            # Provider-agnostic ICS/timezone/calendar-links
+├── meetings/            # Meeting queries, availability overlap
 ├── validations/         # Zod schemas
 └── notifications/       # Email/SMS services
 
@@ -124,8 +157,10 @@ specs/                   # Project specifications
 | Role | Permissions |
 |------|-------------|
 | **Admin** | Full access, user management, system settings |
-| **Leader** | Create/edit rotas, approve swaps, manage team |
-| **Member** | View schedules, submit availability, request swaps |
+| **Lead Developer** | Content/data management across all modules, developer tools |
+| **Developer** | Content/data management across all modules |
+| **Leader** | Create/edit rotas & meetings, approve swaps, manage team |
+| **Member** | View schedules, submit availability, request swaps, RSVP to meetings |
 
 ---
 
@@ -137,21 +172,23 @@ specs/                   # Project specifications
 pnpm dev                              # Start dev server
 pnpm build                            # Production build
 pnpm lint                             # Run ESLint
-pnpm dlx shadcn@latest add [name]     # Add shadcn component
+pnpm dlx shadcn@latest add [name]     # Add a shadcn/ui component
 ```
 
 ### Database Commands
 
+All run via `pnpm dlx supabase` — no global CLI install required.
+
 ```bash
-supabase db push                      # Apply migrations
-supabase gen types typescript --local > types/database.ts  # Generate types
-supabase migration new [name]         # Create new migration
-supabase migration list               # Check migration status
+pnpm dlx supabase db push                                          # Apply migrations
+pnpm dlx supabase migration list                                   # Check migration status
+pnpm dlx supabase migration new [name]                             # Create a new migration
+pnpm dlx supabase gen types typescript --linked > types/database.ts  # Regenerate types
 ```
 
 ### Key Conventions
 
-**File Naming**: Use lowercase-kebab-case: `rota-calendar.tsx`, `equipment-checkout.ts`
+**File Naming**: lowercase-kebab-case — `rota-calendar.tsx`, `meeting-form.tsx`
 
 **Supabase Clients**:
 ```typescript
@@ -189,21 +226,21 @@ const form = useForm({ resolver: zodResolver(createRotaSchema) })
 
 ```bash
 # 1. Check current migration status
-supabase migration list
+pnpm dlx supabase migration list
 
-# 2. Find next available number
+# 2. Find the next available number
 ls supabase/migrations/
 
-# 3. Create with next sequential number (e.g., 023_your_migration.sql)
-supabase migration new your_migration_name
+# 3. Create with the next sequential number (e.g., 042_your_migration.sql)
+pnpm dlx supabase migration new your_migration_name
 ```
 
 ### Important Rules
 
 - Use sequential 3-digit prefixes: `001_`, `002_`, `003_`
 - **Never reuse or duplicate a prefix number**
-- Never edit already-applied migrations—create a new one instead
-- Test migrations locally first if possible
+- Never edit an already-applied migration — create a new one instead
+- Run `pnpm dlx supabase migration list` before pushing, to confirm what's actually pending on the target project
 
 ---
 
@@ -212,17 +249,20 @@ supabase migration new your_migration_name
 | Issue | Solution |
 |-------|----------|
 | "Invalid API key" | Check `.env.local` for correct Supabase keys, no trailing whitespace |
-| "RLS policy violation" | Check user role in profiles table |
-| Type errors after db changes | Run `supabase gen types typescript --local > types/database.ts` |
-| Notifications not sending | Check if `RESEND_API_KEY` is set; view `/admin/notifications` for errors |
+| "RLS policy violation" | Check the user's role in the `profiles` table |
+| Type errors after DB changes | Run `pnpm dlx supabase gen types typescript --linked > types/database.ts` |
+| Notifications not sending | Check that `RESEND_API_KEY` is set; view `/admin/notifications` for errors |
+| Local migration list doesn't match remote | Run `pnpm dlx supabase migration list` — if a migration was applied outside the CLI, use `migration repair --status applied <version>` rather than re-running it |
 
 ---
 
 ## Resources
 
-- [Project Specs](specs/001-cyber-tech-app-build/) - Detailed requirements and API contracts
-- [Quickstart Guide](specs/001-cyber-tech-app-build/quickstart.md) - Extended setup and testing guide
+- [Product Spec](.github/docs/PRODUCT_SPEC.md) · [Tech Docs](.github/docs/TECH_DOCS.md) · [User Guide](.github/docs/user.guide.md)
+- [Project Specs](specs/001-cyber-tech-app-build/) — detailed requirements and API contracts
 - [Next.js Docs](https://nextjs.org/docs)
 - [Supabase Docs](https://supabase.com/docs)
 - [shadcn/ui](https://ui.shadcn.com)
 - [Vercel AI SDK](https://sdk.vercel.ai/docs)
+
+<p align="center">— built for the RCCG Morning Star tech team —</p>
