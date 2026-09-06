@@ -9,6 +9,7 @@ import {
   TeamOverview,
   NotificationFeed,
 } from "@/components/dashboard"
+import { UpcomingMeetings } from "@/components/meetings/upcoming-meetings"
 import type { MyScheduleItem } from "@/types/rota"
 import type { NotificationItem } from "@/types/notification"
 import type { UserRole } from "@/types/auth"
@@ -278,6 +279,7 @@ export default async function DashboardHomePage() {
         {/* Left Column */}
         <div className="space-y-6">
           <UpcomingDuties assignments={upcomingDuties} />
+          <UpcomingMeetings />
           {isLeaderOrAdmin && <QuickActions userRole={profile.role} />}
         </div>
 
