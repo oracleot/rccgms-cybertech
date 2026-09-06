@@ -1,12 +1,11 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { addDays, format, nextSunday, startOfDay } from "date-fns"
+import { format, nextSunday, startOfDay } from "date-fns"
 import {
   UpcomingDuties,
   QuickActions,
   CountdownWidget,
   PendingSwapsWidget,
-  EquipmentAlertsWidget,
   TeamOverview,
   NotificationFeed,
 } from "@/components/dashboard"
@@ -44,7 +43,6 @@ export default async function DashboardHomePage() {
     profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer" || profile.role === "leader"
 
   const today = startOfDay(new Date())
-  const nextWeek = addDays(today, 7)
   const thisSunday = nextSunday(today)
 
   // Fetch user's upcoming assignments
@@ -122,25 +120,6 @@ export default async function DashboardHomePage() {
     status: "pending" | "accepted"
   }> = []
 
-  let overdueItems: Array<{
-    id: string
-    equipmentId: string
-    equipmentName: string
-    category: string
-    borrowerName: string
-    dueDate: string
-    daysOverdue: number
-  }> = []
-
-  let upcomingMaintenance: Array<{
-    id: string
-    equipmentId: string
-    equipmentName: string
-    category: string
-    scheduledDate: string
-    type: string
-  }> = []
-
   let departments: Array<{
     id: string
     name: string
@@ -199,79 +178,6 @@ export default async function DashboardHomePage() {
         serviceName: s.assignment?.rotas?.services?.name ?? "Unknown",
         date: s.assignment?.rotas?.date ?? "",
         status: s.status as "pending" | "accepted",
-      })) ?? []
-
-    // Fetch overdue equipment checkouts
-    const { data: overdueData } = (await supabase
-      .from("equipment_checkouts")
-      .select(
-        `
-        id,
-        expected_return,
-        equipment:equipment!inner (id, name, category),
-        user:profiles!equipment_checkouts_user_id_fkey (name)
-      `
-      )
-      .is("returned_at", null)
-      .lt("expected_return", format(today, "yyyy-MM-dd"))
-      .order("expected_return")) as {
-      data: Array<{
-        id: string
-        expected_return: string
-        equipment: { id: string; name: string; category: string }
-        user: { name: string } | null
-      }> | null
-    }
-
-    overdueItems =
-      overdueData?.map((o) => {
-        const dueDate = new Date(o.expected_return)
-        const daysOverdue = Math.floor(
-          (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
-        )
-        return {
-          id: o.id,
-          equipmentId: o.equipment?.id ?? "",
-          equipmentName: o.equipment?.name ?? "Unknown",
-          category: o.equipment?.category ?? "Unknown",
-          borrowerName: o.user?.name ?? "Unknown",
-          dueDate: o.expected_return,
-          daysOverdue,
-        }
-      }) ?? []
-
-    // Fetch upcoming maintenance
-    const { data: maintenanceData } = (await supabase
-      .from("equipment_maintenance")
-      .select(
-        `
-        id,
-        maintenance_type,
-        scheduled_date,
-        equipment:equipment!inner (id, name, category)
-      `
-      )
-      .gte("scheduled_date", format(today, "yyyy-MM-dd"))
-      .lte("scheduled_date", format(nextWeek, "yyyy-MM-dd"))
-      .is("completed_at", null)
-      .order("scheduled_date")
-      .limit(5)) as {
-      data: Array<{
-        id: string
-        maintenance_type: string
-        scheduled_date: string
-        equipment: { id: string; name: string; category: string }
-      }> | null
-    }
-
-    upcomingMaintenance =
-      maintenanceData?.map((m) => ({
-        id: m.id,
-        equipmentId: m.equipment?.id ?? "",
-        equipmentName: m.equipment?.name ?? "Unknown",
-        category: m.equipment?.category ?? "Unknown",
-        scheduledDate: m.scheduled_date,
-        type: m.maintenance_type,
       })) ?? []
 
     // Fetch department stats
@@ -378,13 +284,7 @@ export default async function DashboardHomePage() {
         {/* Right Column */}
         <div className="space-y-6">
           {isLeaderOrAdmin && (
-            <>
-              <PendingSwapsWidget swaps={pendingSwaps} />
-              <EquipmentAlertsWidget
-                overdueItems={overdueItems}
-                upcomingMaintenance={upcomingMaintenance}
-              />
-            </>
+            <PendingSwapsWidget swaps={pendingSwaps} />
           )}
           <NotificationFeed notifications={notificationItems} />
         </div>

@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card"
 import {
   CalendarDays,
-  Package,
   MonitorPlay,
   Users,
   Sparkles,
@@ -48,18 +47,13 @@ export default async function DashboardPage() {
   // Get stats for admin/leader
   let stats = {
     totalMembers: 0,
-    activeEquipment: 0,
     upcomingServices: 0,
     pendingSwaps: 0,
   }
 
   if (profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader") {
-    const [members, equipment, services, swaps] = await Promise.all([
+    const [members, services, swaps] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase
-        .from("equipment")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "available"),
       supabase
         .from("rotas")
         .select("id", { count: "exact", head: true })
@@ -73,7 +67,6 @@ export default async function DashboardPage() {
 
     stats = {
       totalMembers: members.count ?? 0,
-      activeEquipment: equipment.count ?? 0,
       upcomingServices: services.count ?? 0,
       pendingSwaps: swaps.count ?? 0,
     }
@@ -103,7 +96,7 @@ export default async function DashboardPage() {
       </BlurFade>
 
       {(profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader") && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <BlurFade delay={0.15} inView>
             <Card className="relative overflow-hidden group hover:border-violet-500/30 transition-colors">
               <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -126,27 +119,6 @@ export default async function DashboardPage() {
             </Card>
           </BlurFade>
           <BlurFade delay={0.2} inView>
-            <Card className="relative overflow-hidden group hover:border-green-500/30 transition-colors">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Equipment Available
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-green-500/10">
-                  <Package className="h-4 w-4 text-green-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  <NumberTicker value={stats.activeEquipment} />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Ready to use
-                </p>
-              </CardContent>
-            </Card>
-          </BlurFade>
-          <BlurFade delay={0.25} inView>
             <Card className="relative overflow-hidden group hover:border-blue-500/30 transition-colors">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -283,21 +255,6 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-violet-500 group-hover:translate-x-1 transition-all" />
-                </Link>
-                <Link
-                  href="/equipment"
-                  className="flex items-center gap-3 rounded-lg border p-3 transition-all hover:bg-green-500/5 hover:border-green-500/30 group"
-                >
-                  <div className="p-2 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                    <Package className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium group-hover:text-green-500 transition-colors">Checkout Equipment</p>
-                    <p className="text-sm text-muted-foreground">
-                      Reserve gear for service
-                    </p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-green-500 group-hover:translate-x-1 transition-all" />
                 </Link>
               </div>
             </CardContent>

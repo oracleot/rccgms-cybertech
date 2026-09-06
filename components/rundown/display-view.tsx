@@ -761,14 +761,20 @@ export function DisplayView({
           fontSize: Math.max(16, settings.fontSize * 0.35),
         }}
       >
-        {/* Up next */}
-        {nextItem && (
+        {/* Up next — show next item or a clear "none" indicator when service has started */}
+        {currentItem && (
           <div className="flex items-center gap-2 opacity-60">
             <span>Up next:</span>
-            <span className="font-medium">{nextItem.title}</span>
-            <span className="opacity-50">
-              ({Math.floor(nextItem.durationSeconds / 60)}m)
-            </span>
+            {nextItem ? (
+              <>
+                <span className="font-medium">{nextItem.title}</span>
+                <span className="opacity-50">
+                  ({Math.floor(nextItem.durationSeconds / 60)}m)
+                </span>
+              </>
+            ) : (
+              <span className="italic opacity-70">No upcoming item</span>
+            )}
           </div>
         )}
       </div>

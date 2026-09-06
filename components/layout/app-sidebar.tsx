@@ -7,9 +7,7 @@ import {
   Clapperboard,
   Home,
   MonitorPlay,
-  Package,
   Settings,
-  Share2,
   GraduationCap,
   Users,
   Building2,
@@ -47,8 +45,6 @@ const coreItems = [
 const contentItems = [
   { title: "Livestream", href: ROUTES.LIVESTREAM, icon: Radio },
   { title: "Designs", href: ROUTES.DESIGNS, icon: Palette },
-  { title: "Equipment", href: ROUTES.EQUIPMENT, icon: Package },
-  { title: "Social", href: ROUTES.SOCIAL, icon: Share2 },
   { title: "Training", href: ROUTES.TRAINING, icon: GraduationCap },
 ]
 

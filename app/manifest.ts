@@ -62,13 +62,6 @@ export default function manifest(): MetadataRoute.Manifest {
         url: "/rota/my-schedule",
         icons: [{ src: "/icons/calendar.png", sizes: "96x96" }],
       },
-      {
-        name: "Scan Equipment",
-        short_name: "Scan",
-        description: "Scan equipment QR code",
-        url: "/equipment/scan",
-        icons: [{ src: "/icons/qr-scan.png", sizes: "96x96" }],
-      },
     ],
   }
 }

@@ -12,11 +12,10 @@ import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { OrbitingCircles } from "@/components/ui/orbiting-circles"
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
 import { Meteors } from "@/components/ui/meteors"
-import { 
-  MonitorPlay, 
-  Calendar, 
-  Package, 
-  FileText, 
+import {
+  MonitorPlay,
+  Calendar,
+  FileText,
   Users,
   Wifi,
   Mic,
@@ -152,8 +151,8 @@ export default function Home() {
           
           <BlurFade delay={0.3} direction="up">
             <p className="text-lg md:text-xl text-white/60 max-w-md mb-8 leading-relaxed">
-              The complete platform for managing your tech team. 
-              <span className="text-violet-400"> Rotas, equipment, rundowns</span> — all in one place.
+              The complete platform for managing your tech team.
+              <span className="text-violet-400"> Rotas, rundowns, livestreams</span> — all in one place.
             </p>
           </BlurFade>
           
@@ -162,9 +161,9 @@ export default function Home() {
             <div className="flex flex-wrap gap-3 mb-10">
               {[
                 { icon: Calendar, label: "Smart Scheduling" },
-                { icon: Package, label: "Equipment Tracking" },
                 { icon: FileText, label: "Service Rundowns" },
                 { icon: Users, label: "Team Management" },
+                { icon: Radio, label: "Livestream" },
               ].map((feature, i) => (
                 <div 
                   key={feature.label}
@@ -257,7 +256,7 @@ export default function Home() {
               <Calendar className="h-5 w-5 text-pink-300" />
             </div>
             <div className="p-2.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 backdrop-blur-sm">
-              <Package className="h-5 w-5 text-emerald-300" />
+              <FileText className="h-5 w-5 text-emerald-300" />
             </div>
           </OrbitingCircles>
         </div>
