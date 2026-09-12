@@ -6,27 +6,32 @@
 // App URL Helper
 // ===================
 /**
- * Get the application URL for auth redirects.
- * ALWAYS uses NEXT_PUBLIC_APP_URL environment variable to ensure
- * magic links and auth redirects go to the correct domain.
- * 
- * In production, set NEXT_PUBLIC_APP_URL to your live domain (e.g., https://yourapp.com)
- * In development, it defaults to http://localhost:3000
+ * Get the application URL for auth redirects (magic links, OAuth callbacks).
+ * Resolution order (server-side):
+ *   1. NEXT_PUBLIC_APP_URL  — explicit override; set this for custom domains
+ *   2. VERCEL_PROJECT_PRODUCTION_URL — Vercel auto-sets this to the production URL
+ *   3. VERCEL_URL           — Vercel auto-sets this to the deployment URL (preview builds)
+ *   4. http://localhost:3000 — local development fallback
  */
 export function getAppUrl(): string {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
-  
-  if (!appUrl) {
-    // Only warn in server context, not during build
-    if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
-      console.warn(
-        '[Cyber Tech] NEXT_PUBLIC_APP_URL is not set. Auth redirects may not work correctly in production.'
-      )
-    }
-    return 'http://localhost:3000'
+  // Explicit override always wins
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
   }
-  
-  return appUrl
+
+  // Server-side only: use Vercel's automatically-injected URL variables
+  if (typeof window === 'undefined') {
+    // VERCEL_PROJECT_PRODUCTION_URL is the stable production URL (no deployment hash)
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+      return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    }
+    // VERCEL_URL is the deployment-specific URL (works for previews too)
+    if (process.env.VERCEL_URL) {
+      return `https://${process.env.VERCEL_URL}`
+    }
+  }
+
+  return 'http://localhost:3000'
 }
 
 // ===================
