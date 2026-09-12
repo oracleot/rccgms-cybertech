@@ -11,6 +11,9 @@ import {
   Loader2,
   MonitorPlay,
   MonitorOff,
+  ChevronDown,
+  ChevronUp,
+  Download,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,6 +71,49 @@ declare global {
 
 const BROADCAST_CHANNEL = "rundown-display"
 
+// ---------------------------------------------------------------------------
+// Accent / language options for Web Speech API
+// ---------------------------------------------------------------------------
+const ACCENTS = [
+  { id: "en-NG", label: "Nigerian English" },
+  { id: "en-GH", label: "Ghanaian English" },
+  { id: "en-GB", label: "British English" },
+  { id: "en-US", label: "American English" },
+  { id: "en-ZA", label: "South African" },
+  { id: "en-AU", label: "Australian" },
+  { id: "en-IN", label: "Indian English" },
+] as const
+type AccentId = (typeof ACCENTS)[number]["id"]
+
+// ---------------------------------------------------------------------------
+// Mishearing log — persisted to localStorage for later training
+// ---------------------------------------------------------------------------
+const MISHEARING_KEY = "bible-mishearing-log"
+
+interface MishearingEntry {
+  heard: string        // raw transcript fragment
+  detected: string     // what our model detected (or "" if nothing)
+  corrected: string    // what the operator typed manually
+  ts: number
+}
+
+function loadMishearings(): MishearingEntry[] {
+  try {
+    return JSON.parse(localStorage.getItem(MISHEARING_KEY) ?? "[]")
+  } catch {
+    return []
+  }
+}
+
+function saveMishearing(entry: MishearingEntry) {
+  try {
+    const existing = loadMishearings()
+    localStorage.setItem(MISHEARING_KEY, JSON.stringify([...existing, entry].slice(-200)))
+  } catch {
+    // localStorage unavailable — silently skip
+  }
+}
+
 function useBibleBroadcast() {
   const channelRef = useRef<BroadcastChannel | null>(null)
 
@@ -95,6 +141,7 @@ function useBibleBroadcast() {
 
 export default function BiblePage() {
   const [translation, setTranslation] = useState<TranslationId>("kjv")
+  const [accent, setAccent] = useState<AccentId>("en-NG")
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState("")
   const [detectedRefs, setDetectedRefs] = useState<BibleReference[]>([])
@@ -104,9 +151,17 @@ export default function BiblePage() {
   const [error, setError] = useState<string | null>(null)
   const [onScreenPassage, setOnScreenPassage] = useState<BiblePassagePayload | null>(null)
   const [speechSupported, setSpeechSupported] = useState(false)
+  const [mishearings, setMishearings] = useState<MishearingEntry[]>([])
+  const [showTraining, setShowTraining] = useState(false)
 
   const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const transcriptRef = useRef("")
   const { sendPassage, clearPassage } = useBibleBroadcast()
+
+  // Load mishearing log from localStorage on mount
+  useEffect(() => {
+    setMishearings(loadMishearings())
+  }, [])
 
   useEffect(() => {
     setSpeechSupported(
@@ -117,12 +172,12 @@ export default function BiblePage() {
 
   // Detect references whenever transcript changes (uses speech-optimised strict pipeline)
   useEffect(() => {
+    transcriptRef.current = transcript
     if (!transcript) {
       setDetectedRefs([])
       return
     }
     const refs = detectBibleReferencesFromSpeech(transcript)
-    // Deduplicate and keep the 6 most recent unique references
     const unique = refs.filter(
       (ref, i, arr) => arr.findIndex((r) => r.reference === ref.reference) === i
     )
@@ -135,7 +190,7 @@ export default function BiblePage() {
     const recognition = new SpeechRecognitionCls()
     recognition.continuous = true
     recognition.interimResults = true
-    recognition.lang = "en-GB"
+    recognition.lang = accent   // use selected accent/locale
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let full = ""
@@ -161,7 +216,7 @@ export default function BiblePage() {
     setIsListening(true)
     setTranscript("")
     setDetectedRefs([])
-  }, [speechSupported])
+  }, [speechSupported, accent])
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop()
@@ -200,12 +255,25 @@ export default function BiblePage() {
     e.preventDefault()
     const query = manualInput.trim()
     if (!query) return
+
+    // Log mishearing if there was an active transcript that didn't detect this reference
+    const currentTranscript = transcriptRef.current
+    if (currentTranscript && detectedRefs.length === 0) {
+      const entry: MishearingEntry = {
+        heard: currentTranscript.slice(-300),
+        detected: "",
+        corrected: query,
+        ts: Date.now(),
+      }
+      saveMishearing(entry)
+      setMishearings(loadMishearings())
+    }
+
     setManualInput("")
     const refs = detectBibleReferences(query)
     if (refs.length > 0) {
       await sendRefToScreen(refs[0])
     } else {
-      // Treat raw input as an API path — user might have typed "john 3:16" etc.
       await sendRefToScreen(query.toLowerCase().replace(/\s+/g, "+"))
     }
   }
@@ -229,13 +297,34 @@ export default function BiblePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground hidden sm:block">Translation</span>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <Select
+            value={accent}
+            onValueChange={(v) => {
+              setAccent(v as AccentId)
+              // Restart listening with new accent if active
+              if (isListening) {
+                recognitionRef.current?.stop()
+              }
+            }}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Accent" />
+            </SelectTrigger>
+            <SelectContent>
+              {ACCENTS.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  {a.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select
             value={translation}
             onValueChange={(v) => setTranslation(v as TranslationId)}
           >
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -449,6 +538,101 @@ export default function BiblePage() {
             ))}
           </div>
         </CardContent>
+      </Card>
+
+      {/* Accent Training Data — collects mishearings for model improvement */}
+      <Card className="border-dashed">
+        <CardHeader className="pb-2">
+          <button
+            className="flex items-center justify-between w-full text-left"
+            onClick={() => setShowTraining((v) => !v)}
+          >
+            <div>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Accent Training Data
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {mishearings.length} mishearing{mishearings.length !== 1 ? "s" : ""} logged
+                {mishearings.length > 0 ? " — review to improve accuracy" : ""}
+              </p>
+            </div>
+            {showTraining ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+            )}
+          </button>
+        </CardHeader>
+
+        {showTraining && (
+          <CardContent className="space-y-4 pt-0">
+            <p className="text-xs text-muted-foreground">
+              When voice detection misses a reference and you type it manually, the transcript
+              is saved here. Share this with the developer to improve accent recognition for
+              your congregation.
+            </p>
+
+            {mishearings.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">
+                No mishearings recorded yet. They appear here automatically when you manually
+                correct a missed reference.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {[...mishearings].reverse().map((entry, i) => (
+                  <div key={i} className="rounded-md border p-3 text-xs space-y-1 bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-destructive">Heard (wrong):</span>
+                      <span className="text-muted-foreground">
+                        {new Date(entry.ts).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <p className="font-mono text-muted-foreground line-clamp-2">{entry.heard}</p>
+                    <span className="font-semibold text-green-600 dark:text-green-400">
+                      Corrected to:
+                    </span>
+                    <p className="font-mono font-medium">{entry.corrected}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {mishearings.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-xs"
+                  onClick={() => {
+                    const json = JSON.stringify(mishearings, null, 2)
+                    const blob = new Blob([json], { type: "application/json" })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement("a")
+                    a.href = url
+                    a.download = `bible-mishearings-${Date.now()}.json`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                >
+                  <Download className="h-3 w-3" />
+                  Export for training
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs text-destructive border-destructive/30 hover:border-destructive hover:text-destructive"
+                  onClick={() => {
+                    localStorage.removeItem(MISHEARING_KEY)
+                    setMishearings([])
+                  }}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Clear log
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
     </div>
   )
