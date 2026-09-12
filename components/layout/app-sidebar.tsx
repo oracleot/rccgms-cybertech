@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  BookOpen,
   CalendarDays,
   Clapperboard,
   Home,
@@ -41,6 +42,7 @@ const coreItems = [
   { title: "Rota", href: ROUTES.ROTA, icon: CalendarDays },
   { title: "Meetings", href: ROUTES.MEETINGS, icon: Video },
   { title: "Rundown", href: ROUTES.RUNDOWN, icon: Clapperboard },
+  { title: "Bible", href: ROUTES.BIBLE, icon: BookOpen },
 ]
 
 // Content & production items

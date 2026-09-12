@@ -114,6 +114,8 @@ export type DisplaySyncMessageType =
   | "TRANSITION"
   | "DISPLAY_READY"
   | "DISPLAY_CLOSED"
+  | "BIBLE_PASSAGE"
+  | "BIBLE_CLEAR"
 
 /**
  * Payload for ITEM_CHANGE messages
@@ -197,6 +199,16 @@ export interface TransitionPayload {
 }
 
 /**
+ * Payload for BIBLE_PASSAGE messages — sent by the Bible Reader page to all display screens
+ */
+export interface BiblePassagePayload {
+  reference: string
+  text: string
+  translation: string
+  translationName: string
+}
+
+/**
  * Display sync message structure
  */
 export type DisplaySyncMessage =
@@ -207,6 +219,8 @@ export type DisplaySyncMessage =
   | { type: "TRANSITION"; payload: TransitionPayload }
   | { type: "DISPLAY_READY"; payload: { rundownId: string } }
   | { type: "DISPLAY_CLOSED"; payload: { rundownId: string } }
+  | { type: "BIBLE_PASSAGE"; payload: BiblePassagePayload }
+  | { type: "BIBLE_CLEAR"; payload: { rundownId?: string } }
 
 /**
  * Rundown item with song details for display

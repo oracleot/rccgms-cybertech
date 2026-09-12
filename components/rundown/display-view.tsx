@@ -14,6 +14,7 @@ import type {
   TimerUpdatePayload,
   TransitionPayload,
   RundownItemForDisplay,
+  BiblePassagePayload,
 } from "@/types/rundown"
 import type { DisplaySettingsWithDefaults } from "@/types/settings"
 
@@ -229,6 +230,7 @@ export function DisplayView({
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false)
   const [isTimeoutBlinkRed, setIsTimeoutBlinkRed] = useState(false)
   const [enableTimeoutFlash, setEnableTimeoutFlash] = useState(false)
+  const [biblePassage, setBiblePassage] = useState<BiblePassagePayload | null>(null)
   const prevItemIdRef = useRef<string | null>(null)
   const hasFlashedRef = useRef(false)
   
@@ -316,6 +318,14 @@ export function DisplayView({
         } else {
           setTransitionData(null)
         }
+        break
+
+      case "BIBLE_PASSAGE":
+        setBiblePassage(message.payload)
+        break
+
+      case "BIBLE_CLEAR":
+        setBiblePassage(null)
         break
     }
   }, [])
@@ -521,6 +531,40 @@ export function DisplayView({
             <Maximize2 className="h-20 w-20 mx-auto animate-pulse" />
             <p className="text-3xl font-bold">Tap to Enter Fullscreen</p>
             <p className="text-sm opacity-50">Press Esc to exit later</p>
+          </div>
+        </div>
+      )}
+
+      {/* Bible Passage Overlay — covers the main content while a passage is on screen */}
+      {biblePassage && (
+        <div
+          className="absolute inset-0 z-40 flex flex-col items-center justify-center px-12 py-10 animate-in fade-in duration-500"
+          style={{ backgroundColor: settings.backgroundColor, color: settings.textColor }}
+        >
+          {/* Reference + translation label */}
+          <div className="text-center mb-10">
+            <div
+              className="font-bold tracking-tight leading-none"
+              style={{ fontSize: "clamp(2.5rem, 6vw, 7rem)" }}
+            >
+              {biblePassage.reference}
+            </div>
+            <div
+              className="mt-3 opacity-50 uppercase tracking-[0.25em]"
+              style={{ fontSize: "clamp(0.75rem, 1.5vw, 1.5rem)" }}
+            >
+              {biblePassage.translationName}
+            </div>
+          </div>
+
+          {/* Passage text */}
+          <div
+            className="text-center leading-relaxed max-w-5xl"
+            style={{ fontSize: "clamp(1.4rem, 3vw, 4rem)" }}
+          >
+            <span className="opacity-40" style={{ fontSize: "1.5em", lineHeight: 0 }}>&#8220;</span>
+            {biblePassage.text}
+            <span className="opacity-40" style={{ fontSize: "1.5em", lineHeight: 0 }}>&#8221;</span>
           </div>
         </div>
       )}

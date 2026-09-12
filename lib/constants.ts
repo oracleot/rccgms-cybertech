@@ -383,4 +383,5 @@ export const ROUTES = {
   ADMIN_DEVELOPER_TOOLS: "/admin/developer",
   ADMIN_ML_TRAINING: "/admin/ml-training",
   TRAINING_REQUEST: "/training/request",
+  BIBLE: "/bible",
 } as const
