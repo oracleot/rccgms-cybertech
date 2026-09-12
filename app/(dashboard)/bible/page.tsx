@@ -24,7 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { detectBibleReferences, type BibleReference } from "@/lib/bible/detect-references"
+import { detectBibleReferences } from "@/lib/bible/detect-references"
+import { detectBibleReferencesFromSpeech, type BibleReference } from "@/lib/bible/speech-detection"
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
 
@@ -114,13 +115,13 @@ export default function BiblePage() {
     )
   }, [])
 
-  // Detect references whenever transcript changes
+  // Detect references whenever transcript changes (uses speech-optimised strict pipeline)
   useEffect(() => {
     if (!transcript) {
       setDetectedRefs([])
       return
     }
-    const refs = detectBibleReferences(transcript)
+    const refs = detectBibleReferencesFromSpeech(transcript)
     // Deduplicate and keep the 6 most recent unique references
     const unique = refs.filter(
       (ref, i, arr) => arr.findIndex((r) => r.reference === ref.reference) === i

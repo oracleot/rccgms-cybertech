@@ -11,7 +11,7 @@ interface BookEntry {
   aliases: string[]   // All accepted forms, lowercased
 }
 
-const BOOKS: BookEntry[] = [
+export const BOOKS: BookEntry[] = [
   // Old Testament
   { canonical: "genesis", displayName: "Genesis", aliases: ["genesis", "gen", "ge", "gn"] },
   { canonical: "exodus", displayName: "Exodus", aliases: ["exodus", "exod", "ex"] },
@@ -83,7 +83,7 @@ const BOOKS: BookEntry[] = [
 ]
 
 // Build alias -> book lookup, and collect all patterns sorted longest first
-const BOOK_BY_ALIAS = new Map<string, { canonical: string; displayName: string }>()
+export const BOOK_BY_ALIAS = new Map<string, { canonical: string; displayName: string }>()
 interface AliasPattern { escaped: string; canonical: string; displayName: string }
 const ALL_PATTERNS: AliasPattern[] = []
 
@@ -158,3 +158,4 @@ export function detectBibleReferences(text: string): BibleReference[] {
 
   return results
 }
+
