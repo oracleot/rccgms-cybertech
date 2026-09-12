@@ -28,11 +28,40 @@ import { detectBibleReferences, type BibleReference } from "@/lib/bible/detect-r
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
 
-// Extend Window for vendor-prefixed Speech Recognition (not in standard TS DOM types)
+// Self-contained Web Speech API types — vendor-prefixed, not guaranteed in all TS DOM libs
 declare global {
+  interface SpeechRecognitionAlternative {
+    readonly transcript: string
+    readonly confidence: number
+  }
+  interface SpeechRecognitionResult {
+    readonly isFinal: boolean
+    readonly length: number
+    item(index: number): SpeechRecognitionAlternative
+    [index: number]: SpeechRecognitionAlternative
+  }
+  interface SpeechRecognitionResultList {
+    readonly length: number
+    item(index: number): SpeechRecognitionResult
+    [index: number]: SpeechRecognitionResult
+  }
+  interface SpeechRecognitionEvent extends Event {
+    readonly resultIndex: number
+    readonly results: SpeechRecognitionResultList
+  }
+  interface SpeechRecognition extends EventTarget {
+    continuous: boolean
+    interimResults: boolean
+    lang: string
+    onresult: ((event: SpeechRecognitionEvent) => void) | null
+    onend: (() => void) | null
+    onerror: ((event: Event) => void) | null
+    start(): void
+    stop(): void
+  }
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
+    SpeechRecognition: new () => SpeechRecognition
+    webkitSpeechRecognition: new () => SpeechRecognition
   }
 }
 
