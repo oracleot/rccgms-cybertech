@@ -206,8 +206,10 @@ export interface BiblePassagePayload {
   text: string
   translation: string
   translationName: string
-  verseNumber?: number                              // specific verse being displayed
-  verses?: Array<{ verse: number; text: string }>  // all verses in the passage (for navigation)
+  verseNumber?: number  // specific verse being displayed
+  // All verses in the passage, for navigation. book/chapter are optional because a
+  // long-running OBS dock can receive payloads from a client on an older deploy.
+  verses?: Array<{ book?: string; chapter?: number; verse: number; text: string }>
 }
 
 /**

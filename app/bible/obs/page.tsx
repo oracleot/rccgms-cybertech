@@ -20,6 +20,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { displayReference } from "@/lib/bible/format"
 
 const OBS_CHANNEL = "bible-obs"
 
@@ -29,7 +30,7 @@ interface PassagePayload {
   translation: string
   translationName: string
   verseNumber?: number
-  verses?: Array<{ verse: number; text: string }>
+  verses?: Array<{ book?: string; chapter?: number; verse: number; text: string }>
 }
 
 export default function BibleObsPage() {
@@ -169,12 +170,7 @@ export default function BibleObsPage() {
         {passage && (
           <div className="card">
             <div className="reference">
-              {passage.reference}
-              {passage.verseNumber && (
-                <span style={{ color: "rgba(196,166,255,0.5)", fontWeight: 400, fontSize: "20px", letterSpacing: "0.02em" }}>
-                  — verse {passage.verseNumber}
-                </span>
-              )}
+              {displayReference(passage.reference, passage.verseNumber, passage.verses)}
               <span className="translation-badge">{passage.translationName}</span>
             </div>
             <div className="verse-text">&ldquo;{passage.text}&rdquo;</div>

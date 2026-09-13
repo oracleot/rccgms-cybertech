@@ -14,6 +14,8 @@ export const TRANSLATIONS = [
 export type TranslationId = (typeof TRANSLATIONS)[number]["id"]
 
 export interface VerseEntry {
+  book: string
+  chapter: number
   verse: number
   text: string
 }
@@ -54,6 +56,8 @@ export async function fetchBiblePassage(
   const data: BibleApiResponse = await res.json()
   if (data.error) throw new Error(data.error)
   const verses: VerseEntry[] = (data.verses ?? []).map((v) => ({
+    book: v.book_name,
+    chapter: v.chapter,
     verse: v.verse,
     text: v.text.trim().replace(/\n/g, " "),
   }))

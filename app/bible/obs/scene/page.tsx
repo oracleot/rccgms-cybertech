@@ -3,26 +3,31 @@
 /**
  * OBS Full-Screen Bible Scene — /bible/obs/scene
  *
- * Designed to fill an entire OBS scene dedicated to showing Bible passages.
- * Use this when you want the Bible to take the whole screen, not just a
- * lower-third overlay.
+ * Transparent by default so it composites over whatever background the
+ * scene already has (church branding, an open-Bible image, live camera).
  *
  * OBS Setup:
- *   1. Create a new OBS Scene called "Bible"
- *   2. Add → Browser Source
- *   3. URL: https://<your-domain>/bible/obs/scene
- *   4. Width: 1920, Height: 1080
- *   5. Custom CSS:  body { background: #0d0d1a !important; }
- *   6. Check "Shutdown source when not visible"
+ *   1. Add → Browser Source in your Bible scene
+ *   2. URL: https://<your-domain>/bible/obs/scene
+ *   3. Width: 1920, Height: 1080 — no Custom CSS needed
  *
- * Switch to the Bible scene when the pastor reads from scripture.
- * Switch away when done — the scene clears automatically.
+ * Appearance is controlled by URL parameters, e.g.
+ *   /bible/obs/scene?pos=bottom&size=0.8&bg=000000cc
+ * See SETTINGS below for the full list.
  */
 
 import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { displayReference } from "@/lib/bible/format"
 
 const OBS_CHANNEL = "bible-obs"
+
+interface Verse {
+  book?: string
+  chapter?: number
+  verse: number
+  text: string
+}
 
 interface PassagePayload {
   reference: string
@@ -30,14 +35,70 @@ interface PassagePayload {
   translation: string
   translationName: string
   verseNumber?: number
-  verses?: Array<{ verse: number; text: string }>
+  verses?: Verse[]
+}
+
+interface SceneSettings {
+  bg: string
+  pos: "center" | "top" | "bottom"
+  scale: number
+  refPos: "top" | "bottom" | "hide"
+  serif: boolean
+  color: string
+  accent: string
+  shadow: boolean
+  showTranslation: boolean
+}
+
+const DEFAULTS: SceneSettings = {
+  bg: "transparent",
+  pos: "center",
+  scale: 1,
+  refPos: "top",
+  serif: true,
+  color: "#ffffff",
+  accent: "#e8ddff",
+  shadow: true,
+  showTranslation: true,
+}
+
+/** Accepts "transparent", "c4a6ff", "#c4a6ff", "000000cc" or any CSS colour name. */
+function parseColor(raw: string | null, fallback: string): string {
+  if (!raw) return fallback
+  const v = raw.trim()
+  if (!v) return fallback
+  if (/^[0-9a-f]{3,8}$/i.test(v)) return `#${v}`
+  return v
+}
+
+function readSettings(search: string): SceneSettings {
+  const p = new URLSearchParams(search)
+  const pos = p.get("pos")
+  const refPos = p.get("ref")
+  const size = Number(p.get("size"))
+  return {
+    bg: parseColor(p.get("bg"), DEFAULTS.bg),
+    pos: pos === "top" || pos === "bottom" ? pos : DEFAULTS.pos,
+    scale: Number.isFinite(size) && size > 0 ? Math.min(size, 3) : DEFAULTS.scale,
+    refPos: refPos === "bottom" || refPos === "hide" ? refPos : DEFAULTS.refPos,
+    serif: p.get("font") !== "sans",
+    color: parseColor(p.get("color"), DEFAULTS.color),
+    accent: parseColor(p.get("accent"), DEFAULTS.accent),
+    shadow: p.get("shadow") !== "0",
+    showTranslation: p.get("translation") !== "0",
+  }
 }
 
 export default function BibleObsScenePage() {
   const [passage, setPassage] = useState<PassagePayload | null>(null)
   const [visible, setVisible] = useState(false)
+  const [settings, setSettings] = useState<SceneSettings>(DEFAULTS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
+
+  useEffect(() => {
+    setSettings(readSettings(window.location.search))
+  }, [])
 
   useEffect(() => {
     const supabase = createClient()
@@ -54,19 +115,52 @@ export default function BibleObsScenePage() {
       })
       .subscribe()
     channelRef.current = channel
-    return () => { channel.unsubscribe() }
+    return () => {
+      channel.unsubscribe()
+    }
   }, [])
+
+  const justify =
+    settings.pos === "top" ? "flex-start" : settings.pos === "bottom" ? "flex-end" : "center"
+  const fontFamily = settings.serif
+    ? "'Georgia', 'Times New Roman', serif"
+    : "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  const textShadow = settings.shadow ? "0 3px 18px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.9)" : "none"
+
+  const reference = passage
+    ? displayReference(passage.reference, passage.verseNumber, passage.verses)
+    : ""
+
+  const referenceBlock = passage && settings.refPos !== "hide" && (
+    <div
+      className="reference"
+      style={{
+        color: settings.accent,
+        fontSize: `${44 * settings.scale}px`,
+        textShadow,
+        marginTop: settings.refPos === "bottom" ? `${40 * settings.scale}px` : 0,
+        marginBottom: settings.refPos === "top" ? `${36 * settings.scale}px` : 0,
+      }}
+    >
+      {reference}
+      {settings.showTranslation && (
+        <span className="translation" style={{ fontSize: `${28 * settings.scale}px` }}>
+          {" "}
+          ({passage.translation.toUpperCase()})
+        </span>
+      )}
+    </div>
+  )
 
   return (
     <>
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
-          background: #0d0d1a;
           width: 1920px;
           height: 1080px;
           overflow: hidden;
-          font-family: 'Georgia', 'Times New Roman', serif;
+          background: transparent;
         }
         .scene {
           width: 1920px;
@@ -74,121 +168,38 @@ export default function BibleObsScenePage() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          padding: 80px 160px;
-          position: relative;
-          background: radial-gradient(ellipse at 50% 30%, rgba(80,40,160,0.18) 0%, transparent 70%);
+          padding: 100px 140px;
         }
         .content {
           width: 100%;
-          max-width: 1440px;
           text-align: center;
-          transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1);
+          transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1);
         }
         .content.hidden {
           opacity: 0;
-          transform: translateY(24px);
-          pointer-events: none;
+          transform: translateY(20px);
         }
-        .verse-number {
-          font-size: 28px;
-          font-weight: 700;
-          color: #7c6af7;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-          margin-bottom: 24px;
-          font-family: Arial, sans-serif;
-          opacity: 0.9;
-        }
-        .verse-text {
-          font-size: 64px;
-          line-height: 1.45;
-          color: #f0ecff;
-          font-style: italic;
-          text-shadow: 0 4px 32px rgba(0,0,0,0.6);
-          margin-bottom: 48px;
-        }
-        .reference-row {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 20px;
-        }
-        .accent-line {
-          width: 60px;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, #7c6af7);
-          border-radius: 1px;
-        }
-        .accent-line.right {
-          background: linear-gradient(90deg, #7c6af7, transparent);
-        }
-        .reference {
-          font-size: 32px;
-          font-weight: 700;
-          color: #c4a6ff;
-          letter-spacing: 0.06em;
-          font-family: Arial, sans-serif;
-        }
-        .translation {
-          font-size: 20px;
-          font-weight: 600;
-          color: rgba(196,166,255,0.45);
-          letter-spacing: 0.12em;
-          font-family: Arial, sans-serif;
-          margin-top: 12px;
-        }
-        .idle {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: opacity 0.6s ease;
-        }
-        .idle.hidden { opacity: 0; pointer-events: none; }
-        .cross {
-          width: 3px;
-          height: 80px;
-          background: rgba(124,106,247,0.12);
-          position: relative;
-          border-radius: 2px;
-        }
-        .cross::before {
-          content: '';
-          position: absolute;
-          top: 24px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 48px;
-          height: 3px;
-          background: rgba(124,106,247,0.12);
-          border-radius: 2px;
-        }
+        .reference { font-weight: 700; letter-spacing: 0.01em; }
+        .translation { font-weight: 400; opacity: 0.75; }
+        .verse-text { line-height: 1.42; }
       `}</style>
 
-      <div className="scene">
-        {/* Idle state — subtle cross when nothing is on screen */}
-        <div className={`idle${visible ? " hidden" : ""}`}>
-          <div className="cross" />
-        </div>
-
-        {/* Passage */}
+      <div className="scene" style={{ background: settings.bg, justifyContent: justify, fontFamily }}>
         <div className={`content${visible ? "" : " hidden"}`}>
           {passage && (
             <>
-              {passage.verseNumber && (
-                <div className="verse-number">verse {passage.verseNumber}</div>
-              )}
-              <div className="verse-text">&ldquo;{passage.text}&rdquo;</div>
-              <div className="reference-row">
-                <div className="accent-line" />
-                <div>
-                  <div className="reference">{passage.reference}</div>
-                  <div className="translation">{passage.translationName}</div>
-                </div>
-                <div className="accent-line right" />
+              {settings.refPos === "top" && referenceBlock}
+              <div
+                className="verse-text"
+                style={{
+                  color: settings.color,
+                  fontSize: `${58 * settings.scale}px`,
+                  textShadow,
+                }}
+              >
+                {passage.text}
               </div>
+              {settings.refPos === "bottom" && referenceBlock}
             </>
           )}
         </div>

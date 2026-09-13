@@ -107,24 +107,56 @@ The Bible Reader includes two URL-based OBS integrations — no plugin installat
 
 ### 1. Full-Screen Bible Scene (Browser Source — recommended)
 
-Fills the entire scene with the Bible passage — ideal for a dedicated Bible scene you switch to when the pastor reads scripture.
+Fills the scene with the Bible passage — ideal for a dedicated Bible scene you switch to when the pastor reads scripture.
+
+**The background is transparent**, so it composites over whatever the scene already has — your church branding, an open-Bible image, or a live camera. One background serves every scene; no Custom CSS needed.
 
 **OBS Setup:**
 
 1. Create a new OBS scene called `Bible`
-2. Inside that scene, click **+** → **Browser Source**
-3. Set the URL:
+2. Add your background image / camera as the bottom layer
+3. Click **+** → **Browser Source** and place it above the background
+4. Set the URL:
    ```
    https://rccgms-cybertech.vercel.app/bible/obs/scene
    ```
-4. Width: `1920` — Height: `1080`
-5. Paste this into **Custom CSS**:
-   ```css
-   body { background: #0d0d1a !important; }
-   ```
+5. Width: `1920` — Height: `1080`
 6. Check **Shutdown source when not visible**
 
-The scene shows the verse text large and centred with the reference and accent lines below. A subtle cross appears when nothing is on screen. Switch to this scene when the pastor opens the Bible; switch away when done.
+The reference renders above the verse text (`Genesis 1:2 (KJV)`), both centred with a drop shadow so they stay legible over video.
+
+#### Scene appearance settings
+
+Appearance is controlled by adding parameters to the URL — no rebuild, no Custom CSS. Combine them with `&`:
+
+```
+https://rccgms-cybertech.vercel.app/bible/obs/scene?pos=bottom&size=0.8&bg=000000cc
+```
+
+| Parameter | Values | Default | What it does |
+|-----------|--------|---------|--------------|
+| `bg` | `transparent`, hex (`000000cc`, `0d0d1a`) | `transparent` | Background behind the text. 8-digit hex adds opacity — `000000cc` is a black scrim at 80% |
+| `pos` | `center`, `top`, `bottom` | `center` | Vertical position of the text block |
+| `size` | any number, e.g. `0.75`, `1.2` | `1` | Scales all text. Use below 1 for long passages |
+| `ref` | `top`, `bottom`, `hide` | `top` | Where the reference sits, or hide it entirely |
+| `font` | `serif`, `sans` | `serif` | Typeface |
+| `color` | hex, e.g. `ffffff` | `ffffff` | Verse text colour |
+| `accent` | hex, e.g. `ffd700` | `e8ddff` | Reference colour |
+| `shadow` | `1`, `0` | `1` | Drop shadow — turn off over a plain background |
+| `translation` | `1`, `0` | `1` | Show the `(KJV)` suffix on the reference |
+
+A few combinations worth knowing:
+
+```bash
+# Lower third over live camera, with a dark scrim for legibility
+?pos=bottom&bg=000000cc&size=0.8
+
+# Big centred text over your own background image, gold reference
+?accent=ffd700
+
+# Text only — no reference, for a clean look
+?ref=hide
+```
 
 ### 2. Lower-Third Overlay (Browser Source)
 
@@ -162,25 +194,37 @@ A compact control panel that lives **inside OBS** — send passages and navigate
 4. The dock appears as a panel — drag it to wherever suits your OBS layout
 
 **Dock features:**
-- **On Screen** — live preview of the current passage (updates from any source)
-- **Send Reference** — type any reference (`John 3:16`, `Psalm 23`, `1 Cor 13:4-7`) and hit Send
-- **VERSES — click to advance** — numbered buttons appear for every verse in the passage; click `8` to show verse 8, then `9`, then `10`; the active verse is highlighted purple
+- **Send Reference** — type any reference (`John 3:16`, `Psalm 23`, `Genesis 1:1-5`) and hit Enter
 - **Translation** — switch between KJV, WEB, ASV, BBE, YLT without leaving OBS
 - **Quick Send** — one-click buttons for 6 common passages
-- **Clear Screen** — hide the overlay (button appears only when something is live)
+- **Verse list** — the full passage, one verse per row (see below)
+- **Clear Screen** — hide the overlay (appears only when something is live)
 
 ### Verse Navigation
 
-When a passage with multiple verses is loaded (e.g. Psalm 23, John 1:1–14), numbered verse buttons appear in both the Bible Reader and the OBS dock:
+Loading a multi-verse passage fills the dock with the whole passage, one verse per row, labelled by chapter and verse:
 
 ```
-VERSES — CLICK TO ADVANCE
-[ 1 ] [ 2 ] [●3●] [ 4 ] [ 5 ] [ 6 ]
+GENESIS 1:1-5                             [ ← ] [ → ]
+┌──────────────────────────────────────────────────┐
+│ 1:1   In the beginning God created the heaven    │
+│       and the earth.                             │
+│                                                  │
+│ 1:2   And the earth was without form, and void;  │  ← live
+│       and darkness was upon the face of the deep │
+│                                                  │
+│ 1:3   And God said, Let there be light: and      │
+│       there was light.                           │
+└──────────────────────────────────────────────────┘
 ```
 
-- Click any number to show just that verse on screen and in the OBS overlay/scene
-- The active verse is highlighted; the text and verse number update instantly across all surfaces
-- Works from the Bible Reader page, the OBS dock, or both simultaneously
+- **Click any verse** to put just that verse on screen
+- **← / →** step to the previous or next verse; arrow keys work too
+- The live verse is highlighted and the list auto-scrolls to keep it in view
+- The on-screen reference narrows to the verse being shown — `Genesis 1:1-5` becomes `Genesis 1:2`
+- Every surface stays in sync: send from the Bible Reader or the dock, and the scene, lower third and projection screen all follow
+
+The same verse list appears in the Bible Reader at `/bible`, so an operator on a laptop and an operator inside OBS see and control the same thing.
 
 ### Why not a traditional OBS plugin?
 

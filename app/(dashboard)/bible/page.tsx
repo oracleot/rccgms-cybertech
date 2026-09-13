@@ -13,6 +13,8 @@ import {
   MonitorOff,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Download,
   Tv2,
 } from "lucide-react"
@@ -31,6 +33,7 @@ import { cn } from "@/lib/utils"
 import { detectBibleReferences } from "@/lib/bible/detect-references"
 import { detectBibleReferencesFromSpeech, type BibleReference } from "@/lib/bible/speech-detection"
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
+import { displayReference, verseLabel } from "@/lib/bible/format"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
 import { createClient } from "@/lib/supabase/client"
 
@@ -335,6 +338,19 @@ export default function BiblePage() {
     [sendPassage]
   )
 
+  // Step to the previous/next verse of the passage currently on screen
+  const stepVerse = useCallback(
+    (delta: number) => {
+      const verses = onScreenPassage?.verses
+      if (!onScreenPassage || !verses?.length) return
+      const current = verses.findIndex((v) => v.verse === onScreenPassage.verseNumber)
+      const next = current < 0 ? (delta > 0 ? 0 : verses.length - 1) : current + delta
+      if (next < 0 || next >= verses.length) return
+      sendVerseToScreen(onScreenPassage, verses[next])
+    },
+    [onScreenPassage, sendVerseToScreen]
+  )
+
   return (
     <div className="container max-w-3xl mx-auto py-8 space-y-6">
       {/* Page header */}
@@ -554,11 +570,10 @@ export default function BiblePage() {
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xl font-bold font-mono">
-                {onScreenPassage.reference}
-                {onScreenPassage.verseNumber && (
-                  <span className="text-violet-500 dark:text-violet-400 ml-1">
-                    · v{onScreenPassage.verseNumber}
-                  </span>
+                {displayReference(
+                  onScreenPassage.reference,
+                  onScreenPassage.verseNumber,
+                  onScreenPassage.verses
                 )}
               </span>
               <Badge variant="outline" className="text-xs">
@@ -569,27 +584,62 @@ export default function BiblePage() {
               {onScreenPassage.text}
             </blockquote>
 
-            {/* Verse navigation — click any verse number to send it */}
+            {/* Verse navigation — click any verse to send just that verse */}
             {onScreenPassage.verses && onScreenPassage.verses.length > 1 && (
               <div className="pt-1 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Navigate verses
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {onScreenPassage.verses.map((v) => (
-                    <button
-                      key={v.verse}
-                      onClick={() => sendVerseToScreen(onScreenPassage, v)}
-                      className={cn(
-                        "h-8 min-w-[2rem] px-2 rounded text-sm font-mono font-semibold transition-colors",
-                        onScreenPassage.verseNumber === v.verse
-                          ? "bg-violet-600 text-white"
-                          : "bg-muted hover:bg-violet-100 dark:hover:bg-violet-900/40 text-foreground border border-border"
-                      )}
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Verses — click to send
+                  </p>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => stepVerse(-1)}
+                      title="Previous verse"
                     >
-                      {v.verse}
-                    </button>
-                  ))}
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => stepVerse(1)}
+                      title="Next verse"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="max-h-72 overflow-y-auto rounded-md border divide-y bg-background/60">
+                  {onScreenPassage.verses.map((v) => {
+                    const active = onScreenPassage.verseNumber === v.verse
+                    return (
+                      <button
+                        key={v.verse}
+                        onClick={() => sendVerseToScreen(onScreenPassage, v)}
+                        className={cn(
+                          "flex w-full gap-3 px-3 py-2 text-left text-sm transition-colors",
+                          active
+                            ? "bg-violet-100 dark:bg-violet-900/40"
+                            : "hover:bg-muted"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "font-mono text-xs font-bold shrink-0 pt-0.5",
+                            active
+                              ? "text-violet-700 dark:text-violet-300"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {verseLabel(v)}
+                        </span>
+                        <span className="leading-relaxed">{v.text}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
