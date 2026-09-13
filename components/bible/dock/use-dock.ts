@@ -310,7 +310,10 @@ export function useDock() {
    */
   const send = useCallback(
     async (target: Target, opts?: { focusId?: string; translation?: TranslationId; live?: boolean }): Promise<boolean> => {
-      if (lockedRef.current) return false
+      // The lock protects the stream, not the operator's preparation: with preview
+      // on, a locked dock can still stage what's coming next.
+      const wouldGoLive = !previewFirstRef.current || !!opts?.live
+      if (lockedRef.current && wouldGoLive) return false
       const t = opts?.translation ?? translationRef.current
       setBusy(true)
       setError(null)
@@ -384,10 +387,11 @@ export function useDock() {
       translationRef.current = t
       setTranslationState(t)
       savePrefs({ translation: t })
-      if (lockedRef.current) return
 
       const stagedNow = stagedRef.current
-      const liveNow = onScreenRef.current
+      // While locked the live passage is left alone, but the preview is still the
+      // operator's to prepare.
+      const liveNow = lockedRef.current ? null : onScreenRef.current
       if (!stagedNow && !liveNow) return
 
       void (async () => {
@@ -517,6 +521,10 @@ export function useDock() {
   const canPrev = !locked && verses.length > 1 && (shown ? shown.page > 0 : true)
   const canNext = !locked && verses.length > 1 && (shown ? shown.page < shown.pages - 1 : true)
   const current = currentTarget()
+  /** Whether a send can start at all — locked still allows staging a preview. */
+  const canSend = !locked || previewFirst
+  /** Locked with preview on: sends land in the preview instead of on the stream. */
+  const stagingOnly = locked && previewFirst
 
   return {
     translation,
@@ -556,6 +564,8 @@ export function useDock() {
     clearRecent,
     // live safety
     locked,
+    canSend,
+    stagingOnly,
     setLocked,
     canUndo,
     undo,

@@ -20,7 +20,7 @@ type Tab = "recent" | "favourites" | "queue"
 export function HistoryPopover({ dock }: { dock: Dock }) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<Tab>("recent")
-  const { lists, locked } = dock
+  const { lists } = dock
   const queueCount = lists.queue.length
 
   return (
@@ -58,7 +58,7 @@ export function HistoryPopover({ dock }: { dock: Dock }) {
                         void dock.sendItem(it)
                         setOpen(false)
                       }}
-                      disabled={locked || dock.busy}
+                      disabled={!dock.canSend || dock.busy}
                       extra={
                         <button className="icon-btn" title={dock.isFavourite(it.apiPath) ? "Unpin" : "Pin to favourites"} onClick={() => dock.toggleFavourite(it)}>
                           <Star fill={dock.isFavourite(it.apiPath) ? "currentColor" : "none"} />
@@ -90,7 +90,7 @@ export function HistoryPopover({ dock }: { dock: Dock }) {
                         void dock.sendItem(it)
                         setOpen(false)
                       }}
-                      disabled={locked || dock.busy}
+                      disabled={!dock.canSend || dock.busy}
                       extra={
                         <button className="icon-btn" title="Unpin" onClick={() => dock.toggleFavourite(it)}>
                           <Trash2 />
@@ -137,7 +137,7 @@ function Row({
 function QueueTab({ dock, onSent }: { dock: Dock; onSent: () => void }) {
   const [text, setText] = useState("")
   const parsed = useMemo(() => parseReferenceInput(text), [text])
-  const { lists, locked } = dock
+  const { lists } = dock
 
   const add = () => {
     if (!parsed.best) return
@@ -191,7 +191,7 @@ function QueueTab({ dock, onSent }: { dock: Dock; onSent: () => void }) {
           {lists.queue.map((it, i) => (
             <div className="item-row" key={it.apiPath + it.at}>
               <span className="item-idx">{i + 1}</span>
-              <button className="item-main" onClick={() => { void dock.sendQueued(i); onSent() }} disabled={locked || dock.busy} title="Send and remove from queue">
+              <button className="item-main" onClick={() => { void dock.sendQueued(i); onSent() }} disabled={!dock.canSend || dock.busy} title={dock.stagingOnly ? "Send to preview and remove from queue" : "Send and remove from queue"}>
                 <span className="item-ref">{it.reference}</span>
               </button>
               <button className="icon-btn" title="Move up" onClick={() => dock.moveQueued(i, -1)} disabled={i === 0}>
@@ -208,9 +208,9 @@ function QueueTab({ dock, onSent }: { dock: Dock; onSent: () => void }) {
         </div>
       )}
       {lists.queue.length > 0 && (
-        <button className="btn-primary" style={{ width: "100%" }} disabled={locked || dock.busy} onClick={() => { void dock.sendQueued(0); onSent() }}>
+        <button className="btn-primary" style={{ width: "100%" }} disabled={!dock.canSend || dock.busy} onClick={() => { void dock.sendQueued(0); onSent() }}>
           <Send style={{ width: 13, height: 13, verticalAlign: "-2px", marginRight: 6 }} />
-          Send next: {lists.queue[0].reference}
+          {dock.stagingOnly ? "Preview next" : "Send next"}: {lists.queue[0].reference}
         </button>
       )}
     </>

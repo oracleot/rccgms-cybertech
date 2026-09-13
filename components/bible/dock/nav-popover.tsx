@@ -44,16 +44,16 @@ export function NavPopover({ dock }: { dock: Dock }) {
             <>
               <span className="section-label">{position ? `${position.book.name} ${position.chapter}` : "Nothing on screen"}</span>
               <div className="nav-grid">
-                <button className="btn-ghost" disabled={!position} onClick={() => goChapter(-1)}>
+                <button className="btn-ghost" disabled={!position || !dock.canSend} onClick={() => goChapter(-1)}>
                   <ChevronLeft /> Prev chapter
                 </button>
-                <button className="btn-ghost" disabled={!position} onClick={() => goChapter(1)}>
+                <button className="btn-ghost" disabled={!position || !dock.canSend} onClick={() => goChapter(1)}>
                   Next chapter <ChevronRight />
                 </button>
-                <button className="btn-ghost" disabled={!position} onClick={() => goBook(-1)}>
+                <button className="btn-ghost" disabled={!position || !dock.canSend} onClick={() => goBook(-1)}>
                   <ChevronsLeft /> Prev book
                 </button>
-                <button className="btn-ghost" disabled={!position} onClick={() => goBook(1)}>
+                <button className="btn-ghost" disabled={!position || !dock.canSend} onClick={() => goBook(1)}>
                   Next book <ChevronsRight />
                 </button>
               </div>
@@ -196,8 +196,8 @@ function Browser({ dock, onSent }: { dock: Dock; onSent: () => void }) {
             </div>
           )}
           <div className="hint">Tap a verse, then a later one for a range. No verse sends the whole chapter.</div>
-          <button className="btn-primary" style={{ width: "100%" }} disabled={loading || dock.busy} onClick={sendSelection}>
-            Send {selectionLabel}
+          <button className="btn-primary" style={{ width: "100%" }} disabled={loading || dock.busy || !dock.canSend} onClick={sendSelection}>
+            {dock.stagingOnly ? "Preview" : "Send"} {selectionLabel}
           </button>
         </>
       )}

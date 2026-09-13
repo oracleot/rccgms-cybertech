@@ -25,13 +25,20 @@ export function PreviewCard({ dock }: { dock: Dock }) {
         </div>
       )}
       <div className="row">
-        <button className="btn-primary" style={{ flex: 1 }} onClick={goLive} disabled={locked} title="Put this on the stream (Enter)">
+        <button
+          className="btn-primary"
+          style={{ flex: 1 }}
+          onClick={goLive}
+          disabled={locked}
+          title={locked ? "Unlock the live display to put this on the stream" : "Put this on the stream (Enter)"}
+        >
           Go live
         </button>
         <button className="btn-ghost" onClick={discardStaged}>
           Discard
         </button>
       </div>
+      {locked && <span className="hint">Live display is locked — unlock to put this on the stream.</span>}
     </div>
   )
 }

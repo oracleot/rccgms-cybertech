@@ -30,7 +30,13 @@ export function BibleDock() {
       <div className={`dock${dock.locked ? " is-locked" : ""}`}>
         {view === "bible" ? (
           <div className="pane">
-            <ReferenceInput busy={dock.busy} locked={dock.locked} translation={dock.translation} onSend={(t) => void dock.send(t)} />
+            <ReferenceInput
+              busy={dock.busy}
+              canSend={dock.canSend}
+              stagingOnly={dock.stagingOnly}
+              translation={dock.translation}
+              onSend={(t) => void dock.send(t)}
+            />
             {dock.error && <div className="error-msg">{dock.error}</div>}
 
             <select

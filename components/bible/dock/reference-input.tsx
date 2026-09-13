@@ -13,7 +13,10 @@ import type { Target } from "./use-dock"
 
 interface Props {
   busy: boolean
-  locked?: boolean
+  /** False when the live display is locked and there is no preview to stage into. */
+  canSend: boolean
+  /** Locked with preview on: what's sent lands in the preview, not on the stream. */
+  stagingOnly: boolean
   translation: string
   onSend: (target: Target) => void
 }
@@ -25,7 +28,7 @@ interface SearchState {
   error: string | null
 }
 
-export function ReferenceInput({ busy, locked = false, translation, onSend }: Props) {
+export function ReferenceInput({ busy, canSend, stagingOnly, translation, onSend }: Props) {
   const [text, setText] = useState("")
   const [chooser, setChooser] = useState<ParsedReference[] | null>(null)
   const [activeSuggestion, setActiveSuggestion] = useState(0)
@@ -72,7 +75,7 @@ export function ReferenceInput({ busy, locked = false, translation, onSend }: Pr
   }
 
   const submit = () => {
-    if (!text.trim() || busy || locked) return
+    if (!text.trim() || busy || !canSend) return
     if (showSuggestions) {
       pickSuggestion(parsed.bookSuggestions[activeSuggestion]?.name ?? parsed.bookSuggestions[0].name)
       return
@@ -108,8 +111,14 @@ export function ReferenceInput({ busy, locked = false, translation, onSend }: Pr
 
   const hint = (() => {
     if (chooser || search) return null
-    if (locked) return <span className="hint-line low">Live display is locked</span>
-    if (!text.trim()) return <span className="hint-line" />
+    if (!canSend) return <span className="hint-line low">Live display is locked</span>
+    if (!text.trim()) {
+      return stagingOnly ? (
+        <span className="hint-line medium">Live locked — sends go to the preview</span>
+      ) : (
+        <span className="hint-line" />
+      )
+    }
     if (parsed.best) {
       const r = parsed.best
       const label = parsed.needsConfirmation ? "Could be" : "Interpreted as"
@@ -117,7 +126,7 @@ export function ReferenceInput({ busy, locked = false, translation, onSend }: Pr
         <span className={`hint-line ${r.confidence}`}>
           {label}: <b>{r.reference}</b>
           {r.note ? ` — ${r.note}` : ""}
-          {parsed.needsConfirmation ? " · Enter to choose" : ""}
+          {parsed.needsConfirmation ? " · Enter to choose" : stagingOnly ? " · to preview" : ""}
         </span>
       )
     }
@@ -150,10 +159,10 @@ export function ReferenceInput({ busy, locked = false, translation, onSend }: Pr
         <button
           type="submit"
           className="btn-primary"
-          disabled={busy || locked || !text.trim() || (!parsed.best && !showSuggestions && !canSearch)}
+          disabled={busy || !canSend || !text.trim() || (!parsed.best && !showSuggestions && !canSearch)}
         >
           {busy ? <span className="spinner" /> : null}
-          {parsed.best || showSuggestions || !canSearch ? "Send" : "Search"}
+          {parsed.best || showSuggestions || !canSearch ? (stagingOnly ? "Preview" : "Send") : "Search"}
         </button>
       </form>
 
