@@ -16,6 +16,7 @@ Rotas, rundowns, livestreams, meetings — one app instead of five spreadsheets 
 
 - [Features](#features)
 - [Quick Start](#quick-start)
+- [OBS Integration](#obs-integration)
 - [Architecture](#architecture)
 - [Development](#development)
 - [Database Migrations](#database-migrations)
@@ -33,6 +34,7 @@ Rotas, rundowns, livestreams, meetings — one app instead of five spreadsheets 
 | 📡 **Livestream** | AI-generated YouTube/Facebook descriptions in a church-announcement format |
 | 🎨 **Designs** | Design request tracking, assignment, and file delivery |
 | 🎓 **Training** | Training tracks, step-by-step progress, and certificates |
+| 📖 **Bible Reader** | AI voice-detection that auto-displays Bible passages on the projection screen — with OBS overlay + dock support |
 
 ## Quick Start
 
@@ -95,6 +97,75 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
+---
+
+## OBS Integration
+
+The Bible Reader includes two URL-based OBS integrations — no plugin installation required. OBS loads them as web pages using its built-in Chromium browser, and they update in real time via Supabase Realtime.
+
+> **How it works:** When the operator clicks **Send** in the Bible Reader (or the OBS Dock), the passage is broadcast over a Supabase Realtime channel (`bible-obs`). The overlay page receives it and slides the verse onto stream instantly. No WebSocket server to run, no `.dll` to install.
+
+### 1. Stream Overlay (Browser Source)
+
+Displays the current Bible passage as a transparent lower-third overlay on your stream.
+
+**OBS Setup:**
+
+1. In OBS, click **+** → **Browser Source**
+2. Set the URL:
+   ```
+   https://rccgms-cybertech.vercel.app/bible/obs
+   ```
+3. Width: `1920` — Height: `1080`
+4. Paste this into **Custom CSS**:
+   ```css
+   body { background: transparent !important; }
+   ```
+5. Check **Shutdown source when not visible**
+6. Click **OK**
+
+The overlay shows the Bible reference and verse text in a dark frosted-glass card at the bottom of the frame, with a smooth slide-in animation each time a new passage is sent.
+
+### 2. Control Dock (Custom Browser Dock)
+
+A compact control panel that lives **inside OBS** so the operator can send passages to the overlay without switching windows.
+
+**OBS Setup:**
+
+1. In OBS, go to **View → Docks → Custom Browser Docks**
+2. Enter:
+   - **Dock Name:** `Bible Control`
+   - **URL:**
+     ```
+     https://rccgms-cybertech.vercel.app/bible/obs/dock
+     ```
+3. Click **Apply**
+4. The dock appears as a panel — drag it to wherever suits your OBS layout
+
+**Dock features:**
+- **On Screen** — live preview of the current passage (updates from any source)
+- **Send Reference** — type any reference (e.g. `John 3:16`, `Psalm 23`, `1 Cor 13:4-7`) and hit Send
+- **Translation** — switch between KJV, WEB, ASV, BBE, YLT without leaving OBS
+- **Quick Send** — one-click buttons for 6 common passages
+- **Clear Screen** — hide the overlay (button appears only when something is live)
+
+### Why not a traditional OBS plugin?
+
+Traditional OBS plugins are compiled C++ `.dll` / `.so` files. This integration uses OBS's built-in **Browser Source** feature instead — which is the standard, recommended way to add web-powered overlays. The advantages are:
+
+| | Browser Source (this) | C++ Plugin |
+|---|---|---|
+| Installation | None — just a URL | Download + copy `.dll` to OBS folder |
+| Updates | Automatic with every Vercel deploy | Manual reinstall |
+| OBS version | Works on any OBS version with Browser Source | Must match OBS version |
+| Cross-platform | Windows, Mac, Linux | Separate build per platform |
+
+### Bible Reader (in-app)
+
+The full Bible Reader at `/bible` also has voice detection — the mic auto-starts when the page opens in Chrome or Edge. As the pastor speaks, AI detects Bible references and offers to send them to the screen (and the OBS overlay simultaneously).
+
+---
+
 ## Architecture
 
 ### Tech Stack
@@ -132,6 +203,11 @@ app/
 │   ├── designs/         # Design request tracking
 │   └── training/        # Training tracks
 ├── availability/        # Public (signed-out) availability form
+├── bible/
+│   └── obs/             # OBS integrations (public, no auth)
+│       ├── page.tsx     # Stream overlay — load as OBS Browser Source
+│       └── dock/
+│           └── page.tsx # Control dock — load as OBS Custom Browser Dock
 └── api/                 # API routes + cron jobs
 
 components/
