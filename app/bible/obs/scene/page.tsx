@@ -146,6 +146,13 @@ export default function BibleObsScenePage() {
         .reference { font-weight: 700; letter-spacing: 0.01em; }
         .translation { font-weight: 400; opacity: 0.75; }
         .verse-text { line-height: 1.42; }
+        .inline-num {
+          font-size: 0.48em;
+          font-weight: 700;
+          margin-right: 0.3em;
+          vertical-align: super;
+          line-height: 0;
+        }
       `}</style>
 
       <div
@@ -164,6 +171,11 @@ export default function BibleObsScenePage() {
                   textShadow,
                 }}
               >
+                {settings.inlineNumber && passage.verseNumber != null && (
+                  <sup className="inline-num" style={{ color: settings.accent }}>
+                    {passage.verseNumber}
+                  </sup>
+                )}
                 {passage.text}
               </div>
               {settings.refPos === "bottom" && referenceBlock}

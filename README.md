@@ -139,11 +139,12 @@ Click the **gear icon** at the bottom of the OBS dock to open **Scene Appearance
 | **Text colour** / **Reference colour** | Colour pickers |
 | **Drop shadow** | Keeps text legible over video — turn off over a plain background |
 | **Show translation** | The `(KJV)` suffix on the reference |
+| **Inline verse number** | Puts the verse number in front of the text as a superscript — `³ And God said, Let there be light` — the way a printed Bible sets it |
 | **Reset to defaults** | Back to transparent, centred, serif |
 
 Note the background covers the **whole frame**, not just a band behind the text. For a lower-third band, use the dedicated overlay below instead.
 
-Settings are remembered by the scene itself, so a source that restarts comes back looking the same. To preset the look without opening the dock, URL parameters still work and win on first load: `?bg=000000cc&pos=bottom&size=0.8&ref=hide&font=sans&color=ffffff&accent=ffd700&shadow=0&translation=0`.
+Settings are remembered by the scene itself, so a source that restarts comes back looking the same. To preset the look without opening the dock, URL parameters still work and win on first load: `?bg=000000cc&pos=bottom&size=0.8&ref=hide&font=sans&color=ffffff&accent=ffd700&shadow=0&translation=0&inline=1`.
 
 ### 2. Lower-Third Overlay (Browser Source)
 

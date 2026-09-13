@@ -543,6 +543,16 @@ export default function BibleObsDockPage() {
                 />
               </div>
 
+              <div className="srow">
+                <span>Inline verse number</span>
+                <input
+                  type="checkbox"
+                  checked={settings.inlineNumber}
+                  onChange={(e) => update("inlineNumber", e.target.checked)}
+                />
+              </div>
+              <div className="hint">Puts the number in front of the text, like ³ And God said…</div>
+
               <div className="divider" />
               <button className="btn-reset" onClick={() => pushSettings(SCENE_DEFAULTS)}>
                 Reset to defaults

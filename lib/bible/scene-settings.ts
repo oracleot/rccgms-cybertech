@@ -18,6 +18,7 @@ export interface SceneSettings {
   accent: string
   shadow: boolean
   showTranslation: boolean
+  inlineNumber: boolean
 }
 
 export const SCENE_DEFAULTS: SceneSettings = {
@@ -31,6 +32,7 @@ export const SCENE_DEFAULTS: SceneSettings = {
   accent: "#e8ddff",
   shadow: true,
   showTranslation: true,
+  inlineNumber: false,
 }
 
 export const SCENE_SETTINGS_KEY = "bible-obs-scene-settings"
@@ -85,6 +87,7 @@ export function normalize(raw: unknown): SceneSettings {
     accent: parseHex(p.accent ?? null, SCENE_DEFAULTS.accent),
     shadow: p.shadow !== false,
     showTranslation: p.showTranslation !== false,
+    inlineNumber: p.inlineNumber === true,
   }
 }
 
@@ -109,6 +112,7 @@ export function settingsFromQuery(search: string): Partial<SceneSettings> {
   if (p.get("accent")) out.accent = parseHex(p.get("accent"), SCENE_DEFAULTS.accent)
   if (p.get("shadow")) out.shadow = p.get("shadow") !== "0"
   if (p.get("translation")) out.showTranslation = p.get("translation") !== "0"
+  if (p.get("inline")) out.inlineNumber = p.get("inline") === "1"
   return out
 }
 
