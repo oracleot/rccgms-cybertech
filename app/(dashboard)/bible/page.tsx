@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
+  Tv2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,6 +32,7 @@ import { detectBibleReferences } from "@/lib/bible/detect-references"
 import { detectBibleReferencesFromSpeech, type BibleReference } from "@/lib/bible/speech-detection"
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
+import { createClient } from "@/lib/supabase/client"
 
 // Self-contained Web Speech API types — vendor-prefixed, not guaranteed in all TS DOM libs
 declare global {
@@ -70,6 +72,7 @@ declare global {
 }
 
 const BROADCAST_CHANNEL = "rundown-display"
+const OBS_REALTIME_CHANNEL = "bible-obs"
 
 // ---------------------------------------------------------------------------
 // Accent / language options for Web Speech API
@@ -156,7 +159,24 @@ export default function BiblePage() {
 
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const transcriptRef = useRef("")
+  const autoStartedRef = useRef(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const obsChannelRef = useRef<any>(null)
   const { sendPassage, clearPassage } = useBibleBroadcast()
+
+  // Set up Supabase Realtime channel for OBS broadcast
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase.channel(OBS_REALTIME_CHANNEL, {
+      config: { broadcast: { self: false } },
+    })
+    channel.subscribe()
+    obsChannelRef.current = channel
+    return () => {
+      channel.unsubscribe()
+      obsChannelRef.current = null
+    }
+  }, [])
 
   // Load mishearing log from localStorage on mount
   useEffect(() => {
@@ -224,6 +244,14 @@ export default function BiblePage() {
     setIsListening(false)
   }, [])
 
+  // Auto-start listening as soon as speech recognition is available on mount
+  useEffect(() => {
+    if (speechSupported && !autoStartedRef.current) {
+      autoStartedRef.current = true
+      startListening()
+    }
+  }, [speechSupported, startListening])
+
   const sendRefToScreen = useCallback(
     async (ref: BibleReference | string) => {
       const label = typeof ref === "string" ? ref : ref.reference
@@ -241,6 +269,12 @@ export default function BiblePage() {
         }
         sendPassage(payload)
         setOnScreenPassage(payload)
+        // Broadcast to OBS overlay via Supabase Realtime
+        obsChannelRef.current?.send({
+          type: "broadcast",
+          event: "passage",
+          payload,
+        })
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not fetch passage. Check the reference and try again.")
       } finally {
@@ -281,6 +315,7 @@ export default function BiblePage() {
   const handleClear = useCallback(() => {
     clearPassage()
     setOnScreenPassage(null)
+    obsChannelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
   }, [clearPassage])
 
   return (
@@ -298,6 +333,20 @@ export default function BiblePage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs hidden sm:flex"
+            onClick={() => {
+              const url = `${window.location.origin}/bible/obs`
+              navigator.clipboard.writeText(url).catch(() => {})
+              window.open(url, "_blank", "noopener,noreferrer")
+            }}
+            title="Open OBS overlay page (add as Browser Source in OBS)"
+          >
+            <Tv2 className="h-3.5 w-3.5" />
+            OBS Overlay
+          </Button>
           <Select
             value={accent}
             onValueChange={(v) => {
@@ -373,9 +422,9 @@ export default function BiblePage() {
 
           {speechSupported && !isListening && !transcript && (
             <p className="text-sm text-muted-foreground">
-              Click <strong>Start Listening</strong> and the AI will automatically detect
-              Bible references as the pastor speaks — "John 3:16", "Psalm 23", "First
-              Corinthians 13 verse 4" — and offer to put them on screen instantly.
+              Microphone is ready. The AI automatically detects Bible references as the
+              pastor speaks — "John 3:16", "Psalm 23", "First Corinthians 13 verse 4" —
+              and offers to put them on screen instantly.
             </p>
           )}
 
