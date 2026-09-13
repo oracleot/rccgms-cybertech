@@ -16,6 +16,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { normalizeReference, rangeReference, verseId } from "@/lib/bible/format"
 import { obsChannelName } from "@/lib/bible/obs-channel"
+import { loadLock, saveLock, type LockPayload } from "@/lib/bible/obs-lock"
 import {
   SCENE_DEFAULTS,
   bgToCss,
@@ -41,6 +42,8 @@ interface PassagePayload {
   verseNumber?: number
   focusId?: string
   verses?: Verse[]
+  /** Replaying what is already live (scene switch, reconnect) rather than changing it. */
+  restore?: boolean
 }
 
 /** What the display is currently showing — reported to the dock after every layout. from/to are verse ids. */
@@ -278,8 +281,12 @@ export function BibleObsSurface() {
   const layoutRef = useRef<Layout | null>(null)
   const pagerRef = useRef<Pager | null>(null)
   const lastReportRef = useRef("")
+  const lockedRef = useRef(false)
 
   useEffect(() => {
+    // Restored before the channel opens, so a source that restarts while locked
+    // can't be changed in the gap before a dock tells it the lock state.
+    lockedRef.current = loadLock()
     setSettings(normalize({ ...loadSettings(), ...settingsFromQuery(window.location.search) }))
     if (isPreview()) {
       setPassage(PREVIEW_PASSAGE)
@@ -294,8 +301,13 @@ export function BibleObsSurface() {
     const channel = supabase.channel(obsChannelName(), {
       config: { broadcast: { self: false } },
     })
+    const announceLock = () =>
+      channel.send({ type: "broadcast", event: "lock-state", payload: { locked: lockedRef.current } })
+
     channel
       .on("broadcast", { event: "passage" }, ({ payload }: { payload: PassagePayload }) => {
+        // While locked, only a restore of what is already live gets through.
+        if (lockedRef.current && !payload.restore) return
         // A new passage always gets reported, even if it lands on the same verse numbers.
         lastReportRef.current = ""
         setPassage(payload)
@@ -303,19 +315,32 @@ export function BibleObsSurface() {
         setVisible(true)
       })
       .on("broadcast", { event: "clear" }, () => {
+        if (lockedRef.current) return
         setVisible(false)
       })
       .on("broadcast", { event: "nav" }, ({ payload }: { payload: { delta?: number; page?: number } }) => {
+        if (lockedRef.current) return
         const L = layoutRef.current
         if (!L) return
         const target = payload.page ?? L.page + (payload.delta ?? 0)
         const clamped = Math.min(Math.max(target, 0), L.pages.length - 1)
         if (clamped !== L.page) setFocus(verseId(L.pages[clamped][0]))
       })
+      // Appearance is not scripture, so the lock doesn't hold it back.
       .on("broadcast", { event: "settings" }, ({ payload }: { payload: unknown }) => {
         const next = normalize(payload)
         setSettings(next)
         saveSettings(next)
+      })
+      // A dock is where the operator toggles the lock, so its value wins here.
+      .on("broadcast", { event: "lock" }, ({ payload }: { payload: LockPayload }) => {
+        const on = !!payload?.locked
+        lockedRef.current = on
+        saveLock(on)
+        void announceLock()
+      })
+      .on("broadcast", { event: "request-lock" }, () => {
+        void announceLock()
       })
       .subscribe((status: string) => {
         // OBS shuts this source down whenever its scene isn't visible, so on every
@@ -323,6 +348,7 @@ export function BibleObsSurface() {
         // rather than coming back blank mid-reading.
         if (status === "SUBSCRIBED") {
           channel.send({ type: "broadcast", event: "request-state", payload: {} })
+          void announceLock()
         }
       })
     channelRef.current = channel

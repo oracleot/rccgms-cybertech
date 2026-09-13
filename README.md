@@ -209,8 +209,8 @@ Behind the clock icon. **Recent** is the last 30 passages sent, with a star to p
 ### Live safety
 
 - **Undo** re-broadcasts the previous live state, ten steps deep; undoing the first send clears the screen.
-- **Lock** disables every path that could change the stream — typing, verse clicks, arrows, shortcuts, Clear, translation reload — and says so in the field. It is enforced by this dock: a Bible Reader on another machine can still send.
-- **Preview before live** (Settings, off by default) parks a sent passage in a preview card until you press **Go live** or Enter. Off, the workflow stays one step.
+- **Lock** is enforced by the OBS display itself, so it holds across every client on the channel: while locked, the display refuses any attempt to change or clear the live scripture — from this dock, a second dock, or a Bible Reader on another machine. The lock travels over the same realtime channel, every dock shows it, and both the dock and the display remember it, so an OBS source or dock that restarts comes back locked rather than quietly open. Restoring what is already live after a scene switch still works, because a restore is not a change. Appearance settings are not scripture and stay adjustable.
+- **Preview before live** (Settings, off by default) parks a sent passage in a preview card until you press **Go live** or Enter. Off, the workflow stays one step. Changing translation keeps live and preview as they are: a live passage is updated on the stream, a staged one is updated in the preview — preview mode never pulls a passage off the stream.
 
 ### Display modes and verse navigation
 

@@ -12,6 +12,7 @@ import type { FetchedPassage, TranslationId } from "@/lib/bible/fetch-passage"
 import { loadPassage, prefetchTranslationsWhenIdle, PassageUnavailableError } from "@/lib/bible/passage-store"
 import { normalizeReference, verseId } from "@/lib/bible/format"
 import { obsChannelName } from "@/lib/bible/obs-channel"
+import { loadLock, saveLock, type LockPayload } from "@/lib/bible/obs-lock"
 import { SCENE_DEFAULTS, loadSettings, saveSettings, type SceneSettings } from "@/lib/bible/scene-settings"
 import { bookFromApiName, nextBook, nextChapter, prevBook, prevChapter, type BookInfo } from "@/lib/bible/books"
 import {
@@ -44,6 +45,8 @@ export interface PassagePayload {
   verseNumber?: number
   focusId?: string
   verses?: Verse[]
+  /** Replaying what is already live (scene switch, reconnect) rather than changing it. */
+  restore?: boolean
 }
 
 /** Something the operator can send: what to ask the API for, and how to label it. */
@@ -135,7 +138,10 @@ export function useDock() {
   const settingsRef = useRef(settings)
   const onScreenRef = useRef<PassagePayload | null>(null)
   const shownRef = useRef<DisplayState | null>(null)
-  const lastTargetRef = useRef<Target | null>(null)
+  // Tracked apart, so changing translation reloads the right one rather than
+  // whichever happened to be fetched last.
+  const liveTargetRef = useRef<Target | null>(null)
+  const stagedTargetRef = useRef<Target | null>(null)
   const lockedRef = useRef(false)
   const previewFirstRef = useRef(false)
   const stagedRef = useRef<PassagePayload | null>(null)
@@ -154,6 +160,9 @@ export function useDock() {
     previewFirstRef.current = !!prefs.previewFirst
     setPreviewFirstState(!!prefs.previewFirst)
     setLists(loadLists())
+    const wasLocked = loadLock()
+    lockedRef.current = wasLocked
+    setLockedState(wasLocked)
   }, [])
 
   useEffect(() => {
@@ -169,16 +178,26 @@ export function useDock() {
     stagedRef.current = staged
   }, [staged])
 
+  const applyLock = useCallback((on: boolean) => {
+    lockedRef.current = on
+    setLockedState(on)
+    saveLock(on)
+  }, [])
+
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase.channel(obsChannelName(), {
       config: { broadcast: { self: true } },
     })
     channel
+      // The display refuses scripture changes while locked, so this mirror must too —
+      // otherwise the dock drifts away from the stream and restores the wrong thing.
       .on("broadcast", { event: "passage" }, ({ payload }: { payload: PassagePayload }) => {
+        if (lockedRef.current && !payload.restore) return
         setOnScreen(payload)
       })
       .on("broadcast", { event: "clear" }, () => {
+        if (lockedRef.current) return
         setOnScreen(null)
         setShown(null)
         setFocus(null)
@@ -190,21 +209,35 @@ export function useDock() {
       // already live so it renders the current verse instead of coming back blank.
       .on("broadcast", { event: "request-state" }, () => {
         channel.send({ type: "broadcast", event: "settings", payload: settingsRef.current })
+        channel.send({ type: "broadcast", event: "lock", payload: { locked: lockedRef.current } })
         const cur = onScreenRef.current
         if (cur) {
           channel.send({
             type: "broadcast",
             event: "passage",
-            payload: withFocus(cur, shownRef.current?.from ?? cur.focusId),
+            // Marked as a restore so a locked display replays it instead of refusing it.
+            payload: { ...withFocus(cur, shownRef.current?.from ?? cur.focusId), restore: true },
           })
         }
       })
-      .subscribe()
+      // Another dock changed the lock, or the display reported where it stands.
+      .on("broadcast", { event: "lock" }, ({ payload }: { payload: LockPayload }) => {
+        applyLock(!!payload?.locked)
+      })
+      .on("broadcast", { event: "lock-state" }, ({ payload }: { payload: LockPayload }) => {
+        applyLock(!!payload?.locked)
+      })
+      .subscribe((status: string) => {
+        // A dock opened after the display needs to know whether the stream is locked.
+        if (status === "SUBSCRIBED") {
+          channel.send({ type: "broadcast", event: "request-lock", payload: {} })
+        }
+      })
     channelRef.current = channel
     return () => {
       channel.unsubscribe()
     }
-  }, [])
+  }, [applyLock])
 
   const updateLists = useCallback((fn: (l: DockLists) => DockLists) => {
     setLists((prev) => {
@@ -285,12 +318,14 @@ export function useDock() {
         const passage = await loadPassage(target.apiPath, t, "high")
         const single = passage.verses.length === 1 ? verseId(passage.verses[0]) : undefined
         const payload = withFocus(toPayload(passage), opts?.focusId ?? single)
-        lastTargetRef.current = { apiPath: target.apiPath, reference: passage.reference }
+        const loaded = { apiPath: target.apiPath, reference: passage.reference }
         prefetchTranslationsWhenIdle(target.apiPath, t, passage.verses.length)
         if (previewFirstRef.current && !opts?.live) {
+          stagedTargetRef.current = loaded
           setStaged(payload)
           return false
         }
+        liveTargetRef.current = loaded
         broadcast(payload)
         updateLists((l) => pushRecent(l, { apiPath: target.apiPath, reference: passage.reference }))
         return true
@@ -308,36 +343,63 @@ export function useDock() {
     const s = stagedRef.current
     if (!s || lockedRef.current) return
     broadcast(s)
-    const target = lastTargetRef.current ?? targetFromReference(s.reference)
+    const target = stagedTargetRef.current ?? targetFromReference(s.reference)
+    liveTargetRef.current = target
+    stagedTargetRef.current = null
     updateLists((l) => pushRecent(l, { apiPath: target.apiPath, reference: s.reference }))
     setStaged(null)
   }, [broadcast, updateLists])
 
-  const discardStaged = useCallback(() => setStaged(null), [])
+  const discardStaged = useCallback(() => {
+    stagedTargetRef.current = null
+    setStaged(null)
+  }, [])
 
   const setPreviewFirst = useCallback((on: boolean) => {
     previewFirstRef.current = on
     setPreviewFirstState(on)
     savePrefs({ previewFirst: on })
-    if (!on) setStaged(null)
+    if (!on) {
+      stagedTargetRef.current = null
+      setStaged(null)
+    }
   }, [])
 
-  const setLocked = useCallback((on: boolean) => {
-    lockedRef.current = on
-    setLockedState(on)
-  }, [])
+  /** The display enforces this, so every client on the channel is held to it. */
+  const setLocked = useCallback(
+    (on: boolean) => {
+      applyLock(on)
+      channelRef.current?.send({ type: "broadcast", event: "lock", payload: { locked: on } })
+    },
+    [applyLock]
+  )
 
-  /** Re-load what is live in another translation, keeping the same verse or page in view. */
+  /**
+   * Re-load in another translation, keeping the same verse or page in view.
+   * Live stays live and staged stays staged: with preview on, changing
+   * translation must never pull a passage off the stream into the preview.
+   */
   const changeTranslation = useCallback(
     (t: TranslationId) => {
       translationRef.current = t
       setTranslationState(t)
       savePrefs({ translation: t })
       if (lockedRef.current) return
-      const cur = stagedRef.current ?? onScreenRef.current
-      if (!cur) return
-      const target = lastTargetRef.current ?? targetFromReference(cur.reference)
-      void send(target, { translation: t, focusId: shownRef.current?.from ?? cur.focusId })
+
+      const stagedNow = stagedRef.current
+      const liveNow = onScreenRef.current
+      if (!stagedNow && !liveNow) return
+
+      void (async () => {
+        if (stagedNow) {
+          const target = stagedTargetRef.current ?? targetFromReference(stagedNow.reference)
+          await send(target, { translation: t, focusId: stagedNow.focusId })
+        }
+        if (liveNow) {
+          const target = liveTargetRef.current ?? targetFromReference(liveNow.reference)
+          await send(target, { translation: t, focusId: shownRef.current?.from ?? liveNow.focusId, live: true })
+        }
+      })()
     },
     [send]
   )
@@ -390,7 +452,7 @@ export function useDock() {
   const currentTarget = useCallback((): Target | null => {
     const cur = onScreenRef.current
     if (!cur) return null
-    return lastTargetRef.current ?? targetFromReference(cur.reference)
+    return liveTargetRef.current ?? targetFromReference(cur.reference)
   }, [])
 
   const sendItem = useCallback((item: Target) => send({ apiPath: item.apiPath, reference: item.reference }), [send])

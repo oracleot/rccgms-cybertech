@@ -34,6 +34,7 @@ import { displayReference, verseId, verseLabel } from "@/lib/bible/format"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
 import { createClient } from "@/lib/supabase/client"
 import { obsChannelName } from "@/lib/bible/obs-channel"
+import type { LockPayload } from "@/lib/bible/obs-lock"
 import { ListeningPanel } from "@/components/bible/listening/listening-panel"
 import { useListening } from "@/components/bible/listening/use-listening"
 
@@ -126,6 +127,8 @@ export default function BiblePage() {
 
   // Listening starts only when the operator presses Start — never on load.
   const listening = useListening(accent)
+  const [liveLocked, setLiveLocked] = useState(false)
+  const lockedRef = useRef(false)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const obsChannelRef = useRef<any>(null)
   const { sendPassage, clearPassage } = useBibleBroadcast()
@@ -136,7 +139,22 @@ export default function BiblePage() {
     const channel = supabase.channel(obsChannelName(), {
       config: { broadcast: { self: false } },
     })
-    channel.subscribe()
+    channel
+      // The OBS display refuses scripture changes while locked; track it so this
+      // page says so rather than looking like it sent something that never lands.
+      .on("broadcast", { event: "lock" }, ({ payload }: { payload: LockPayload }) => {
+        lockedRef.current = !!payload?.locked
+        setLiveLocked(!!payload?.locked)
+      })
+      .on("broadcast", { event: "lock-state" }, ({ payload }: { payload: LockPayload }) => {
+        lockedRef.current = !!payload?.locked
+        setLiveLocked(!!payload?.locked)
+      })
+      .subscribe((status: string) => {
+        if (status === "SUBSCRIBED") {
+          channel.send({ type: "broadcast", event: "request-lock", payload: {} })
+        }
+      })
     obsChannelRef.current = channel
     return () => {
       channel.unsubscribe()
@@ -151,6 +169,10 @@ export default function BiblePage() {
 
   const sendRefToScreen = useCallback(
     async (ref: SendTarget) => {
+      if (lockedRef.current) {
+        setError("The live display is locked from the OBS dock. Unlock it there to change what is on screen.")
+        return
+      }
       setLoadingRef(ref.reference)
       setIsLoading(true)
       setError(null)
@@ -220,6 +242,10 @@ export default function BiblePage() {
   }
 
   const handleClear = useCallback(() => {
+    if (lockedRef.current) {
+      setError("The live display is locked from the OBS dock. Unlock it there to clear the screen.")
+      return
+    }
     clearPassage()
     setOnScreenPassage(null)
     obsChannelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
@@ -285,6 +311,11 @@ export default function BiblePage() {
             <Tv2 className="h-3.5 w-3.5" />
             OBS Display
           </Button>
+          {liveLocked && (
+            <Badge variant="outline" className="gap-1 border-destructive/40 text-destructive">
+              Live display locked
+            </Badge>
+          )}
           <Select value={accent} onValueChange={(v) => setAccent(v as AccentId)}>
             <SelectTrigger className="w-44">
               <SelectValue placeholder="Accent" />
