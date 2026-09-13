@@ -11,14 +11,22 @@
  *   2. URL: https://<your-domain>/bible/obs/scene
  *   3. Width: 1920, Height: 1080 — no Custom CSS needed
  *
- * Appearance is controlled by URL parameters, e.g.
- *   /bible/obs/scene?pos=bottom&size=0.8&bg=000000cc
- * See SETTINGS below for the full list.
+ * Appearance is set from the OBS dock's settings panel. URL parameters
+ * (see settingsFromQuery) still work and win on first load.
  */
 
 import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { displayReference } from "@/lib/bible/format"
+import {
+  SCENE_DEFAULTS,
+  bgToCss,
+  loadSettings,
+  normalize,
+  saveSettings,
+  settingsFromQuery,
+  type SceneSettings,
+} from "@/lib/bible/scene-settings"
 
 const OBS_CHANNEL = "bible-obs"
 
@@ -38,66 +46,15 @@ interface PassagePayload {
   verses?: Verse[]
 }
 
-interface SceneSettings {
-  bg: string
-  pos: "center" | "top" | "bottom"
-  scale: number
-  refPos: "top" | "bottom" | "hide"
-  serif: boolean
-  color: string
-  accent: string
-  shadow: boolean
-  showTranslation: boolean
-}
-
-const DEFAULTS: SceneSettings = {
-  bg: "transparent",
-  pos: "center",
-  scale: 1,
-  refPos: "top",
-  serif: true,
-  color: "#ffffff",
-  accent: "#e8ddff",
-  shadow: true,
-  showTranslation: true,
-}
-
-/** Accepts "transparent", "c4a6ff", "#c4a6ff", "000000cc" or any CSS colour name. */
-function parseColor(raw: string | null, fallback: string): string {
-  if (!raw) return fallback
-  const v = raw.trim()
-  if (!v) return fallback
-  if (/^[0-9a-f]{3,8}$/i.test(v)) return `#${v}`
-  return v
-}
-
-function readSettings(search: string): SceneSettings {
-  const p = new URLSearchParams(search)
-  const pos = p.get("pos")
-  const refPos = p.get("ref")
-  const size = Number(p.get("size"))
-  return {
-    bg: parseColor(p.get("bg"), DEFAULTS.bg),
-    pos: pos === "top" || pos === "bottom" ? pos : DEFAULTS.pos,
-    scale: Number.isFinite(size) && size > 0 ? Math.min(size, 3) : DEFAULTS.scale,
-    refPos: refPos === "bottom" || refPos === "hide" ? refPos : DEFAULTS.refPos,
-    serif: p.get("font") !== "sans",
-    color: parseColor(p.get("color"), DEFAULTS.color),
-    accent: parseColor(p.get("accent"), DEFAULTS.accent),
-    shadow: p.get("shadow") !== "0",
-    showTranslation: p.get("translation") !== "0",
-  }
-}
-
 export default function BibleObsScenePage() {
   const [passage, setPassage] = useState<PassagePayload | null>(null)
   const [visible, setVisible] = useState(false)
-  const [settings, setSettings] = useState<SceneSettings>(DEFAULTS)
+  const [settings, setSettings] = useState<SceneSettings>(SCENE_DEFAULTS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
 
   useEffect(() => {
-    setSettings(readSettings(window.location.search))
+    setSettings(normalize({ ...loadSettings(), ...settingsFromQuery(window.location.search) }))
   }, [])
 
   useEffect(() => {
@@ -113,7 +70,19 @@ export default function BibleObsScenePage() {
       .on("broadcast", { event: "clear" }, () => {
         setVisible(false)
       })
-      .subscribe()
+      .on("broadcast", { event: "settings" }, ({ payload }: { payload: unknown }) => {
+        const next = normalize(payload)
+        setSettings(next)
+        saveSettings(next)
+      })
+      .subscribe((status: string) => {
+        // OBS shuts this source down whenever the scene isn't visible, so on every
+        // switch back we ask the dock for the verse and look that are already live
+        // rather than coming back blank mid-reading.
+        if (status === "SUBSCRIBED") {
+          channel.send({ type: "broadcast", event: "request-state", payload: {} })
+        }
+      })
     channelRef.current = channel
     return () => {
       channel.unsubscribe()
@@ -125,11 +94,9 @@ export default function BibleObsScenePage() {
   const fontFamily = settings.serif
     ? "'Georgia', 'Times New Roman', serif"
     : "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-  const textShadow = settings.shadow ? "0 3px 18px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.9)" : "none"
-
-  const reference = passage
-    ? displayReference(passage.reference, passage.verseNumber, passage.verses)
-    : ""
+  const textShadow = settings.shadow
+    ? "0 3px 18px rgba(0,0,0,0.75), 0 1px 3px rgba(0,0,0,0.9)"
+    : "none"
 
   const referenceBlock = passage && settings.refPos !== "hide" && (
     <div
@@ -142,7 +109,7 @@ export default function BibleObsScenePage() {
         marginBottom: settings.refPos === "top" ? `${36 * settings.scale}px` : 0,
       }}
     >
-      {reference}
+      {displayReference(passage.reference, passage.verseNumber, passage.verses)}
       {settings.showTranslation && (
         <span className="translation" style={{ fontSize: `${28 * settings.scale}px` }}>
           {" "}
@@ -175,16 +142,16 @@ export default function BibleObsScenePage() {
           text-align: center;
           transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22,1,0.36,1);
         }
-        .content.hidden {
-          opacity: 0;
-          transform: translateY(20px);
-        }
+        .content.hidden { opacity: 0; transform: translateY(20px); }
         .reference { font-weight: 700; letter-spacing: 0.01em; }
         .translation { font-weight: 400; opacity: 0.75; }
         .verse-text { line-height: 1.42; }
       `}</style>
 
-      <div className="scene" style={{ background: settings.bg, justifyContent: justify, fontFamily }}>
+      <div
+        className="scene"
+        style={{ background: bgToCss(settings), justifyContent: justify, fontFamily }}
+      >
         <div className={`content${visible ? "" : " hidden"}`}>
           {passage && (
             <>

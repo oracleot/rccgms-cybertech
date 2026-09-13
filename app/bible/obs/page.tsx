@@ -58,6 +58,10 @@ export default function BibleObsPage() {
       })
       .subscribe((status) => {
         setConnected(status === "SUBSCRIBED")
+        // Ask for the live verse so an OBS source that just restarted isn't blank
+        if (status === "SUBSCRIBED") {
+          channel.send({ type: "broadcast", event: "request-state", payload: {} })
+        }
       })
 
     channelRef.current = channel

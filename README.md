@@ -127,36 +127,23 @@ The reference renders above the verse text (`Genesis 1:2 (KJV)`), both centred w
 
 #### Scene appearance settings
 
-Appearance is controlled by adding parameters to the URL — no rebuild, no Custom CSS. Combine them with `&`:
+Click the **gear icon** at the bottom of the OBS dock to open **Scene Appearance**. Changes apply to the scene instantly — no URL editing, no reloading the source.
 
-```
-https://rccgms-cybertech.vercel.app/bible/obs/scene?pos=bottom&size=0.8&bg=000000cc
-```
+| Setting | What it does |
+|---------|--------------|
+| **Background** | Colour picker plus an opacity slider. **0% is fully transparent** so your own background shows through; raise it to dim a busy background behind the text |
+| **Text position** | Top, Centre or Bottom of the frame |
+| **Text size** | 50–150%. Drop below 100% for long passages |
+| **Reference** | Above the text, below it, or hidden |
+| **Font** | Serif or Sans |
+| **Text colour** / **Reference colour** | Colour pickers |
+| **Drop shadow** | Keeps text legible over video — turn off over a plain background |
+| **Show translation** | The `(KJV)` suffix on the reference |
+| **Reset to defaults** | Back to transparent, centred, serif |
 
-| Parameter | Values | Default | What it does |
-|-----------|--------|---------|--------------|
-| `bg` | `transparent`, hex (`000000cc`, `0d0d1a`) | `transparent` | Background behind the text. 8-digit hex adds opacity — `000000cc` is a black scrim at 80% |
-| `pos` | `center`, `top`, `bottom` | `center` | Vertical position of the text block |
-| `size` | any number, e.g. `0.75`, `1.2` | `1` | Scales all text. Use below 1 for long passages |
-| `ref` | `top`, `bottom`, `hide` | `top` | Where the reference sits, or hide it entirely |
-| `font` | `serif`, `sans` | `serif` | Typeface |
-| `color` | hex, e.g. `ffffff` | `ffffff` | Verse text colour |
-| `accent` | hex, e.g. `ffd700` | `e8ddff` | Reference colour |
-| `shadow` | `1`, `0` | `1` | Drop shadow — turn off over a plain background |
-| `translation` | `1`, `0` | `1` | Show the `(KJV)` suffix on the reference |
+Note the background covers the **whole frame**, not just a band behind the text. For a lower-third band, use the dedicated overlay below instead.
 
-A few combinations worth knowing:
-
-```bash
-# Lower third over live camera, with a dark scrim for legibility
-?pos=bottom&bg=000000cc&size=0.8
-
-# Big centred text over your own background image, gold reference
-?accent=ffd700
-
-# Text only — no reference, for a clean look
-?ref=hide
-```
+Settings are remembered by the scene itself, so a source that restarts comes back looking the same. To preset the look without opening the dock, URL parameters still work and win on first load: `?bg=000000cc&pos=bottom&size=0.8&ref=hide&font=sans&color=ffffff&accent=ffd700&shadow=0&translation=0`.
 
 ### 2. Lower-Third Overlay (Browser Source)
 
@@ -196,9 +183,9 @@ A compact control panel that lives **inside OBS** — send passages and navigate
 **Dock features:**
 - **Send Reference** — type any reference (`John 3:16`, `Psalm 23`, `Genesis 1:1-5`) and hit Enter
 - **Translation** — switch between KJV, WEB, ASV, BBE, YLT without leaving OBS
-- **Quick Send** — one-click buttons for 6 common passages
 - **Verse list** — the full passage, one verse per row (see below)
 - **Clear Screen** — hide the overlay (appears only when something is live)
+- **Toolbar** — the book and gear icons at the bottom switch between the Bible controls and **Scene Appearance**
 
 ### Verse Navigation
 
@@ -225,6 +212,10 @@ GENESIS 1:1-5                             [ ← ] [ → ]
 - Every surface stays in sync: send from the Bible Reader or the dock, and the scene, lower third and projection screen all follow
 
 The same verse list appears in the Bible Reader at `/bible`, so an operator on a laptop and an operator inside OBS see and control the same thing.
+
+### Switching scenes mid-reading
+
+With **Shutdown source when not visible** ticked, OBS stops the browser source every time you leave the scene. When you switch back, the source asks the dock what is currently live and restores that verse and appearance immediately — so moving between the Bible scene and a camera mid-reading does not blank the verse. The dock must be open in OBS for this to work.
 
 ### Why not a traditional OBS plugin?
 
