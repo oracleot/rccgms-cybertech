@@ -8,6 +8,7 @@
  */
 
 export interface SceneSettings {
+  style: "text" | "card"
   bgColor: string
   bgOpacity: number
   pos: "top" | "center" | "bottom"
@@ -22,6 +23,7 @@ export interface SceneSettings {
 }
 
 export const SCENE_DEFAULTS: SceneSettings = {
+  style: "text",
   bgColor: "#000000",
   bgOpacity: 0,
   pos: "center",
@@ -77,6 +79,7 @@ export function normalize(raw: unknown): SceneSettings {
   const scale = Number(p.scale)
   const opacity = Number(p.bgOpacity)
   return {
+    style: p.style === "card" ? "card" : "text",
     bgColor: parseHex(p.bgColor ?? null, SCENE_DEFAULTS.bgColor),
     bgOpacity: Number.isFinite(opacity) ? Math.min(Math.max(opacity, 0), 1) : SCENE_DEFAULTS.bgOpacity,
     pos: p.pos === "top" || p.pos === "bottom" ? p.pos : SCENE_DEFAULTS.pos,
@@ -95,6 +98,8 @@ export function normalize(raw: unknown): SceneSettings {
 export function settingsFromQuery(search: string): Partial<SceneSettings> {
   const p = new URLSearchParams(search)
   const out: Partial<SceneSettings> = {}
+  const style = p.get("style")
+  if (style === "card" || style === "text") out.style = style
   const bgRaw = p.get("bg")
   if (bgRaw) {
     const bg = parseBg(bgRaw)

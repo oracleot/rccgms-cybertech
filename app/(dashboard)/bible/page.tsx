@@ -36,6 +36,7 @@ import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible
 import { displayReference, verseLabel } from "@/lib/bible/format"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
 import { createClient } from "@/lib/supabase/client"
+import { obsChannelName } from "@/lib/bible/obs-channel"
 
 // Self-contained Web Speech API types — vendor-prefixed, not guaranteed in all TS DOM libs
 declare global {
@@ -75,7 +76,6 @@ declare global {
 }
 
 const BROADCAST_CHANNEL = "rundown-display"
-const OBS_REALTIME_CHANNEL = "bible-obs"
 
 // ---------------------------------------------------------------------------
 // Accent / language options for Web Speech API
@@ -170,7 +170,7 @@ export default function BiblePage() {
   // Set up Supabase Realtime channel for OBS broadcast
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase.channel(OBS_REALTIME_CHANNEL, {
+    const channel = supabase.channel(obsChannelName(), {
       config: { broadcast: { self: false } },
     })
     channel.subscribe()

@@ -101,71 +101,49 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## OBS Integration
 
-The Bible Reader includes two URL-based OBS integrations — no plugin installation required. OBS loads them as web pages using its built-in Chromium browser, and they update in real time via Supabase Realtime.
+Two URL-based OBS integrations — a display source and a control dock. No plugin installation. OBS loads them as web pages in its built-in Chromium browser, and they update in real time via Supabase Realtime.
 
-> **How it works:** When the operator clicks **Send** in the Bible Reader (or the OBS Dock), the passage is broadcast over a Supabase Realtime channel (`bible-obs`). The overlay page receives it and slides the verse onto stream instantly. No WebSocket server to run, no `.dll` to install.
+> **How it works:** When the operator sends a passage from the Bible Reader or the OBS dock, it is broadcast over a Supabase Realtime channel. The display source receives it and puts the verse on stream instantly. No WebSocket server to run, no `.dll` to install. The channel is namespaced by domain, so a developer running the app locally can never broadcast onto the church's stream — keep the Bible Reader, dock and display source on the same domain.
 
-### 1. Full-Screen Bible Scene (Browser Source — recommended)
+### 1. Bible Display (Browser Source)
 
-Fills the scene with the Bible passage — ideal for a dedicated Bible scene you switch to when the pastor reads scripture.
-
-**The background is transparent**, so it composites over whatever the scene already has — your church branding, an open-Bible image, or a live camera. One background serves every scene; no Custom CSS needed.
+Behaves like a native OBS text source: **transparent**, showing only the reference and the verse text over whatever your scene already has — church branding, an open-Bible image, a live camera. It fills whatever size you give the source and sizes the type to match, so you can run it at OBS's default 800×600, at 400×500 like the FirstFruits plugin, or full-frame at 1920×1080, then scale and position it in the scene like any other source.
 
 **OBS Setup:**
 
-1. Create a new OBS scene called `Bible`
-2. Add your background image / camera as the bottom layer
-3. Click **+** → **Browser Source** and place it above the background
-4. Set the URL:
+1. In your Bible scene, click **+** → **Browser Source**, placed above your background
+2. Set the URL:
    ```
-   https://rccgms-cybertech.vercel.app/bible/obs/scene
+   https://rccgms-cybertech.vercel.app/bible/obs
    ```
-5. Width: `1920` — Height: `1080`
-6. Check **Shutdown source when not visible**
+3. Leave OBS's defaults — size (800×600) and Custom CSS are both fine. Resize the source in the scene to taste
+4. Check **Shutdown source when not visible**
 
-The reference renders above the verse text (`Genesis 1:2 (KJV)`), both centred with a drop shadow so they stay legible over video.
+To position the source before anyone has sent a verse, add `?preview=1` to the URL temporarily — it shows a sample verse without connecting. Remove it when done.
 
-#### Scene appearance settings
+`/bible/obs/scene` still works and shows the same thing, so existing setups keep running.
 
-Click the **gear icon** at the bottom of the OBS dock to open **Scene Appearance**. Changes apply to the scene instantly — no URL editing, no reloading the source.
+#### Appearance settings
+
+Click the **gear icon** at the bottom of the OBS dock to open **Scene Appearance**. Changes apply to the display instantly — no URL editing, no reloading the source.
 
 | Setting | What it does |
 |---------|--------------|
-| **Background** | Colour picker plus an opacity slider. **0% is fully transparent** so your own background shows through; raise it to dim a busy background behind the text |
-| **Text position** | Top, Centre or Bottom of the frame |
-| **Text size** | 50–150%. Drop below 100% for long passages |
+| **Style** | **Text only** (default) or **Lower-third card** — the purple band with the reference and quoted verse |
+| **Background** | Colour picker plus an opacity slider. **0% is fully transparent**; raise it to dim a busy background behind the text. Covers the whole source, not just the text |
+| **Text position** | Top, Centre or Bottom of the source |
+| **Text size** | 50–150%, relative to the source width. Drop below 100% for long passages |
 | **Reference** | Above the text, below it, or hidden |
 | **Font** | Serif or Sans |
 | **Text colour** / **Reference colour** | Colour pickers |
 | **Drop shadow** | Keeps text legible over video — turn off over a plain background |
 | **Show translation** | The `(KJV)` suffix on the reference |
 | **Inline verse number** | Puts the verse number in front of the text as a superscript — `³ And God said, Let there be light` — the way a printed Bible sets it |
-| **Reset to defaults** | Back to transparent, centred, serif |
+| **Reset to defaults** | Back to text only, transparent, centred, serif |
 
-Note the background covers the **whole frame**, not just a band behind the text. For a lower-third band, use the dedicated overlay below instead.
+Settings are remembered by the display itself, so a source that restarts comes back looking the same. To preset the look without opening the dock, URL parameters still work and win on first load: `?style=card&bg=000000cc&pos=bottom&size=0.8&ref=hide&font=sans&color=ffffff&accent=ffd700&shadow=0&translation=0&inline=1`.
 
-Settings are remembered by the scene itself, so a source that restarts comes back looking the same. To preset the look without opening the dock, URL parameters still work and win on first load: `?bg=000000cc&pos=bottom&size=0.8&ref=hide&font=sans&color=ffffff&accent=ffd700&shadow=0&translation=0&inline=1`.
-
-### 2. Lower-Third Overlay (Browser Source)
-
-Shows the passage as a transparent overlay at the bottom of any scene — composites over your camera or background without covering the full screen.
-
-**OBS Setup:**
-
-1. In OBS, click **+** → **Browser Source**
-2. Set the URL:
-   ```
-   https://rccgms-cybertech.vercel.app/bible/obs
-   ```
-3. Width: `1920` — Height: `1080`
-4. Paste this into **Custom CSS**:
-   ```css
-   body { background: transparent !important; }
-   ```
-5. Check **Shutdown source when not visible**
-6. Click **OK**
-
-### 3. Control Dock (Custom Browser Dock)
+### 2. Control Dock (Custom Browser Dock)
 
 A compact control panel that lives **inside OBS** — send passages and navigate verses without switching windows.
 
@@ -274,9 +252,8 @@ app/
 ├── availability/        # Public (signed-out) availability form
 ├── bible/
 │   └── obs/             # OBS integrations (public, no auth)
-│       ├── page.tsx     # Lower-third overlay — load as OBS Browser Source
-│       ├── scene/
-│       │   └── page.tsx # Full-screen Bible scene — dedicated OBS scene
+│       ├── page.tsx     # Bible display — load as OBS Browser Source
+│       ├── scene/       # Same display under its original URL
 │       └── dock/
 │           └── page.tsx # Control dock — load as OBS Custom Browser Dock
 └── api/                 # API routes + cron jobs

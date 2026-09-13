@@ -22,14 +22,13 @@ import { createClient } from "@/lib/supabase/client"
 import { detectBibleReferences } from "@/lib/bible/detect-references"
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
 import { verseLabel } from "@/lib/bible/format"
+import { obsChannelName } from "@/lib/bible/obs-channel"
 import {
   SCENE_DEFAULTS,
   loadSettings,
   saveSettings,
   type SceneSettings,
 } from "@/lib/bible/scene-settings"
-
-const OBS_CHANNEL = "bible-obs"
 
 interface Verse {
   book?: string
@@ -91,7 +90,7 @@ export default function BibleObsDockPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase.channel(OBS_CHANNEL, {
+    const channel = supabase.channel(obsChannelName(), {
       config: { broadcast: { self: true } },
     })
     channel
@@ -434,6 +433,18 @@ export default function BibleObsDockPage() {
           <div className="pane">
             <span className="section-label">Scene Appearance</span>
             <div className="settings">
+              <div className="srow">
+                <span>Style</span>
+                <select
+                  className="compact"
+                  value={settings.style}
+                  onChange={(e) => update("style", e.target.value as SceneSettings["style"])}
+                >
+                  <option value="text">Text only</option>
+                  <option value="card">Lower-third card</option>
+                </select>
+              </div>
+
               <div className="srow">
                 <span>Background</span>
                 <div className="ctl">
