@@ -14,6 +14,19 @@ import { normalizeReference, verseId } from "@/lib/bible/format"
 import { obsChannelName } from "@/lib/bible/obs-channel"
 import { SCENE_DEFAULTS, loadSettings, saveSettings, type SceneSettings } from "@/lib/bible/scene-settings"
 import { bookFromApiName, nextBook, nextChapter, prevBook, prevChapter, type BookInfo } from "@/lib/bible/books"
+import {
+  EMPTY_LISTS,
+  clearRecent as clearRecentList,
+  enqueue as enqueueItem,
+  isFavourite as isFav,
+  loadLists,
+  moveQueued as moveQueuedItem,
+  pushRecent,
+  removeQueued,
+  saveLists,
+  toggleFavourite as toggleFav,
+  type DockLists,
+} from "@/lib/bible/dock-lists"
 import type { DisplayState } from "@/components/bible/obs-surface"
 
 export interface Verse {
@@ -46,9 +59,11 @@ export interface Position {
 }
 
 const PREFS_KEY = "bible-dock-prefs"
+const UNDO_DEPTH = 10
 
 interface Prefs {
   translation?: TranslationId
+  previewFirst?: boolean
 }
 
 function loadPrefs(): Prefs {
@@ -108,6 +123,11 @@ export function useDock() {
   const [settings, setSettings] = useState<SceneSettings>(SCENE_DEFAULTS)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lists, setLists] = useState<DockLists>(EMPTY_LISTS)
+  const [locked, setLockedState] = useState(false)
+  const [canUndo, setCanUndo] = useState(false)
+  const [previewFirst, setPreviewFirstState] = useState(false)
+  const [staged, setStaged] = useState<PassagePayload | null>(null)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
@@ -116,6 +136,11 @@ export function useDock() {
   const onScreenRef = useRef<PassagePayload | null>(null)
   const shownRef = useRef<DisplayState | null>(null)
   const lastTargetRef = useRef<Target | null>(null)
+  const lockedRef = useRef(false)
+  const previewFirstRef = useRef(false)
+  const stagedRef = useRef<PassagePayload | null>(null)
+  /** Live states before each change; null means the screen was clear. */
+  const undoRef = useRef<Array<PassagePayload | null>>([])
 
   useEffect(() => {
     const stored = loadSettings()
@@ -126,6 +151,9 @@ export function useDock() {
       translationRef.current = prefs.translation
       setTranslationState(prefs.translation)
     }
+    previewFirstRef.current = !!prefs.previewFirst
+    setPreviewFirstState(!!prefs.previewFirst)
+    setLists(loadLists())
   }, [])
 
   useEffect(() => {
@@ -137,6 +165,9 @@ export function useDock() {
   useEffect(() => {
     shownRef.current = shown
   }, [shown])
+  useEffect(() => {
+    stagedRef.current = staged
+  }, [staged])
 
   useEffect(() => {
     const supabase = createClient()
@@ -175,6 +206,14 @@ export function useDock() {
     }
   }, [])
 
+  const updateLists = useCallback((fn: (l: DockLists) => DockLists) => {
+    setLists((prev) => {
+      const next = fn(prev)
+      if (next !== prev) saveLists(next)
+      return next
+    })
+  }, [])
+
   const pushSettings = useCallback((next: SceneSettings) => {
     settingsRef.current = next
     setSettings(next)
@@ -189,44 +228,104 @@ export function useDock() {
     [pushSettings]
   )
 
-  const broadcast = useCallback((payload: PassagePayload) => {
-    channelRef.current?.send({ type: "broadcast", event: "passage", payload })
-    setOnScreen(payload)
-    setShown(null)
-    setFocus(payload.focusId ?? null)
+  /** Remember the live state so Undo can bring it back. */
+  const remember = useCallback(() => {
+    const cur = onScreenRef.current
+    const snapshot = cur ? withFocus(cur, shownRef.current?.from ?? cur.focusId) : null
+    undoRef.current = [...undoRef.current.slice(-(UNDO_DEPTH - 1)), snapshot]
+    setCanUndo(true)
   }, [])
 
-  const clear = useCallback(() => {
-    channelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
-    setOnScreen(null)
-    setShown(null)
-    setFocus(null)
-  }, [])
+  const broadcast = useCallback(
+    (payload: PassagePayload, opts?: { remember?: boolean }) => {
+      if (opts?.remember !== false) remember()
+      channelRef.current?.send({ type: "broadcast", event: "passage", payload })
+      setOnScreen(payload)
+      setShown(null)
+      setFocus(payload.focusId ?? null)
+    },
+    [remember]
+  )
+
+  const clear = useCallback(
+    (opts?: { remember?: boolean }) => {
+      if (lockedRef.current) return
+      if (opts?.remember !== false) remember()
+      channelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
+      setOnScreen(null)
+      setShown(null)
+      setFocus(null)
+    },
+    [remember]
+  )
+
+  const undo = useCallback(() => {
+    if (lockedRef.current) return
+    const stack = undoRef.current
+    if (!stack.length) return
+    const prev = stack.pop()!
+    setCanUndo(stack.length > 0)
+    if (prev) broadcast(prev, { remember: false })
+    else clear({ remember: false })
+  }, [broadcast, clear])
 
   /**
-   * Put a passage on screen. The selected translation is loaded first (from
-   * cache when we have it); the others are warmed behind it so switching
-   * translation afterwards is instant.
+   * Put a passage on screen — or, with preview on, into the preview slot.
+   * The selected translation is loaded first (from cache when we have it);
+   * the others are warmed behind it so switching afterwards is instant.
+   * Resolves true when the passage went live.
    */
   const send = useCallback(
-    async (target: Target, opts?: { focusId?: string; translation?: TranslationId }) => {
+    async (target: Target, opts?: { focusId?: string; translation?: TranslationId; live?: boolean }): Promise<boolean> => {
+      if (lockedRef.current) return false
       const t = opts?.translation ?? translationRef.current
       setBusy(true)
       setError(null)
       try {
         const passage = await loadPassage(target.apiPath, t, "high")
         const single = passage.verses.length === 1 ? verseId(passage.verses[0]) : undefined
-        broadcast(withFocus(toPayload(passage), opts?.focusId ?? single))
+        const payload = withFocus(toPayload(passage), opts?.focusId ?? single)
         lastTargetRef.current = { apiPath: target.apiPath, reference: passage.reference }
         prefetchTranslationsWhenIdle(target.apiPath, t, passage.verses.length)
+        if (previewFirstRef.current && !opts?.live) {
+          setStaged(payload)
+          return false
+        }
+        broadcast(payload)
+        updateLists((l) => pushRecent(l, { apiPath: target.apiPath, reference: passage.reference }))
+        return true
       } catch (e) {
         setError(e instanceof PassageUnavailableError ? e.message : "Not found — check the reference")
+        return false
       } finally {
         setBusy(false)
       }
     },
-    [broadcast]
+    [broadcast, updateLists]
   )
+
+  const goLive = useCallback(() => {
+    const s = stagedRef.current
+    if (!s || lockedRef.current) return
+    broadcast(s)
+    const target = lastTargetRef.current ?? targetFromReference(s.reference)
+    updateLists((l) => pushRecent(l, { apiPath: target.apiPath, reference: s.reference }))
+    setStaged(null)
+  }, [broadcast, updateLists])
+
+  const discardStaged = useCallback(() => setStaged(null), [])
+
+  const setPreviewFirst = useCallback((on: boolean) => {
+    previewFirstRef.current = on
+    setPreviewFirstState(on)
+    savePrefs({ previewFirst: on })
+    if (!on) setStaged(null)
+  }, [])
+
+  const setLocked = useCallback((on: boolean) => {
+    lockedRef.current = on
+    setLockedState(on)
+  }, [])
 
   /** Re-load what is live in another translation, keeping the same verse or page in view. */
   const changeTranslation = useCallback(
@@ -234,7 +333,8 @@ export function useDock() {
       translationRef.current = t
       setTranslationState(t)
       savePrefs({ translation: t })
-      const cur = onScreenRef.current
+      if (lockedRef.current) return
+      const cur = stagedRef.current ?? onScreenRef.current
       if (!cur) return
       const target = lastTargetRef.current ?? targetFromReference(cur.reference)
       void send(target, { translation: t, focusId: shownRef.current?.from ?? cur.focusId })
@@ -245,19 +345,14 @@ export function useDock() {
   const selectVerse = useCallback(
     (v: Verse) => {
       const cur = onScreenRef.current
-      if (!cur) return
-      const id = verseId(v)
-      const payload = withFocus(cur, id)
-      channelRef.current?.send({ type: "broadcast", event: "passage", payload })
-      setOnScreen(payload)
-      setShown(null)
-      setFocus(id)
+      if (!cur || lockedRef.current) return
+      broadcast(withFocus(cur, verseId(v)))
     },
-    []
+    [broadcast]
   )
 
   const nav = useCallback((delta: number) => {
-    if (!onScreenRef.current) return
+    if (!onScreenRef.current || lockedRef.current) return
     channelRef.current?.send({ type: "broadcast", event: "nav", payload: { delta } })
   }, [])
 
@@ -290,11 +385,51 @@ export function useDock() {
     [position, send]
   )
 
-  // ← → verse · Shift+← → chapter · Alt+← → book, never while typing
+  // ---- lists
+
+  const currentTarget = useCallback((): Target | null => {
+    const cur = onScreenRef.current
+    if (!cur) return null
+    return lastTargetRef.current ?? targetFromReference(cur.reference)
+  }, [])
+
+  const sendItem = useCallback((item: Target) => send({ apiPath: item.apiPath, reference: item.reference }), [send])
+  const toggleFavourite = useCallback((item: Target) => updateLists((l) => toggleFav(l, item)), [updateLists])
+  const isFavourite = useCallback((apiPath: string) => isFav(lists, apiPath), [lists])
+  const favouriteCurrent = useCallback(() => {
+    const t = currentTarget()
+    if (t) toggleFavourite(t)
+  }, [currentTarget, toggleFavourite])
+  const enqueue = useCallback((item: Target) => updateLists((l) => enqueueItem(l, item)), [updateLists])
+  const queueCurrent = useCallback(() => {
+    const t = currentTarget()
+    if (t) enqueue(t)
+  }, [currentTarget, enqueue])
+  const dequeue = useCallback((i: number) => updateLists((l) => removeQueued(l, i)), [updateLists])
+  const moveQueued = useCallback((i: number, d: -1 | 1) => updateLists((l) => moveQueuedItem(l, i, d)), [updateLists])
+  const clearRecent = useCallback(() => updateLists(clearRecentList), [updateLists])
+  const sendQueued = useCallback(
+    async (i: number) => {
+      const item = lists.queue[i]
+      if (!item) return
+      const ok = await send(item)
+      // With preview on, the item is staged rather than live; keep it queued until it goes live? No —
+      // the operator has taken it up, so it leaves the queue either way.
+      if (ok || previewFirstRef.current) dequeue(i)
+    },
+    [lists.queue, send, dequeue]
+  )
+
+  // ← → verse · Shift+← → chapter · Alt+← → book · Enter goes live from preview, never while typing
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null
       if (el && (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return
+      if (e.key === "Enter" && stagedRef.current) {
+        e.preventDefault()
+        goLive()
+        return
+      }
       const dir = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0
       if (!dir) return
       e.preventDefault()
@@ -304,7 +439,7 @@ export function useDock() {
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [nav, goChapter, goBook])
+  }, [nav, goChapter, goBook, goLive])
 
   // The on-screen range is a run of list positions, never a numeric verse range —
   // a page can cross a chapter boundary, where numbers restart.
@@ -317,8 +452,9 @@ export function useDock() {
   )
   const firstShowingIdx = verses.findIndex(isShowing)
 
-  const canPrev = verses.length > 1 && (shown ? shown.page > 0 : true)
-  const canNext = verses.length > 1 && (shown ? shown.page < shown.pages - 1 : true)
+  const canPrev = !locked && verses.length > 1 && (shown ? shown.page > 0 : true)
+  const canNext = !locked && verses.length > 1 && (shown ? shown.page < shown.pages - 1 : true)
+  const current = currentTarget()
 
   return {
     translation,
@@ -343,6 +479,29 @@ export function useDock() {
     changeTranslation,
     updateSetting,
     pushSettings,
+    // lists
+    lists,
+    sendItem,
+    toggleFavourite,
+    isFavourite,
+    favouriteCurrent,
+    currentIsFavourite: !!current && isFav(lists, current.apiPath),
+    enqueue,
+    queueCurrent,
+    dequeue,
+    moveQueued,
+    sendQueued,
+    clearRecent,
+    // live safety
+    locked,
+    setLocked,
+    canUndo,
+    undo,
+    previewFirst,
+    setPreviewFirst,
+    staged,
+    goLive,
+    discardStaged,
   }
 }
 

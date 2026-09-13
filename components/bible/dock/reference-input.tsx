@@ -11,10 +11,11 @@ import type { Target } from "./use-dock"
 
 interface Props {
   busy: boolean
+  locked?: boolean
   onSend: (target: Target) => void
 }
 
-export function ReferenceInput({ busy, onSend }: Props) {
+export function ReferenceInput({ busy, locked = false, onSend }: Props) {
   const [text, setText] = useState("")
   const [chooser, setChooser] = useState<ParsedReference[] | null>(null)
   const [activeSuggestion, setActiveSuggestion] = useState(0)
@@ -40,7 +41,7 @@ export function ReferenceInput({ busy, onSend }: Props) {
   }
 
   const submit = () => {
-    if (!text.trim() || busy) return
+    if (!text.trim() || busy || locked) return
     if (showSuggestions) {
       pickSuggestion(parsed.bookSuggestions[activeSuggestion]?.name ?? parsed.bookSuggestions[0].name)
       return
@@ -72,6 +73,7 @@ export function ReferenceInput({ busy, onSend }: Props) {
 
   const hint = (() => {
     if (chooser) return null
+    if (locked) return <span className="hint-line low">Live display is locked</span>
     if (!text.trim()) return <span className="hint-line" />
     if (parsed.best) {
       const r = parsed.best
@@ -109,7 +111,7 @@ export function ReferenceInput({ busy, onSend }: Props) {
           spellCheck={false}
           aria-label="Bible reference"
         />
-        <button type="submit" className="btn-primary" disabled={busy || !text.trim() || (!parsed.best && !showSuggestions)}>
+        <button type="submit" className="btn-primary" disabled={busy || locked || !text.trim() || (!parsed.best && !showSuggestions)}>
           {busy ? <span className="spinner" /> : null}
           Send
         </button>

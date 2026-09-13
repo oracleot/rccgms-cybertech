@@ -7,12 +7,14 @@
 
 import { useState } from "react"
 import * as Tooltip from "@radix-ui/react-tooltip"
-import { BookOpen, Settings } from "lucide-react"
+import { BookOpen, Lock, LockOpen, RotateCcw, Settings } from "lucide-react"
 import { TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
 import { DockStyles } from "./dock-styles"
 import { ReferenceInput } from "./reference-input"
 import { VerseList } from "./verse-list"
 import { NavPopover } from "./nav-popover"
+import { HistoryPopover } from "./history-popover"
+import { PreviewCard } from "./preview-card"
 import { SettingsPanel } from "./settings-panel"
 import { Tip } from "./tip"
 import { useDock } from "./use-dock"
@@ -24,10 +26,10 @@ export function BibleDock() {
   return (
     <Tooltip.Provider>
       <DockStyles />
-      <div className="dock">
+      <div className={`dock${dock.locked ? " is-locked" : ""}`}>
         {view === "bible" ? (
           <div className="pane">
-            <ReferenceInput busy={dock.busy} onSend={(t) => void dock.send(t)} />
+            <ReferenceInput busy={dock.busy} locked={dock.locked} onSend={(t) => void dock.send(t)} />
             {dock.error && <div className="error-msg">{dock.error}</div>}
 
             <select
@@ -43,11 +45,13 @@ export function BibleDock() {
               ))}
             </select>
 
+            <PreviewCard dock={dock} />
+
             <div className="divider" />
             <VerseList dock={dock} />
 
             {dock.onScreen && (
-              <button className="btn-clear" onClick={dock.clear}>
+              <button className="btn-clear" onClick={() => dock.clear()} disabled={dock.locked}>
                 Clear Screen
               </button>
             )}
@@ -63,7 +67,23 @@ export function BibleDock() {
             </button>
           </Tip>
           <NavPopover dock={dock} />
+          <HistoryPopover dock={dock} />
           <span className="tool-spacer" />
+          <Tip label="Undo last live change">
+            <button className="tool-btn" onClick={dock.undo} disabled={!dock.canUndo || dock.locked} aria-label="Undo">
+              <RotateCcw />
+            </button>
+          </Tip>
+          <Tip label={dock.locked ? "Unlock live display" : "Lock live display — blocks every change"}>
+            <button
+              className={`tool-btn${dock.locked ? " locked" : ""}`}
+              onClick={() => dock.setLocked(!dock.locked)}
+              aria-label={dock.locked ? "Unlock" : "Lock"}
+              aria-pressed={dock.locked}
+            >
+              {dock.locked ? <Lock /> : <LockOpen />}
+            </button>
+          </Tip>
           <Tip label="Settings — display, appearance, shortcuts">
             <button className={`tool-btn${view === "settings" ? " active" : ""}`} onClick={() => setView("settings")} aria-label="Settings">
               <Settings />

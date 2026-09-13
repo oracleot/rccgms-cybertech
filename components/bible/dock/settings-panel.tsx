@@ -116,6 +116,14 @@ export function SettingsPanel({ dock }: { dock: Dock }) {
         <div className="divider" />
         <span className="section-label">Dock</span>
         <div className="srow">
+          <span>Preview before live</span>
+          <input type="checkbox" checked={dock.previewFirst} onChange={(e) => dock.setPreviewFirst(e.target.checked)} />
+        </div>
+        <div className="hint">
+          Sent passages wait in a preview card until you press Go live (or Enter). Off by default so the normal
+          workflow stays one step.
+        </div>
+        <div className="srow">
           <span>Default translation</span>
           <select className="compact" value={translation} onChange={(e) => changeTranslation(e.target.value as TranslationId)}>
             {TRANSLATIONS.map((t) => (
@@ -136,6 +144,8 @@ export function SettingsPanel({ dock }: { dock: Dock }) {
           <kbd>Alt</kbd> + arrows previous / next book
           <br />
           <kbd>Enter</kbd> in the reference field sends · <kbd>Tab</kbd> completes a book name · <kbd>Esc</kbd> clears
+          <br />
+          <kbd>Enter</kbd> outside a field puts the previewed passage live
           <br />
           Shortcuts pause while you are typing in a field.
         </div>
