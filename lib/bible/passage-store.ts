@@ -179,18 +179,33 @@ interface Job {
 const inFlight = new Map<string, Job>()
 const queue: Job[] = []
 let active = 0
+let activeLow = 0
+/** After the API throttles us, prefetches stand down so the operator's requests get through. */
+let lowPausedUntil = 0
+const LOW_PAUSE_MS = 6000
 
 function pump() {
   while (active < CONCURRENCY && queue.length) {
-    // High priority first; within a priority, oldest first
-    const idx = queue.findIndex((j) => j.priority === "high")
-    const job = queue.splice(idx >= 0 ? idx : 0, 1)[0]
+    const highIdx = queue.findIndex((j) => j.priority === "high")
+    let idx = highIdx
+    if (idx < 0) {
+      // Only prefetches waiting. Keep one slot free for whatever the operator asks for
+      // next, and hold off entirely while the API is throttling.
+      if (activeLow >= CONCURRENCY - 1 || Date.now() < lowPausedUntil) return
+      idx = 0
+    }
+    const job = queue.splice(idx, 1)[0]
     active++
+    if (job.priority === "low") activeLow++
     void run(job).finally(() => {
       active--
+      if (job.priority === "low") activeLow--
       inFlight.delete(job.key)
       pump()
     })
+  }
+  if (queue.length && Date.now() < lowPausedUntil) {
+    setTimeout(pump, lowPausedUntil - Date.now() + 50)
   }
 }
 
@@ -225,6 +240,7 @@ async function fetchWithRetry(apiPath: string, translation: TranslationId): Prom
       if (/not found|API error 404/i.test(msg)) return null
       const transient = /API error (429|5\d\d)|Failed to fetch|NetworkError/i.test(msg)
       if (!transient || attempt === 2) throw e
+      lowPausedUntil = Date.now() + LOW_PAUSE_MS
       await new Promise((r) => setTimeout(r, delay))
       delay *= 2
     }
@@ -310,6 +326,30 @@ export function prefetchTranslations(apiPath: string, except: TranslationId, onl
     if (peekPassage(apiPath, t) !== undefined) continue
     loadPassage(apiPath, t, "low").catch(() => {})
   }
+}
+
+let deferredPrefetch: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * Prefetch once the operator has paused. A short passage is warmed at once —
+ * it's four small requests. A whole chapter is four large ones, and an
+ * operator stepping through chapters would otherwise queue dozens; so those
+ * wait until nothing new has been sent for a moment, and a newer send
+ * replaces the pending one.
+ */
+export function prefetchTranslationsWhenIdle(apiPath: string, except: TranslationId, verseCount: number): void {
+  if (deferredPrefetch) {
+    clearTimeout(deferredPrefetch)
+    deferredPrefetch = null
+  }
+  if (verseCount <= 12) {
+    prefetchTranslations(apiPath, except)
+    return
+  }
+  deferredPrefetch = setTimeout(() => {
+    deferredPrefetch = null
+    prefetchTranslations(apiPath, except)
+  }, 1500)
 }
 
 /** Which translations already hold this passage in memory — for the dock to show what's instant. */

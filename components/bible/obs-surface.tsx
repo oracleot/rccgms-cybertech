@@ -171,6 +171,10 @@ function computeLayout(
   // passage will go before it splits into pages. So 150% means "bigger type, more pages".
   const MIN = Math.max(11, base * 0.03 * s.scale)
   const MAX = Math.max(MIN, Math.max(16, base * 0.18) * s.scale)
+  // Auto pages at a comfortable size rather than the floor: fewer verses per page,
+  // larger type. Multi-verse packs down to MIN before it adds a page.
+  const COMFORT = Math.min(MAX, Math.max(MIN, base * 0.055 * s.scale))
+  const PACK_AT = s.mode === "auto" ? COMFORT : MIN
 
   measurer.className = `${contentClass(s)} measure`
   measurer.style.width = `${W}px`
@@ -212,22 +216,23 @@ function computeLayout(
       mode = "single"
       pages = singlePages()
     } else {
-      // Auto and Multi-verse both show the whole passage, paged only when it can't fit.
-      // Single is the one mode that deliberately puts one verse per page.
+      // Auto and Multi-verse both show the whole passage, paged only when it can't fit;
+      // they differ in the size they page at (PACK_AT). Single is the one mode that
+      // deliberately puts one verse per page.
       mode = "multi"
-      // Greedy first: how many pages are needed when each holds as much as fits at MIN.
+      // Greedy first: how many pages are needed when each holds as much as fits at PACK_AT.
       const greedy: Verse[][] = []
       let i = 0
       while (i < n) {
         let lo = 1
         let hi = n - i
-        if (fits(htmlFor(all.slice(i, i + hi), true), MIN)) {
+        if (fits(htmlFor(all.slice(i, i + hi), true), PACK_AT)) {
           greedy.push(all.slice(i))
           break
         }
         while (lo < hi) {
           const mid = Math.ceil((lo + hi) / 2)
-          if (fits(htmlFor(all.slice(i, i + mid), true), MIN)) lo = mid
+          if (fits(htmlFor(all.slice(i, i + mid), true), PACK_AT)) lo = mid
           else hi = mid - 1
         }
         greedy.push(all.slice(i, i + lo))
@@ -237,7 +242,7 @@ function computeLayout(
       pages = greedy
       if (greedy.length > 1) {
         const balanced = balancedSplit(all, greedy.length)
-        if (balanced.every((p) => fits(htmlFor(p, true), MIN))) pages = balanced
+        if (balanced.every((p) => fits(htmlFor(p, true), PACK_AT))) pages = balanced
       }
     }
 
