@@ -62,7 +62,32 @@ export interface Position {
 }
 
 const PREFS_KEY = "bible-dock-prefs"
+const UI_MODE_KEY = "bible-dock-ui-mode"
 const UNDO_DEPTH = 10
+
+/**
+ * Simple/Advanced is presentation only — which controls are shown, never which
+ * behaviour runs. Every action below stays reachable in both; this just decides
+ * what the toolbar and Settings surface by default. Simple is the default so a
+ * first-time operator isn't confronted with the full toolset mid-service.
+ */
+export type UiMode = "simple" | "advanced"
+
+function loadUiMode(): UiMode {
+  try {
+    return window.localStorage.getItem(UI_MODE_KEY) === "advanced" ? "advanced" : "simple"
+  } catch {
+    return "simple"
+  }
+}
+
+function saveUiMode(m: UiMode) {
+  try {
+    window.localStorage.setItem(UI_MODE_KEY, m)
+  } catch {
+    // non-fatal: the choice still applies for this session
+  }
+}
 
 interface Prefs {
   translation?: TranslationId
@@ -131,6 +156,7 @@ export function useDock() {
   const [canUndo, setCanUndo] = useState(false)
   const [previewFirst, setPreviewFirstState] = useState(false)
   const [staged, setStaged] = useState<PassagePayload | null>(null)
+  const [uiMode, setUiModeState] = useState<UiMode>("simple")
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
@@ -163,6 +189,12 @@ export function useDock() {
     const wasLocked = loadLock()
     lockedRef.current = wasLocked
     setLockedState(wasLocked)
+    setUiModeState(loadUiMode())
+  }, [])
+
+  const setUiMode = useCallback((m: UiMode) => {
+    setUiModeState(m)
+    saveUiMode(m)
   }, [])
 
   useEffect(() => {
@@ -574,6 +606,9 @@ export function useDock() {
     staged,
     goLive,
     discardStaged,
+    // interface mode
+    uiMode,
+    setUiMode,
   }
 }
 

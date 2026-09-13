@@ -23,6 +23,7 @@ import { useDock } from "./use-dock"
 export function BibleDock() {
   const dock = useDock()
   const [view, setView] = useState<"bible" | "settings">("bible")
+  const advanced = dock.uiMode === "advanced"
 
   return (
     <Tooltip.Provider>
@@ -55,7 +56,7 @@ export function BibleDock() {
             <PreviewCard dock={dock} />
 
             <div className="divider" />
-            <VerseList dock={dock} />
+            <VerseList dock={dock} advanced={advanced} />
 
             {dock.onScreen && (
               <button className="btn-clear" onClick={() => dock.clear()} disabled={dock.locked}>
@@ -73,15 +74,20 @@ export function BibleDock() {
               <BookOpen />
             </button>
           </Tip>
-          <NavPopover dock={dock} />
-          <HistoryPopover dock={dock} />
-          <AudioPopover dock={dock} />
+          {/* Chapter/book navigation, browser, history/favourites/queue and audio tools are
+              secondary during a live service — Advanced only. Nothing here is disabled in
+              Simple, it just isn't shown; switching modes never changes what these do. */}
+          {advanced && <NavPopover dock={dock} />}
+          {advanced && <HistoryPopover dock={dock} />}
+          {advanced && <AudioPopover dock={dock} />}
           <span className="tool-spacer" />
-          <Tip label="Undo last live change">
-            <button className="tool-btn" onClick={dock.undo} disabled={!dock.canUndo || dock.locked} aria-label="Undo">
-              <RotateCcw />
-            </button>
-          </Tip>
+          {advanced && (
+            <Tip label="Undo last live change">
+              <button className="tool-btn" onClick={dock.undo} disabled={!dock.canUndo || dock.locked} aria-label="Undo">
+                <RotateCcw />
+              </button>
+            </Tip>
+          )}
           <Tip label={dock.locked ? "Unlock live display" : "Lock live display — blocks every change"}>
             <button
               className={`tool-btn${dock.locked ? " locked" : ""}`}
@@ -92,7 +98,7 @@ export function BibleDock() {
               {dock.locked ? <Lock /> : <LockOpen />}
             </button>
           </Tip>
-          <Tip label="Settings — display, appearance, shortcuts">
+          <Tip label="Settings — interface mode, display, appearance, shortcuts">
             <button className={`tool-btn${view === "settings" ? " active" : ""}`} onClick={() => setView("settings")} aria-label="Settings">
               <Settings />
             </button>

@@ -160,23 +160,28 @@ A compact control panel that lives **inside OBS** — send passages and navigate
 3. Click **Apply**
 4. The dock appears as a panel — drag it to wherever suits your OBS layout
 
-The main pane holds only what an operator reaches for repeatedly during a service; everything else is behind an icon in the bottom toolbar.
+The dock has two interface modes, switched from **Settings → Interface**:
 
-**Main pane**
+- **Simple** (default) — just what a live service needs: the reference field, translation, Send/Clear, the current passage with essential verse/page navigation, live-or-preview state, and Lock. A compact **Settings** covers the basics.
+- **Advanced** — adds chapter/book navigation, the scripture browser, history/favourites/queue, audio tools, and deeper display settings (typography, appearance, keyboard shortcuts).
+
+Switching modes only changes what's shown — nothing is disabled either way, no setting is reset, and the live scripture on stream is untouched. A passage sent in Advanced with, say, a lower-third card style and a custom accent colour still shows that way after switching back to Simple; a display mode set in Advanced keeps applying. Contextual state always shows regardless of mode — a `2/4` page indicator on a split passage, the preview card once something is staged, an error, the **Locked** pill.
+
+**Main pane** (both modes)
 - **Reference field** — forgiving about how you type (see [Typing a reference](#typing-a-reference)); words from a verse search scripture instead
 - **Translation** — KJV, WEB, ASV, BBE, YLT. Changing it re-loads whatever is live in the new translation, keeping the same verse or page on screen. Other translations are warmed in the background, so the switch is usually instant
-- **Verse list** — the full passage, one verse per row, with the verses currently on screen highlighted; the star pins the passage to favourites
+- **Verse list** — the full passage, one verse per row, with the verses currently on screen highlighted; in Advanced, a star pins the passage to favourites
 - **← / →** — step through verses or pages, with a `2/4` page indicator when a passage is split; arrow keys work too
 - **Clear Screen** — hide the display (appears only when something is live)
 
 **Toolbar icons** (hover for a tooltip)
 - **Book** — the main pane
-- **Compass** — previous/next chapter and book, and a Book → Chapter → Verse browser
-- **Clock** — recent passages, favourites and the queue
-- **Microphone** — voice detection and the input level meter; appears only where the browser supports speech recognition (OBS's embedded browser does not — use the Bible Reader in Chrome or Edge for that)
-- **Undo** — put back the previous live state
-- **Lock** — block every change to the live display until unlocked
-- **Gear** — display mode, appearance, default translation, preview-before-live, shortcuts
+- **Compass** *(Advanced)* — previous/next chapter and book, and a Book → Chapter → Verse browser
+- **Clock** *(Advanced)* — recent passages, favourites and the queue
+- **Microphone** *(Advanced)* — voice detection and the input level meter; appears only where the browser supports speech recognition (OBS's embedded browser does not — use the Bible Reader in Chrome or Edge for that)
+- **Undo** *(Advanced)* — put back the previous live state
+- **Lock** — block every change to the live display until unlocked; in both modes
+- **Gear** — Settings, split into **Interface** (the Simple/Advanced switch), **Basic** (style, default translation, preview-before-live — always visible), and **Advanced** (display mode, appearance, typography, keyboard shortcuts — shown only in Advanced mode)
 
 ### Typing a reference
 
@@ -196,13 +201,13 @@ Enter sends when it is sure. A partly typed book name offers completions (`1 cor
 
 Type words instead — `for God so loved` — and Enter searches scripture text; pick a result to send it. Search is a separate action from reference parsing; the two are never confused.
 
-### Navigation
+### Navigation (Advanced)
 
 Behind the compass icon: **Prev / Next chapter** and **Prev / Next book**, in Bible order — never alphabetical. The chapter after Psalm 150 is Proverbs 1; the book after Psalms is Proverbs, landing on chapter 1. The **Browse** tab is a Book → Chapter → Verse picker: tap a verse, then a later one for a range, or send the whole chapter.
 
 Keyboard, everywhere except while typing in a field: `←` `→` verse or page · `Shift` + arrows chapter · `Alt` + arrows book · `Enter` puts a previewed passage live.
 
-### History, favourites and queue
+### History, favourites and queue (Advanced)
 
 Behind the clock icon. **Recent** is the last 30 passages sent, with a star to pin any of them. **Favourites** are the scriptures the church keeps returning to. **Queue** is what's coming up — add references ahead of time, reorder them, and press **Send next** as the pastor reaches each one; the icon shows how many are waiting. References only are stored, in the browser.
 

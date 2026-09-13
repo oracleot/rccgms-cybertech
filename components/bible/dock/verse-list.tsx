@@ -5,7 +5,7 @@ import { Star } from "lucide-react"
 import { verseId, verseLabel } from "@/lib/bible/format"
 import type { Dock } from "./use-dock"
 
-export function VerseList({ dock }: { dock: Dock }) {
+export function VerseList({ dock, advanced }: { dock: Dock; advanced: boolean }) {
   const { verses, shown, heading, isShowing, firstShowingIdx, canPrev, canNext, nav, selectVerse, locked, onScreen } = dock
   const activeRef = useRef<HTMLButtonElement>(null)
 
@@ -26,7 +26,7 @@ export function VerseList({ dock }: { dock: Dock }) {
           {locked && <span className="pill-locked">Locked</span>}
         </span>
         <div className="nav-group">
-          {onScreen && (
+          {onScreen && advanced && (
             <button
               className={`nav-btn star${dock.currentIsFavourite ? " on" : ""}`}
               onClick={dock.favouriteCurrent}

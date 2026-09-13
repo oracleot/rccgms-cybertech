@@ -168,6 +168,15 @@ export function DockStyles() {
       .tabs button { flex: 1; font-size: 11.5px; padding: 5px; background: #1e1e2e; border: 1px solid #313244; color: #a6adc8; }
       .tabs button.active { background: #2a2040; border-color: #7c6af7; color: #eae4ff; }
 
+      /* Simple / Advanced interface mode — a small inline segmented control */
+      .mode-toggle { display: inline-flex; gap: 3px; flex-shrink: 0; }
+      .mode-toggle button {
+        background: #1e1e2e; border: 1px solid #313244; border-radius: 5px;
+        color: #a6adc8; font-size: 11px; font-weight: 600; padding: 4px 11px;
+      }
+      .mode-toggle button.active { background: #2a2040; border-color: #7c6af7; color: #eae4ff; }
+      .mode-toggle button:hover:not(.active) { border-color: #3d3d55; color: #cdd6f4; }
+
       /* Scripture browser */
       .browser { display: flex; flex-direction: column; gap: 7px; }
       .crumbs { display: flex; gap: 4px; flex-wrap: wrap; font-size: 11.5px; color: #8f86c9; }
