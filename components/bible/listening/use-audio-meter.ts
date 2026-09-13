@@ -15,6 +15,14 @@ export interface AudioInput {
   deviceId: string
   label: string
   isDefault: boolean
+  /**
+   * Devices that are the same physical hardware share a groupId (spec-defined).
+   * This is the only way to tell whether a specifically-picked device happens
+   * to BE the OS default: the "default" pseudo-entry often has its own
+   * deviceId, distinct from the real device's own entry, even when they are
+   * the same microphone.
+   */
+  groupId: string
 }
 
 const METER_KEY = "bible-audio-meter-device"
@@ -55,6 +63,7 @@ export function useAudioMeter(enabled: boolean, deviceId: string | null) {
         deviceId: d.deviceId,
         label: d.label || `Microphone ${i + 1}`,
         isDefault: d.deviceId === "default" || (i === 0 && !inputs.some((x) => x.deviceId === "default")),
+        groupId: d.groupId,
       }))
       setDevices(list)
     } catch {

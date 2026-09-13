@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import type { VoiceReference } from "@/lib/bible/voice-reference"
 import { STATUS_LABEL, type Listening, type ListenStatus } from "./use-listening"
 import { loadPreferredMeterDevice, savePreferredMeterDevice, useAudioMeter } from "./use-audio-meter"
+import { useRecognitionDiagnostics } from "./use-recognition-diagnostics"
 
 interface Props {
   listening: Listening
@@ -83,7 +84,7 @@ export function ListeningPanel({ listening, onSend, sending }: Props) {
           </p>
         )}
 
-        {showAudio && <AudioSection />}
+        {showAudio && <AudioSection listening={listening} />}
 
         {refs.length > 0 ? (
           <div className="space-y-2">
@@ -137,18 +138,19 @@ export function ListeningPanel({ listening, onSend, sending }: Props) {
   )
 }
 
-function AudioSection() {
+function AudioSection({ listening }: { listening: Listening }) {
   const [deviceId, setDeviceId] = useState<string | null>(null)
+  const [showDiagnostics, setShowDiagnostics] = useState(false)
   useEffect(() => {
     setDeviceId(loadPreferredMeterDevice())
   }, [])
   const meter = useAudioMeter(true, deviceId)
+  const diag = useRecognitionDiagnostics(listening, meter.devices, deviceId)
   const pick = (id: string | null) => {
     setDeviceId(id)
     savePreferredMeterDevice(id)
   }
   const current = meter.devices.find((d) => d.deviceId === (deviceId ?? "default")) ?? meter.devices.find((d) => d.isDefault)
-  const meterIsDefault = !deviceId || deviceId === "default" || !!current?.isDefault
 
   return (
     <div className="rounded-md border bg-muted/30 p-3 space-y-3">
@@ -187,11 +189,83 @@ function AudioSection() {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground leading-relaxed">
-        {meterIsDefault
-          ? "Recognition listens to the system default input, so this meter shows what it hears."
-          : "This meter is testing the selected input. Recognition still listens to the system default — the browser doesn't allow choosing a device for it. To use this input for recognition, make it the default in Windows Sound settings."}
-      </p>
+      {/* A green meter proves nothing about what recognition hears unless the two inputs are
+          the same device — a mismatch here is exactly what can make recognition look "broken"
+          while the meter says everything is fine. */}
+      {diag.mismatchWarning ? (
+        <p className="text-xs font-semibold text-red-600 dark:text-red-400 leading-relaxed">{diag.mismatchWarning}</p>
+      ) : (
+        <p className="text-xs text-muted-foreground leading-relaxed">{diag.matchNote}</p>
+      )}
+
+      <div className="space-y-1.5 pt-1 border-t">
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => setShowDiagnostics((s) => !s)}
+        >
+          {showDiagnostics ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          Recognition diagnostics
+        </button>
+        {showDiagnostics && (
+          <div className="text-xs space-y-1 font-mono">
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground font-sans">Meter input</span>
+              <span className="truncate max-w-[60%]">{diag.meterLabel}</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground font-sans">Recognition input</span>
+              <span className="truncate max-w-[60%]">System Default ({diag.recognitionLabel})</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground font-sans">Same device?</span>
+              <span
+                className={
+                  diag.match === "different"
+                    ? "text-red-600 dark:text-red-400 font-semibold"
+                    : diag.match === "same"
+                      ? "text-green-600 dark:text-green-400 font-semibold"
+                      : ""
+                }
+              >
+                {diag.match === "same" ? "Yes" : diag.match === "different" ? "No" : "Can't tell"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground font-sans">Status</span>
+              <span>{STATUS_LABEL[listening.status]}</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground font-sans">Started</span>
+              <span>{diag.startedAgo}</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground font-sans">Last result</span>
+              <span>{diag.lastResultAgo}</span>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span className="text-muted-foreground font-sans">Restarts</span>
+              <span>{diag.restartCount}</span>
+            </div>
+            {diag.lastInterim && (
+              <p className="italic text-muted-foreground font-sans">Interim: &ldquo;{diag.lastInterim}&rdquo;</p>
+            )}
+            {diag.lastFinal && <p className="italic text-muted-foreground font-sans">Final: &ldquo;{diag.lastFinal}&rdquo;</p>}
+            <div className="max-h-28 overflow-y-auto space-y-0.5 pt-1 border-t font-sans">
+              {diag.events.length === 0 ? (
+                <p className="text-muted-foreground">No events yet</p>
+              ) : (
+                diag.events.map((e, i) => (
+                  <div key={i} className="flex justify-between gap-3 text-muted-foreground">
+                    <span>{e.label}</span>
+                    <span className="shrink-0 opacity-70">{e.agoLabel}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

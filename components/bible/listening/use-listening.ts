@@ -13,6 +13,27 @@
  *    way to pick a device. Change the default in Windows Sound settings.
  *  - continuous mode ends itself after a stretch of silence; while the
  *    operator wants to listen we restart it, and report if we can't.
+ *
+ * Two real desktop failure modes drove the shape of the retry logic below
+ * (found from an operator's report: mic showed connected, the level meter
+ * moved, but recognition never produced a reference, and the "listening"
+ * indicator sometimes vanished after a few seconds):
+ *
+ *  1. Restarting too soon after Chrome ends a session can throw
+ *     InvalidStateError synchronously from rec.start() — the previous
+ *     session's audio pipe hasn't released yet. The old code treated any
+ *     start() throw as terminal, so one unlucky restart killed listening
+ *     outright. It's now retried with backoff like any other transient
+ *     failure, and only escalated after several tries in a row fail.
+ *  2. A silence-triggered onend/restart is NORMAL — Chrome does this
+ *     periodically even while genuinely working — and must never count
+ *     toward giving up. If recognition is bound to a different physical
+ *     device than the operator is speaking into (a real possibility: the
+ *     level meter can be pointed at any device, but recognition always
+ *     uses the OS/browser default), it will cycle through these clean
+ *     restarts indefinitely without ever producing a result. That is a
+ *     configuration problem to surface via diagnostics, not a reason to
+ *     stop trying.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -68,21 +89,91 @@ function getCtor(): RecognitionCtor | null {
 }
 
 const TRANSCRIPT_MAX = 2000
-const RESTART_DELAY_MS = 300
-const MAX_SILENT_RESTARTS = 40
+export const CLEAN_RESTART_DELAY_MS = 300 // a silence-triggered onend, with no error — Chrome's normal cadence
+const EVENT_LOG_MAX = 30
+export const MAX_CONSECUTIVE_FAILURES = 6 // real failures in a row before giving up
+
+/** Backoff for actual failures: 500ms, 1s, 2s, 4s, 8s, 8s... giving Windows audio time to settle. */
+export function failureBackoffMs(consecutiveFailures: number): number {
+  return Math.min(500 * 2 ** Math.max(0, consecutiveFailures - 1), 8000)
+}
+
+export type RecognitionEndKind = "clean" | "failure"
+
+export type RetryDecision =
+  | { action: "retry"; delayMs: number; consecutiveFailures: number }
+  | { action: "give-up"; consecutiveFailures: number }
+
+/**
+ * What to do after a recognition session ends, given why and how many real
+ * failures have happened in a row. This is the one place that decides "keep
+ * trying" vs "give up" — the hook below only wires it up — so the actual
+ * desktop bug this was built to fix (dying on the first InvalidStateError
+ * right after an ordinary restart) is directly testable without a browser:
+ * see scripts/check-listening-retry.ts.
+ *
+ * A "clean" end — plain silence, or Chrome's own periodic cycling, or our own
+ * abort() on stop/language-change — is not a failure and always retries; it
+ * must never count toward giving up, or a healthy long session eventually
+ * dies on its own, and — worse — this is also what a device mismatch looks
+ * like (recognition legitimately hearing silence from the wrong input),
+ * which is a configuration problem to surface via diagnostics, not a reason
+ * to stop listening. Only start() throwing, or onerror reporting something
+ * other than "no-speech"/"aborted", count as failures.
+ */
+export function decideRetry(kind: RecognitionEndKind, consecutiveFailures: number): RetryDecision {
+  if (kind === "clean") {
+    return { action: "retry", delayMs: CLEAN_RESTART_DELAY_MS, consecutiveFailures: 0 }
+  }
+  const next = consecutiveFailures + 1
+  if (next > MAX_CONSECUTIVE_FAILURES) {
+    return { action: "give-up", consecutiveFailures: next }
+  }
+  return { action: "retry", delayMs: failureBackoffMs(next), consecutiveFailures: next }
+}
+
+export type ListenEventType = "start" | "result" | "end-clean" | "end-after-error" | "error" | "start-failed" | "gave-up"
+
+export interface ListenEvent {
+  at: number
+  type: ListenEventType
+  detail?: string
+}
+
+export interface ListenDiagnostics {
+  events: ListenEvent[]
+  /** Every restart since the last user-initiated Start — clean and after-error alike. */
+  restartCount: number
+  lastInterim: string
+  lastFinal: string
+  lastResultAt: number | null
+  /** When the current (or most recent) recognition session actually started. */
+  startedAt: number | null
+}
 
 export function useListening(lang: string) {
   const [supported, setSupported] = useState(false)
   const [status, setStatus] = useState<ListenStatus>("unsupported")
   const [detail, setDetail] = useState<string | null>(null)
   const [transcript, setTranscript] = useState("")
+  const [diagnostics, setDiagnostics] = useState<ListenDiagnostics>({
+    events: [],
+    restartCount: 0,
+    lastInterim: "",
+    lastFinal: "",
+    lastResultAt: null,
+    startedAt: null,
+  })
 
   const recRef = useRef<RecognitionLike | null>(null)
   const intentRef = useRef(false)
   const finalRef = useRef("")
-  const restartsRef = useRef(0)
+  const restartCountRef = useRef(0)
+  const consecutiveFailuresRef = useRef(0)
+  const lastErrorCodeRef = useRef<string | null>(null)
   const restartTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const langRef = useRef(lang)
+  const eventsRef = useRef<ListenEvent[]>([])
 
   useEffect(() => {
     const ok = getCtor() !== null
@@ -90,11 +181,21 @@ export function useListening(lang: string) {
     setStatus(ok ? "ready" : "unsupported")
   }, [])
 
-  const fail = useCallback((s: ListenStatus, why: string | null) => {
-    intentRef.current = false
-    setStatus(s)
-    setDetail(why)
+  const logEvent = useCallback((type: ListenEventType, eventDetail?: string) => {
+    const entry: ListenEvent = { at: Date.now(), type, detail: eventDetail }
+    eventsRef.current = [...eventsRef.current, entry].slice(-EVENT_LOG_MAX)
+    setDiagnostics((d) => ({ ...d, events: eventsRef.current }))
   }, [])
+
+  const fail = useCallback(
+    (s: ListenStatus, why: string | null, eventDetail?: string) => {
+      intentRef.current = false
+      setStatus(s)
+      setDetail(why)
+      logEvent("gave-up", eventDetail ?? why ?? s)
+    },
+    [logEvent]
+  )
 
   const spin = useCallback(() => {
     const Ctor = getCtor()
@@ -114,39 +215,54 @@ export function useListening(lang: string) {
     rec.lang = langRef.current
 
     rec.onstart = () => {
+      consecutiveFailuresRef.current = 0
       setStatus("listening")
       setDetail(null)
+      setDiagnostics((d) => ({ ...d, startedAt: Date.now() }))
+      logEvent("start")
     }
     rec.onresult = (e) => {
       let interim = ""
+      let final = ""
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i]
         const text = r[0]?.transcript ?? ""
-        if (r.isFinal) finalRef.current = `${finalRef.current} ${text}`.trim().slice(-TRANSCRIPT_MAX)
-        else interim += text
+        if (r.isFinal) {
+          final = text
+          finalRef.current = `${finalRef.current} ${text}`.trim().slice(-TRANSCRIPT_MAX)
+        } else {
+          interim += text
+        }
       }
-      restartsRef.current = 0
-      setTranscript(`${finalRef.current} ${interim}`.trim().slice(-TRANSCRIPT_MAX))
+      restartCountRef.current = 0
+      const merged = `${finalRef.current} ${interim}`.trim().slice(-TRANSCRIPT_MAX)
+      setTranscript(merged)
+      setDiagnostics((d) => ({
+        ...d,
+        lastResultAt: Date.now(),
+        lastInterim: interim || d.lastInterim,
+        lastFinal: final || d.lastFinal,
+      }))
+      logEvent("result", final ? `final: "${final.trim()}"` : `interim: "${interim.trim()}"`)
     }
     rec.onerror = (e) => {
       const code = e.error ?? "unknown"
+      lastErrorCodeRef.current = code
+      logEvent("error", code)
       switch (code) {
         case "not-allowed":
         case "service-not-allowed":
-          fail("permission-denied", "Allow microphone access for this site, then press Start again.")
-          break
-        case "audio-capture":
-          fail("no-audio", "No microphone was found. Check the input is connected and set as default in Windows Sound settings.")
-          break
-        case "network":
-          fail("error", "The speech service needs an internet connection.")
+          // An explicit permission decision — retrying won't change it.
+          fail("permission-denied", "Allow microphone access for this site, then press Start again.", code)
           break
         case "no-speech":
         case "aborted":
-          // Silence or our own restart — not a fault. onend handles the restart.
+          // Silence, or our own restart/abort — not a fault. onend handles what happens next.
           break
         default:
-          fail("error", `Recognition error: ${code}${e.message ? ` — ${e.message}` : ""}`)
+          // audio-capture, network, and anything unrecognised: treat as transient and let
+          // onend's retry path decide whether to back off or give up, rather than dying here.
+          break
       }
     }
     rec.onend = () => {
@@ -155,21 +271,54 @@ export function useListening(lang: string) {
         setStatus((s) => (s === "listening" ? "stopped" : s))
         return
       }
-      // Chrome ends continuous recognition after silence; keep going while the operator wants us to.
-      if (restartsRef.current++ > MAX_SILENT_RESTARTS) {
-        fail("error", "Recognition kept stopping — check the microphone is receiving audio, then press Start again.")
+
+      const errorCode = lastErrorCodeRef.current
+      lastErrorCodeRef.current = null
+      const isFailure = !!errorCode && errorCode !== "no-speech" && errorCode !== "aborted"
+      logEvent(isFailure ? "end-after-error" : "end-clean", errorCode ?? undefined)
+
+      const decision = decideRetry(isFailure ? "failure" : "clean", consecutiveFailuresRef.current)
+      consecutiveFailuresRef.current = decision.consecutiveFailures
+      restartCountRef.current++
+      setDiagnostics((d) => ({ ...d, restartCount: restartCountRef.current }))
+
+      if (decision.action === "give-up") {
+        const message =
+          errorCode === "audio-capture"
+            ? "No microphone was found. Check the input is connected and set as default in Windows Sound settings."
+            : errorCode === "network"
+              ? "The speech service needs an internet connection."
+              : errorCode
+                ? `Recognition error: ${errorCode}`
+                : "Recognition kept failing. Try Stop then Start again."
+        fail("error", message, `${errorCode ?? "unknown"} × ${decision.consecutiveFailures}`)
         return
       }
-      restartTimer.current = setTimeout(spin, RESTART_DELAY_MS)
+      restartTimer.current = setTimeout(spin, decision.delayMs)
     }
 
     try {
       rec.start()
       recRef.current = rec
-    } catch {
-      fail("error", "Recognition could not start. Try again.")
+    } catch (e) {
+      // The most common desktop failure: restarting before the previous session's audio pipe
+      // has released throws InvalidStateError synchronously. This used to be treated as
+      // terminal — one unlucky restart silently killed listening. Retry with backoff instead.
+      const name = e instanceof Error ? e.name : "unknown"
+      logEvent("start-failed", name)
+      const decision = decideRetry("failure", consecutiveFailuresRef.current)
+      consecutiveFailuresRef.current = decision.consecutiveFailures
+      if (decision.action === "give-up") {
+        fail(
+          "error",
+          "Recognition keeps failing to (re)start. This can happen right after switching microphones or with some audio drivers — try Stop then Start again.",
+          `${name} × ${decision.consecutiveFailures}`
+        )
+        return
+      }
+      restartTimer.current = setTimeout(spin, decision.delayMs)
     }
-  }, [fail])
+  }, [fail, logEvent])
 
   const start = useCallback(() => {
     if (!supported) {
@@ -178,7 +327,11 @@ export function useListening(lang: string) {
     }
     if (intentRef.current) return
     intentRef.current = true
-    restartsRef.current = 0
+    restartCountRef.current = 0
+    consecutiveFailuresRef.current = 0
+    lastErrorCodeRef.current = null
+    eventsRef.current = []
+    setDiagnostics({ events: [], restartCount: 0, lastInterim: "", lastFinal: "", lastResultAt: null, startedAt: null })
     setDetail(null)
     spin()
   }, [supported, spin, fail])
@@ -215,7 +368,7 @@ export function useListening(lang: string) {
       } catch {
         // ignore
       }
-      restartTimer.current = setTimeout(spin, RESTART_DELAY_MS)
+      restartTimer.current = setTimeout(spin, CLEAN_RESTART_DELAY_MS)
     }
   }, [lang, spin])
 
@@ -257,7 +410,18 @@ export function useListening(lang: string) {
     return all.slice(-6)
   }, [transcript])
 
-  return { supported, status, detail, transcript, refs, start, stop, clearTranscript, listening: status === "listening" }
+  return {
+    supported,
+    status,
+    detail,
+    transcript,
+    refs,
+    start,
+    stop,
+    clearTranscript,
+    listening: status === "listening",
+    diagnostics,
+  }
 }
 
 export type Listening = ReturnType<typeof useListening>

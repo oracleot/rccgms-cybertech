@@ -251,6 +251,21 @@ export function DockStyles() {
       .level-peak { position: absolute; top: 0; height: 100%; width: 2px; background: rgba(255,255,255,0.6); }
       .search-results button { white-space: normal; line-height: 1.4; }
 
+      /* Recognition diagnostics */
+      .diag-warn { color: #f38ba8; font-size: 11px; font-weight: 600; line-height: 1.4; }
+      .diag-good { color: #4ade80; font-weight: 600; }
+      .diag { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; font-size: 11px; }
+      .diag-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+      .diag-row .k { color: #6e6a92; flex-shrink: 0; }
+      .diag-row .v { color: #cdd6f4; font-weight: 600; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .diag-quote { color: #a6adc8; font-size: 10.5px; font-style: italic; overflow-wrap: anywhere; }
+      .diag-events {
+        max-height: 110px; overflow-y: auto; display: flex; flex-direction: column;
+        gap: 2px; margin-top: 3px; border-top: 1px solid #252535; padding-top: 4px;
+      }
+      .diag-events .row2 { display: flex; justify-content: space-between; gap: 8px; font-size: 10.5px; color: #a6adc8; }
+      .diag-events .ago { color: #52526e; flex-shrink: 0; }
+
       .spinner {
         display: inline-block; width: 12px; height: 12px;
         border: 2px solid rgba(255,255,255,0.25); border-top-color: #fff;
