@@ -3,25 +3,21 @@
 /**
  * OBS Custom Browser Dock — /bible/obs/dock
  *
- * Add this as a Custom Browser Dock inside OBS Studio so the operator
- * can control the Bible overlay without leaving OBS.
+ * The one control panel for the OBS Bible display at /bible/obs. Add it in
+ * OBS under View → Docks → Custom Browser Docks so the operator can send
+ * passages, step through verses and pages, switch translations and set the
+ * display's appearance without leaving OBS.
  *
- * OBS Setup:
- *   1. View → Docks → Custom Browser Docks
- *   2. Dock Name: Bible Control
- *   3. URL: https://<your-domain>/bible/obs/dock
- *   4. Click Apply — dock appears as a panel inside OBS
- *
- * The dock broadcasts to the same Supabase Realtime channel as the
- * Bible Reader, so every OBS surface updates instantly. It is also the
- * source of truth for the scene's appearance settings.
+ * The display decides what fits on screen; it reports what it is showing and
+ * this dock mirrors that, so the highlighted verses and page count are always
+ * what the stream is actually showing.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { detectBibleReferences } from "@/lib/bible/detect-references"
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
-import { verseLabel } from "@/lib/bible/format"
+import { normalizeReference, verseLabel } from "@/lib/bible/format"
 import { obsChannelName } from "@/lib/bible/obs-channel"
 import {
   SCENE_DEFAULTS,
@@ -29,6 +25,7 @@ import {
   saveSettings,
   type SceneSettings,
 } from "@/lib/bible/scene-settings"
+import type { DisplayState } from "@/components/bible/obs-surface"
 
 interface Verse {
   book?: string
@@ -66,6 +63,8 @@ export default function BibleObsDockPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [onScreen, setOnScreen] = useState<PassagePayload | null>(null)
+  const [shown, setShown] = useState<DisplayState | null>(null)
+  const [focus, setFocus] = useState<number | null>(null)
   const [view, setView] = useState<"bible" | "settings">("bible")
   const [settings, setSettings] = useState<SceneSettings>(SCENE_DEFAULTS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,6 +72,7 @@ export default function BibleObsDockPage() {
   const activeVerseRef = useRef<HTMLButtonElement>(null)
   const settingsRef = useRef(settings)
   const onScreenRef = useRef<PassagePayload | null>(null)
+  const shownRef = useRef<DisplayState | null>(null)
 
   useEffect(() => {
     const stored = loadSettings()
@@ -83,10 +83,12 @@ export default function BibleObsDockPage() {
   useEffect(() => {
     settingsRef.current = settings
   }, [settings])
-
   useEffect(() => {
     onScreenRef.current = onScreen
   }, [onScreen])
+  useEffect(() => {
+    shownRef.current = shown
+  }, [shown])
 
   useEffect(() => {
     const supabase = createClient()
@@ -99,13 +101,23 @@ export default function BibleObsDockPage() {
       })
       .on("broadcast", { event: "clear" }, () => {
         setOnScreen(null)
+        setShown(null)
+        setFocus(null)
       })
-      // A source that loads later (OBS scene switch, restart) asks for what is
+      .on("broadcast", { event: "display-state" }, ({ payload }: { payload: DisplayState }) => {
+        setShown(payload)
+      })
+      // A display that loads later (OBS scene switch, restart) asks for what is
       // already live so it renders the current verse instead of coming back blank.
       .on("broadcast", { event: "request-state" }, () => {
         channel.send({ type: "broadcast", event: "settings", payload: settingsRef.current })
-        if (onScreenRef.current) {
-          channel.send({ type: "broadcast", event: "passage", payload: onScreenRef.current })
+        const cur = onScreenRef.current
+        if (cur) {
+          channel.send({
+            type: "broadcast",
+            event: "passage",
+            payload: { ...cur, verseNumber: shownRef.current?.from ?? cur.verseNumber },
+          })
         }
       })
       .subscribe()
@@ -132,73 +144,87 @@ export default function BibleObsDockPage() {
   const broadcast = useCallback((payload: PassagePayload) => {
     channelRef.current?.send({ type: "broadcast", event: "passage", payload })
     setOnScreen(payload)
+    setShown(null)
+    setFocus(payload.verseNumber ?? null)
   }, [])
 
   const clearScreen = useCallback(() => {
     channelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
     setOnScreen(null)
+    setShown(null)
+    setFocus(null)
   }, [])
 
-  const sendRef = useCallback(async (ref: string) => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const apiPath = ref.toLowerCase().replace(/\s+/g, "+")
-      const passage = await fetchBiblePassage(apiPath, translation)
-      broadcast({
-        reference: passage.reference,
-        text: passage.text,
-        translation: passage.translationId,
-        translationName: passage.translationName,
-        verses: passage.verses,
-        verseNumber: passage.verses.length === 1 ? passage.verses[0]?.verse : undefined,
-      })
-    } catch {
-      setError("Not found — check the reference")
-    } finally {
-      setIsLoading(false)
-    }
-  }, [translation, broadcast])
+  const sendRef = useCallback(
+    async (ref: string, opts?: { translation?: TranslationId; focus?: number }) => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const apiPath = ref.toLowerCase().replace(/\s+/g, "+")
+        const passage = await fetchBiblePassage(apiPath, opts?.translation ?? translation)
+        const keepFocus =
+          opts?.focus != null && passage.verses.some((v) => v.verse === opts.focus) ? opts.focus : undefined
+        broadcast({
+          reference: passage.reference,
+          text: passage.text,
+          translation: passage.translationId,
+          translationName: passage.translationName,
+          verses: passage.verses,
+          verseNumber: keepFocus ?? (passage.verses.length === 1 ? passage.verses[0]?.verse : undefined),
+        })
+      } catch {
+        setError("Not found — check the reference")
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [translation, broadcast]
+  )
 
-  const sendVerse = useCallback((v: Verse) => {
-    setOnScreen((current) => {
-      if (!current) return current
-      const payload: PassagePayload = { ...current, text: v.text, verseNumber: v.verse }
-      channelRef.current?.send({ type: "broadcast", event: "passage", payload })
-      return payload
-    })
+  // Re-fetch what is live in the new translation, keeping the same verse or page in view.
+  const changeTranslation = useCallback(
+    (t: TranslationId) => {
+      setTranslation(t)
+      const cur = onScreenRef.current
+      if (cur) void sendRef(cur.reference, { translation: t, focus: shownRef.current?.from ?? cur.verseNumber })
+    },
+    [sendRef]
+  )
+
+  const selectVerse = useCallback((v: Verse) => {
+    const cur = onScreenRef.current
+    if (!cur) return
+    const payload: PassagePayload = { ...cur, verseNumber: v.verse }
+    channelRef.current?.send({ type: "broadcast", event: "passage", payload })
+    setOnScreen(payload)
+    setShown(null)
+    setFocus(v.verse)
+  }, [])
+
+  const nav = useCallback((delta: number) => {
+    if (!onScreenRef.current) return
+    channelRef.current?.send({ type: "broadcast", event: "nav", payload: { delta } })
   }, [])
 
   const verses = onScreen?.verses ?? []
-  const activeIndex = useMemo(
-    () => verses.findIndex((v) => v.verse === onScreen?.verseNumber),
-    [verses, onScreen?.verseNumber]
-  )
-
-  const step = useCallback(
-    (delta: number) => {
-      if (!verses.length) return
-      const next = activeIndex < 0 ? (delta > 0 ? 0 : verses.length - 1) : activeIndex + delta
-      if (next < 0 || next >= verses.length) return
-      sendVerse(verses[next])
-    },
-    [verses, activeIndex, sendVerse]
-  )
+  const isShowing = (v: Verse) =>
+    shown ? v.verse >= shown.from && v.verse <= shown.to : focus === v.verse
+  const firstShowing = verses.find(isShowing)?.verse
 
   useEffect(() => {
     activeVerseRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
-  }, [onScreen?.verseNumber])
+  }, [firstShowing])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null
       if (el && (el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA")) return
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); step(1) }
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); step(-1) }
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); nav(1) }
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); nav(-1) }
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [step])
+  }, [nav])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -208,6 +234,9 @@ export default function BibleObsDockPage() {
     const detected = detectBibleReferences(q)
     await sendRef(detected.length > 0 ? detected[0].reference : q)
   }
+
+  const canPrev = verses.length > 1 && (shown ? shown.page > 0 : true)
+  const canNext = verses.length > 1 && (shown ? shown.page < shown.pages - 1 : true)
 
   return (
     <>
@@ -263,7 +292,12 @@ export default function BibleObsDockPage() {
           display: flex; align-items: center; justify-content: space-between;
           gap: 6px; margin-bottom: 5px;
         }
-        .nav-group { display: flex; gap: 4px; }
+        .verse-head .section-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .page-ind {
+          color: #b4a8ff; font-family: monospace; font-size: 10.5px; font-weight: 700;
+          margin-left: 6px; letter-spacing: 0;
+        }
+        .nav-group { display: flex; gap: 4px; flex-shrink: 0; }
         .nav-btn {
           background: #1e1e2e; border: 1px solid #313244; border-radius: 5px;
           color: #a6adc8; font-size: 13px; font-weight: 700; line-height: 1; padding: 4px 9px;
@@ -358,7 +392,7 @@ export default function BibleObsDockPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="e.g. John 3:16"
+                placeholder="e.g. John 3:16-18"
                 disabled={isLoading}
                 autoComplete="off"
                 spellCheck={false}
@@ -370,7 +404,11 @@ export default function BibleObsDockPage() {
             </form>
             {error && <div className="error-msg">{error}</div>}
 
-            <select value={translation} onChange={(e) => setTranslation(e.target.value as TranslationId)}>
+            <select
+              value={translation}
+              onChange={(e) => changeTranslation(e.target.value as TranslationId)}
+              disabled={isLoading}
+            >
               {TRANSLATIONS.map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
@@ -380,22 +418,19 @@ export default function BibleObsDockPage() {
 
             <div className="verse-section">
               <div className="verse-head">
-                <span className="section-label">{onScreen ? onScreen.reference : "Verses"}</span>
+                <span className="section-label">
+                  {onScreen ? normalizeReference(onScreen.reference) : "Verses"}
+                  {shown && shown.pages > 1 && (
+                    <span className="page-ind">
+                      {shown.page + 1}/{shown.pages}
+                    </span>
+                  )}
+                </span>
                 <div className="nav-group">
-                  <button
-                    className="nav-btn"
-                    onClick={() => step(-1)}
-                    disabled={!verses.length || activeIndex <= 0}
-                    title="Previous verse (←)"
-                  >
+                  <button className="nav-btn" onClick={() => nav(-1)} disabled={!canPrev} title="Previous (←)">
                     ←
                   </button>
-                  <button
-                    className="nav-btn"
-                    onClick={() => step(1)}
-                    disabled={!verses.length || activeIndex >= verses.length - 1}
-                    title="Next verse (→)"
-                  >
+                  <button className="nav-btn" onClick={() => nav(1)} disabled={!canNext} title="Next (→)">
                     →
                   </button>
                 </div>
@@ -404,13 +439,13 @@ export default function BibleObsDockPage() {
               {verses.length > 0 ? (
                 <div className="verse-list">
                   {verses.map((v) => {
-                    const active = onScreen?.verseNumber === v.verse
+                    const active = isShowing(v)
                     return (
                       <button
                         key={v.verse}
-                        ref={active ? activeVerseRef : undefined}
+                        ref={active && v.verse === firstShowing ? activeVerseRef : undefined}
                         className={`verse-item${active ? " active" : ""}`}
-                        onClick={() => sendVerse(v)}
+                        onClick={() => selectVerse(v)}
                       >
                         <span className="verse-num">{verseLabel(v)}</span>
                         <span>{v.text}</span>
@@ -433,6 +468,23 @@ export default function BibleObsDockPage() {
           <div className="pane">
             <span className="section-label">Scene Appearance</span>
             <div className="settings">
+              <div className="srow">
+                <span>Display mode</span>
+                <select
+                  className="compact"
+                  value={settings.mode}
+                  onChange={(e) => update("mode", e.target.value as SceneSettings["mode"])}
+                >
+                  <option value="auto">Auto</option>
+                  <option value="single">Single verse</option>
+                  <option value="multi">Multi-verse</option>
+                </select>
+              </div>
+              <div className="hint">
+                Auto shows the whole passage when it fits, otherwise one verse at a time.
+                Multi-verse splits long passages into pages.
+              </div>
+
               <div className="srow">
                 <span>Style</span>
                 <select
@@ -492,6 +544,10 @@ export default function BibleObsDockPage() {
                   <span className="val">{Math.round(settings.scale * 100)}%</span>
                 </div>
               </div>
+              <div className="hint">
+                Text auto-fits the source. This sets how large it may go, and how small it will go
+                before a long passage splits into pages.
+              </div>
 
               <div className="srow">
                 <span>Reference</span>
@@ -520,20 +576,12 @@ export default function BibleObsDockPage() {
 
               <div className="srow">
                 <span>Text colour</span>
-                <input
-                  type="color"
-                  value={settings.color}
-                  onChange={(e) => update("color", e.target.value)}
-                />
+                <input type="color" value={settings.color} onChange={(e) => update("color", e.target.value)} />
               </div>
 
               <div className="srow">
                 <span>Reference colour</span>
-                <input
-                  type="color"
-                  value={settings.accent}
-                  onChange={(e) => update("accent", e.target.value)}
-                />
+                <input type="color" value={settings.accent} onChange={(e) => update("accent", e.target.value)} />
               </div>
 
               <div className="srow">
@@ -562,7 +610,10 @@ export default function BibleObsDockPage() {
                   onChange={(e) => update("inlineNumber", e.target.checked)}
                 />
               </div>
-              <div className="hint">Puts the number in front of the text, like ³ And God said…</div>
+              <div className="hint">
+                Single-verse only — puts the number in front of the text, like ³ And God said…
+                Multi-verse always numbers each verse.
+              </div>
 
               <div className="divider" />
               <button className="btn-reset" onClick={() => pushSettings(SCENE_DEFAULTS)}>

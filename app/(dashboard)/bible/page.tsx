@@ -375,10 +375,10 @@ export default function BiblePage() {
               navigator.clipboard.writeText(url).catch(() => {})
               window.open(url, "_blank", "noopener,noreferrer")
             }}
-            title="Open OBS overlay page (add as Browser Source in OBS)"
+            title="Open the OBS Bible display (add it as a Browser Source in OBS)"
           >
             <Tv2 className="h-3.5 w-3.5" />
-            OBS Overlay
+            OBS Display
           </Button>
           <Select
             value={accent}

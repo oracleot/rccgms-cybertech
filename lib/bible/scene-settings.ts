@@ -1,5 +1,5 @@
 /**
- * Appearance settings for the OBS Bible scene (/bible/obs/scene).
+ * Appearance settings for the OBS Bible display (/bible/obs).
  *
  * The dock is the source of truth: the operator edits settings there and they
  * are broadcast over the same Realtime channel as passages. Both surfaces cache
@@ -7,7 +7,10 @@
  * (scene switch, restart) comes back looking the same without waiting for the dock.
  */
 
+export type DisplayMode = "single" | "multi" | "auto"
+
 export interface SceneSettings {
+  mode: DisplayMode
   style: "text" | "card"
   bgColor: string
   bgOpacity: number
@@ -23,6 +26,7 @@ export interface SceneSettings {
 }
 
 export const SCENE_DEFAULTS: SceneSettings = {
+  mode: "auto",
   style: "text",
   bgColor: "#000000",
   bgOpacity: 0,
@@ -79,6 +83,7 @@ export function normalize(raw: unknown): SceneSettings {
   const scale = Number(p.scale)
   const opacity = Number(p.bgOpacity)
   return {
+    mode: p.mode === "single" || p.mode === "multi" ? p.mode : "auto",
     style: p.style === "card" ? "card" : "text",
     bgColor: parseHex(p.bgColor ?? null, SCENE_DEFAULTS.bgColor),
     bgOpacity: Number.isFinite(opacity) ? Math.min(Math.max(opacity, 0), 1) : SCENE_DEFAULTS.bgOpacity,
@@ -98,6 +103,8 @@ export function normalize(raw: unknown): SceneSettings {
 export function settingsFromQuery(search: string): Partial<SceneSettings> {
   const p = new URLSearchParams(search)
   const out: Partial<SceneSettings> = {}
+  const mode = p.get("mode")
+  if (mode === "single" || mode === "multi" || mode === "auto") out.mode = mode
   const style = p.get("style")
   if (style === "card" || style === "text") out.style = style
   const bgRaw = p.get("bg")

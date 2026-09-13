@@ -107,7 +107,9 @@ Two URL-based OBS integrations — a display source and a control dock. No plugi
 
 ### 1. Bible Display (Browser Source)
 
-Behaves like a native OBS text source: **transparent**, showing only the reference and the verse text over whatever your scene already has — church branding, an open-Bible image, a live camera. It fills whatever size you give the source and sizes the type to match, so you can run it at OBS's default 800×600, at 400×500 like the FirstFruits plugin, or full-frame at 1920×1080, then scale and position it in the scene like any other source.
+Behaves like a native OBS text source: **transparent**, showing only the reference and the verse text over whatever your scene already has — church branding, an open-Bible image, a live camera. It fills whatever size you give the source, so you can run it at OBS's default 800×600, at 400×500 like the FirstFruits plugin, or full-frame at 1920×1080, then scale and position it in the scene like any other source.
+
+**Type fits itself to the source.** The display measures the rendered passage against the source area and uses the largest size that fits — a short verse fills the frame, a long one comes down, and a long passage splits into pages rather than shrinking below a readable minimum. Resize the source in OBS and it re-fits on the spot.
 
 **OBS Setup:**
 
@@ -119,9 +121,7 @@ Behaves like a native OBS text source: **transparent**, showing only the referen
 3. Leave OBS's defaults — size (800×600) and Custom CSS are both fine. Resize the source in the scene to taste
 4. Check **Shutdown source when not visible**
 
-To position the source before anyone has sent a verse, add `?preview=1` to the URL temporarily — it shows a sample verse without connecting. Remove it when done.
-
-`/bible/obs/scene` still works and shows the same thing, so existing setups keep running.
+To position the source before anyone has sent a verse, add `?preview=1` to the URL temporarily — it shows a sample passage without connecting. Remove it when done.
 
 #### Appearance settings
 
@@ -129,19 +129,20 @@ Click the **gear icon** at the bottom of the OBS dock to open **Scene Appearance
 
 | Setting | What it does |
 |---------|--------------|
+| **Display mode** | **Auto** (default), **Single verse** or **Multi-verse** — see [Display modes](#display-modes-and-verse-navigation) |
 | **Style** | **Text only** (default) or **Lower-third card** — the purple band with the reference and quoted verse |
 | **Background** | Colour picker plus an opacity slider. **0% is fully transparent**; raise it to dim a busy background behind the text. Covers the whole source, not just the text |
 | **Text position** | Top, Centre or Bottom of the source |
-| **Text size** | 50–150%, relative to the source width. Drop below 100% for long passages |
+| **Text size** | 50–150%. Text auto-fits regardless; this sets how large it may go and how small it will go before a long passage splits into pages — 150% means bigger type and more pages |
 | **Reference** | Above the text, below it, or hidden |
 | **Font** | Serif or Sans |
 | **Text colour** / **Reference colour** | Colour pickers |
 | **Drop shadow** | Keeps text legible over video — turn off over a plain background |
 | **Show translation** | The `(KJV)` suffix on the reference |
-| **Inline verse number** | Puts the verse number in front of the text as a superscript — `³ And God said, Let there be light` — the way a printed Bible sets it |
-| **Reset to defaults** | Back to text only, transparent, centred, serif |
+| **Inline verse number** | Single-verse only: puts the number in front of the text as a superscript — `³ And God said, Let there be light`. Multi-verse always numbers each verse |
+| **Reset to defaults** | Back to Auto, text only, transparent, centred, serif |
 
-Settings are remembered by the display itself, so a source that restarts comes back looking the same. To preset the look without opening the dock, URL parameters still work and win on first load: `?style=card&bg=000000cc&pos=bottom&size=0.8&ref=hide&font=sans&color=ffffff&accent=ffd700&shadow=0&translation=0&inline=1`.
+Settings are remembered by the display itself, so a source that restarts comes back looking the same. To preset the look without opening the dock, URL parameters still work and win on first load: `?mode=multi&style=card&bg=000000cc&pos=bottom&size=0.8&ref=hide&font=sans&color=ffffff&accent=ffd700&shadow=0&translation=0&inline=1`.
 
 ### 2. Control Dock (Custom Browser Dock)
 
@@ -160,37 +161,41 @@ A compact control panel that lives **inside OBS** — send passages and navigate
 4. The dock appears as a panel — drag it to wherever suits your OBS layout
 
 **Dock features:**
-- **Send Reference** — type any reference (`John 3:16`, `Psalm 23`, `Genesis 1:1-5`) and hit Enter
-- **Translation** — switch between KJV, WEB, ASV, BBE, YLT without leaving OBS
-- **Verse list** — the full passage, one verse per row (see below)
-- **Clear Screen** — hide the overlay (appears only when something is live)
+- **Send Reference** — type any reference (`John 3:16`, `Psalm 23`, `John 3:16-18`) and hit Enter
+- **Translation** — KJV, WEB, ASV, BBE, YLT. Changing it re-fetches whatever is live in the new translation straight away, keeping the same verse or page on screen — no need to send the reference again
+- **Verse list** — the full passage, one verse per row, with the verses currently on screen highlighted (see below)
+- **← / →** — step through verses or pages, with a `2/4` page indicator when a passage is split; arrow keys work too
+- **Clear Screen** — hide the display (appears only when something is live)
 - **Toolbar** — the book and gear icons at the bottom switch between the Bible controls and **Scene Appearance**
 
-### Verse Navigation
+### Display modes and verse navigation
 
-Loading a multi-verse passage fills the dock with the whole passage, one verse per row, labelled by chapter and verse:
+Loading a passage fills the dock with every verse, one per row, labelled by chapter and verse. The rows currently on screen are highlighted, and the list scrolls to keep them in view:
 
 ```
-GENESIS 1:1-5                             [ ← ] [ → ]
+JOHN 3:16–18                              [ ← ] [ → ]
 ┌──────────────────────────────────────────────────┐
-│ 1:1   In the beginning God created the heaven    │
-│       and the earth.                             │
-│                                                  │
-│ 1:2   And the earth was without form, and void;  │  ← live
-│       and darkness was upon the face of the deep │
-│                                                  │
-│ 1:3   And God said, Let there be light: and      │
-│       there was light.                           │
+│ 3:16  For God so loved the world, that he gave   │  ┐
+│       his only begotten Son…                     │  │
+│ 3:17  For God sent not his Son into the world    │  ├ on screen
+│       to condemn the world…                      │  │
+│ 3:18  He that believeth on him is not condemned  │  ┘
 └──────────────────────────────────────────────────┘
 ```
 
-- **Click any verse** to put just that verse on screen
-- **← / →** step to the previous or next verse; arrow keys work too
-- The live verse is highlighted and the list auto-scrolls to keep it in view
-- The on-screen reference narrows to the verse being shown — `Genesis 1:1-5` becomes `Genesis 1:2`
-- Every surface stays in sync: send from the Bible Reader or the dock, and the scene, lower third and projection screen all follow
+What goes on screen depends on the **Display mode** in Scene Appearance:
 
-The same verse list appears in the Bible Reader at `/bible`, so an operator on a laptop and an operator inside OBS see and control the same thing.
+| Mode | Behaviour |
+|------|-----------|
+| **Auto** (default) | The whole passage if it fits the source at a readable size — `John 3:16–18` shows all three verses, numbered. If it doesn't fit, one verse at a time |
+| **Single verse** | Always one verse at a time. Click a verse to show it; ← / → step through |
+| **Multi-verse** | The whole passage, split into pages when it can't fit at a readable size. Pages are balanced so each holds a similar amount of text, set in one common size so type doesn't jump as you page. ← / → step pages, and the dock shows `2/4` |
+
+In every mode the on-screen reference is exactly what is showing — `John 3:16–18 (KJV)` for the range, `Psalm 119:21–40` for a page, `Genesis 1:2` for one verse — with an en dash, as printed Bibles set it. Multi-verse pages number each verse with a superscript.
+
+Clicking a verse in Multi-verse mode jumps to the page that contains it. The display is the authority on what fits, so the dock's highlight and page count are always what the stream is actually showing.
+
+Every surface stays in sync: send from the Bible Reader or the dock and the OBS display and the projection screen both follow. The same verse list appears in the Bible Reader at `/bible`, so an operator on a laptop and an operator inside OBS see and control the same thing.
 
 ### Switching scenes mid-reading
 
@@ -253,7 +258,6 @@ app/
 ├── bible/
 │   └── obs/             # OBS integrations (public, no auth)
 │       ├── page.tsx     # Bible display — load as OBS Browser Source
-│       ├── scene/       # Same display under its original URL
 │       └── dock/
 │           └── page.tsx # Control dock — load as OBS Custom Browser Dock
 └── api/                 # API routes + cron jobs
