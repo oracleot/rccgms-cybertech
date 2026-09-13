@@ -105,9 +105,30 @@ The Bible Reader includes two URL-based OBS integrations — no plugin installat
 
 > **How it works:** When the operator clicks **Send** in the Bible Reader (or the OBS Dock), the passage is broadcast over a Supabase Realtime channel (`bible-obs`). The overlay page receives it and slides the verse onto stream instantly. No WebSocket server to run, no `.dll` to install.
 
-### 1. Stream Overlay (Browser Source)
+### 1. Full-Screen Bible Scene (Browser Source — recommended)
 
-Displays the current Bible passage as a transparent lower-third overlay on your stream.
+Fills the entire scene with the Bible passage — ideal for a dedicated Bible scene you switch to when the pastor reads scripture.
+
+**OBS Setup:**
+
+1. Create a new OBS scene called `Bible`
+2. Inside that scene, click **+** → **Browser Source**
+3. Set the URL:
+   ```
+   https://rccgms-cybertech.vercel.app/bible/obs/scene
+   ```
+4. Width: `1920` — Height: `1080`
+5. Paste this into **Custom CSS**:
+   ```css
+   body { background: #0d0d1a !important; }
+   ```
+6. Check **Shutdown source when not visible**
+
+The scene shows the verse text large and centred with the reference and accent lines below. A subtle cross appears when nothing is on screen. Switch to this scene when the pastor opens the Bible; switch away when done.
+
+### 2. Lower-Third Overlay (Browser Source)
+
+Shows the passage as a transparent overlay at the bottom of any scene — composites over your camera or background without covering the full screen.
 
 **OBS Setup:**
 
@@ -124,11 +145,9 @@ Displays the current Bible passage as a transparent lower-third overlay on your 
 5. Check **Shutdown source when not visible**
 6. Click **OK**
 
-The overlay shows the Bible reference and verse text in a dark frosted-glass card at the bottom of the frame, with a smooth slide-in animation each time a new passage is sent.
+### 3. Control Dock (Custom Browser Dock)
 
-### 2. Control Dock (Custom Browser Dock)
-
-A compact control panel that lives **inside OBS** so the operator can send passages to the overlay without switching windows.
+A compact control panel that lives **inside OBS** — send passages and navigate verses without switching windows.
 
 **OBS Setup:**
 
@@ -144,10 +163,24 @@ A compact control panel that lives **inside OBS** so the operator can send passa
 
 **Dock features:**
 - **On Screen** — live preview of the current passage (updates from any source)
-- **Send Reference** — type any reference (e.g. `John 3:16`, `Psalm 23`, `1 Cor 13:4-7`) and hit Send
+- **Send Reference** — type any reference (`John 3:16`, `Psalm 23`, `1 Cor 13:4-7`) and hit Send
+- **VERSES — click to advance** — numbered buttons appear for every verse in the passage; click `8` to show verse 8, then `9`, then `10`; the active verse is highlighted purple
 - **Translation** — switch between KJV, WEB, ASV, BBE, YLT without leaving OBS
 - **Quick Send** — one-click buttons for 6 common passages
 - **Clear Screen** — hide the overlay (button appears only when something is live)
+
+### Verse Navigation
+
+When a passage with multiple verses is loaded (e.g. Psalm 23, John 1:1–14), numbered verse buttons appear in both the Bible Reader and the OBS dock:
+
+```
+VERSES — CLICK TO ADVANCE
+[ 1 ] [ 2 ] [●3●] [ 4 ] [ 5 ] [ 6 ]
+```
+
+- Click any number to show just that verse on screen and in the OBS overlay/scene
+- The active verse is highlighted; the text and verse number update instantly across all surfaces
+- Works from the Bible Reader page, the OBS dock, or both simultaneously
 
 ### Why not a traditional OBS plugin?
 
@@ -205,7 +238,9 @@ app/
 ├── availability/        # Public (signed-out) availability form
 ├── bible/
 │   └── obs/             # OBS integrations (public, no auth)
-│       ├── page.tsx     # Stream overlay — load as OBS Browser Source
+│       ├── page.tsx     # Lower-third overlay — load as OBS Browser Source
+│       ├── scene/
+│       │   └── page.tsx # Full-screen Bible scene — dedicated OBS scene
 │       └── dock/
 │           └── page.tsx # Control dock — load as OBS Custom Browser Dock
 └── api/                 # API routes + cron jobs
