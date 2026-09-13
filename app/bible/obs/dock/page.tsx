@@ -37,6 +37,8 @@ interface PassagePayload {
   text: string
   translation: string
   translationName: string
+  verseNumber?: number
+  verses?: Array<{ verse: number; text: string }>
 }
 
 export default function BibleObsDockPage() {
@@ -91,6 +93,8 @@ export default function BibleObsDockPage() {
         text: passage.text,
         translation: passage.translationId,
         translationName: passage.translationName,
+        verses: passage.verses,
+        verseNumber: passage.verses.length === 1 ? passage.verses[0]?.verse : undefined,
       })
     } catch {
       setError("Not found — check the reference")
@@ -98,6 +102,15 @@ export default function BibleObsDockPage() {
       setIsLoading(false)
     }
   }, [translation, broadcast])
+
+  const sendVerse = useCallback((v: { verse: number; text: string }) => {
+    if (!onScreen) return
+    const payload: PassagePayload = { ...onScreen, text: v.text, verseNumber: v.verse }
+    channelRef.current?.send({ type: "broadcast", event: "passage", payload })
+    setOnScreen(payload)
+    setFlashRef(String(v.verse))
+    setTimeout(() => setFlashRef(null), 800)
+  }, [onScreen])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -215,6 +228,28 @@ export default function BibleObsDockPage() {
           border-color: #7c6af7;
           color: #b4a8ff;
         }
+        .verse-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+        }
+        .verse-btn {
+          background: #1e1e2e;
+          border: 1px solid #313244;
+          border-radius: 5px;
+          color: #a6adc8;
+          cursor: pointer;
+          font-family: monospace;
+          font-size: 12px;
+          font-weight: 700;
+          min-width: 30px;
+          padding: 5px 6px;
+          text-align: center;
+          transition: background 0.1s, border-color 0.1s, color 0.1s;
+        }
+        .verse-btn:hover { background: #2a2a3e; border-color: #7c6af7; color: #cdd6f4; }
+        .verse-btn.active { background: #7c6af7; border-color: #7c6af7; color: #fff; }
+        .verse-btn.flash { background: #4a3a7a; border-color: #b4a8ff; color: #fff; }
         .on-screen-box {
           background: #1a1a2e;
           border: 1px solid #7c6af7;
@@ -330,6 +365,28 @@ export default function BibleObsDockPage() {
             ))}
           </div>
         </div>
+
+        {/* Verse navigation — shown when a multi-verse passage is loaded */}
+        {onScreen?.verses && onScreen.verses.length > 1 && (
+          <>
+            <div className="divider" />
+            <div>
+              <div className="section-label">Verses — click to advance</div>
+              <div className="verse-grid">
+                {onScreen.verses.map((v) => (
+                  <button
+                    key={v.verse}
+                    className={`verse-btn${onScreen.verseNumber === v.verse ? " active" : ""}${flashRef === String(v.verse) ? " flash" : ""}`}
+                    onClick={() => sendVerse(v)}
+                    disabled={isLoading}
+                  >
+                    {v.verse}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Clear */}
         {onScreen && (

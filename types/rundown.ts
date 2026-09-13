@@ -206,6 +206,8 @@ export interface BiblePassagePayload {
   text: string
   translation: string
   translationName: string
+  verseNumber?: number                              // specific verse being displayed
+  verses?: Array<{ verse: number; text: string }>  // all verses in the passage (for navigation)
 }
 
 /**

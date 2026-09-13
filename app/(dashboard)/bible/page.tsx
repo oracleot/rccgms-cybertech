@@ -266,6 +266,8 @@ export default function BiblePage() {
           text: passage.text,
           translation: passage.translationId,
           translationName: passage.translationName,
+          verses: passage.verses,
+          verseNumber: passage.verses.length === 1 ? passage.verses[0]?.verse : undefined,
         }
         sendPassage(payload)
         setOnScreenPassage(payload)
@@ -317,6 +319,21 @@ export default function BiblePage() {
     setOnScreenPassage(null)
     obsChannelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
   }, [clearPassage])
+
+  // Send a single numbered verse from an already-loaded passage
+  const sendVerseToScreen = useCallback(
+    (base: BiblePassagePayload, verseEntry: { verse: number; text: string }) => {
+      const payload: BiblePassagePayload = {
+        ...base,
+        text: verseEntry.text,
+        verseNumber: verseEntry.verse,
+      }
+      sendPassage(payload)
+      setOnScreenPassage(payload)
+      obsChannelRef.current?.send({ type: "broadcast", event: "passage", payload })
+    },
+    [sendPassage]
+  )
 
   return (
     <div className="container max-w-3xl mx-auto py-8 space-y-6">
@@ -538,6 +555,11 @@ export default function BiblePage() {
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xl font-bold font-mono">
                 {onScreenPassage.reference}
+                {onScreenPassage.verseNumber && (
+                  <span className="text-violet-500 dark:text-violet-400 ml-1">
+                    · v{onScreenPassage.verseNumber}
+                  </span>
+                )}
               </span>
               <Badge variant="outline" className="text-xs">
                 {onScreenPassage.translationName}
@@ -546,6 +568,31 @@ export default function BiblePage() {
             <blockquote className="border-l-4 border-violet-400 pl-4 text-muted-foreground italic leading-relaxed text-sm">
               {onScreenPassage.text}
             </blockquote>
+
+            {/* Verse navigation — click any verse number to send it */}
+            {onScreenPassage.verses && onScreenPassage.verses.length > 1 && (
+              <div className="pt-1 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Navigate verses
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {onScreenPassage.verses.map((v) => (
+                    <button
+                      key={v.verse}
+                      onClick={() => sendVerseToScreen(onScreenPassage, v)}
+                      className={cn(
+                        "h-8 min-w-[2rem] px-2 rounded text-sm font-mono font-semibold transition-colors",
+                        onScreenPassage.verseNumber === v.verse
+                          ? "bg-violet-600 text-white"
+                          : "bg-muted hover:bg-violet-100 dark:hover:bg-violet-900/40 text-foreground border border-border"
+                      )}
+                    >
+                      {v.verse}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       ) : (

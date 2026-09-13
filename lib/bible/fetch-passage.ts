@@ -13,16 +13,31 @@ export const TRANSLATIONS = [
 
 export type TranslationId = (typeof TRANSLATIONS)[number]["id"]
 
+export interface VerseEntry {
+  verse: number
+  text: string
+}
+
 export interface FetchedPassage {
   reference: string
   text: string
   translationId: string
   translationName: string
+  verses: VerseEntry[]
+}
+
+interface BibleApiVerse {
+  book_id: string
+  book_name: string
+  chapter: number
+  verse: number
+  text: string
 }
 
 interface BibleApiResponse {
   reference: string
   text: string
+  verses: BibleApiVerse[]
   translation_id: string
   translation_name: string
   error?: string
@@ -38,10 +53,15 @@ export async function fetchBiblePassage(
   if (!res.ok) throw new Error(`API error ${res.status}`)
   const data: BibleApiResponse = await res.json()
   if (data.error) throw new Error(data.error)
+  const verses: VerseEntry[] = (data.verses ?? []).map((v) => ({
+    verse: v.verse,
+    text: v.text.trim().replace(/\n/g, " "),
+  }))
   return {
     reference: data.reference,
     text: data.text.trim().replace(/\n/g, " "),
     translationId: data.translation_id,
     translationName: data.translation_name,
+    verses,
   }
 }

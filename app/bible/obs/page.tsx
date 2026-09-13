@@ -28,6 +28,8 @@ interface PassagePayload {
   text: string
   translation: string
   translationName: string
+  verseNumber?: number
+  verses?: Array<{ verse: number; text: string }>
 }
 
 export default function BibleObsPage() {
@@ -168,6 +170,11 @@ export default function BibleObsPage() {
           <div className="card">
             <div className="reference">
               {passage.reference}
+              {passage.verseNumber && (
+                <span style={{ color: "rgba(196,166,255,0.5)", fontWeight: 400, fontSize: "20px", letterSpacing: "0.02em" }}>
+                  — verse {passage.verseNumber}
+                </span>
+              )}
               <span className="translation-badge">{passage.translationName}</span>
             </div>
             <div className="verse-text">&ldquo;{passage.text}&rdquo;</div>
