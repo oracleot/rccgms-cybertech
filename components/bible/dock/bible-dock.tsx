@@ -14,6 +14,7 @@ import { ReferenceInput } from "./reference-input"
 import { VerseList } from "./verse-list"
 import { NavPopover } from "./nav-popover"
 import { HistoryPopover } from "./history-popover"
+import { AudioPopover } from "./audio-popover"
 import { PreviewCard } from "./preview-card"
 import { SettingsPanel } from "./settings-panel"
 import { Tip } from "./tip"
@@ -29,7 +30,7 @@ export function BibleDock() {
       <div className={`dock${dock.locked ? " is-locked" : ""}`}>
         {view === "bible" ? (
           <div className="pane">
-            <ReferenceInput busy={dock.busy} locked={dock.locked} onSend={(t) => void dock.send(t)} />
+            <ReferenceInput busy={dock.busy} locked={dock.locked} translation={dock.translation} onSend={(t) => void dock.send(t)} />
             {dock.error && <div className="error-msg">{dock.error}</div>}
 
             <select
@@ -68,6 +69,7 @@ export function BibleDock() {
           </Tip>
           <NavPopover dock={dock} />
           <HistoryPopover dock={dock} />
+          <AudioPopover dock={dock} />
           <span className="tool-spacer" />
           <Tip label="Undo last live change">
             <button className="tool-btn" onClick={dock.undo} disabled={!dock.canUndo || dock.locked} aria-label="Undo">

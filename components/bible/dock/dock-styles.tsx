@@ -225,6 +225,23 @@ export function DockStyles() {
       .nav-btn.star.on svg { fill: currentColor; }
       .nav-btn.star { padding: 5px 7px; }
 
+      /* Audio */
+      .tool-btn.listening { background: #1f3a2a; border-color: #4ade80; color: #4ade80; }
+      .status-pill {
+        display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 10px;
+        font-size: 11px; font-weight: 600; background: #1e1e2e; border: 1px solid #313244; color: #a6adc8;
+      }
+      .status-pill.on { background: #1f3a2a; border-color: #2f6b45; color: #4ade80; }
+      .status-pill.bad { background: #3d2d3a; border-color: #6b3a4a; color: #f38ba8; }
+      .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 1.2s infinite; }
+      @keyframes pulse { 50% { opacity: 0.3; } }
+      .level-bar { position: relative; height: 8px; border-radius: 4px; background: #1e1e2e; border: 1px solid #313244; overflow: hidden; }
+      .level-fill { height: 100%; background: #4ade80; transition: width 80ms linear; }
+      .level-fill.warm { background: #f9c74f; }
+      .level-fill.hot { background: #f38ba8; }
+      .level-peak { position: absolute; top: 0; height: 100%; width: 2px; background: rgba(255,255,255,0.6); }
+      .search-results button { white-space: normal; line-height: 1.4; }
+
       .spinner {
         display: inline-block; width: 12px; height: 12px;
         border: 2px solid rgba(255,255,255,0.25); border-top-color: #fff;

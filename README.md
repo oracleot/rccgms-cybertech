@@ -160,13 +160,57 @@ A compact control panel that lives **inside OBS** — send passages and navigate
 3. Click **Apply**
 4. The dock appears as a panel — drag it to wherever suits your OBS layout
 
-**Dock features:**
-- **Send Reference** — type any reference (`John 3:16`, `Psalm 23`, `John 3:16-18`) and hit Enter
-- **Translation** — KJV, WEB, ASV, BBE, YLT. Changing it re-fetches whatever is live in the new translation straight away, keeping the same verse or page on screen — no need to send the reference again
-- **Verse list** — the full passage, one verse per row, with the verses currently on screen highlighted (see below)
+The main pane holds only what an operator reaches for repeatedly during a service; everything else is behind an icon in the bottom toolbar.
+
+**Main pane**
+- **Reference field** — forgiving about how you type (see [Typing a reference](#typing-a-reference)); words from a verse search scripture instead
+- **Translation** — KJV, WEB, ASV, BBE, YLT. Changing it re-loads whatever is live in the new translation, keeping the same verse or page on screen. Other translations are warmed in the background, so the switch is usually instant
+- **Verse list** — the full passage, one verse per row, with the verses currently on screen highlighted; the star pins the passage to favourites
 - **← / →** — step through verses or pages, with a `2/4` page indicator when a passage is split; arrow keys work too
 - **Clear Screen** — hide the display (appears only when something is live)
-- **Toolbar** — the book and gear icons at the bottom switch between the Bible controls and **Scene Appearance**
+
+**Toolbar icons** (hover for a tooltip)
+- **Book** — the main pane
+- **Compass** — previous/next chapter and book, and a Book → Chapter → Verse browser
+- **Clock** — recent passages, favourites and the queue
+- **Microphone** — voice detection and the input level meter; appears only where the browser supports speech recognition (OBS's embedded browser does not — use the Bible Reader in Chrome or Edge for that)
+- **Undo** — put back the previous live state
+- **Lock** — block every change to the live display until unlocked
+- **Gear** — display mode, appearance, default translation, preview-before-live, shortcuts
+
+### Typing a reference
+
+The field reads references the way an operator types them mid-service, and shows what it understood underneath as you type — `Interpreted as: 2 Kings 2:3–5`:
+
+| You type | It reads |
+|----------|----------|
+| `2kings2 3 5` | 2 Kings 2:3–5 |
+| `john316` | John 3:16 |
+| `jn 3 16` | John 3:16 |
+| `ps119 3 6` | Psalm 119:3–6 |
+| `1cor13 4 7` | 1 Corinthians 13:4–7 |
+| `gen 1 31-2 3` | Genesis 1:31–2:3 |
+| `First John 4 8`, `ii kings 2:3`, `jonh 3 16` | 1 John 4:8, 2 Kings 2:3, John 3:16 |
+
+Enter sends when it is sure. A partly typed book name offers completions (`1 cor` → 1 Corinthians; Tab accepts). When the input could genuinely mean more than one thing — or names a chapter a book doesn't have — Enter opens a short chooser instead of sending, so the wrong scripture never goes to the stream by default.
+
+Type words instead — `for God so loved` — and Enter searches scripture text; pick a result to send it. Search is a separate action from reference parsing; the two are never confused.
+
+### Navigation
+
+Behind the compass icon: **Prev / Next chapter** and **Prev / Next book**, in Bible order — never alphabetical. The chapter after Psalm 150 is Proverbs 1; the book after Psalms is Proverbs, landing on chapter 1. The **Browse** tab is a Book → Chapter → Verse picker: tap a verse, then a later one for a range, or send the whole chapter.
+
+Keyboard, everywhere except while typing in a field: `←` `→` verse or page · `Shift` + arrows chapter · `Alt` + arrows book · `Enter` puts a previewed passage live.
+
+### History, favourites and queue
+
+Behind the clock icon. **Recent** is the last 30 passages sent, with a star to pin any of them. **Favourites** are the scriptures the church keeps returning to. **Queue** is what's coming up — add references ahead of time, reorder them, and press **Send next** as the pastor reaches each one; the icon shows how many are waiting. References only are stored, in the browser.
+
+### Live safety
+
+- **Undo** re-broadcasts the previous live state, ten steps deep; undoing the first send clears the screen.
+- **Lock** disables every path that could change the stream — typing, verse clicks, arrows, shortcuts, Clear, translation reload — and says so in the field. It is enforced by this dock: a Bible Reader on another machine can still send.
+- **Preview before live** (Settings, off by default) parks a sent passage in a preview card until you press **Go live** or Enter. Off, the workflow stays one step.
 
 ### Display modes and verse navigation
 
@@ -187,9 +231,11 @@ What goes on screen depends on the **Display mode** in Scene Appearance:
 
 | Mode | Behaviour |
 |------|-----------|
-| **Auto** (default) | The whole passage. On one page when it fits at a readable size — `John 3:16–18` shows all three verses, numbered. When it doesn't, it works out how many consecutive verses fit per page and splits into balanced pages, each holding a similar amount of text, set in one common size so type doesn't jump as you page. ← / → step pages, and the dock shows `2/4` |
+| **Auto** (default) | Comfortable type first. The whole passage on one page when it fits at a comfortable size — `John 3:16–18` shows all three verses, numbered — otherwise as many consecutive verses per page as read comfortably, in balanced pages set in one common size so type doesn't jump as you page. ← / → step pages, and the dock shows `2/4` |
 | **Single verse** | Always one verse at a time — the only mode that deliberately puts one verse per page. Click a verse to show it; ← / → step through |
-| **Multi-verse** | Currently behaves the same as Auto; kept as an explicit choice |
+| **Multi-verse** | As many verses per page as reasonably fit: type comes down towards the minimum before another page is added. Never below the readable minimum — at that point it pages |
+
+At 800×600, Psalm 119:1–40 is six pages of about six verses at ~31px in Auto, and two pages of twenty at ~19px in Multi-verse.
 
 In every mode the on-screen reference is exactly what is showing — `John 3:16–18 (KJV)` for the range, `Psalm 119:21–40` for a page, `Genesis 1:2` for one verse — with an en dash, as printed Bibles set it. Multi-verse pages number each verse with a superscript.
 
@@ -212,9 +258,19 @@ Traditional OBS plugins are compiled C++ `.dll` / `.so` files. This integration 
 | OBS version | Works on any OBS version with Browser Source | Must match OBS version |
 | Cross-platform | Windows, Mac, Linux | Separate build per platform |
 
-### Bible Reader (in-app)
+### Voice detection (Bible Reader)
 
-The full Bible Reader at `/bible` also has voice detection — the mic auto-starts when the page opens in Chrome or Edge. As the pastor speaks, AI detects Bible references and offers to send them to the screen (and the OBS overlay simultaneously).
+The Bible Reader at `/bible` listens for references as the pastor speaks. It uses the browser's speech recognition (Chrome or Edge; it needs internet) and starts **only when you press Start Listening** — never on page load.
+
+What it hears is turned into structured references — `John three sixteen`, `John 316` and `Second Kings two three to five` all become `John 3:16` and `2 Kings 2:3–5` — through the same parser the typed field uses. Only that parsed reference is ever sent to the Bible API; the surrounding conversation never is. Detected references appear as chips with a **Send** button; a chip in amber means the book name was a fuzzy match, so check it before sending. The raw transcript is kept for diagnosing mishearings but folded away by default.
+
+The status pill tells you the truth about the microphone: **Ready**, **Listening**, **Stopped**, **Microphone permission denied**, **No audio input**, **Input disconnected**, **Speech recognition unavailable** or **Recognition error**, each with what to do about it. Chrome ends continuous recognition after silence; while you have pressed Start it is restarted for you.
+
+**Audio input.** The **Audio** button shows every audio input on the machine with a live level meter, so you can confirm Fusion is receiving the expected source. One limitation is stated rather than hidden: the browser's speech recognition always listens to the **system default** input and offers no way to choose a device. The default is marked in the list; the meter on it shows what recognition hears. Pointing the meter at another device only tests that device — to make recognition use it, set it as the default in Windows Sound settings. True per-device recognition would mean capturing audio ourselves and streaming it to a speech service (Deepgram, AssemblyAI or Whisper behind a server route with an API key); that is a separate decision and is not built.
+
+### Caching and translations
+
+Passages load through one store: a memory cache, a bounded IndexedDB cache (by translation and normalised reference, with a schema version, a 30-day life and least-recently-used eviction — Bible text is never put in localStorage), and de-duplication of in-flight requests. The translation you asked for loads first; the others are warmed behind it, immediately for short passages and once you have paused for whole chapters, so a burst of chapter steps doesn't queue dozens of requests against the API's rate limit. Returning to a passage used earlier is instant. bible-api.com serves one translation per request and lacks some chapters in some translations (YLT has no Psalm 119); that is remembered as "not available in YLT" rather than retried.
 
 ---
 

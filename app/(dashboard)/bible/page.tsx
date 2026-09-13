@@ -3,10 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import {
   BookOpen,
-  Mic,
-  MicOff,
   Search,
-  Send,
   Trash2,
   Loader2,
   MonitorPlay,
@@ -30,49 +27,20 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { detectBibleReferences } from "@/lib/bible/detect-references"
-import { detectBibleReferencesFromSpeech, type BibleReference } from "@/lib/bible/speech-detection"
-import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
+import { parseReferenceInput } from "@/lib/bible/parse-reference"
+import { TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
+import { loadPassage, prefetchTranslationsWhenIdle, PassageUnavailableError } from "@/lib/bible/passage-store"
 import { displayReference, verseId, verseLabel } from "@/lib/bible/format"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
 import { createClient } from "@/lib/supabase/client"
 import { obsChannelName } from "@/lib/bible/obs-channel"
+import { ListeningPanel } from "@/components/bible/listening/listening-panel"
+import { useListening } from "@/components/bible/listening/use-listening"
 
-// Self-contained Web Speech API types — vendor-prefixed, not guaranteed in all TS DOM libs
-declare global {
-  interface SpeechRecognitionAlternative {
-    readonly transcript: string
-    readonly confidence: number
-  }
-  interface SpeechRecognitionResult {
-    readonly isFinal: boolean
-    readonly length: number
-    item(index: number): SpeechRecognitionAlternative
-    [index: number]: SpeechRecognitionAlternative
-  }
-  interface SpeechRecognitionResultList {
-    readonly length: number
-    item(index: number): SpeechRecognitionResult
-    [index: number]: SpeechRecognitionResult
-  }
-  interface SpeechRecognitionEvent extends Event {
-    readonly resultIndex: number
-    readonly results: SpeechRecognitionResultList
-  }
-  interface SpeechRecognition extends EventTarget {
-    continuous: boolean
-    interimResults: boolean
-    lang: string
-    onresult: ((event: SpeechRecognitionEvent) => void) | null
-    onend: (() => void) | null
-    onerror: ((event: Event) => void) | null
-    start(): void
-    stop(): void
-  }
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognition
-    webkitSpeechRecognition: new () => SpeechRecognition
-  }
+/** What can be put on screen: the API path, and the reference it's labelled with. */
+interface SendTarget {
+  apiPath: string
+  reference: string
 }
 
 const BROADCAST_CHANNEL = "rundown-display"
@@ -148,21 +116,16 @@ function useBibleBroadcast() {
 export default function BiblePage() {
   const [translation, setTranslation] = useState<TranslationId>("kjv")
   const [accent, setAccent] = useState<AccentId>("en-NG")
-  const [isListening, setIsListening] = useState(false)
-  const [transcript, setTranscript] = useState("")
-  const [detectedRefs, setDetectedRefs] = useState<BibleReference[]>([])
   const [manualInput, setManualInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [loadingRef, setLoadingRef] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [onScreenPassage, setOnScreenPassage] = useState<BiblePassagePayload | null>(null)
-  const [speechSupported, setSpeechSupported] = useState(false)
   const [mishearings, setMishearings] = useState<MishearingEntry[]>([])
   const [showTraining, setShowTraining] = useState(false)
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const transcriptRef = useRef("")
-  const autoStartedRef = useRef(false)
+  // Listening starts only when the operator presses Start — never on load.
+  const listening = useListening(accent)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const obsChannelRef = useRef<any>(null)
   const { sendPassage, clearPassage } = useBibleBroadcast()
@@ -186,84 +149,14 @@ export default function BiblePage() {
     setMishearings(loadMishearings())
   }, [])
 
-  useEffect(() => {
-    setSpeechSupported(
-      typeof window !== "undefined" &&
-        ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
-    )
-  }, [])
-
-  // Detect references whenever transcript changes (uses speech-optimised strict pipeline)
-  useEffect(() => {
-    transcriptRef.current = transcript
-    if (!transcript) {
-      setDetectedRefs([])
-      return
-    }
-    const refs = detectBibleReferencesFromSpeech(transcript)
-    const unique = refs.filter(
-      (ref, i, arr) => arr.findIndex((r) => r.reference === ref.reference) === i
-    )
-    setDetectedRefs(unique.slice(-6))
-  }, [transcript])
-
-  const startListening = useCallback(() => {
-    if (!speechSupported) return
-    const SpeechRecognitionCls = window.SpeechRecognition ?? window.webkitSpeechRecognition
-    const recognition = new SpeechRecognitionCls()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = accent   // use selected accent/locale
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let full = ""
-      for (let i = 0; i < event.results.length; i++) {
-        full += event.results[i]?.[0]?.transcript ?? ""
-        full += " "
-      }
-      // Keep last 600 chars to avoid runaway growth
-      setTranscript(full.slice(-600))
-    }
-
-    recognition.onend = () => {
-      setIsListening(false)
-      recognitionRef.current = null
-    }
-    recognition.onerror = () => {
-      setIsListening(false)
-      recognitionRef.current = null
-    }
-
-    recognition.start()
-    recognitionRef.current = recognition
-    setIsListening(true)
-    setTranscript("")
-    setDetectedRefs([])
-  }, [speechSupported, accent])
-
-  const stopListening = useCallback(() => {
-    recognitionRef.current?.stop()
-    recognitionRef.current = null
-    setIsListening(false)
-  }, [])
-
-  // Auto-start listening as soon as speech recognition is available on mount
-  useEffect(() => {
-    if (speechSupported && !autoStartedRef.current) {
-      autoStartedRef.current = true
-      startListening()
-    }
-  }, [speechSupported, startListening])
-
   const sendRefToScreen = useCallback(
-    async (ref: BibleReference | string) => {
-      const label = typeof ref === "string" ? ref : ref.reference
-      setLoadingRef(label)
+    async (ref: SendTarget) => {
+      setLoadingRef(ref.reference)
       setIsLoading(true)
       setError(null)
       try {
-        const apiPath = typeof ref === "string" ? ref : ref.apiPath
-        const passage = await fetchBiblePassage(apiPath, translation)
+        const passage = await loadPassage(ref.apiPath, translation, "high")
+        prefetchTranslationsWhenIdle(ref.apiPath, translation, passage.verses.length)
         const payload: BiblePassagePayload = {
           reference: passage.reference,
           text: passage.text,
@@ -282,7 +175,11 @@ export default function BiblePage() {
           payload,
         })
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not fetch passage. Check the reference and try again.")
+        setError(
+          err instanceof PassageUnavailableError
+            ? err.message
+            : "Could not fetch passage. Check the reference and try again."
+        )
       } finally {
         setIsLoading(false)
         setLoadingRef(null)
@@ -296,11 +193,10 @@ export default function BiblePage() {
     const query = manualInput.trim()
     if (!query) return
 
-    // Log mishearing if there was an active transcript that didn't detect this reference
-    const currentTranscript = transcriptRef.current
-    if (currentTranscript && detectedRefs.length === 0) {
+    // Typed while listening found nothing: that's a mishearing worth keeping for training
+    if (listening.transcript && listening.refs.length === 0) {
       const entry: MishearingEntry = {
-        heard: currentTranscript.slice(-300),
+        heard: listening.transcript.slice(-300),
         detected: "",
         corrected: query,
         ts: Date.now(),
@@ -309,16 +205,18 @@ export default function BiblePage() {
       setMishearings(loadMishearings())
     }
 
-    setManualInput("")
-    // The detector reads "Genesis 1:31-2:3" as "Genesis 1:31-2"; the API understands
-    // ranges that cross a chapter, so pass those through untouched.
-    const crossesChapters = /\d+:\d+\s*-\s*\d+:\d+/.test(query)
-    const refs = crossesChapters ? [] : detectBibleReferences(query)
-    if (refs.length > 0) {
-      await sendRefToScreen(refs[0])
-    } else {
-      await sendRefToScreen(query.toLowerCase().replace(/\s+/g, "+"))
+    // Only a parsed reference ever reaches the API — never the raw text
+    const parsed = parseReferenceInput(query)
+    if (!parsed.best) {
+      setError(`"${query}" isn't a Bible reference. Try a form like John 3:16, ps 23 or 2kings2 3 5.`)
+      return
     }
+    if (parsed.best.confidence === "low") {
+      setError(`Not sure what "${query}" means${parsed.best.note ? ` — ${parsed.best.note}` : ""}. Be more specific.`)
+      return
+    }
+    setManualInput("")
+    await sendRefToScreen({ apiPath: parsed.best.apiPath, reference: parsed.best.reference })
   }
 
   const handleClear = useCallback(() => {
@@ -387,16 +285,7 @@ export default function BiblePage() {
             <Tv2 className="h-3.5 w-3.5" />
             OBS Display
           </Button>
-          <Select
-            value={accent}
-            onValueChange={(v) => {
-              setAccent(v as AccentId)
-              // Restart listening with new accent if active
-              if (isListening) {
-                recognitionRef.current?.stop()
-              }
-            }}
-          >
+          <Select value={accent} onValueChange={(v) => setAccent(v as AccentId)}>
             <SelectTrigger className="w-44">
               <SelectValue placeholder="Accent" />
             </SelectTrigger>
@@ -427,92 +316,12 @@ export default function BiblePage() {
         </div>
       </div>
 
-      {/* Voice Detection */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">AI Voice Detection</CardTitle>
-            {speechSupported ? (
-              <Button
-                variant={isListening ? "destructive" : "default"}
-                onClick={isListening ? stopListening : startListening}
-                className="gap-2"
-              >
-                {isListening ? (
-                  <MicOff className="h-4 w-4" />
-                ) : (
-                  <Mic className="h-4 w-4" />
-                )}
-                {isListening ? "Stop Listening" : "Start Listening"}
-              </Button>
-            ) : (
-              <Badge variant="outline" className="text-muted-foreground">
-                Speech recognition requires Chrome or Edge
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!speechSupported && (
-            <p className="text-sm text-muted-foreground">
-              Open this page in Google Chrome or Microsoft Edge to enable microphone-based
-              automatic detection. Manual search below works in all browsers.
-            </p>
-          )}
-
-          {speechSupported && !isListening && !transcript && (
-            <p className="text-sm text-muted-foreground">
-              Microphone is ready. The AI automatically detects Bible references as the
-              pastor speaks — "John 3:16", "Psalm 23", "First Corinthians 13 verse 4" —
-              and offers to put them on screen instantly.
-            </p>
-          )}
-
-          {isListening && (
-            <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              Listening — speak naturally
-            </div>
-          )}
-
-          {transcript && (
-            <div className="rounded-md bg-muted/50 border p-3 text-sm text-muted-foreground leading-relaxed font-mono max-h-28 overflow-y-auto">
-              {transcript.slice(-300)}
-            </div>
-          )}
-
-          {detectedRefs.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Detected References
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {detectedRefs.map((ref) => (
-                  <div key={ref.reference} className="flex items-center gap-1">
-                    <Badge variant="secondary" className="font-mono text-sm">
-                      {ref.reference}
-                    </Badge>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 gap-1 text-xs"
-                      onClick={() => sendRefToScreen(ref)}
-                      disabled={isLoading}
-                    >
-                      {loadingRef === ref.reference ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Send className="h-3 w-3" />
-                      )}
-                      Send
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Voice detection — structured references in, only a parsed reference ever goes to the API */}
+      <ListeningPanel
+        listening={listening}
+        onSend={(ref) => void sendRefToScreen({ apiPath: ref.apiPath, reference: ref.reference })}
+        sending={loadingRef}
+      />
 
       {/* Manual Search */}
       <Card>
@@ -681,7 +490,10 @@ export default function BiblePage() {
             ].map((ex) => (
               <button
                 key={ex}
-                onClick={() => sendRefToScreen(ex.toLowerCase().replace(/\s+/g, "+"))}
+                onClick={() => {
+                  const best = parseReferenceInput(ex).best
+                  if (best) void sendRefToScreen({ apiPath: best.apiPath, reference: best.reference })
+                }}
                 disabled={isLoading}
                 className={cn(
                   "text-left rounded-md px-3 py-2 text-sm font-mono",
