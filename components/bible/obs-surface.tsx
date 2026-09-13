@@ -14,7 +14,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { normalizeReference, rangeReference } from "@/lib/bible/format"
+import { normalizeReference, rangeReference, verseId } from "@/lib/bible/format"
 import { obsChannelName } from "@/lib/bible/obs-channel"
 import {
   SCENE_DEFAULTS,
@@ -39,13 +39,14 @@ interface PassagePayload {
   translation: string
   translationName: string
   verseNumber?: number
+  focusId?: string
   verses?: Verse[]
 }
 
-/** What the display is currently showing — reported to the dock after every layout. */
+/** What the display is currently showing — reported to the dock after every layout. from/to are verse ids. */
 export interface DisplayState {
-  from: number
-  to: number
+  from: string
+  to: string
   page: number
   pages: number
   mode: "single" | "multi"
@@ -86,6 +87,17 @@ const esc = (s: string) =>
 
 function versesOf(p: PassagePayload): Verse[] {
   return p.verses?.length ? p.verses : [{ verse: p.verseNumber ?? 1, text: p.text }]
+}
+
+/** The verse a payload asks us to show — by id, else by number for older senders, else the first. */
+function focusOf(p: PassagePayload): string {
+  const vs = versesOf(p)
+  if (p.focusId && vs.some((v) => verseId(v) === p.focusId)) return p.focusId
+  if (p.verseNumber != null) {
+    const v = vs.find((x) => x.verse === p.verseNumber)
+    if (v) return verseId(v)
+  }
+  return verseId(vs[0])
 }
 
 /**
@@ -145,7 +157,7 @@ function balancedSplit(all: Verse[], K: number): Verse[][] {
 
 function computeLayout(
   passage: PassagePayload,
-  focus: number | null,
+  focus: string | null,
   s: SceneSettings,
   surface: HTMLDivElement,
   measurer: HTMLDivElement,
@@ -199,11 +211,9 @@ function computeLayout(
     if (s.mode === "single" || n === 1) {
       mode = "single"
       pages = singlePages()
-    } else if (s.mode === "auto") {
-      const whole = fits(htmlFor(all, true), MIN)
-      mode = whole ? "multi" : "single"
-      pages = whole ? [all] : singlePages()
     } else {
+      // Auto and Multi-verse both show the whole passage, paged only when it can't fit.
+      // Single is the one mode that deliberately puts one verse per page.
       mode = "multi"
       // Greedy first: how many pages are needed when each holds as much as fits at MIN.
       const greedy: Verse[][] = []
@@ -238,7 +248,7 @@ function computeLayout(
   }
 
   const { mode, pages, commonFont } = pager
-  let page = focus == null ? 0 : pages.findIndex((p) => p.some((v) => v.verse === focus))
+  let page = focus == null ? 0 : pages.findIndex((p) => p.some((v) => verseId(v) === focus))
   if (page < 0) page = 0
 
   const numbers = mode === "multi" || s.inlineNumber
@@ -250,7 +260,7 @@ function computeLayout(
 
 export function BibleObsSurface() {
   const [passage, setPassage] = useState<PassagePayload | null>(null)
-  const [focus, setFocus] = useState<number | null>(null)
+  const [focus, setFocus] = useState<string | null>(null)
   const [visible, setVisible] = useState(false)
   const [settings, setSettings] = useState<SceneSettings>(SCENE_DEFAULTS)
   const [layout, setLayout] = useState<Layout | null>(null)
@@ -268,7 +278,7 @@ export function BibleObsSurface() {
     setSettings(normalize({ ...loadSettings(), ...settingsFromQuery(window.location.search) }))
     if (isPreview()) {
       setPassage(PREVIEW_PASSAGE)
-      setFocus(PREVIEW_PASSAGE.verses![0].verse)
+      setFocus(focusOf(PREVIEW_PASSAGE))
       setVisible(true)
     }
   }, [])
@@ -284,7 +294,7 @@ export function BibleObsSurface() {
         // A new passage always gets reported, even if it lands on the same verse numbers.
         lastReportRef.current = ""
         setPassage(payload)
-        setFocus(payload.verseNumber ?? versesOf(payload)[0].verse)
+        setFocus(focusOf(payload))
         setVisible(true)
       })
       .on("broadcast", { event: "clear" }, () => {
@@ -295,7 +305,7 @@ export function BibleObsSurface() {
         if (!L) return
         const target = payload.page ?? L.page + (payload.delta ?? 0)
         const clamped = Math.min(Math.max(target, 0), L.pages.length - 1)
-        if (clamped !== L.page) setFocus(L.pages[clamped][0].verse)
+        if (clamped !== L.page) setFocus(verseId(L.pages[clamped][0]))
       })
       .on("broadcast", { event: "settings" }, ({ payload }: { payload: unknown }) => {
         const next = normalize(payload)
@@ -341,8 +351,8 @@ export function BibleObsSurface() {
     if (!layout || !channelRef.current) return
     const pg = layout.pages[layout.page]
     const state: DisplayState = {
-      from: pg[0].verse,
-      to: pg[pg.length - 1].verse,
+      from: verseId(pg[0]),
+      to: verseId(pg[pg.length - 1]),
       page: layout.page,
       pages: layout.pages.length,
       mode: layout.mode,

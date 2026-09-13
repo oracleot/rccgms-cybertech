@@ -17,7 +17,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { detectBibleReferences } from "@/lib/bible/detect-references"
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
-import { normalizeReference, verseLabel } from "@/lib/bible/format"
+import { normalizeReference, verseId, verseLabel } from "@/lib/bible/format"
 import { obsChannelName } from "@/lib/bible/obs-channel"
 import {
   SCENE_DEFAULTS,
@@ -40,7 +40,14 @@ interface PassagePayload {
   translation: string
   translationName: string
   verseNumber?: number
+  focusId?: string
   verses?: Verse[]
+}
+
+/** Payload focused on one verse by stable id; verseNumber rides along for the projection screen. */
+function withFocus(p: PassagePayload, id: string | undefined): PassagePayload {
+  const v = id ? p.verses?.find((x) => verseId(x) === id) : undefined
+  return { ...p, focusId: v ? id : undefined, verseNumber: v?.verse }
 }
 
 const BookIcon = () => (
@@ -64,7 +71,7 @@ export default function BibleObsDockPage() {
   const [error, setError] = useState<string | null>(null)
   const [onScreen, setOnScreen] = useState<PassagePayload | null>(null)
   const [shown, setShown] = useState<DisplayState | null>(null)
-  const [focus, setFocus] = useState<number | null>(null)
+  const [focus, setFocus] = useState<string | null>(null)
   const [view, setView] = useState<"bible" | "settings">("bible")
   const [settings, setSettings] = useState<SceneSettings>(SCENE_DEFAULTS)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,7 +123,7 @@ export default function BibleObsDockPage() {
           channel.send({
             type: "broadcast",
             event: "passage",
-            payload: { ...cur, verseNumber: shownRef.current?.from ?? cur.verseNumber },
+            payload: withFocus(cur, shownRef.current?.from ?? cur.focusId),
           })
         }
       })
@@ -145,7 +152,7 @@ export default function BibleObsDockPage() {
     channelRef.current?.send({ type: "broadcast", event: "passage", payload })
     setOnScreen(payload)
     setShown(null)
-    setFocus(payload.verseNumber ?? null)
+    setFocus(payload.focusId ?? null)
   }, [])
 
   const clearScreen = useCallback(() => {
@@ -156,22 +163,25 @@ export default function BibleObsDockPage() {
   }, [])
 
   const sendRef = useCallback(
-    async (ref: string, opts?: { translation?: TranslationId; focus?: number }) => {
+    async (ref: string, opts?: { translation?: TranslationId; focus?: string }) => {
       setIsLoading(true)
       setError(null)
       try {
         const apiPath = ref.toLowerCase().replace(/\s+/g, "+")
         const passage = await fetchBiblePassage(apiPath, opts?.translation ?? translation)
-        const keepFocus =
-          opts?.focus != null && passage.verses.some((v) => v.verse === opts.focus) ? opts.focus : undefined
-        broadcast({
-          reference: passage.reference,
-          text: passage.text,
-          translation: passage.translationId,
-          translationName: passage.translationName,
-          verses: passage.verses,
-          verseNumber: keepFocus ?? (passage.verses.length === 1 ? passage.verses[0]?.verse : undefined),
-        })
+        const single = passage.verses.length === 1 ? verseId(passage.verses[0]) : undefined
+        broadcast(
+          withFocus(
+            {
+              reference: passage.reference,
+              text: passage.text,
+              translation: passage.translationId,
+              translationName: passage.translationName,
+              verses: passage.verses,
+            },
+            opts?.focus ?? single
+          )
+        )
       } catch {
         setError("Not found — check the reference")
       } finally {
@@ -186,7 +196,7 @@ export default function BibleObsDockPage() {
     (t: TranslationId) => {
       setTranslation(t)
       const cur = onScreenRef.current
-      if (cur) void sendRef(cur.reference, { translation: t, focus: shownRef.current?.from ?? cur.verseNumber })
+      if (cur) void sendRef(cur.reference, { translation: t, focus: shownRef.current?.from ?? cur.focusId })
     },
     [sendRef]
   )
@@ -194,11 +204,12 @@ export default function BibleObsDockPage() {
   const selectVerse = useCallback((v: Verse) => {
     const cur = onScreenRef.current
     if (!cur) return
-    const payload: PassagePayload = { ...cur, verseNumber: v.verse }
+    const id = verseId(v)
+    const payload = withFocus(cur, id)
     channelRef.current?.send({ type: "broadcast", event: "passage", payload })
     setOnScreen(payload)
     setShown(null)
-    setFocus(v.verse)
+    setFocus(id)
   }, [])
 
   const nav = useCallback((delta: number) => {
@@ -207,9 +218,14 @@ export default function BibleObsDockPage() {
   }, [])
 
   const verses = onScreen?.verses ?? []
-  const isShowing = (v: Verse) =>
-    shown ? v.verse >= shown.from && v.verse <= shown.to : focus === v.verse
-  const firstShowing = verses.find(isShowing)?.verse
+  // The on-screen range is a run of list positions, never a numeric verse range —
+  // a page can cross a chapter boundary, where numbers restart.
+  const fromIdx = shown ? verses.findIndex((v) => verseId(v) === shown.from) : -1
+  const toIdx = shown ? verses.findIndex((v) => verseId(v) === shown.to) : -1
+  const isShowing = (v: Verse, i: number) =>
+    shown ? fromIdx >= 0 && toIdx >= 0 && i >= fromIdx && i <= toIdx : focus === verseId(v)
+  const firstShowingIdx = verses.findIndex(isShowing)
+  const firstShowing = firstShowingIdx >= 0 ? verseId(verses[firstShowingIdx]) : undefined
 
   useEffect(() => {
     activeVerseRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" })
@@ -231,7 +247,10 @@ export default function BibleObsDockPage() {
     const q = query.trim()
     if (!q) return
     setQuery("")
-    const detected = detectBibleReferences(q)
+    // The detector reads "Genesis 1:31-2:3" as "Genesis 1:31-2"; the API understands
+    // ranges that cross a chapter, so pass those through untouched.
+    const crossesChapters = /\d+:\d+\s*-\s*\d+:\d+/.test(q)
+    const detected = crossesChapters ? [] : detectBibleReferences(q)
     await sendRef(detected.length > 0 ? detected[0].reference : q)
   }
 
@@ -438,12 +457,12 @@ export default function BibleObsDockPage() {
 
               {verses.length > 0 ? (
                 <div className="verse-list">
-                  {verses.map((v) => {
-                    const active = isShowing(v)
+                  {verses.map((v, i) => {
+                    const active = isShowing(v, i)
                     return (
                       <button
-                        key={v.verse}
-                        ref={active && v.verse === firstShowing ? activeVerseRef : undefined}
+                        key={verseId(v)}
+                        ref={active && i === firstShowingIdx ? activeVerseRef : undefined}
                         className={`verse-item${active ? " active" : ""}`}
                         onClick={() => selectVerse(v)}
                       >
@@ -481,8 +500,8 @@ export default function BibleObsDockPage() {
                 </select>
               </div>
               <div className="hint">
-                Auto shows the whole passage when it fits, otherwise one verse at a time.
-                Multi-verse splits long passages into pages.
+                Auto and Multi-verse show the whole passage, split into balanced pages when it
+                can&apos;t fit. Single verse shows one verse at a time.
               </div>
 
               <div className="srow">

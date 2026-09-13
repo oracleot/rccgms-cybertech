@@ -187,9 +187,9 @@ What goes on screen depends on the **Display mode** in Scene Appearance:
 
 | Mode | Behaviour |
 |------|-----------|
-| **Auto** (default) | The whole passage if it fits the source at a readable size — `John 3:16–18` shows all three verses, numbered. If it doesn't fit, one verse at a time |
-| **Single verse** | Always one verse at a time. Click a verse to show it; ← / → step through |
-| **Multi-verse** | The whole passage, split into pages when it can't fit at a readable size. Pages are balanced so each holds a similar amount of text, set in one common size so type doesn't jump as you page. ← / → step pages, and the dock shows `2/4` |
+| **Auto** (default) | The whole passage. On one page when it fits at a readable size — `John 3:16–18` shows all three verses, numbered. When it doesn't, it works out how many consecutive verses fit per page and splits into balanced pages, each holding a similar amount of text, set in one common size so type doesn't jump as you page. ← / → step pages, and the dock shows `2/4` |
+| **Single verse** | Always one verse at a time — the only mode that deliberately puts one verse per page. Click a verse to show it; ← / → step through |
+| **Multi-verse** | Currently behaves the same as Auto; kept as an explicit choice |
 
 In every mode the on-screen reference is exactly what is showing — `John 3:16–18 (KJV)` for the range, `Psalm 119:21–40` for a page, `Genesis 1:2` for one verse — with an en dash, as printed Bibles set it. Multi-verse pages number each verse with a superscript.
 

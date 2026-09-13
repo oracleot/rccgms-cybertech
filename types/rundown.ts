@@ -206,7 +206,8 @@ export interface BiblePassagePayload {
   text: string
   translation: string
   translationName: string
-  verseNumber?: number  // specific verse being displayed
+  verseNumber?: number  // number of the focused verse — kept for the projection screen
+  focusId?: string      // stable identity of the focused verse ("Genesis|1|2"); see verseId()
   // All verses in the passage, for navigation. book/chapter are optional because a
   // long-running OBS dock can receive payloads from a client on an older deploy.
   verses?: Array<{ book?: string; chapter?: number; verse: number; text: string }>

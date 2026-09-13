@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils"
 import { detectBibleReferences } from "@/lib/bible/detect-references"
 import { detectBibleReferencesFromSpeech, type BibleReference } from "@/lib/bible/speech-detection"
 import { fetchBiblePassage, TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
-import { displayReference, verseLabel } from "@/lib/bible/format"
+import { displayReference, verseId, verseLabel } from "@/lib/bible/format"
 import type { DisplaySyncMessage, BiblePassagePayload } from "@/types/rundown"
 import { createClient } from "@/lib/supabase/client"
 import { obsChannelName } from "@/lib/bible/obs-channel"
@@ -271,6 +271,7 @@ export default function BiblePage() {
           translationName: passage.translationName,
           verses: passage.verses,
           verseNumber: passage.verses.length === 1 ? passage.verses[0]?.verse : undefined,
+          focusId: passage.verses.length === 1 ? verseId(passage.verses[0]) : undefined,
         }
         sendPassage(payload)
         setOnScreenPassage(payload)
@@ -309,7 +310,10 @@ export default function BiblePage() {
     }
 
     setManualInput("")
-    const refs = detectBibleReferences(query)
+    // The detector reads "Genesis 1:31-2:3" as "Genesis 1:31-2"; the API understands
+    // ranges that cross a chapter, so pass those through untouched.
+    const crossesChapters = /\d+:\d+\s*-\s*\d+:\d+/.test(query)
+    const refs = crossesChapters ? [] : detectBibleReferences(query)
     if (refs.length > 0) {
       await sendRefToScreen(refs[0])
     } else {
@@ -325,11 +329,12 @@ export default function BiblePage() {
 
   // Send a single numbered verse from an already-loaded passage
   const sendVerseToScreen = useCallback(
-    (base: BiblePassagePayload, verseEntry: { verse: number; text: string }) => {
+    (base: BiblePassagePayload, verseEntry: { book?: string; chapter?: number; verse: number; text: string }) => {
       const payload: BiblePassagePayload = {
         ...base,
         text: verseEntry.text,
         verseNumber: verseEntry.verse,
+        focusId: verseId(verseEntry),
       }
       sendPassage(payload)
       setOnScreenPassage(payload)
@@ -343,7 +348,9 @@ export default function BiblePage() {
     (delta: number) => {
       const verses = onScreenPassage?.verses
       if (!onScreenPassage || !verses?.length) return
-      const current = verses.findIndex((v) => v.verse === onScreenPassage.verseNumber)
+      const current = verses.findIndex((v) =>
+        onScreenPassage.focusId ? verseId(v) === onScreenPassage.focusId : v.verse === onScreenPassage.verseNumber
+      )
       const next = current < 0 ? (delta > 0 ? 0 : verses.length - 1) : current + delta
       if (next < 0 || next >= verses.length) return
       sendVerseToScreen(onScreenPassage, verses[next])
@@ -573,7 +580,8 @@ export default function BiblePage() {
                 {displayReference(
                   onScreenPassage.reference,
                   onScreenPassage.verseNumber,
-                  onScreenPassage.verses
+                  onScreenPassage.verses,
+                  onScreenPassage.focusId
                 )}
               </span>
               <Badge variant="outline" className="text-xs">
@@ -614,10 +622,12 @@ export default function BiblePage() {
                 </div>
                 <div className="max-h-72 overflow-y-auto rounded-md border divide-y bg-background/60">
                   {onScreenPassage.verses.map((v) => {
-                    const active = onScreenPassage.verseNumber === v.verse
+                    const active = onScreenPassage.focusId
+                      ? onScreenPassage.focusId === verseId(v)
+                      : onScreenPassage.verseNumber === v.verse
                     return (
                       <button
-                        key={v.verse}
+                        key={verseId(v)}
                         onClick={() => sendVerseToScreen(onScreenPassage, v)}
                         className={cn(
                           "flex w-full gap-3 px-3 py-2 text-left text-sm transition-colors",

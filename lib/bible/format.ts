@@ -6,6 +6,16 @@ export interface VerseLike {
   verse: number
 }
 
+/**
+ * Stable identity for a verse within a passage: "Genesis|1|2". Verse numbers
+ * alone repeat across chapter boundaries (Genesis 1:1–2:3 has two verse 1s),
+ * so focus, page lookup and highlighting must never compare by number.
+ * Translation-independent, so a selection survives a translation switch.
+ */
+export function verseId(v: VerseLike): string {
+  return `${v.book ?? ""}|${v.chapter ?? ""}|${v.verse}`
+}
+
 /** "1:2" — the label shown beside each verse in navigation lists. */
 export function verseLabel(v: VerseLike): string {
   return v.chapter == null ? String(v.verse) : `${v.chapter}:${v.verse}`
@@ -42,10 +52,13 @@ export function rangeReference(verses: VerseLike[]): string | null {
 export function displayReference(
   reference: string,
   verseNumber?: number,
-  verses?: VerseLike[]
+  verses?: VerseLike[],
+  focusId?: string
 ): string {
-  if (verseNumber == null || !verses?.length) return reference
-  const v = verses.find((x) => x.verse === verseNumber)
+  if (!verses?.length) return reference
+  const v =
+    (focusId ? verses.find((x) => verseId(x) === focusId) : undefined) ??
+    (verseNumber != null ? verses.find((x) => x.verse === verseNumber) : undefined)
   if (!v?.book || v.chapter == null) return reference
   return `${v.book} ${v.chapter}:${v.verse}`
 }
