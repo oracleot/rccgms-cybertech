@@ -31,6 +31,7 @@ interface LyricSetRow {
   title: string
   groups: unknown
   updated_at: string
+  scripture_reference: string | null
 }
 
 // The generated Database type predates this table; codegen needs a linked
@@ -49,6 +50,7 @@ function rowToSet(row: LyricSetRow): LyricSet {
     title: row.title,
     groups: Array.isArray(row.groups) ? (row.groups as LyricSet["groups"]) : [],
     updatedAt: new Date(row.updated_at).getTime(),
+    scriptureReference: row.scripture_reference ?? undefined,
   }
 }
 
@@ -93,7 +95,7 @@ async function migrateLegacyLocalSets(supabase: ReturnType<typeof createClient>)
     const { count } = await table(supabase).select("id", { count: "exact", head: true })
     if (count && count > 0) return
     await table(supabase).insert(
-      legacy.map((s) => ({ id: s.id, type: s.type, title: s.title, groups: s.groups }))
+      legacy.map((s) => ({ id: s.id, type: s.type, title: s.title, groups: s.groups, scripture_reference: s.scriptureReference ?? null }))
     )
   } catch {
     // best-effort only — a failed migration just means the old local sets stay local
@@ -122,6 +124,7 @@ export async function saveSet(set: LyricSet): Promise<void> {
     type: set.type,
     title: set.title,
     groups: set.groups,
+    scripture_reference: set.scriptureReference ?? null,
   })
   if (error) throw error
 }

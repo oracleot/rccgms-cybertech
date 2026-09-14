@@ -12,7 +12,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ChevronDown, ChevronUp, Combine, ExternalLink, Music2, Plus, Scissors, Trash2, Tv2 } from "lucide-react"
+import { ExternalLink, FileUp, Music2, Plus, Trash2, Tv2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -23,6 +23,8 @@ import { deleteSet as deleteSetRemote, loadCachedSets, saveSet, subscribeToSets,
 import { mergeGroups, splitContent, splitGroup } from "@/lib/lyrics/parse"
 import { newGroupId, newSetId, type ContentType, type LyricGroup, type LyricSet } from "@/lib/lyrics/types"
 import { cn } from "@/lib/utils"
+import { GroupRow } from "./group-row"
+import { DocxImportPanel } from "./docx-import"
 
 function NewSetForm({ onCreate, disabled }: { onCreate: (set: LyricSet) => void; disabled: boolean }) {
   const [title, setTitle] = useState("")
@@ -89,76 +91,6 @@ function NewSetForm({ onCreate, disabled }: { onCreate: (set: LyricSet) => void;
           <Button onClick={create} disabled={disabled || !groups.length}>
             <Plus className="mr-1.5 h-4 w-4" />
             Split into items
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function GroupRow({
-  group,
-  index,
-  total,
-  disabled,
-  onChange,
-  onMove,
-  onSplit,
-  onMerge,
-  onDelete,
-}: {
-  group: LyricGroup
-  index: number
-  total: number
-  disabled: boolean
-  onChange: (patch: Partial<LyricGroup>) => void
-  onMove: (dir: -1 | 1) => void
-  onSplit: () => void
-  onMerge: () => void
-  onDelete: () => void
-}) {
-  return (
-    <Card>
-      <CardContent className="flex gap-3 py-3">
-        <div className="w-6 flex-shrink-0 pt-2 text-center text-xs font-mono text-muted-foreground">{index + 1}</div>
-        <div className="flex-1 space-y-2">
-          <Textarea
-            rows={2}
-            value={group.primary}
-            onChange={(e) => onChange({ primary: e.target.value })}
-            className="font-medium"
-            disabled={disabled}
-          />
-          {group.secondary != null ? (
-            <Textarea
-              rows={1}
-              value={group.secondary}
-              placeholder="Secondary line — translation, response, sub-point…"
-              onChange={(e) => onChange({ secondary: e.target.value })}
-              className="text-sm text-muted-foreground"
-              disabled={disabled}
-            />
-          ) : (
-            <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => onChange({ secondary: "" })} disabled={disabled}>
-              + Add secondary line
-            </Button>
-          )}
-        </div>
-        <div className="flex flex-shrink-0 flex-col gap-0.5">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(-1)} disabled={disabled || index === 0} title="Move up">
-            <ChevronUp className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(1)} disabled={disabled || index === total - 1} title="Move down">
-            <ChevronDown className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSplit} disabled={disabled} title="Split into two">
-            <Scissors className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onMerge} disabled={disabled || index === total - 1} title="Merge with next">
-            <Combine className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDelete} disabled={disabled} title="Delete item">
-            <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
       </CardContent>
@@ -326,6 +258,7 @@ export function LyricsEditor() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<"all" | ContentType>("all")
   const [creating, setCreating] = useState(false)
+  const [importing, setImporting] = useState(false)
   const setsRef = useRef<LyricSet[]>([])
 
   // Only ever moves server → local. A failed fetch keeps the cached copy on
@@ -416,10 +349,16 @@ export function LyricsEditor() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Songs & Prayer Sets</h2>
-          <Button size="sm" onClick={() => { setCreating(true); setSelectedId(null) }} disabled={offline}>
-            <Plus className="mr-1 h-4 w-4" />
-            New
-          </Button>
+          <div className="flex gap-1.5">
+            <Button size="sm" variant="outline" onClick={() => { setImporting(true); setCreating(false); setSelectedId(null) }} disabled={offline}>
+              <FileUp className="mr-1 h-4 w-4" />
+              Import .docx
+            </Button>
+            <Button size="sm" onClick={() => { setCreating(true); setImporting(false); setSelectedId(null) }} disabled={offline}>
+              <Plus className="mr-1 h-4 w-4" />
+              New
+            </Button>
+          </div>
         </div>
 
         {syncError && <p className="rounded-md bg-destructive/10 px-2 py-1.5 text-xs text-destructive">{syncError}</p>}
@@ -469,7 +408,9 @@ export function LyricsEditor() {
       </div>
 
       <div>
-        {creating ? (
+        {importing ? (
+          <DocxImportPanel onImported={() => void refresh()} onClose={() => setImporting(false)} />
+        ) : creating ? (
           <NewSetForm onCreate={handleCreate} disabled={offline} />
         ) : selected ? (
           <SetEditor key={selected.id} set={selected} disabled={offline} onUpdate={updateSelected} onDelete={() => deleteSet(selected.id)} />

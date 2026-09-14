@@ -85,6 +85,7 @@ export function LyricsDockStyles() {
       .group-row.active .group-num { color: #b4a8ff; }
       .group-text { flex: 1; min-width: 0; }
       .group-secondary { color: #6e6a92; font-size: 10.5px; margin-top: 2px; }
+      .group-repeat { color: #8f86c9; font-size: 10px; font-weight: 700; margin-left: 5px; }
       .empty { color: #444460; font-size: 12px; text-align: center; padding: 14px 0; border: 1px dashed #2d2d45; border-radius: 6px; }
       .error-msg { color: #f38ba8; font-size: 11px; }
       .divider { height: 1px; background: #252535; }

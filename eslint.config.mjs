@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Remotion directory excluded from tsconfig and not part of Next.js build
     "remotion/**",
+    // Vendored third-party bundle (mammoth.browser.js) — not our code to lint
+    "lib/lyrics/vendor/**",
   ]),
   // Custom rules
   {

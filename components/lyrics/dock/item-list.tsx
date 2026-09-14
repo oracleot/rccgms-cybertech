@@ -23,6 +23,7 @@ export function ItemList({ dock }: { dock: LyricsDock }) {
             <span className="group-num">{i + 1}</span>
             <span className="group-text">
               {g.primary}
+              {!!g.repeat && g.repeat > 1 && <span className="group-repeat">×{g.repeat}</span>}
               {g.secondary && <div className="group-secondary">{g.secondary}</div>}
             </span>
           </button>

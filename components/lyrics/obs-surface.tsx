@@ -45,6 +45,15 @@ function primaryHtml(primary: string): string {
   return primary.split("\n").map(esc).join("<br/>")
 }
 
+/** One HTML builder shared by the hidden measurer and the visible layer, so what is measured is exactly what shows. */
+function itemHtml(item: LyricItemPayload, s: LyricsSettings): string {
+  const repeatBadge = item.group.repeat && item.group.repeat > 1 ? `<span class="repeat">×${item.group.repeat}</span>` : ""
+  const secondary = item.group.secondary
+    ? `<div class="secondary" style="color:${s.secondaryColor}">${esc(item.group.secondary)}</div>`
+    : ""
+  return `<div class="primary">${primaryHtml(item.group.primary)}${repeatBadge}</div>${secondary}`
+}
+
 interface Layout {
   font: number
   html: string
@@ -77,9 +86,7 @@ function computeLayout(
   const MIN = Math.max(11, safeH * 0.05 * s.scale)
   const MAX = Math.max(MIN, Math.max(18, safeH * 0.6) * s.scale)
 
-  const html = `<div class="primary">${primaryHtml(item.group.primary)}</div>${
-    item.group.secondary ? `<div class="secondary">${esc(item.group.secondary)}</div>` : ""
-  }`
+  const html = itemHtml(item, s)
   measurer.innerHTML = html
   measurer.style.width = `${safeW}px`
 
@@ -246,6 +253,14 @@ export function LyricsObsSurface() {
           transition: none !important;
         }
         .primary { line-height: 1.3; overflow-wrap: break-word; }
+        .repeat {
+          display: inline-block;
+          margin-left: 0.3em;
+          font-size: 0.4em;
+          font-weight: 700;
+          opacity: 0.6;
+          vertical-align: middle;
+        }
         .secondary {
           font-weight: 600;
           font-size: 0.56em;
@@ -284,13 +299,7 @@ export function LyricsObsSurface() {
                 opacity: visible ? 1 : 0,
                 transform: visible ? "translateY(0)" : "translateY(0.4em)",
               }}
-              dangerouslySetInnerHTML={{
-                __html: `<div class="primary">${primaryHtml(item.group.primary)}</div>${
-                  item.group.secondary
-                    ? `<div class="secondary" style="color:${settings.secondaryColor}">${esc(item.group.secondary)}</div>`
-                    : ""
-                }`,
-              }}
+              dangerouslySetInnerHTML={{ __html: itemHtml(item, settings) }}
             />
           </div>
         )}

@@ -13,6 +13,8 @@ export interface LyricGroup {
   primary: string
   /** Optional second line — a translation, a response, a sub-point. Own colour on screen. */
   secondary?: string
+  /** "We are going higher x2" becomes one cue with repeat: 2, not two duplicate cues. */
+  repeat?: number
 }
 
 export interface LyricSet {
@@ -21,6 +23,12 @@ export interface LyricSet {
   title: string
   groups: LyricGroup[]
   updatedAt: number
+  /**
+   * Metadata only, e.g. "Psalm 100:1-5" — imported from a Word document that
+   * listed a reading alongside a song. Never becomes a lyric cue: the Bible
+   * module (/bible/obs) is the one place scripture is displayed.
+   */
+  scriptureReference?: string
 }
 
 /** What actually goes out on the realtime channel and what /lyrics/obs renders. */
