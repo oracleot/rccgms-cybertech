@@ -56,7 +56,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/api/health") ||
     request.nextUrl.pathname.startsWith("/designs/request") || // Public design request form
     request.nextUrl.pathname.startsWith("/availability") || // Public availability form
-    request.nextUrl.pathname.startsWith("/bible/obs") // OBS browser source overlay (no auth)
+    request.nextUrl.pathname.startsWith("/bible/obs") || // OBS browser source overlay (no auth)
+    request.nextUrl.pathname.startsWith("/lyrics/obs") // OBS browser source overlay (no auth)
 
   // If user is not logged in and trying to access protected route
   if (!user && !isAuthRoute && !isPublicRoute) {

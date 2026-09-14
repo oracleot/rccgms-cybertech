@@ -17,6 +17,7 @@ Rotas, rundowns, livestreams, meetings — one app instead of five spreadsheets 
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [OBS Integration](#obs-integration)
+- [Fusion Lyrics / Prayer Points](#fusion-lyrics--prayer-points)
 - [Architecture](#architecture)
 - [Development](#development)
 - [Database Migrations](#database-migrations)
@@ -35,6 +36,7 @@ Rotas, rundowns, livestreams, meetings — one app instead of five spreadsheets 
 | 🎨 **Designs** | Design request tracking, assignment, and file delivery |
 | 🎓 **Training** | Training tracks, step-by-step progress, and certificates |
 | 📖 **Bible Reader** | AI voice-detection that auto-displays Bible passages on the projection screen — with OBS overlay + dock support |
+| 🎤 **Fusion Lyrics** | Transparent worship-caption overlay for song lyrics and prayer points, with its own OBS display + dock, entirely separate from the Bible module |
 
 ## Quick Start
 
@@ -290,6 +292,53 @@ Expand **Recognition diagnostics** (under the Audio button, and in the dock) for
 ### Caching and translations
 
 Passages load through one store: a memory cache, a bounded IndexedDB cache (by translation and normalised reference, with a schema version, a 30-day life and least-recently-used eviction — Bible text is never put in localStorage), and de-duplication of in-flight requests. The translation you asked for loads first; the others are warmed behind it, immediately for short passages and once you have paused for whole chapters, so a burst of chapter steps doesn't queue dozens of requests against the API's rate limit. Returning to a passage used earlier is instant. bible-api.com serves one translation per request and lacks some chapters in some translations (YLT has no Psalm 119); that is remembered as "not available in YLT" rather than retried.
+
+---
+
+## Fusion Lyrics / Prayer Points
+
+A second, independent live-text overlay for song lyrics and prayer points — built the same way as the Bible OBS module (transparent Browser Source + realtime dock), but on its own routes, its own realtime channel namespace (`lyrics-obs:<hostname>`, vs. Bible's `bible-obs:<hostname>`), its own lock, and its own localStorage keys. Nothing here can affect `/bible/obs`, and nothing in Bible can affect `/lyrics/obs`.
+
+| Route | Purpose |
+|-------|---------|
+| `/lyrics` | Full management page — create songs/prayer sets, paste-and-split, edit, reorder |
+| `/lyrics/obs` | Transparent OBS Browser Source — text only, no logo, no watermark |
+| `/lyrics/obs/dock` | Compact OBS Custom Browser Dock — pick a set, drive it live |
+
+### Data model
+
+A song or prayer set is never sent to the screen as one block of text — it's an ordered list of small **display groups**, each `{ id, primary, secondary? }`. `secondary` is an optional second line in its own colour, for a translation under the original language, a call-and-response line, or a sub-point. The operator steps through groups one at a time; only the current group is ever broadcast.
+
+### Fast content entry
+
+Paste the whole song or list — never type it in line by line:
+
+- **Lyrics**: a blank line starts a new slide; two short consecutive lines pack into one slide (a couplet); a long line stands on its own. Tick **"Every other line is a translation"** to instead pair alternating lines as primary/secondary — for a song pasted as original line, translation line, original, translation…
+- **Prayer Points**: paste a numbered or bulleted list (`1.`, `1)`, `-`, `*`, `•`) and each marker becomes one point, with any unmarked follow-on line folded into the point above. Without markers, blank-line-separated blocks become points instead.
+
+Everything the splitter produces can still be edited, split, merged, reordered or deleted afterwards on the `/lyrics` page — nothing is locked in by the first pass.
+
+### Transparent OBS output and safe area
+
+`/lyrics/obs` is fully transparent by default (no logo/watermark — OBS handles branding), sized to whatever the Browser Source is set to, and reflows on resize via `ResizeObserver`. Text is fit with the same measure-the-actual-render approach as the Bible display (a hidden measurer, binary search over font size), so a one-word lyric like `JESUS` can go large and a long prayer point shrinks to fit — never clipped. Unlike the Bible display, size is driven primarily by the safe area's **height** rather than `min(width, height)`, because a lyrics overlay is usually a wide band (a lower-third or full-width caption bar), not a squarish passage box.
+
+Configurable **safe margins** (top/bottom/left/right, percent of the source) keep text clear of logos or icons OBS is already compositing elsewhere in the scene — the fit algorithm lays out inside the safe area, not the full source. **Position** is Bottom Centre (default), Centre, Top Centre, or Custom (independent horizontal/vertical alignment).
+
+### Operator dock
+
+Simple mode (default) shows only what a live service needs: set/item picking, the current item, Prev/Next, Clear, Manual/Auto, and Lock. Advanced adds set creation, safe margins, typography, secondary-line colour, transitions and preview settings — same progressive-disclosure principle as the Bible dock, one behavioural path underneath. The operator can also click any item in the list to jump straight to it. Keyboard: `←`/`↑` previous, `→`/`↓`/`Space` next, `Esc` clears — all paused while typing in a field.
+
+### Timed Auto mode
+
+Choose an interval in seconds, **Start Auto**, and the dock advances on its own; **Pause**/**Resume**/**Stop** are always available, and pressing Next/Previous manually at any time overrides and restarts the interval from that point. Auto stops on its own at the end of a set rather than looping. (A later **Listen Auto**, selecting the current lyric by ear, can plug into the same state — not built yet.)
+
+### Live safety
+
+Lock, Clear and Undo work exactly as they do in the Bible module: the OBS display itself enforces the lock over the realtime channel (not just the dock), so no other client can change or clear the live line while locked, and a source that reloads mid-lock comes back showing what was already live rather than going blank. With **Preview before live** on, a locked dock can still stage the next item — the lock protects what's on stream, not the operator's preparation.
+
+### Persistence
+
+Songs, prayer sets, appearance settings, safe margins and interface mode are kept in localStorage for now (`lyrics-sets`, `lyrics-obs-scene-settings`, `lyrics-obs-locked`, `lyrics-dock-ui-mode`) — deliberately no database migration for the MVP. Storage is accessed only through `lib/lyrics/store.ts`, so a shared Supabase library can be layered in later without touching the dock or display code. The `/lyrics` page and the dock pick up each other's changes live via the browser's `storage` event.
 
 ---
 
