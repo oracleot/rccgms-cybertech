@@ -12,9 +12,8 @@ import { createClient } from "@/lib/supabase/client"
 import { lyricsChannelName } from "@/lib/lyrics/channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/lyrics/lock"
 import { LYRICS_DEFAULTS, loadSettings, saveSettings, type LyricsSettings } from "@/lib/lyrics/settings"
-import { SETS_KEY, loadSets, removeSet, upsertSet } from "@/lib/lyrics/store"
-import { splitContent } from "@/lib/lyrics/parse"
-import { newSetId, type ContentType, type LyricItemPayload, type LyricSet } from "@/lib/lyrics/types"
+import { loadCachedSets, subscribeToSets, syncSets } from "@/lib/lyrics/store"
+import type { LyricItemPayload, LyricSet } from "@/lib/lyrics/types"
 
 const UI_MODE_KEY = "lyrics-dock-ui-mode"
 const PREFS_KEY = "lyrics-dock-prefs"
@@ -58,6 +57,8 @@ function savePrefs(p: Prefs) {
 
 export function useLyricsDock() {
   const [sets, setSets] = useState<LyricSet[]>([])
+  const [setsError, setSetsError] = useState<string | null>(null)
+  const [offline, setOffline] = useState(false)
   const [activeSet, setActiveSetState] = useState<LyricSet | null>(null)
   const [activeIndex, setActiveIndexState] = useState(0)
   const [onScreen, setOnScreen] = useState<LyricItemPayload | null>(null)
@@ -95,29 +96,45 @@ export function useLyricsDock() {
     lockedRef.current = wasLocked
     setLockedState(wasLocked)
     setUiModeState(loadUiMode())
-    const loadedSets = loadSets()
-    setsRef.current = loadedSets
-    setSets(loadedSets)
     const prefs = loadPrefs()
     previewFirstRef.current = !!prefs.previewFirst
     setPreviewFirstState(!!prefs.previewFirst)
   }, [])
 
-  useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== SETS_KEY) return
-      const next = loadSets()
-      setsRef.current = next
-      setSets(next)
-      if (activeSetRef.current) {
-        const refreshed = next.find((s) => s.id === activeSetRef.current!.id) ?? null
-        activeSetRef.current = refreshed
-        setActiveSetState(refreshed)
-      }
+  /**
+   * Re-reads the shared library from Supabase and reconciles the active set
+   * against it. Only ever moves server → local: a failed fetch keeps showing
+   * the cached copy (never invented, never pushed back up), so a stale
+   * connection can't quietly overwrite what's actually on the server once it
+   * comes back — the next successful fetch simply replaces the cache outright.
+   */
+  const refreshSets = useCallback(async () => {
+    const { sets: fresh, source } = await syncSets()
+    setsRef.current = fresh
+    setSets(fresh)
+    setOffline(source === "cache")
+    setSetsError(source === "cache" ? "Offline — using the last cached library" : null)
+    if (activeSetRef.current) {
+      const refreshed = fresh.find((s) => s.id === activeSetRef.current!.id) ?? null
+      activeSetRef.current = refreshed
+      setActiveSetState(refreshed)
     }
-    window.addEventListener("storage", onStorage)
-    return () => window.removeEventListener("storage", onStorage)
   }, [])
+
+  // The library lives in Supabase (lyric_sets) so it's visible to every client,
+  // including an OBS Browser Source — which runs inside OBS's own embedded
+  // Chromium with a storage profile entirely separate from the operator's
+  // normal browser, so localStorage alone can never bridge the two. The
+  // cached copy paints instantly while the real fetch is in flight; the
+  // realtime subscription keeps every open client in sync afterwards.
+  useEffect(() => {
+    const cached = loadCachedSets()
+    setsRef.current = cached
+    setSets(cached)
+    void refreshSets()
+    const unsubscribe = subscribeToSets(() => void refreshSets())
+    return unsubscribe
+  }, [refreshSets])
 
   const setUiMode = useCallback((m: UiMode) => {
     setUiModeState(m)
@@ -385,40 +402,13 @@ export function useLyricsDock() {
     [stopAuto]
   )
 
-  // ---- sets
-
-  const createSet = useCallback(
-    (title: string, type: ContentType, raw: string, opts?: { pairTranslation?: boolean }): LyricSet | null => {
-      const groups = splitContent(raw, type, opts)
-      if (!groups.length) return null
-      const set: LyricSet = {
-        id: newSetId(),
-        type,
-        title: title.trim() || (type === "prayer" ? "Untitled prayer set" : "Untitled song"),
-        groups,
-        updatedAt: Date.now(),
-      }
-      const next = upsertSet(setsRef.current, set)
-      setsRef.current = next
-      setSets(next)
-      selectSet(set.id)
-      return set
-    },
-    [selectSet]
-  )
-
-  const deleteSet = useCallback((id: string) => {
-    const next = removeSet(setsRef.current, id)
-    setsRef.current = next
-    setSets(next)
-    if (activeSetRef.current?.id === id) {
-      stopAuto()
-      activeSetRef.current = null
-      setActiveSetState(null)
-      activeIndexRef.current = 0
-      setActiveIndexState(0)
-    }
-  }, [stopAuto])
+  // Creating, editing, reordering and deleting sets all happen on the
+  // authenticated /lyrics management page, never here — the dock has no
+  // session (an OBS Browser Source can't log in), and RLS only grants
+  // authenticated clients write access to lyric_sets, on purpose: an OBS
+  // Browser Source getting write/delete access to the shared library would
+  // be an unnecessary privilege it doesn't need to do its job. The dock only
+  // ever reads the library and drives the live item.
 
   // ← → / ↑ ↓ prev/next · Space advances · Escape clears · never while typing
   useEffect(() => {
@@ -447,6 +437,8 @@ export function useLyricsDock() {
 
   return {
     sets,
+    setsError,
+    offline,
     activeSet,
     activeIndex,
     onScreen,
@@ -473,8 +465,6 @@ export function useLyricsDock() {
     canNext,
     jumpTo,
     clear,
-    createSet,
-    deleteSet,
     autoOn,
     autoPaused,
     autoInterval,

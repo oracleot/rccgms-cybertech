@@ -9,31 +9,19 @@
 
 import { useState } from "react"
 import * as Tooltip from "@radix-ui/react-tooltip"
-import { Lock, LockOpen, Music2, RotateCcw, Settings, Trash2 } from "lucide-react"
+import { ExternalLink, Lock, LockOpen, Music2, RotateCcw, Settings } from "lucide-react"
 import { LyricsDockStyles } from "./dock-styles"
 import { ItemList } from "./item-list"
 import { LyricsSettingsPanel } from "./settings-panel"
 import { Tip } from "./tip"
 import { useLyricsDock } from "./use-dock"
-import type { ContentType } from "@/lib/lyrics/types"
 
 export function LyricsDock() {
   const dock = useLyricsDock()
   const [view, setView] = useState<"main" | "settings">("main")
-  const [newTitle, setNewTitle] = useState("")
-  const [newType, setNewType] = useState<ContentType>("lyrics")
-  const [newRaw, setNewRaw] = useState("")
-  const [pairTranslation, setPairTranslation] = useState(false)
   const advanced = dock.uiMode === "advanced"
 
   const { activeSet, onScreen, staged } = dock
-
-  const handleCreate = () => {
-    if (!newRaw.trim()) return
-    dock.createSet(newTitle, newType, newRaw, { pairTranslation })
-    setNewTitle("")
-    setNewRaw("")
-  }
 
   return (
     <Tooltip.Provider>
@@ -44,7 +32,7 @@ export function LyricsDock() {
             <span className="section-label">Song / Prayer set</span>
             <select value={activeSet?.id ?? ""} onChange={(e) => dock.selectSet(e.target.value)}>
               <option value="" disabled>
-                {dock.sets.length ? "Choose a set…" : "No sets yet — create one in Advanced"}
+                {dock.sets.length ? "Choose a set…" : "No sets yet — create one at /lyrics"}
               </option>
               {dock.sets.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -53,6 +41,7 @@ export function LyricsDock() {
                 </option>
               ))}
             </select>
+            {dock.setsError && <div className="error-msg">{dock.setsError}</div>}
 
             {staged && (
               <div className="preview">
@@ -143,43 +132,19 @@ export function LyricsDock() {
             {advanced && (
               <>
                 <div className="divider" />
-                <span className="section-label">New set</span>
-                <div className="row">
-                  <input type="text" placeholder="Title" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
-                  <div className="type-toggle">
-                    <button className={newType === "lyrics" ? "active" : ""} onClick={() => setNewType("lyrics")}>
-                      Lyrics
-                    </button>
-                    <button className={newType === "prayer" ? "active" : ""} onClick={() => setNewType("prayer")}>
-                      Prayer
-                    </button>
-                  </div>
-                </div>
-                {newType === "lyrics" && (
-                  <label className="srow">
-                    <span>Every other line is a translation</span>
-                    <input type="checkbox" checked={pairTranslation} onChange={(e) => setPairTranslation(e.target.checked)} />
-                  </label>
-                )}
-                <textarea
-                  placeholder={
-                    newType === "prayer"
-                      ? "Paste a numbered or bulleted list of prayer points…"
-                      : "Paste the full song — blank line between slides…"
-                  }
-                  value={newRaw}
-                  onChange={(e) => setNewRaw(e.target.value)}
-                />
-                <button className="btn-primary" onClick={handleCreate} disabled={!newRaw.trim()}>
-                  Split into items
-                </button>
-                {activeSet && (
-                  <button className="btn-ghost wide" onClick={() => dock.deleteSet(activeSet.id)}>
-                    <Trash2 style={{ height: 12, width: 12, marginRight: 5, verticalAlign: -2 }} />
-                    Delete &ldquo;{activeSet.title}&rdquo;
+                {/* Creating/editing/deleting sets happens on /lyrics, not here — the dock
+                    has no login session (an OBS Browser Source can't authenticate), and
+                    only signed-in staff can write to the shared library. The dock only
+                    ever reads it. */}
+                <a href="/lyrics" target="_blank" rel="noreferrer">
+                  <button className="btn-ghost wide">
+                    <ExternalLink style={{ height: 12, width: 12, marginRight: 5, verticalAlign: -2 }} />
+                    Manage songs &amp; prayer sets (/lyrics)
                   </button>
-                )}
-                <div className="hint">Full editing, reordering and merging lives on the /lyrics management page.</div>
+                </a>
+                <div className="hint">
+                  Create, edit, reorder and delete sets on the /lyrics page — changes appear here automatically.
+                </div>
               </>
             )}
           </div>

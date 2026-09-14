@@ -3,12 +3,15 @@
 /**
  * /lyrics — the full Lyrics & Prayer Points management page. Paste a whole
  * song or a numbered list of prayer points, get ordered display groups back,
- * then edit, split, merge, reorder or delete them. This page never talks to
- * the realtime channel directly — it only edits what's in lib/lyrics/store,
- * and the dock (/lyrics/obs/dock) picks up changes via the storage event.
+ * then edit, split, merge, reorder or delete them. The library lives in
+ * Supabase (lib/lyrics/store.ts) — not localStorage — because this page runs
+ * in the operator's normal browser while the dock (/lyrics/obs/dock) runs
+ * inside OBS's own embedded Chromium, a completely separate storage profile.
+ * Realtime (lib/lyrics/store.ts's subscribeToSets) keeps every open client —
+ * this page, the dock, another operator's laptop — in sync automatically.
  */
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, Combine, ExternalLink, Music2, Plus, Scissors, Trash2, Tv2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,12 +19,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { loadSets, removeSet, upsertSet, SETS_KEY } from "@/lib/lyrics/store"
+import { deleteSet as deleteSetRemote, loadCachedSets, saveSet, subscribeToSets, syncSets } from "@/lib/lyrics/store"
 import { mergeGroups, splitContent, splitGroup } from "@/lib/lyrics/parse"
 import { newGroupId, newSetId, type ContentType, type LyricGroup, type LyricSet } from "@/lib/lyrics/types"
 import { cn } from "@/lib/utils"
 
-function NewSetForm({ onCreate }: { onCreate: (set: LyricSet) => void }) {
+function NewSetForm({ onCreate, disabled }: { onCreate: (set: LyricSet) => void; disabled: boolean }) {
   const [title, setTitle] = useState("")
   const [type, setType] = useState<ContentType>("lyrics")
   const [raw, setRaw] = useState("")
@@ -45,19 +48,24 @@ function NewSetForm({ onCreate }: { onCreate: (set: LyricSet) => void }) {
   return (
     <Card>
       <CardContent className="space-y-4 pt-6">
+        {disabled && (
+          <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+            Offline — the library is read-only until the connection is back.
+          </p>
+        )}
         <div className="flex items-center gap-3">
-          <Input placeholder="Song or set title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Input placeholder="Song or set title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={disabled} />
           <Tabs value={type} onValueChange={(v) => setType(v as ContentType)}>
             <TabsList>
-              <TabsTrigger value="lyrics">Lyrics</TabsTrigger>
-              <TabsTrigger value="prayer">Prayer Points</TabsTrigger>
+              <TabsTrigger value="lyrics" disabled={disabled}>Lyrics</TabsTrigger>
+              <TabsTrigger value="prayer" disabled={disabled}>Prayer Points</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
         {type === "lyrics" && (
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <input type="checkbox" checked={pairTranslation} onChange={(e) => setPairTranslation(e.target.checked)} />
+            <input type="checkbox" checked={pairTranslation} onChange={(e) => setPairTranslation(e.target.checked)} disabled={disabled} />
             Every other line is a translation of the line above (e.g. Yoruba, then English)
           </label>
         )}
@@ -71,13 +79,14 @@ function NewSetForm({ onCreate }: { onCreate: (set: LyricSet) => void }) {
           }
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
+          disabled={disabled}
         />
 
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {groups.length ? `${groups.length} item${groups.length === 1 ? "" : "s"} will be created` : "Paste content above"}
           </p>
-          <Button onClick={create} disabled={!groups.length}>
+          <Button onClick={create} disabled={disabled || !groups.length}>
             <Plus className="mr-1.5 h-4 w-4" />
             Split into items
           </Button>
@@ -91,6 +100,7 @@ function GroupRow({
   group,
   index,
   total,
+  disabled,
   onChange,
   onMove,
   onSplit,
@@ -100,6 +110,7 @@ function GroupRow({
   group: LyricGroup
   index: number
   total: number
+  disabled: boolean
   onChange: (patch: Partial<LyricGroup>) => void
   onMove: (dir: -1 | 1) => void
   onSplit: () => void
@@ -116,6 +127,7 @@ function GroupRow({
             value={group.primary}
             onChange={(e) => onChange({ primary: e.target.value })}
             className="font-medium"
+            disabled={disabled}
           />
           {group.secondary != null ? (
             <Textarea
@@ -124,27 +136,28 @@ function GroupRow({
               placeholder="Secondary line — translation, response, sub-point…"
               onChange={(e) => onChange({ secondary: e.target.value })}
               className="text-sm text-muted-foreground"
+              disabled={disabled}
             />
           ) : (
-            <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => onChange({ secondary: "" })}>
+            <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => onChange({ secondary: "" })} disabled={disabled}>
               + Add secondary line
             </Button>
           )}
         </div>
         <div className="flex flex-shrink-0 flex-col gap-0.5">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(-1)} disabled={index === 0} title="Move up">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(-1)} disabled={disabled || index === 0} title="Move up">
             <ChevronUp className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(1)} disabled={index === total - 1} title="Move down">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMove(1)} disabled={disabled || index === total - 1} title="Move down">
             <ChevronDown className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSplit} title="Split into two">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSplit} disabled={disabled} title="Split into two">
             <Scissors className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onMerge} disabled={index === total - 1} title="Merge with next">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onMerge} disabled={disabled || index === total - 1} title="Merge with next">
             <Combine className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDelete} title="Delete item">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onDelete} disabled={disabled} title="Delete item">
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
@@ -155,10 +168,12 @@ function GroupRow({
 
 function SetEditor({
   set,
+  disabled,
   onUpdate,
   onDelete,
 }: {
   set: LyricSet
+  disabled: boolean
   onUpdate: (mutate: (s: LyricSet) => LyricSet) => void
   onDelete: () => void
 }) {
@@ -222,6 +237,11 @@ function SetEditor({
 
   return (
     <div className="space-y-4">
+      {disabled && (
+        <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+          Offline — this set is read-only until the connection is back. It&apos;s still fine to use live from the dock.
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Badge variant={set.type === "prayer" ? "secondary" : "default"}>
@@ -232,17 +252,18 @@ function SetEditor({
             onChange={(e) => setTitle(e.target.value)}
             onBlur={commitTitle}
             className="w-64 font-medium"
+            disabled={disabled}
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setAppendOpen((v) => !v)}>
+          <Button variant="outline" size="sm" onClick={() => setAppendOpen((v) => !v)} disabled={disabled}>
             <Plus className="mr-1.5 h-4 w-4" />
             Append from paste
           </Button>
-          <Button variant="outline" size="sm" onClick={addGroup}>
+          <Button variant="outline" size="sm" onClick={addGroup} disabled={disabled}>
             + Blank item
           </Button>
-          <Button variant="ghost" size="sm" className="text-destructive" onClick={onDelete}>
+          <Button variant="ghost" size="sm" className="text-destructive" onClick={onDelete} disabled={disabled}>
             <Trash2 className="mr-1.5 h-4 w-4" />
             Delete set
           </Button>
@@ -254,16 +275,22 @@ function SetEditor({
           <CardContent className="space-y-3 pt-6">
             {set.type === "lyrics" && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input type="checkbox" checked={appendPair} onChange={(e) => setAppendPair(e.target.checked)} />
+                <input type="checkbox" checked={appendPair} onChange={(e) => setAppendPair(e.target.checked)} disabled={disabled} />
                 Every other line is a translation
               </label>
             )}
-            <Textarea rows={6} value={appendRaw} onChange={(e) => setAppendRaw(e.target.value)} placeholder="Paste more content to add to the end…" />
+            <Textarea
+              rows={6}
+              value={appendRaw}
+              onChange={(e) => setAppendRaw(e.target.value)}
+              placeholder="Paste more content to add to the end…"
+              disabled={disabled}
+            />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" size="sm" onClick={() => setAppendOpen(false)}>
                 Cancel
               </Button>
-              <Button size="sm" onClick={appendFromPaste} disabled={!appendRaw.trim()}>
+              <Button size="sm" onClick={appendFromPaste} disabled={disabled || !appendRaw.trim()}>
                 Append
               </Button>
             </div>
@@ -279,6 +306,7 @@ function SetEditor({
             group={g}
             index={i}
             total={set.groups.length}
+            disabled={disabled}
             onChange={(patch) => updateGroup(g.id, patch)}
             onMove={(dir) => moveGroup(g.id, dir)}
             onSplit={() => splitOne(g.id)}
@@ -293,42 +321,94 @@ function SetEditor({
 
 export function LyricsEditor() {
   const [sets, setSets] = useState<LyricSet[]>([])
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const [offline, setOffline] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [filter, setFilter] = useState<"all" | ContentType>("all")
   const [creating, setCreating] = useState(false)
+  const setsRef = useRef<LyricSet[]>([])
 
-  useEffect(() => {
-    setSets(loadSets())
+  // Only ever moves server → local. A failed fetch keeps the cached copy on
+  // screen rather than inventing anything, and never pushes stale cache data
+  // back up — the next successful fetch simply replaces it outright, so a
+  // reconnect can't clobber newer data written elsewhere while this client
+  // was offline.
+  const refresh = useCallback(async () => {
+    const { sets: fresh, source } = await syncSets()
+    setsRef.current = fresh
+    setSets(fresh)
+    setOffline(source === "cache")
+    setSyncError(source === "cache" ? "Offline — using the last cached library (read-only)" : null)
   }, [])
 
+  // Supabase is the source of truth so this page, the dock and another
+  // operator's laptop all see the same library; the cached copy just paints
+  // instantly while the real fetch is in flight.
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === SETS_KEY) setSets(loadSets())
-    }
-    window.addEventListener("storage", onStorage)
-    return () => window.removeEventListener("storage", onStorage)
-  }, [])
+    const cached = loadCachedSets()
+    setsRef.current = cached
+    setSets(cached)
+    void refresh()
+    const unsubscribe = subscribeToSets(() => void refresh())
+    return unsubscribe
+  }, [refresh])
 
   const selected = sets.find((s) => s.id === selectedId) ?? null
   const visible = sets.filter((s) => filter === "all" || s.type === filter)
 
+  // Every write below is optimistic (instant local update) then confirmed
+  // against Supabase in the background; a failure rolls the local change
+  // back and surfaces why, rather than silently drifting from the shared
+  // copy. While offline the UI already disables these controls, but each
+  // handler guards too rather than relying on that alone.
   const handleCreate = (set: LyricSet) => {
-    const next = upsertSet(sets, set)
+    if (offline) return
+    const next = [set, ...setsRef.current]
+    setsRef.current = next
     setSets(next)
     setSelectedId(set.id)
     setCreating(false)
+    void saveSet(set)
+      .then(() => setSyncError(null))
+      .catch(() => {
+        setSyncError("Couldn't save the new set — check your connection")
+        const rolledBack = setsRef.current.filter((s) => s.id !== set.id)
+        setsRef.current = rolledBack
+        setSets(rolledBack)
+        setSelectedId((id) => (id === set.id ? null : id))
+      })
   }
 
   const updateSelected = (mutate: (s: LyricSet) => LyricSet) => {
-    if (!selected) return
-    const next = upsertSet(sets, { ...mutate(selected), updatedAt: Date.now() })
+    if (!selected || offline) return
+    const previous = setsRef.current
+    const updated = { ...mutate(selected), updatedAt: Date.now() }
+    const next = [updated, ...previous.filter((s) => s.id !== updated.id)]
+    setsRef.current = next
     setSets(next)
+    void saveSet(updated)
+      .then(() => setSyncError(null))
+      .catch(() => {
+        setSyncError("Couldn't save changes — check your connection")
+        setsRef.current = previous
+        setSets(previous)
+      })
   }
 
   const deleteSet = (id: string) => {
-    const next = removeSet(sets, id)
+    if (offline) return
+    const previous = setsRef.current
+    const next = previous.filter((s) => s.id !== id)
+    setsRef.current = next
     setSets(next)
     if (selectedId === id) setSelectedId(null)
+    void deleteSetRemote(id)
+      .then(() => setSyncError(null))
+      .catch(() => {
+        setSyncError("Couldn't delete the set — check your connection")
+        setsRef.current = previous
+        setSets(previous)
+      })
   }
 
   return (
@@ -336,11 +416,13 @@ export function LyricsEditor() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">Songs & Prayer Sets</h2>
-          <Button size="sm" onClick={() => { setCreating(true); setSelectedId(null) }}>
+          <Button size="sm" onClick={() => { setCreating(true); setSelectedId(null) }} disabled={offline}>
             <Plus className="mr-1 h-4 w-4" />
             New
           </Button>
         </div>
+
+        {syncError && <p className="rounded-md bg-destructive/10 px-2 py-1.5 text-xs text-destructive">{syncError}</p>}
 
         <Tabs value={filter} onValueChange={(v) => setFilter(v as "all" | ContentType)}>
           <TabsList className="w-full">
@@ -388,9 +470,9 @@ export function LyricsEditor() {
 
       <div>
         {creating ? (
-          <NewSetForm onCreate={handleCreate} />
+          <NewSetForm onCreate={handleCreate} disabled={offline} />
         ) : selected ? (
-          <SetEditor key={selected.id} set={selected} onUpdate={updateSelected} onDelete={() => deleteSet(selected.id)} />
+          <SetEditor key={selected.id} set={selected} disabled={offline} onUpdate={updateSelected} onDelete={() => deleteSet(selected.id)} />
         ) : (
           <Card>
             <CardContent className="py-16 text-center text-sm text-muted-foreground">
