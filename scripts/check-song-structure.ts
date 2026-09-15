@@ -92,6 +92,32 @@ eq(parseHeading(""), null, "an empty line is not a heading")
 }
 
 {
+  // A hymn with bare verse-number markers is projected verse by verse: one
+  // cue per verse, not one per line. A song with the same text would be one
+  // cue per line — that difference is the point of having two types.
+  const { sections } = parseSections(
+    ["1", "Alpha one", "Alpha two", "Alpha three", "", "2", "Bravo one", "Bravo two", "Bravo three"].join("\n"),
+    "hymn"
+  )
+  eq(sections.length, 2, "a numbered hymn -> 2 verses")
+  eq(sections[0].groups.length, 1, "each numbered hymn verse is a single cue")
+  eq(sections[0].number, 1, "the first verse keeps number 1")
+  eq(sections[1].number, 2, "the second verse keeps number 2")
+  eq(
+    sections[0].groups[0].primary,
+    "Alpha one\nAlpha two\nAlpha three",
+    "the whole verse is in one cue, lines intact"
+  )
+
+  // Same text as a song stays phrase-cued, one per line.
+  const asSong = parseSections(
+    ["1", "Alpha one", "Alpha two", "Alpha three", "", "2", "Bravo one", "Bravo two", "Bravo three"].join("\n"),
+    "song"
+  )
+  eq(asSong.sections[0].groups.length, 3, "the same text as a song is one cue per line")
+}
+
+{
   // A hymn pasted as blank-line-separated blocks reads verse by verse.
   const { sections, recognised } = parseSections("Alpha one\nAlpha two\n\nBravo one\nBravo two", "hymn")
   check(recognised, "a blank-line-separated hymn is treated as verses")

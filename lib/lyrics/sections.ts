@@ -176,9 +176,19 @@ export function parseSections(raw: string, type: ContentType = "song"): ParseSec
     return section
   })
 
+  // A hymn is followed verse by verse by a congregation, so each verse goes
+  // to the screen whole rather than as one cue per line — that is the whole
+  // difference between hymn mode and song mode, and it applies however the
+  // verses were recognised (numbered markers or blank-line blocks).
+  if (type === "hymn" && recognised) {
+    return {
+      recognised,
+      sections: sections.filter((s) => s.groups.length > 0).map(collapseSectionToVerseCue),
+    }
+  }
+
   // Hymns with no headings at all still read verse-by-verse: blank-line
-  // blocks are the verses. Only applied when nothing was recognised, so an
-  // explicitly-structured hymn keeps the structure it stated.
+  // blocks are the verses.
   if (!recognised && type === "hymn") {
     const blocks = raw
       .replace(/\r\n/g, "\n")

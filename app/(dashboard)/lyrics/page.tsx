@@ -1,17 +1,14 @@
-import { LyricsEditor } from "@/components/lyrics/editor/lyrics-editor"
+import type { Metadata } from "next"
+import { WorshipLibrary } from "@/components/worship/worship-library"
 
-export default function LyricsPage() {
-  return (
-    <div className="space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Lyrics & Prayer Points</h1>
-        <p className="text-sm text-muted-foreground">
-          Prepare songs and prayer sets here, then drive them live from the OBS dock. Output is a transparent
-          Browser Source at <code className="rounded bg-muted px-1 py-0.5 text-xs">/lyrics/obs</code> — no logo, no
-          watermark, text only.
-        </p>
-      </div>
-      <LyricsEditor />
-    </div>
-  )
+export const metadata: Metadata = {
+  title: "Worship Library",
+  description: "Prepare songs, hymns and prayer points for live display.",
+}
+
+// The route stays /lyrics: the OBS dock, the Browser Source URLs and every
+// link already in operators' hands point here, and renaming it would break
+// them for no functional gain. The page is the Worship Library.
+export default function WorshipLibraryPage() {
+  return <WorshipLibrary />
 }

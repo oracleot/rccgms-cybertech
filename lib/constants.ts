@@ -375,6 +375,9 @@ export const ROUTES = {
   RUNDOWN_NEW: "/rundown/new",
   LIVESTREAM: "/livestream",
   DESIGNS: "/designs",
+  // The Worship Library. The route keeps its original /lyrics path so the OBS
+  // Browser Source URLs and dock links already in use keep working.
+  WORSHIP_LIBRARY: "/lyrics",
   SOCIAL: "/social",
   TRAINING: "/training",
   TRAINING_MY_PROGRESS: "/training/my-progress",

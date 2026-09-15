@@ -18,6 +18,7 @@ import {
   Code2,
   Brain,
   Radio,
+  Music2,
   Video,
 } from "lucide-react"
 
@@ -48,6 +49,7 @@ const coreItems = [
 // Content & production items
 const contentItems = [
   { title: "Livestream", href: ROUTES.LIVESTREAM, icon: Radio },
+  { title: "Worship Library", href: ROUTES.WORSHIP_LIBRARY, icon: Music2 },
   { title: "Designs", href: ROUTES.DESIGNS, icon: Palette },
   { title: "Training", href: ROUTES.TRAINING, icon: GraduationCap },
 ]
