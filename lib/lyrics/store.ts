@@ -17,7 +17,7 @@
  */
 
 import { createClient } from "@/lib/supabase/client"
-import type { LyricSet } from "./types"
+import { defaultPresentation, normalizeContentType, type LyricSet, type Presentation } from "./types"
 
 const CACHE_KEY = "lyrics-sets-cache"
 const LEGACY_KEY = "lyrics-sets"
@@ -32,6 +32,10 @@ interface LyricSetRow {
   groups: unknown
   updated_at: string
   scripture_reference: string | null
+  /** V2 columns — absent on rows written before migration 045. */
+  sections?: unknown
+  language?: string | null
+  presentation?: unknown
 }
 
 // The generated Database type predates this table; codegen needs a linked
@@ -43,14 +47,44 @@ function table(supabase: ReturnType<typeof createClient>) {
   return (supabase as unknown as UntypedSupabase).from("lyric_sets")
 }
 
+/**
+ * A row is valid whether or not it has V2 structure. `groups` is read exactly
+ * as before and stays the projection list; `sections` only adds the authoring
+ * view on top when the row has one. A pre-V2 flat set therefore loads and
+ * plays identically after this change — nothing needs reimporting.
+ */
 function rowToSet(row: LyricSetRow): LyricSet {
+  const type = normalizeContentType(row.type === "prayer" ? "prayer" : row.type)
+  const sections = Array.isArray(row.sections) ? (row.sections as LyricSet["sections"]) : undefined
   return {
     id: row.id,
-    type: row.type === "prayer" ? "prayer" : "lyrics",
+    type,
     title: row.title,
     groups: Array.isArray(row.groups) ? (row.groups as LyricSet["groups"]) : [],
+    sections: sections?.length ? sections : undefined,
+    language: row.language ?? undefined,
+    presentation: normalizePresentation(row.presentation, type),
     updatedAt: new Date(row.updated_at).getTime(),
     scriptureReference: row.scripture_reference ?? undefined,
+  }
+}
+
+function normalizePresentation(raw: unknown, type: LyricSet["type"]): Presentation {
+  const base = defaultPresentation(type)
+  if (!raw || typeof raw !== "object") return base
+  const p = raw as Partial<Presentation>
+  return {
+    sectionLabels:
+      p.sectionLabels === "all" || p.sectionLabels === "numbers" || p.sectionLabels === "off"
+        ? p.sectionLabels
+        : base.sectionLabels,
+    verseNumberStyle:
+      p.verseNumberStyle === "heading" ||
+      p.verseNumberStyle === "inline" ||
+      p.verseNumberStyle === "superscript" ||
+      p.verseNumberStyle === "none"
+        ? p.verseNumberStyle
+        : base.verseNumberStyle,
   }
 }
 
@@ -119,11 +153,17 @@ export async function syncSets(): Promise<{ sets: LyricSet[]; source: SetsSource
 
 export async function saveSet(set: LyricSet): Promise<void> {
   const supabase = createClient()
+  // groups is always written, structured or not, so the dock and the OBS
+  // display keep one thing to read and a set stays playable even if a future
+  // reader ignores `sections` entirely.
   const { error } = await table(supabase).upsert({
     id: set.id,
     type: set.type,
     title: set.title,
     groups: set.groups,
+    sections: set.sections ?? null,
+    language: set.language ?? null,
+    presentation: set.presentation ?? null,
     scripture_reference: set.scriptureReference ?? null,
   })
   if (error) throw error

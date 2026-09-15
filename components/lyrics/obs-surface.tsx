@@ -25,12 +25,12 @@ import {
   saveSettings,
   type LyricsSettings,
 } from "@/lib/lyrics/settings"
-import type { LyricItemPayload } from "@/lib/lyrics/types"
+import { defaultPresentation, type LyricItemPayload } from "@/lib/lyrics/types"
 
 const PREVIEW_ITEM: LyricItemPayload = {
   setId: "preview",
   setTitle: "Preview",
-  type: "lyrics",
+  type: "song",
   group: { id: "p1", primary: "SO GI BU ONYE INYE AKA M", secondary: "YOU ALONE ARE MY HELPER" },
   index: 0,
   total: 1,
@@ -45,14 +45,59 @@ function primaryHtml(primary: string): string {
   return primary.split("\n").map(esc).join("<br/>")
 }
 
+/**
+ * The verse marker for a hymn cue, per the set's chosen style. The number is
+ * structural (group.section.number), never part of the lyric text, so the
+ * same content can present as a heading, a side number, a superscript, or
+ * nothing at all without the words changing.
+ *
+ * Songs get nothing here: "Verse 1" / "Chorus" are operator metadata and must
+ * never reach the congregation's screen.
+ */
+function verseMarkerHtml(item: LyricItemPayload): { lead: string; heading: string } {
+  const none = { lead: "", heading: "" }
+  if (item.type !== "hymn") return none
+  const presentation = item.presentation ?? defaultPresentation(item.type)
+  if (presentation.verseNumberStyle === "none" || presentation.sectionLabels === "off") return none
+
+  const section = item.group.section
+  // Only numbered sections carry a marker — a chorus has no verse number, and
+  // inventing one would mislabel it.
+  if (!section || section.number === undefined) return none
+  const n = esc(String(section.number))
+
+  switch (presentation.verseNumberStyle) {
+    case "heading":
+      return { lead: "", heading: `<div class="verse-heading">${n}</div>` }
+    case "inline":
+      return { lead: `<span class="verse-inline">${n}</span>`, heading: "" }
+    case "superscript":
+      return { lead: `<span class="verse-sup">${n}</span>`, heading: "" }
+    default:
+      return none
+  }
+}
+
 /** One HTML builder shared by the hidden measurer and the visible layer, so what is measured is exactly what shows. */
 function itemHtml(item: LyricItemPayload, s: LyricsSettings): string {
   const repeatBadge = item.group.repeat && item.group.repeat > 1 ? `<span class="repeat">×${item.group.repeat}</span>` : ""
   const secondary = item.group.secondary
     ? `<div class="secondary" style="color:${s.secondaryColor}">${esc(item.group.secondary)}</div>`
     : ""
-  return `<div class="primary">${primaryHtml(item.group.primary)}${repeatBadge}</div>${secondary}`
+  const { lead, heading } = verseMarkerHtml(item)
+  const hymnClass = item.type === "hymn" ? " is-hymn" : ""
+  return `${heading}<div class="primary${hymnClass}">${lead}${primaryHtml(item.group.primary)}${repeatBadge}</div>${secondary}`
 }
+
+/**
+ * The size a cue is shown at when it fits — a broadcast caption's normal
+ * weight on screen, as a fraction of the safe area's height. Tuned so a
+ * typical one- or two-line worship phrase reads large without a short cue
+ * ballooning to fill the frame.
+ */
+const PREFERRED_HEIGHT_RATIO = 0.17
+/** Hard ceiling for short/thin sources, so the preferred size can't overflow a caption bar. */
+const MAX_HEIGHT_RATIO = 0.42
 
 interface Layout {
   font: number
@@ -83,8 +128,17 @@ function computeLayout(
   // size scales off the safe area's height, not min(W,H) — a short caption in a
   // 1920x300 bar should still read like a broadcast caption, not shrink to fit
   // an imaginary square. Width is still enforced for real by fits() below.
+  //
+  // Auto-fit PREVENTS OVERFLOW; it does not fill the safe area. Every cue
+  // starts at the same preferred size and only shrinks if it genuinely
+  // doesn't fit, so consecutive cues hold a steady size instead of the text
+  // jumping between enormous and tiny as short and long lines alternate —
+  // which is what a purely maximising fit did in rehearsal.
   const MIN = Math.max(11, safeH * 0.05 * s.scale)
-  const MAX = Math.max(MIN, Math.max(18, safeH * 0.6) * s.scale)
+  const PREFERRED = Math.max(MIN, safeH * PREFERRED_HEIGHT_RATIO * s.scale)
+  // The cap only matters in a very short source (a thin caption bar), where
+  // the preferred size would otherwise exceed what the band can show.
+  const MAX = Math.max(MIN, Math.min(PREFERRED, Math.max(18, safeH * MAX_HEIGHT_RATIO) * s.scale))
 
   const html = itemHtml(item, s)
   measurer.innerHTML = html
@@ -104,8 +158,12 @@ function computeLayout(
     return true
   }
 
-  let font = MIN
-  if (fits(MIN)) {
+  // Take the preferred size whenever it fits — no growing past it just
+  // because there is room. Only when it overflows do we search downward for
+  // the largest size that does fit, floored at MIN (clipping is never the
+  // answer; slightly small text is).
+  let font = MAX
+  if (!fits(MAX)) {
     let lo = MIN
     let hi = MAX
     for (let k = 0; k < 8; k++) {
@@ -253,6 +311,29 @@ export function LyricsObsSurface() {
           transition: none !important;
         }
         .primary { line-height: 1.3; overflow-wrap: break-word; }
+        /* Hymn verses are read together by a congregation rather than
+           advanced phrase by phrase, so the lines sit a little more open. */
+        .primary.is-hymn { line-height: 1.42; }
+        .verse-heading {
+          font-size: 0.62em;
+          font-weight: 800;
+          line-height: 1.1;
+          margin-bottom: 0.22em;
+          opacity: 0.75;
+        }
+        .verse-inline {
+          display: inline-block;
+          font-weight: 800;
+          margin-right: 0.45em;
+          opacity: 0.75;
+        }
+        .verse-sup {
+          font-size: 0.5em;
+          font-weight: 800;
+          margin-right: 0.25em;
+          opacity: 0.75;
+          vertical-align: super;
+        }
         .repeat {
           display: inline-block;
           margin-left: 0.3em;

@@ -42,7 +42,7 @@ function toDraft(s: ImportedSong): Draft {
     title: s.title,
     scripture: s.scriptureReference ?? "",
     confidence: s.titleConfidence,
-    type: "lyrics",
+    type: "song",
     groups: s.groups,
     excluded: false,
     open: !!s.ambiguous,

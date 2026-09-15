@@ -28,7 +28,7 @@ import { DocxImportPanel } from "./docx-import"
 
 function NewSetForm({ onCreate, disabled }: { onCreate: (set: LyricSet) => void; disabled: boolean }) {
   const [title, setTitle] = useState("")
-  const [type, setType] = useState<ContentType>("lyrics")
+  const [type, setType] = useState<ContentType>("song")
   const [raw, setRaw] = useState("")
   const [pairTranslation, setPairTranslation] = useState(false)
 
@@ -59,13 +59,13 @@ function NewSetForm({ onCreate, disabled }: { onCreate: (set: LyricSet) => void;
           <Input placeholder="Song or set title" value={title} onChange={(e) => setTitle(e.target.value)} disabled={disabled} />
           <Tabs value={type} onValueChange={(v) => setType(v as ContentType)}>
             <TabsList>
-              <TabsTrigger value="lyrics" disabled={disabled}>Lyrics</TabsTrigger>
+              <TabsTrigger value="song" disabled={disabled}>Lyrics</TabsTrigger>
               <TabsTrigger value="prayer" disabled={disabled}>Prayer Points</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
-        {type === "lyrics" && (
+        {type === "song" && (
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <input type="checkbox" checked={pairTranslation} onChange={(e) => setPairTranslation(e.target.checked)} disabled={disabled} />
             Every other line is a translation of the line above (e.g. Yoruba, then English)
@@ -205,7 +205,7 @@ function SetEditor({
       {appendOpen && (
         <Card>
           <CardContent className="space-y-3 pt-6">
-            {set.type === "lyrics" && (
+            {set.type === "song" && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input type="checkbox" checked={appendPair} onChange={(e) => setAppendPair(e.target.checked)} disabled={disabled} />
                 Every other line is a translation
@@ -366,7 +366,7 @@ export function LyricsEditor() {
         <Tabs value={filter} onValueChange={(v) => setFilter(v as "all" | ContentType)}>
           <TabsList className="w-full">
             <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
-            <TabsTrigger value="lyrics" className="flex-1">Lyrics</TabsTrigger>
+            <TabsTrigger value="song" className="flex-1">Lyrics</TabsTrigger>
             <TabsTrigger value="prayer" className="flex-1">Prayer</TabsTrigger>
           </TabsList>
         </Tabs>

@@ -5,7 +5,7 @@
  * still be edited, split, merged and reordered afterwards.
  */
 
-import { newGroupId, type LyricGroup } from "./types"
+import { newGroupId, type ContentType, type LyricGroup } from "./types"
 
 /**
  * A cue at or under this many words is left whole — this is a readability
@@ -96,38 +96,27 @@ function segmentIntoPhrases(text: string): string[] {
   return [...segmentIntoPhrases(words.slice(0, splitAt).join(" ")), ...segmentIntoPhrases(words.slice(splitAt).join(" "))]
 }
 
-interface Phrase {
-  text: string
-  repeat?: number
-}
-
-/** Packs consecutive phrases two-to-a-cue — the same couplet rule as before phrase segmentation existed. */
-function packPhrases(phrases: Phrase[]): LyricGroup[] {
-  const groups: LyricGroup[] = []
-  let i = 0
-  while (i < phrases.length) {
-    const a = phrases[i]
-    const b = phrases[i + 1]
-    // A repeat marker belongs to one phrase; pairing it with a neighbour
-    // would leave it ambiguous which line the ×N actually applies to.
-    if (b && !a.repeat && !b.repeat) {
-      groups.push({ id: newGroupId(), primary: `${a.text}\n${b.text}` })
-      i += 2
-    } else {
-      groups.push({ id: newGroupId(), primary: a.text, repeat: a.repeat })
-      i += 1
-    }
-  }
-  return groups
+/**
+ * One sung line becomes one cue.
+ *
+ * The earlier rule packed every two phrases into one cue unconditionally,
+ * which is why the library filled up with arbitrary two-line groupings: a
+ * short line that reads perfectly on its own was still glued to its
+ * neighbour. A cue only carries two visual lines now when the *single* line
+ * it came from was too long to sit on one (segmentIntoPhrases split it), in
+ * which case both halves stay together in that one cue — they are one sung
+ * phrase, and separating them would make the operator advance mid-sentence.
+ */
+function cueFromLine(segments: string[], repeat?: number): LyricGroup {
+  return { id: newGroupId(), primary: segments.join("\n"), repeat }
 }
 
 /**
- * Blank line = new slide boundary. Within a block, each line is broken into
- * broadcast-sized phrases (segmentIntoPhrases) and consecutive short
- * phrases pack two-to-a-cue — this is what keeps a long paragraph from
- * dumping onto the screen as one giant slide, per an explicit correction:
- * a lyric cue should read like a worship-caption phrase the operator
- * advances through, not a whole line or verse at once.
+ * Blank line = new slide boundary. Within a block, each source line becomes
+ * one cue: normally a single visual line, and two only when the line was long
+ * enough that segmentIntoPhrases had to break it — the renderer then shows
+ * that cue on two lines because the phrase genuinely needs them, not because
+ * of a fixed grouping rule.
  *
  * With pairTranslation on, lines alternate primary/secondary instead, one
  * cue per pair. These are deliberately NOT phrase-segmented: there's no
@@ -147,15 +136,11 @@ export function splitLyrics(raw: string, opts?: { pairTranslation?: boolean }): 
       continue
     }
 
-    const phrases: Phrase[] = []
     for (const line of block) {
       const { text, repeat } = extractRepeat(line)
-      const segments = segmentIntoPhrases(text)
-      segments.forEach((seg, i) => {
-        phrases.push({ text: seg, repeat: i === segments.length - 1 ? repeat : undefined })
-      })
+      if (!text) continue
+      groups.push(cueFromLine(segmentIntoPhrases(text), repeat))
     }
-    groups.push(...packPhrases(phrases))
   }
   return groups
 }
@@ -187,7 +172,7 @@ export function splitPrayerPoints(raw: string): LyricGroup[] {
   return blocksOf(raw).map((block) => ({ id: newGroupId(), primary: block.join(" ") }))
 }
 
-export function splitContent(raw: string, type: "lyrics" | "prayer", opts?: { pairTranslation?: boolean }): LyricGroup[] {
+export function splitContent(raw: string, type: ContentType, opts?: { pairTranslation?: boolean }): LyricGroup[] {
   return type === "prayer" ? splitPrayerPoints(raw) : splitLyrics(raw, opts)
 }
 

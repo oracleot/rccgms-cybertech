@@ -13,11 +13,15 @@ const check = (ok: boolean, msg: string) => {
   console.log(`${ok ? "ok  " : "FAIL"} ${msg}`)
 }
 
-// 1. Two-line English lyric — one group, both lines kept together.
+// 1. One sung line = one cue. Two separate lines are two cues, each on one
+// visual line — the operator advances between them rather than the pair being
+// glued together by a fixed two-to-a-cue rule.
 {
   const g = splitLyrics("Amazing grace how sweet the sound\nThat saved a wretch like me")
-  check(g.length === 1, `two-line lyric -> 1 group (got ${g.length})`)
-  check(g[0].primary === "Amazing grace how sweet the sound\nThat saved a wretch like me", "two-line lyric keeps both lines in primary")
+  check(g.length === 2, `two separate lines -> 2 cues (got ${g.length})`)
+  check(g[0].primary === "Amazing grace how sweet the sound", "first line is its own cue")
+  check(g[1].primary === "That saved a wretch like me", "second line is its own cue")
+  check(!g[0].primary.includes("\n"), "a line that fits stays on one visual line")
 }
 
 // 2. One-word lyric.
@@ -72,11 +76,12 @@ const check = (ok: boolean, msg: string) => {
   check(g.length === 24, `24 blank-line-separated lines -> 24 groups (got ${g.length})`)
 }
 
-// Short consecutive lines pack into couplets; a long line is phrase-segmented
-// into broadcast-sized cues instead of dumped onto the screen as one slide.
+// Short lines stay one-per-cue; a long line is phrase-segmented so it reads
+// on two visual lines rather than being dumped on screen as one long run.
 {
   const g = splitLyrics("Hallelujah\nHallelujah\n\nThis is a considerably longer single line that should stand on its own as one group because packing it with a neighbour would be unreadable on screen")
-  check(g[0].primary === "Hallelujah\nHallelujah", "two short lines pack into one couplet group")
+  check(g[0].primary === "Hallelujah", "a short line is its own single-line cue")
+  check(g[1].primary === "Hallelujah", "the next short line is a separate cue, not packed with it")
   check(g.length > 2, `the long line is broken into more than one cue (got ${g.length} total)`)
   const longLineCues = g.slice(1)
   const allWithinTarget = longLineCues.every((cue) => cue.primary.split("\n").every((line) => line.split(/\s+/).length <= 7))
