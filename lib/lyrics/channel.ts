@@ -28,3 +28,14 @@ export function lyricsChannelName(roomId: string): string {
 export function monitorChannelName(roomId: string): string {
   return `${lyricsChannelName(roomId)}:monitor`
 }
+
+/**
+ * Presence + controller-ownership channel for a room. Every surface (dock,
+ * display, monitor) joins it to appear in the participant list, but it carries
+ * only presence and controller claims — never item/clear/lock — so a monitor
+ * joining it still can't touch the on-screen output. Scoped by room, so one
+ * Broadcast ID never sees another's participants or controller.
+ */
+export function presenceChannelName(roomId: string): string {
+  return `${lyricsChannelName(roomId)}:presence`
+}

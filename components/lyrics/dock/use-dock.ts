@@ -56,7 +56,15 @@ function savePrefs(p: Prefs) {
   }
 }
 
-export function useLyricsDock(roomId: string) {
+export function useLyricsDock(roomId: string, isController: boolean) {
+  // Standby docks (not the active controller) must not change the live output.
+  // Read from a ref at call time so a control handoff takes effect immediately
+  // without re-creating every callback.
+  const canControlRef = useRef(isController)
+  useEffect(() => {
+    canControlRef.current = isController
+  }, [isController])
+
   const [sets, setSets] = useState<LyricSet[]>([])
   const [setsError, setSetsError] = useState<string | null>(null)
   const [offline, setOffline] = useState(false)
@@ -250,6 +258,7 @@ export function useLyricsDock(roomId: string) {
 
   /** The lock protects the stream, not staging: with preview on, a locked dock can still prepare what's next. */
   const send = useCallback((payload: LyricItemPayload, opts?: { live?: boolean }): boolean => {
+    if (!canControlRef.current) return false
     const wouldGoLive = !previewFirstRef.current || !!opts?.live
     if (lockedRef.current && wouldGoLive) return false
     if (previewFirstRef.current && !opts?.live) {
@@ -267,6 +276,7 @@ export function useLyricsDock(roomId: string) {
   }, [remember])
 
   const goLive = useCallback(() => {
+    if (!canControlRef.current) return
     const s = stagedRef.current
     if (!s || lockedRef.current) return
     remember()
@@ -283,7 +293,7 @@ export function useLyricsDock(roomId: string) {
   }, [])
 
   const clear = useCallback(() => {
-    if (lockedRef.current) return
+    if (!canControlRef.current || lockedRef.current) return
     remember()
     channelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
     setOnScreen(null)
@@ -291,7 +301,7 @@ export function useLyricsDock(roomId: string) {
   }, [remember])
 
   const undo = useCallback(() => {
-    if (lockedRef.current) return
+    if (!canControlRef.current || lockedRef.current) return
     const stack = undoRef.current
     if (!stack.length) return
     const prevItem = stack.pop()!
@@ -309,6 +319,7 @@ export function useLyricsDock(roomId: string) {
 
   const setLocked = useCallback(
     (on: boolean) => {
+      if (!canControlRef.current) return
       applyLock(on)
       channelRef.current?.send({ type: "broadcast", event: "lock", payload: { locked: on } })
     },
@@ -365,7 +376,7 @@ export function useLyricsDock(roomId: string) {
   }, [send, itemAt, stopAuto])
 
   const startAuto = useCallback(() => {
-    if (!activeSetRef.current) return
+    if (!canControlRef.current || !activeSetRef.current) return
     clearAutoTimer()
     autoOnRef.current = true
     setAutoOnState(true)
@@ -411,6 +422,7 @@ export function useLyricsDock(roomId: string) {
 
   const move = useCallback(
     (delta: 1 | -1) => {
+      if (!canControlRef.current) return
       const set = activeSetRef.current
       if (!set || !set.groups.length) return
       const ni = Math.min(Math.max(activeIndexRef.current + delta, 0), set.groups.length - 1)
@@ -427,6 +439,7 @@ export function useLyricsDock(roomId: string) {
 
   const jumpTo = useCallback(
     (i: number) => {
+      if (!canControlRef.current) return
       const set = activeSetRef.current
       if (!set || i < 0 || i >= set.groups.length) return
       activeIndexRef.current = i

@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client"
 import { monitorChannelName } from "@/lib/lyrics/channel"
 import { useRoomSelection } from "./use-room-selection"
 import { JoinScreen } from "./join-screen"
+import { PresenceBeacon } from "./presence-beacon"
 import {
   EMPTY_MONITOR_STATE,
   MONITOR_REQUEST_EVENT,
@@ -87,6 +88,7 @@ export function LyricsMonitorSurface() {
 
   return (
     <div className="monitor">
+      {room && <PresenceBeacon key={room} roomId={room} role="monitor" />}
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; background: #0b0b12; }

@@ -29,6 +29,7 @@ import {
 import { defaultPresentation, type LyricItemPayload } from "@/lib/lyrics/types"
 import { useRoomSelection } from "./use-room-selection"
 import { JoinScreen } from "./join-screen"
+import { PresenceBeacon } from "./presence-beacon"
 
 const PREVIEW_ITEM: LyricItemPayload = {
   setId: "preview",
@@ -402,6 +403,8 @@ function ObsDisplay({ room, preview, onLeave }: { room: string | null; preview: 
       `}</style>
 
       <div ref={surfaceRef} className="surface">
+        {/* Announce this display in the room's presence (renders nothing). */}
+        {!preview && room && <PresenceBeacon roomId={room} role="display" />}
         {/* Hover-only room switch — never visible on the OBS stream (no
             pointer there), reachable through OBS Interact or a browser. Two
             steps so a stray click can't drop the display mid-service. Not

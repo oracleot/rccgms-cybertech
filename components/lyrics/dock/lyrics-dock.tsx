@@ -9,14 +9,16 @@
 
 import { useEffect, useRef, useState } from "react"
 import * as Tooltip from "@radix-ui/react-tooltip"
-import { ExternalLink, Lock, LockOpen, Music2, RotateCcw, Settings } from "lucide-react"
+import { ExternalLink, Lock, LockOpen, Music2, Radio, RotateCcw, Settings } from "lucide-react"
 import { LyricsDockStyles } from "./dock-styles"
 import { ItemList } from "./item-list"
 import { LyricsSettingsPanel } from "./settings-panel"
-import { RoomGate, RoomInfo } from "./room-panel"
+import { RoomGate } from "./room-panel"
+import { SessionPanel } from "./session-panel"
 import { Tip } from "./tip"
 import { useLyricsDock } from "./use-dock"
 import { useRoomSelection } from "../use-room-selection"
+import { useRoomPresence } from "../use-room-presence"
 
 /**
  * Entry point for the OBS dock. The dock URL is permanent (`/lyrics/obs/dock`,
@@ -117,9 +119,11 @@ function ManageLibraryLink() {
 }
 
 function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }) {
-  const dock = useLyricsDock(roomId)
-  const [view, setView] = useState<"main" | "settings">("main")
+  const presence = useRoomPresence(roomId, "dock")
+  const dock = useLyricsDock(roomId, presence.isController)
+  const [view, setView] = useState<"main" | "settings" | "session">("main")
   const advanced = dock.uiMode === "advanced"
+  const standby = !presence.isController
 
   const { activeSet, onScreen, staged } = dock
 
@@ -127,6 +131,14 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
     <Tooltip.Provider>
       <LyricsDockStyles />
       <div className={`dock${dock.locked ? " is-locked" : ""}`}>
+        {standby && view !== "session" && (
+          <div className="standby-banner">
+            <span>
+              Standby — {controllerName(presence)} has control
+            </span>
+            <button onClick={presence.takeControl}>Take control</button>
+          </div>
+        )}
         {view === "main" ? (
           <div className="pane">
             <span className="section-label">Song / Prayer set</span>
@@ -232,8 +244,6 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
             {advanced && (
               <>
                 <div className="divider" />
-                <RoomInfo roomId={roomId} onLeave={onLeave} />
-                <div className="divider" />
                 {/* Creating/editing/deleting sets happens on /lyrics, not here — the dock
                     has no login session (an OBS Browser Source can't authenticate), and
                     only signed-in staff can write to the shared library. The dock only
@@ -242,6 +252,8 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
               </>
             )}
           </div>
+        ) : view === "session" ? (
+          <SessionPanel roomId={roomId} presence={presence} onLeave={onLeave} />
         ) : (
           <LyricsSettingsPanel dock={dock} />
         )}
@@ -264,10 +276,20 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
             <button
               className={`tool-btn${dock.locked ? " locked" : ""}`}
               onClick={() => dock.setLocked(!dock.locked)}
+              disabled={standby}
               aria-label={dock.locked ? "Unlock" : "Lock"}
               aria-pressed={dock.locked}
             >
               {dock.locked ? <Lock /> : <LockOpen />}
+            </button>
+          </Tip>
+          <Tip label="Broadcast session — ID, participants, controller">
+            <button
+              className={`tool-btn${view === "session" ? " active" : ""}${standby ? " standby" : ""}`}
+              onClick={() => setView("session")}
+              aria-label="Broadcast session"
+            >
+              <Radio />
             </button>
           </Tip>
           <Tip label="Settings — interface mode, safe area, typography">
@@ -279,4 +301,10 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
       </div>
     </Tooltip.Provider>
   )
+}
+
+/** The label of the dock that currently holds control, for the standby banner. */
+function controllerName(presence: ReturnType<typeof useRoomPresence>): string {
+  const c = presence.participants.find((p) => p.participantId === presence.controllerId)
+  return c ? c.label : "another dock"
 }

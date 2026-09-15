@@ -164,8 +164,37 @@ export function LyricsDockStyles() {
       .room-help-row span { color: #6e6a92; min-width: 48px; }
       .room-help-row code {
         background: #16161f; border: 1px solid #26263a; border-radius: 4px; color: #a6adc8;
-        font-size: 10px; overflow: hidden; padding: 2px 5px; text-overflow: ellipsis; white-space: nowrap;
+        flex: 1; font-size: 10px; overflow: hidden; padding: 2px 5px; text-overflow: ellipsis; white-space: nowrap;
       }
+      /* Broadcast session panel */
+      .standby-banner {
+        display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 6px 8px;
+        background: #33301a; border: 1px solid #5a5320; border-radius: 6px; color: #e0c257; font-size: 10.5px;
+      }
+      .standby-banner span { flex: 1; }
+      .standby-banner button {
+        background: #2a2040; border: 1px solid #7c6af7; border-radius: 5px; color: #cdb4ff;
+        cursor: pointer; font-size: 10.5px; font-weight: 600; padding: 3px 9px;
+      }
+      .session-id-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .session-pane .status-pill { font-size: 10px; }
+      .status-pill.wait { background: #33301a; color: #e0c257; }
+      .status-pill.err { background: #331a1a; color: #e07777; }
+      .participants { display: flex; flex-direction: column; gap: 4px; }
+      .participant { display: flex; align-items: center; gap: 7px; font-size: 11px; padding: 3px 0; }
+      .p-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+      .p-dot.dock { background: #7c6af7; }
+      .p-dot.display { background: #57e08b; }
+      .p-dot.monitor { background: #e0c257; }
+      .p-label { color: #cdd6f4; }
+      .p-you { color: #6e6a92; }
+      .p-role { color: #6e6a92; margin-left: auto; font-size: 10px; }
+      .p-ctrl {
+        background: #2a2040; border: 1px solid #7c6af7; border-radius: 4px; color: #cdb4ff;
+        font-size: 9px; font-weight: 700; padding: 1px 5px;
+      }
+      .standby-hint { color: #e0c257; }
+      .tool-btn.standby { color: #e0c257; }
       /* The manage-page URL, shown so it can be selected by hand when the
          clipboard API isn't available (plain-http dock = insecure origin). */
       .url-field {
