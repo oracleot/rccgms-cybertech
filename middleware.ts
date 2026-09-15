@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { currentPathWithQuery } from "@/lib/auth/next-url"
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -59,11 +60,16 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/bible/obs") || // OBS browser source overlay (no auth)
     request.nextUrl.pathname.startsWith("/lyrics/obs") // OBS browser source overlay (no auth)
 
-  // If user is not logged in and trying to access protected route
+  // If user is not logged in and trying to access protected route.
+  // The whole path including its query is preserved, so "/lyrics?mode=edit"
+  // comes back intact after the magic-link round trip rather than as a bare
+  // "/lyrics" — see lib/auth/next-url.ts for the canonical `next` contract.
   if (!user && !isAuthRoute && !isPublicRoute) {
     const url = request.nextUrl.clone()
+    const destination = currentPathWithQuery(request.nextUrl)
     url.pathname = "/login"
-    url.searchParams.set("redirectTo", request.nextUrl.pathname)
+    url.search = ""
+    url.searchParams.set("next", destination)
     return NextResponse.redirect(url)
   }
 

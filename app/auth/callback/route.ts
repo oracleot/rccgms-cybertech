@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { readNext } from "@/lib/auth/next-url"
 
 /**
  * Auth callback route for handling Supabase redirects
@@ -14,7 +15,10 @@ import { NextResponse } from "next/server"
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
-  const next = searchParams.get("next") ?? "/dashboard"
+  // Canonical `next`, still accepting the legacy `redirectTo` spelling for
+  // links already sitting in inboxes. Sanitized, because this value arrives
+  // from an email link and would otherwise be an open redirect.
+  const next = readNext(searchParams)
   const type = searchParams.get("type")
 
   if (code) {
@@ -43,7 +47,7 @@ export async function GET(request: Request) {
       
       if (type === "magiclink") {
         // For magic link logins, redirect to the requested destination
-        return NextResponse.redirect(`${origin}${next}`)
+        return NextResponse.redirect(new URL(next, origin))
       }
       
       if (type === "recovery") {
@@ -52,7 +56,7 @@ export async function GET(request: Request) {
       }
       
       // Default: redirect to next URL or dashboard
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(new URL(next, origin))
     }
   }
 

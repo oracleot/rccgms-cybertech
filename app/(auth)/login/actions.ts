@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { magicLinkSchema, type MagicLinkInput } from "@/lib/validations/auth"
 import { getAppUrl } from "@/lib/constants"
+import { sanitizeNext } from "@/lib/auth/next-url"
 
 /**
  * Send a magic link to the user's email for passwordless authentication
@@ -33,7 +34,9 @@ export async function sendMagicLink(data: MagicLinkInput) {
 
   const supabase = await createClient()
   const appUrl = getAppUrl()
-  const next = encodeURIComponent(parsed.data.redirectTo || "/dashboard")
+  // Canonical `next`; `redirectTo` is still read so an older client (or the
+  // desktop shell mid-update) posting the previous field name still works.
+  const next = encodeURIComponent(sanitizeNext(parsed.data.next ?? parsed.data.redirectTo))
 
   // Desktop shell: redirect through the app's custom URL scheme instead of
   // the website, so the OS hands the clicked email link back to the Fusion

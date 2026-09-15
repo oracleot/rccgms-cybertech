@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { magicLinkSchema } from "@/lib/validations/auth"
 import { getAppUrl } from "@/lib/constants"
+import { sanitizeNext } from "@/lib/auth/next-url"
 
 /**
  * Simple in-memory rate limiter for magic link requests
@@ -60,7 +61,11 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { email, redirectTo } = parsed.data
+  const { email } = parsed.data
+  // Canonical `next`, accepting the legacy `redirectTo` body field. This
+  // route used to put `redirectTo` on the callback URL, which /auth/callback
+  // never read — so every link it sent landed on the dashboard.
+  const next = sanitizeNext(parsed.data.next ?? parsed.data.redirectTo)
 
   // Check rate limit
   if (isRateLimited(email.toLowerCase())) {
@@ -102,7 +107,7 @@ export async function POST(request: NextRequest) {
     email,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: `${appUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+      emailRedirectTo: `${appUrl}/auth/callback?type=magiclink&next=${encodeURIComponent(next)}`,
     },
   })
 

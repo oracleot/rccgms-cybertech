@@ -30,6 +30,7 @@ import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { magicLinkSchema } from "@/lib/validations/auth"
 import { z } from "zod"
 import { ROUTES } from "@/lib/constants"
+import { sanitizeNext } from "@/lib/auth/next-url"
 import { isDesktopShell } from "@/lib/desktop-shell"
 import { sendMagicLink } from "./actions"
 
@@ -38,7 +39,10 @@ type MagicLinkFormInput = z.input<typeof magicLinkSchema>
 
 export default function LoginPage() {
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirectTo") || ROUTES.DASHBOARD
+  // Canonical `next`, falling back to the legacy `redirectTo` so a link
+  // someone already has open still returns to the right place. Read once
+  // per render from the URL, so it survives re-renders and form resets.
+  const next = sanitizeNext(searchParams.get("next") ?? searchParams.get("redirectTo"), ROUTES.DASHBOARD)
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [notInvited, setNotInvited] = useState(false)
@@ -48,7 +52,7 @@ export default function LoginPage() {
     resolver: zodResolver(magicLinkSchema),
     defaultValues: {
       email: "",
-      redirectTo: redirectTo,
+      next,
     },
   })
 
@@ -57,7 +61,9 @@ export default function LoginPage() {
     try {
       const result = await sendMagicLink({
         ...data,
-        redirectTo,
+        // From the closure, not the form state, so a re-render or reset
+        // can never drop the destination between load and submit.
+        next,
         platform: isDesktopShell() ? "desktop" : "web",
       })
 

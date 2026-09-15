@@ -124,7 +124,12 @@ export type SetPrimaryDepartmentInput = z.infer<typeof setPrimaryDepartmentSchem
 // Magic link login schema
 export const magicLinkSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  redirectTo: z.string().optional().default("/dashboard"),
+  // Where to land after authenticating. Canonical name is `next`; the value
+  // is untrusted until it goes through sanitizeNext() (lib/auth/next-url.ts),
+  // so no format validation belongs here.
+  next: z.string().optional(),
+  /** @deprecated legacy name for `next` — still accepted, never written. */
+  redirectTo: z.string().optional(),
   // "desktop" when submitted from the Fusion desktop shell (Tauri) - changes
   // the magic-link redirect target to the app's custom URL scheme instead
   // of the website, so clicking the emailed link returns to the app instead
