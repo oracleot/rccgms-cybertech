@@ -18,7 +18,8 @@
 import { useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { monitorChannelName } from "@/lib/lyrics/channel"
-import { roomFromSearch } from "@/lib/lyrics/room"
+import { useRoomSelection } from "./use-room-selection"
+import { JoinScreen } from "./join-screen"
 import {
   EMPTY_MONITOR_STATE,
   MONITOR_REQUEST_EVENT,
@@ -34,7 +35,7 @@ export function LyricsMonitorSurface() {
   const [state, setState] = useState<LyricsMonitorState>(EMPTY_MONITOR_STATE)
   const [connection, setConnection] = useState<Connection>("connecting")
   const [lastUpdate, setLastUpdate] = useState<number | null>(null)
-  const [room] = useState(() => (typeof window === "undefined" ? null : roomFromSearch(window.location.search)))
+  const { room, ready, join, leave } = useRoomSelection()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase's RealtimeChannel type isn't exported for a ref
   const channelRef = useRef<any>(null)
 
@@ -80,33 +81,9 @@ export function LyricsMonitorSurface() {
   const hasLive = state.currentPrimary !== null
   const typeLabel = state.type ? TYPE_LABEL[state.type] ?? state.type : null
 
-  // A monitor with no Broadcast ID has no room to observe. It never joins a
-  // shared channel — it says so instead.
-  if (!room) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#0b0b12",
-          color: "#c7c7d6",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-          padding: 24,
-          textAlign: "center",
-        }}
-      >
-        <div style={{ maxWidth: 360 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>No Broadcast ID</div>
-          <p style={{ fontSize: 13, lineHeight: 1.5, color: "#8b8ba3" }}>
-            Open the monitor link from the operator&apos;s dock — it carries the Broadcast ID that
-            connects you to their session.
-          </p>
-        </div>
-      </div>
-    )
-  }
+  // Before joining, ask for the Broadcast ID; never a shared/default room.
+  if (ready && !room) return <JoinScreen title="Lyrics monitor" onJoin={join} />
+  if (!ready) return null
 
   return (
     <div className="monitor">
@@ -125,6 +102,11 @@ export function LyricsMonitorSurface() {
         .pill.wait { background: #33301a; color: #e0c257; }
         .pill.err  { background: #331a1a; color: #e07777; }
         .pill.dim  { background: #1c1c28; color: #8b8ba3; }
+        .switch-btn {
+          background: #1c1c28; border: 1px solid #313244; border-radius: 6px; color: #a6adc8;
+          cursor: pointer; font-size: 10.5px; padding: 3px 9px;
+        }
+        .switch-btn:hover { border-color: #7c6af7; color: #cdd6f4; }
         .grow { flex: 1; }
         .now {
           border: 1px solid #26263a; border-radius: 12px; background: #12121c; padding: 20px;
@@ -150,6 +132,10 @@ export function LyricsMonitorSurface() {
 
       <div className="bar">
         <h1>Lyrics Monitor</h1>
+        <span className="pill dim">Room {room}</span>
+        <button className="switch-btn" onClick={leave}>
+          Switch
+        </button>
         <span className="grow" />
         {connection === "live" && <span className="pill live">● Live</span>}
         {connection === "waiting" && <span className="pill wait">Waiting for operator</span>}

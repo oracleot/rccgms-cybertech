@@ -3,10 +3,12 @@
 /**
  * Room screen and room info for the OBS dock.
  *
- * The dock never joins a channel without a Broadcast ID. If it's opened
- * without one, RoomGate lets the operator create a new room (a random ID) or
- * join an existing one. Once a room is active, RoomInfo shows the ID and the
- * three URLs to paste into OBS, with copy buttons.
+ * The dock never joins a channel without a Broadcast ID. Opened without one,
+ * RoomGate lets the operator Create a new room (a random ID) or Join an
+ * existing one. Once joined, RoomInfo shows the Broadcast ID prominently — the
+ * operator types that same ID into the Display and Monitor once — and a Switch
+ * action. The OBS URLs are permanent and carry no room, so they're shown only
+ * as small setup help, not a per-room thing to copy each time.
  */
 
 import { useState } from "react"
@@ -16,12 +18,13 @@ function origin(): string {
   return typeof window === "undefined" ? "" : window.location.origin
 }
 
-export function roomUrls(roomId: string) {
+/** The permanent OBS URLs — no room. The room is entered inside each surface. */
+export function permanentUrls() {
   const base = origin()
   return {
-    display: `${base}/lyrics/obs?room=${roomId}`,
-    dock: `${base}/lyrics/obs/dock?room=${roomId}`,
-    monitor: `${base}/lyrics/obs/monitor?room=${roomId}`,
+    display: `${base}/lyrics/obs`,
+    dock: `${base}/lyrics/obs/dock`,
+    monitor: `${base}/lyrics/obs/monitor`,
   }
 }
 
@@ -43,11 +46,11 @@ export function RoomGate({ onJoin }: { onJoin: (roomId: string) => void }) {
       <div className="room-gate-title">Broadcast room</div>
       <p className="hint">
         The Broadcast ID keeps your session separate from everyone else&apos;s. Create a new one for this
-        service, or join an existing room.
+        service, then enter the same ID into your Display (and Monitor). Or join an existing room.
       </p>
 
       <button className="btn-primary wide" onClick={() => onJoin(generateRoomId())}>
-        Create new room
+        Create new broadcast
       </button>
 
       <div className="room-or">or join existing</div>
@@ -74,62 +77,61 @@ export function RoomGate({ onJoin }: { onJoin: (roomId: string) => void }) {
   )
 }
 
-function RoomUrlRow({
-  label,
-  url,
-  copied,
-  onCopy,
-}: {
-  label: string
-  url: string
-  copied: boolean
-  onCopy: () => void
-}) {
-  return (
-    <div className="room-url">
-      <div className="room-url-head">
-        <span className="room-url-label">{label}</span>
-        <button className="room-copy" onClick={onCopy}>
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
-      <input className="url-field" value={url} readOnly onFocus={(e) => e.target.select()} />
-    </div>
-  )
-}
-
 export function RoomInfo({ roomId, onLeave }: { roomId: string; onLeave: () => void }) {
-  const urls = roomUrls(roomId)
-  const [copied, setCopied] = useState<string | null>(null)
+  const [showHelp, setShowHelp] = useState(false)
+  const [copied, setCopied] = useState(false)
 
-  const copy = async (label: string, text: string) => {
+  const copyId = async () => {
     try {
-      await navigator.clipboard.writeText(text)
-      setCopied(label)
+      await navigator.clipboard.writeText(roomId)
+      setCopied(true)
     } catch {
-      setCopied(null)
+      setCopied(false)
     }
-    window.setTimeout(() => setCopied((c) => (c === label ? null : c)), 2500)
+    window.setTimeout(() => setCopied(false), 2500)
   }
+
+  const urls = permanentUrls()
 
   return (
     <div className="room-info">
       <div className="room-id-row">
         <div>
           <div className="room-id-label">Broadcast ID</div>
-          <div className="room-id">{roomId}</div>
+          <button className="room-id" onClick={copyId} title="Copy">
+            {roomId}
+          </button>
+          {copied && <span className="room-copied"> copied</span>}
         </div>
         <button className="btn-ghost" onClick={onLeave}>
-          Leave / switch
+          Switch / leave
         </button>
       </div>
-      <RoomUrlRow label="Display (Browser Source)" url={urls.display} copied={copied === "Display (Browser Source)"} onCopy={() => void copy("Display (Browser Source)", urls.display)} />
-      <RoomUrlRow label="Dock" url={urls.dock} copied={copied === "Dock"} onCopy={() => void copy("Dock", urls.dock)} />
-      <RoomUrlRow label="Monitor (read-only)" url={urls.monitor} copied={copied === "Monitor (read-only)"} onCopy={() => void copy("Monitor (read-only)", urls.monitor)} />
       <div className="hint">
-        Add the Display URL as a transparent Browser Source in OBS. Share the Monitor URL with anyone who
-        should watch. Anyone with the Dock URL can operate this room.
+        Enter this ID once into your Display (and Monitor if used). The OBS URLs stay the same — you don&apos;t
+        change them to switch broadcasts.
       </div>
+
+      <button className="room-help-toggle" onClick={() => setShowHelp((v) => !v)}>
+        {showHelp ? "Hide setup URLs" : "Show setup URLs"}
+      </button>
+      {showHelp && (
+        <div className="room-help">
+          <div className="room-help-row">
+            <span>Display</span>
+            <code>{urls.display}</code>
+          </div>
+          <div className="room-help-row">
+            <span>Dock</span>
+            <code>{urls.dock}</code>
+          </div>
+          <div className="room-help-row">
+            <span>Monitor</span>
+            <code>{urls.monitor}</code>
+          </div>
+          <div className="hint">These are permanent. Add them once in OBS; the Broadcast ID is entered in each surface.</div>
+        </div>
+      )}
     </div>
   )
 }

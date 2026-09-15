@@ -7,60 +7,25 @@
  * same useLyricsDock state; Simple just hides secondary controls.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import * as Tooltip from "@radix-ui/react-tooltip"
 import { ExternalLink, Lock, LockOpen, Music2, RotateCcw, Settings } from "lucide-react"
-import { forgetRoom, rememberedRoom, rememberRoom, roomFromSearch } from "@/lib/lyrics/room"
 import { LyricsDockStyles } from "./dock-styles"
 import { ItemList } from "./item-list"
 import { LyricsSettingsPanel } from "./settings-panel"
 import { RoomGate, RoomInfo } from "./room-panel"
-// RoomInfo is used inside the dock; RoomGate in the app wrapper above.
 import { Tip } from "./tip"
 import { useLyricsDock } from "./use-dock"
+import { useRoomSelection } from "../use-room-selection"
 
 /**
- * Entry point for the OBS dock. It resolves the Broadcast room first — from the
- * URL, or the last one this browser used — and only then mounts the dock bound
- * to that room. Without a room it shows the room screen; it never joins a
- * shared channel. Remembering the room means OBS reopening the dock doesn't ask
- * for the ID again.
+ * Entry point for the OBS dock. The dock URL is permanent (`/lyrics/obs/dock`,
+ * no ?room=): it reconnects to the last room this browser used, or — without
+ * one — shows Create-or-Join. It never joins a shared channel. Switching rooms
+ * happens here, never by editing the OBS URL.
  */
 export function LyricsDockApp() {
-  const [room, setRoom] = useState<string | null>(null)
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    const fromUrl = roomFromSearch(window.location.search)
-    const resolved = fromUrl ?? rememberedRoom()
-    if (resolved) {
-      rememberRoom(resolved)
-      // Keep the URL honest so the Display/Monitor URLs shown match the channel.
-      const url = new URL(window.location.href)
-      if (url.searchParams.get("room") !== resolved) {
-        url.searchParams.set("room", resolved)
-        window.history.replaceState(null, "", url.toString())
-      }
-      setRoom(resolved)
-    }
-    setReady(true)
-  }, [])
-
-  const join = useCallback((id: string) => {
-    rememberRoom(id)
-    const url = new URL(window.location.href)
-    url.searchParams.set("room", id)
-    window.history.replaceState(null, "", url.toString())
-    setRoom(id)
-  }, [])
-
-  const leave = useCallback(() => {
-    forgetRoom()
-    const url = new URL(window.location.href)
-    url.searchParams.delete("room")
-    window.history.replaceState(null, "", url.toString())
-    setRoom(null)
-  }, [])
+  const { room, ready, join, leave } = useRoomSelection()
 
   if (!ready) return null
   if (!room) {

@@ -149,15 +149,23 @@ export function LyricsDockStyles() {
       .room-info { display: flex; flex-direction: column; gap: 8px; }
       .room-id-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
       .room-id-label { font-size: 9.5px; color: #6e6a92; text-transform: uppercase; letter-spacing: 0.05em; }
-      .room-id { font-family: monospace; font-size: 17px; font-weight: 700; letter-spacing: 0.12em; color: #b4a8ff; }
-      .room-url { display: flex; flex-direction: column; gap: 3px; }
-      .room-url-head { display: flex; align-items: center; justify-content: space-between; }
-      .room-url-label { font-size: 10px; color: #a6adc8; }
-      .room-copy {
-        background: #1e1e2e; border: 1px solid #313244; border-radius: 4px; color: #a6adc8;
-        cursor: pointer; font-size: 9.5px; padding: 2px 7px;
+      .room-id {
+        background: none; border: none; cursor: pointer; padding: 0;
+        font-family: monospace; font-size: 19px; font-weight: 700; letter-spacing: 0.14em; color: #b4a8ff;
       }
-      .room-copy:hover { border-color: #7c6af7; color: #cdd6f4; }
+      .room-id:hover { color: #cdb4ff; }
+      .room-copied { font-size: 10px; color: #57e08b; }
+      .room-help-toggle {
+        align-self: flex-start; background: none; border: none; color: #7c6af7; cursor: pointer;
+        font-size: 10.5px; padding: 0; text-decoration: underline;
+      }
+      .room-help { display: flex; flex-direction: column; gap: 4px; }
+      .room-help-row { display: flex; align-items: baseline; gap: 8px; font-size: 10px; }
+      .room-help-row span { color: #6e6a92; min-width: 48px; }
+      .room-help-row code {
+        background: #16161f; border: 1px solid #26263a; border-radius: 4px; color: #a6adc8;
+        font-size: 10px; overflow: hidden; padding: 2px 5px; text-overflow: ellipsis; white-space: nowrap;
+      }
       /* The manage-page URL, shown so it can be selected by hand when the
          clipboard API isn't available (plain-http dock = insecure origin). */
       .url-field {

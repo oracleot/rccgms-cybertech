@@ -26,8 +26,9 @@ import {
   saveSettings,
   type LyricsSettings,
 } from "@/lib/lyrics/settings"
-import { roomFromSearch } from "@/lib/lyrics/room"
 import { defaultPresentation, type LyricItemPayload } from "@/lib/lyrics/types"
+import { useRoomSelection } from "./use-room-selection"
+import { JoinScreen } from "./join-screen"
 
 const PREVIEW_ITEM: LyricItemPayload = {
   setId: "preview",
@@ -39,7 +40,6 @@ const PREVIEW_ITEM: LyricItemPayload = {
 }
 
 const isPreview = () => new URLSearchParams(window.location.search).get("preview") === "1"
-const currentRoom = () => roomFromSearch(window.location.search)
 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
@@ -182,15 +182,28 @@ function computeLayout(
   return { font, html, padTop, padBottom, padLeft, padRight }
 }
 
+/**
+ * Resolves the room and shows the join screen, then mounts the display bound to
+ * that room. key={room} remounts the display on a switch, so no cue, lock or
+ * setting from the previous room can linger.
+ */
 export function LyricsObsSurface() {
+  const preview = typeof window !== "undefined" && isPreview()
+  const { room, ready, join, leave } = useRoomSelection()
+
+  if (preview) return <ObsDisplay room={null} preview onLeave={leave} />
+  if (!ready) return null
+  if (!room) return <JoinScreen title="Lyrics display" onJoin={join} />
+  return <ObsDisplay key={room} room={room} preview={false} onLeave={leave} />
+}
+
+function ObsDisplay({ room, preview, onLeave }: { room: string | null; preview: boolean; onLeave: () => void }) {
   const [item, setItem] = useState<LyricItemPayload | null>(null)
   const [visible, setVisible] = useState(false)
   const [settings, setSettings] = useState<LyricsSettings>(LYRICS_DEFAULTS)
   const [layout, setLayout] = useState<Layout | null>(null)
   const [resizeTick, setResizeTick] = useState(0)
-  // The Broadcast ID from the URL, read once. Preview mode needs none.
-  const [room] = useState(() => (typeof window === "undefined" ? null : currentRoom()))
-  const [preview] = useState(() => (typeof window === "undefined" ? false : isPreview()))
+  const [switching, setSwitching] = useState(false)
 
   const surfaceRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
@@ -288,35 +301,6 @@ export function LyricsObsSurface() {
   const transitionCss =
     settings.transition === "fade" ? "opacity 220ms ease, transform 220ms cubic-bezier(0.22,1,0.36,1)" : "none"
 
-  // No Broadcast ID and not preview: there is no session to show. Fail into a
-  // clear message rather than silently joining a shared channel — the display
-  // URL must carry ?room=… from the dock.
-  if (!preview && !room) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#0b0b12",
-          color: "#c7c7d6",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-          padding: 24,
-          textAlign: "center",
-        }}
-      >
-        <div style={{ maxWidth: 360 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>No Broadcast ID</div>
-          <p style={{ fontSize: 13, lineHeight: 1.5, color: "#8b8ba3" }}>
-            Open this Browser Source with the display URL from your dock — it carries the Broadcast ID
-            (<code>?room=…</code>) that links it to your session.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <>
       <style>{`
@@ -354,6 +338,26 @@ export function LyricsObsSurface() {
           inset: 0;
           z-index: 0;
           pointer-events: none;
+        }
+        /* Switch-room chip. Fully invisible until the corner is hovered, so it
+           never shows on the OBS stream (which has no pointer) — it's reachable
+           only through OBS's Interact window or a browser, to change rooms
+           without touching the permanent URL. */
+        .switch-chip {
+          position: absolute; top: 6px; right: 6px; z-index: 3;
+          opacity: 0; transition: opacity 120ms ease;
+          background: rgba(12,12,18,0.85); border: 1px solid #313244; border-radius: 6px;
+          color: #cdd6f4; cursor: pointer; font-size: 10px; padding: 4px 8px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .switch-chip:hover, .switch-corner:hover .switch-chip { opacity: 1; }
+        .switch-corner {
+          position: absolute; top: 0; right: 0; width: 130px; height: 44px; z-index: 3;
+        }
+        .switch-confirm { display: flex; gap: 5px; align-items: center; opacity: 1; }
+        .switch-confirm button {
+          background: #2a2040; border: 1px solid #45455e; border-radius: 4px; color: #cdd6f4;
+          cursor: pointer; font-size: 10px; padding: 2px 6px;
         }
         .primary { line-height: 1.3; overflow-wrap: break-word; }
         /* Hymn verses are read together by a congregation rather than
@@ -398,6 +402,25 @@ export function LyricsObsSurface() {
       `}</style>
 
       <div ref={surfaceRef} className="surface">
+        {/* Hover-only room switch — never visible on the OBS stream (no
+            pointer there), reachable through OBS Interact or a browser. Two
+            steps so a stray click can't drop the display mid-service. Not
+            shown in preview. */}
+        {!preview && room && (
+          <div className="switch-corner">
+            {switching ? (
+              <div className="switch-chip switch-confirm">
+                <span>Leave {room}?</span>
+                <button onClick={onLeave}>Yes</button>
+                <button onClick={() => setSwitching(false)}>No</button>
+              </div>
+            ) : (
+              <button className="switch-chip" onClick={() => setSwitching(true)}>
+                Room {room} · Switch
+              </button>
+            )}
+          </div>
+        )}
         {/* Optional background, behind the text and filling whatever size the
             Browser Source is. Absolutely positioned so it never affects the
             measured text layout or the safe margins. Only shown while
