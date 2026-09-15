@@ -26,6 +26,7 @@ import {
   saveSettings,
   type LyricsSettings,
 } from "@/lib/lyrics/settings"
+import { roomFromSearch } from "@/lib/lyrics/room"
 import { defaultPresentation, type LyricItemPayload } from "@/lib/lyrics/types"
 
 const PREVIEW_ITEM: LyricItemPayload = {
@@ -38,6 +39,7 @@ const PREVIEW_ITEM: LyricItemPayload = {
 }
 
 const isPreview = () => new URLSearchParams(window.location.search).get("preview") === "1"
+const currentRoom = () => roomFromSearch(window.location.search)
 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
@@ -186,6 +188,9 @@ export function LyricsObsSurface() {
   const [settings, setSettings] = useState<LyricsSettings>(LYRICS_DEFAULTS)
   const [layout, setLayout] = useState<Layout | null>(null)
   const [resizeTick, setResizeTick] = useState(0)
+  // The Broadcast ID from the URL, read once. Preview mode needs none.
+  const [room] = useState(() => (typeof window === "undefined" ? null : currentRoom()))
+  const [preview] = useState(() => (typeof window === "undefined" ? false : isPreview()))
 
   const surfaceRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
@@ -194,18 +199,20 @@ export function LyricsObsSurface() {
   const lockedRef = useRef(false)
 
   useEffect(() => {
-    lockedRef.current = loadLock()
-    setSettings(loadSettings())
-    if (isPreview()) {
+    if (preview) {
       setItem(PREVIEW_ITEM)
       setVisible(true)
+      return
     }
-  }, [])
+    if (!room) return
+    lockedRef.current = loadLock(room)
+    setSettings(loadSettings(room))
+  }, [room, preview])
 
   useEffect(() => {
-    if (isPreview()) return
+    if (preview || !room) return
     const supabase = createClient()
-    const channel = supabase.channel(lyricsChannelName(), {
+    const channel = supabase.channel(lyricsChannelName(room), {
       config: { broadcast: { self: false } },
     })
     const announceLock = () =>
@@ -224,12 +231,12 @@ export function LyricsObsSurface() {
       .on("broadcast", { event: "settings" }, ({ payload }: { payload: unknown }) => {
         const next = normalize(payload)
         setSettings(next)
-        saveSettings(next)
+        saveSettings(room, next)
       })
       .on("broadcast", { event: "lock" }, ({ payload }: { payload: LockPayload }) => {
         const on = !!payload?.locked
         lockedRef.current = on
-        saveLock(on)
+        saveLock(room, on)
         void announceLock()
       })
       .on("broadcast", { event: "request-lock" }, () => {
@@ -248,7 +255,7 @@ export function LyricsObsSurface() {
     return () => {
       channel.unsubscribe()
     }
-  }, [])
+  }, [room, preview])
 
   useEffect(() => {
     const el = surfaceRef.current
@@ -280,6 +287,35 @@ export function LyricsObsSurface() {
       : "none"
   const transitionCss =
     settings.transition === "fade" ? "opacity 220ms ease, transform 220ms cubic-bezier(0.22,1,0.36,1)" : "none"
+
+  // No Broadcast ID and not preview: there is no session to show. Fail into a
+  // clear message rather than silently joining a shared channel — the display
+  // URL must carry ?room=… from the dock.
+  if (!preview && !room) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0b0b12",
+          color: "#c7c7d6",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          padding: 24,
+          textAlign: "center",
+        }}
+      >
+        <div style={{ maxWidth: 360 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>No Broadcast ID</div>
+          <p style={{ fontSize: 13, lineHeight: 1.5, color: "#8b8ba3" }}>
+            Open this Browser Source with the display URL from your dock — it carries the Broadcast ID
+            (<code>?room=…</code>) that links it to your session.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>

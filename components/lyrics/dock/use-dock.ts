@@ -56,7 +56,7 @@ function savePrefs(p: Prefs) {
   }
 }
 
-export function useLyricsDock() {
+export function useLyricsDock(roomId: string) {
   const [sets, setSets] = useState<LyricSet[]>([])
   const [setsError, setSetsError] = useState<string | null>(null)
   const [offline, setOffline] = useState(false)
@@ -92,17 +92,17 @@ export function useLyricsDock() {
   const autoIntervalRef = useRef(5)
 
   useEffect(() => {
-    const stored = loadSettings()
+    const stored = loadSettings(roomId)
     settingsRef.current = stored
     setSettings(stored)
-    const wasLocked = loadLock()
+    const wasLocked = loadLock(roomId)
     lockedRef.current = wasLocked
     setLockedState(wasLocked)
     setUiModeState(loadUiMode())
     const prefs = loadPrefs()
     previewFirstRef.current = !!prefs.previewFirst
     setPreviewFirstState(!!prefs.previewFirst)
-  }, [])
+  }, [roomId])
 
   /**
    * Re-reads the shared library from Supabase and reconciles the active set
@@ -147,12 +147,12 @@ export function useLyricsDock() {
   const applyLock = useCallback((on: boolean) => {
     lockedRef.current = on
     setLockedState(on)
-    saveLock(on)
-  }, [])
+    saveLock(roomId, on)
+  }, [roomId])
 
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase.channel(lyricsChannelName(), {
+    const channel = supabase.channel(lyricsChannelName(roomId), {
       config: { broadcast: { self: true } },
     })
     channel
@@ -183,7 +183,7 @@ export function useLyricsDock() {
     return () => {
       channel.unsubscribe()
     }
-  }, [applyLock])
+  }, [applyLock, roomId])
 
   // Snapshot for a monitor, read from refs so it's callable from the channel
   // handler (a stable closure). Never carries anything a monitor could use to
@@ -210,7 +210,7 @@ export function useLyricsDock() {
   // ever asks for a snapshot.
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase.channel(monitorChannelName(), { config: { broadcast: { self: false } } })
+    const channel = supabase.channel(monitorChannelName(roomId), { config: { broadcast: { self: false } } })
     channel
       .on("broadcast", { event: MONITOR_REQUEST_EVENT }, () => {
         channel.send({ type: "broadcast", event: MONITOR_STATE_EVENT, payload: snapshotFromRefs() })
@@ -220,7 +220,7 @@ export function useLyricsDock() {
     return () => {
       channel.unsubscribe()
     }
-  }, [snapshotFromRefs])
+  }, [snapshotFromRefs, roomId])
 
   // Push a fresh monitor snapshot whenever anything a monitor shows changes, so
   // an already-connected monitor tracks the service live rather than only on
@@ -232,9 +232,9 @@ export function useLyricsDock() {
   const pushSettings = useCallback((next: LyricsSettings) => {
     settingsRef.current = next
     setSettings(next)
-    saveSettings(next)
+    saveSettings(roomId, next)
     channelRef.current?.send({ type: "broadcast", event: "settings", payload: next })
-  }, [])
+  }, [roomId])
 
   const updateSetting = useCallback(
     <K extends keyof LyricsSettings>(key: K, value: LyricsSettings[K]) => {

@@ -135,6 +135,29 @@ export function LyricsDockStyles() {
         background: #1e1e2e; border: 1px solid #45455e; color: #a6adc8; font-size: 11px; line-height: 1; cursor: pointer;
       }
       .preset-del:hover { background: #3a1e1e; color: #f38ba8; }
+      /* Broadcast room */
+      .room-gate { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+      .room-gate-title { font-size: 13px; font-weight: 700; color: #cdd6f4; }
+      .room-or { text-align: center; font-size: 10px; color: #6e6a92; text-transform: uppercase; letter-spacing: 0.06em; margin: 2px 0; }
+      .room-join { display: flex; gap: 6px; }
+      .room-input, .url-field { font-family: monospace; }
+      .room-input {
+        flex: 1; background: #16161f; border: 1px solid #313244; border-radius: 5px; color: #e7e7f0;
+        font-size: 13px; letter-spacing: 0.08em; padding: 6px 8px; text-transform: uppercase;
+      }
+      .room-input:focus { border-color: #7c6af7; outline: none; }
+      .room-info { display: flex; flex-direction: column; gap: 8px; }
+      .room-id-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .room-id-label { font-size: 9.5px; color: #6e6a92; text-transform: uppercase; letter-spacing: 0.05em; }
+      .room-id { font-family: monospace; font-size: 17px; font-weight: 700; letter-spacing: 0.12em; color: #b4a8ff; }
+      .room-url { display: flex; flex-direction: column; gap: 3px; }
+      .room-url-head { display: flex; align-items: center; justify-content: space-between; }
+      .room-url-label { font-size: 10px; color: #a6adc8; }
+      .room-copy {
+        background: #1e1e2e; border: 1px solid #313244; border-radius: 4px; color: #a6adc8;
+        cursor: pointer; font-size: 9.5px; padding: 2px 7px;
+      }
+      .room-copy:hover { border-color: #7c6af7; color: #cdd6f4; }
       /* The manage-page URL, shown so it can be selected by hand when the
          clipboard API isn't available (plain-http dock = insecure origin). */
       .url-field {

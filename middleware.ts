@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { currentPathWithQuery } from "@/lib/auth/next-url"
-import { DOCK_COOKIE, dockKeyHash } from "@/lib/lyrics/dock-key"
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -44,30 +43,6 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
-  }
-
-  // Operator dock key exchange: when the dock is opened with ?key=…, validate
-  // it against the LYRICS_DOCK_KEY secret and, on a match, drop a cookie
-  // holding the key's HASH and redirect to a clean URL so the secret doesn't
-  // stay in the address bar or OBS's saved dock URL. The dock page itself does
-  // the actual gate check; this only performs the one-time exchange. Only the
-  // exact dock path, never the public display or the read-only monitor.
-  if (request.nextUrl.pathname === "/lyrics/obs/dock") {
-    const secret = process.env.LYRICS_DOCK_KEY
-    const provided = request.nextUrl.searchParams.get("key")
-    if (secret && provided && provided === secret) {
-      const clean = request.nextUrl.clone()
-      clean.searchParams.delete("key")
-      const res = NextResponse.redirect(clean)
-      res.cookies.set(DOCK_COOKIE, await dockKeyHash(secret), {
-        httpOnly: true,
-        secure: true,
-        sameSite: "lax",
-        path: "/lyrics/obs/dock",
-        maxAge: 60 * 60 * 24 * 30,
-      })
-      return res
-    }
   }
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login") ||

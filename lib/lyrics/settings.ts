@@ -165,9 +165,15 @@ export function applyPositionPreset(s: LyricsSettings, preset: PositionPreset): 
   return { ...s, positionPreset: preset }
 }
 
-export function loadSettings(): LyricsSettings {
+// The appearance cache is keyed per room, so a display or dock reloading paints
+// its own room's look — never another room's stale settings.
+function settingsKey(roomId: string): string {
+  return `${LYRICS_SETTINGS_KEY}:${roomId}`
+}
+
+export function loadSettings(roomId: string): LyricsSettings {
   try {
-    const raw = window.localStorage.getItem(LYRICS_SETTINGS_KEY)
+    const raw = window.localStorage.getItem(settingsKey(roomId))
     if (raw) return normalize(JSON.parse(raw))
   } catch {
     // private mode, blocked storage — fall through to defaults
@@ -175,9 +181,9 @@ export function loadSettings(): LyricsSettings {
   return LYRICS_DEFAULTS
 }
 
-export function saveSettings(s: LyricsSettings): void {
+export function saveSettings(roomId: string, s: LyricsSettings): void {
   try {
-    window.localStorage.setItem(LYRICS_SETTINGS_KEY, JSON.stringify(s))
+    window.localStorage.setItem(settingsKey(roomId), JSON.stringify(s))
   } catch {
     // non-fatal: settings still apply for this session
   }

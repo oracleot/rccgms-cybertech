@@ -7,14 +7,76 @@
  * same useLyricsDock state; Simple just hides secondary controls.
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import * as Tooltip from "@radix-ui/react-tooltip"
 import { ExternalLink, Lock, LockOpen, Music2, RotateCcw, Settings } from "lucide-react"
+import { forgetRoom, rememberedRoom, rememberRoom, roomFromSearch } from "@/lib/lyrics/room"
 import { LyricsDockStyles } from "./dock-styles"
 import { ItemList } from "./item-list"
 import { LyricsSettingsPanel } from "./settings-panel"
+import { RoomGate, RoomInfo } from "./room-panel"
+// RoomInfo is used inside the dock; RoomGate in the app wrapper above.
 import { Tip } from "./tip"
 import { useLyricsDock } from "./use-dock"
+
+/**
+ * Entry point for the OBS dock. It resolves the Broadcast room first — from the
+ * URL, or the last one this browser used — and only then mounts the dock bound
+ * to that room. Without a room it shows the room screen; it never joins a
+ * shared channel. Remembering the room means OBS reopening the dock doesn't ask
+ * for the ID again.
+ */
+export function LyricsDockApp() {
+  const [room, setRoom] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const fromUrl = roomFromSearch(window.location.search)
+    const resolved = fromUrl ?? rememberedRoom()
+    if (resolved) {
+      rememberRoom(resolved)
+      // Keep the URL honest so the Display/Monitor URLs shown match the channel.
+      const url = new URL(window.location.href)
+      if (url.searchParams.get("room") !== resolved) {
+        url.searchParams.set("room", resolved)
+        window.history.replaceState(null, "", url.toString())
+      }
+      setRoom(resolved)
+    }
+    setReady(true)
+  }, [])
+
+  const join = useCallback((id: string) => {
+    rememberRoom(id)
+    const url = new URL(window.location.href)
+    url.searchParams.set("room", id)
+    window.history.replaceState(null, "", url.toString())
+    setRoom(id)
+  }, [])
+
+  const leave = useCallback(() => {
+    forgetRoom()
+    const url = new URL(window.location.href)
+    url.searchParams.delete("room")
+    window.history.replaceState(null, "", url.toString())
+    setRoom(null)
+  }, [])
+
+  if (!ready) return null
+  if (!room) {
+    return (
+      <Tooltip.Provider>
+        <LyricsDockStyles />
+        <div className="dock">
+          <RoomGate onJoin={join} />
+        </div>
+      </Tooltip.Provider>
+    )
+  }
+  // key={room} remounts the dock on a room switch, so no live/session state
+  // from the previous room can linger.
+  return <LyricsDock key={room} roomId={room} onLeave={leave} />
+}
 
 /**
  * The management page has to be opened in the operator's *normal* browser,
@@ -89,8 +151,8 @@ function ManageLibraryLink() {
   )
 }
 
-export function LyricsDock({ unprotectedNotice = false }: { unprotectedNotice?: boolean }) {
-  const dock = useLyricsDock()
+function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }) {
+  const dock = useLyricsDock(roomId)
   const [view, setView] = useState<"main" | "settings">("main")
   const advanced = dock.uiMode === "advanced"
 
@@ -100,11 +162,6 @@ export function LyricsDock({ unprotectedNotice = false }: { unprotectedNotice?: 
     <Tooltip.Provider>
       <LyricsDockStyles />
       <div className={`dock${dock.locked ? " is-locked" : ""}`}>
-        {unprotectedNotice && (
-          <div className="dev-notice">
-            No operator key set — this dock is open. Set <code>LYRICS_DOCK_KEY</code> in production.
-          </div>
-        )}
         {view === "main" ? (
           <div className="pane">
             <span className="section-label">Song / Prayer set</span>
@@ -209,6 +266,8 @@ export function LyricsDock({ unprotectedNotice = false }: { unprotectedNotice?: 
 
             {advanced && (
               <>
+                <div className="divider" />
+                <RoomInfo roomId={roomId} onLeave={onLeave} />
                 <div className="divider" />
                 {/* Creating/editing/deleting sets happens on /lyrics, not here — the dock
                     has no login session (an OBS Browser Source can't authenticate), and

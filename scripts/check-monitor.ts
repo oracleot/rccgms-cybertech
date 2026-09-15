@@ -9,7 +9,6 @@
  */
 
 import { buildMonitorState, EMPTY_MONITOR_STATE } from "../lib/lyrics/monitor"
-import { dockKeyHash, timingSafeEqualHex } from "../lib/lyrics/dock-key"
 import type { ContentType } from "../lib/lyrics/types"
 
 let failed = 0
@@ -141,23 +140,5 @@ const song = (id: string, lines: string[]) => ({
 eq(EMPTY_MONITOR_STATE.currentPrimary, null, "the empty monitor state shows nothing live")
 eq(EMPTY_MONITOR_STATE.index, -1, "the empty monitor state has no cue index")
 
-// --- dock key: hash, not the secret ------------------------------------
-
-async function main() {
-  const secret = "super-secret-operator-key-123"
-  const hash = await dockKeyHash(secret)
-  check(/^[0-9a-f]{64}$/.test(hash), "the key hash is 64 hex chars (SHA-256)")
-  check(!hash.includes(secret), "the hash does not contain the raw secret")
-  eq(await dockKeyHash(secret), hash, "hashing is deterministic")
-  check((await dockKeyHash("different-key")) !== hash, "a different key yields a different hash")
-
-  check(timingSafeEqualHex(hash, hash), "an identical hash compares equal")
-  check(!timingSafeEqualHex(hash, await dockKeyHash("different-key")), "a different hash compares unequal")
-  check(!timingSafeEqualHex(hash, ""), "an empty cookie never matches")
-  check(!timingSafeEqualHex(hash, hash.slice(0, -1)), "a different-length value never matches")
-
-  console.log(failed ? `\n${failed} check(s) FAILED` : "\nall checks passed")
-  process.exit(failed ? 1 : 0)
-}
-
-void main()
+console.log(failed ? `\n${failed} check(s) FAILED` : "\nall checks passed")
+process.exit(failed ? 1 : 0)

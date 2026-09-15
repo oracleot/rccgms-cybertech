@@ -1,21 +1,30 @@
 /**
- * Realtime channel shared by the Lyrics management page, the OBS dock and the
- * OBS display. Its own namespace, entirely separate from bible-obs:* — a
- * lyrics broadcast can never reach /bible/obs and a Bible broadcast can never
- * reach /lyrics/obs. Namespaced by hostname so local dev and preview deploys
- * can never broadcast onto the church's live stream.
+ * Realtime channels for the Lyrics OBS tool, namespaced by Broadcast ID.
+ *
+ * The room is the primary session boundary: two Broadcast IDs never share a
+ * channel, so their items, Next/Prev, Lock, Clear, Auto, Preview, settings and
+ * monitor state stay completely separate. A hostname segment is kept as a
+ * secondary guard so dev and production can't collide even on the same ID, and
+ * so a lyrics broadcast can never reach bible-obs:*.
+ *
+ * There is deliberately no room-less channel — without a Broadcast ID there is
+ * nothing to join, and the caller shows the room screen instead of falling back
+ * to a shared global channel.
  */
-export function lyricsChannelName(): string {
-  const host = typeof window === "undefined" ? "server" : window.location.hostname
-  return `lyrics-obs:${host}`
+function host(): string {
+  return typeof window === "undefined" ? "server" : window.location.hostname
+}
+
+export function lyricsChannelName(roomId: string): string {
+  return `lyrics-obs:${host()}:${roomId}`
 }
 
 /**
- * A separate channel for read-only monitors. The display never subscribes to
- * it, so a monitor — however widely its link is shared — shares no channel
- * with the on-screen output and cannot move it. Same hostname namespacing, so
- * a production monitor sees the production service and dev stays isolated.
+ * The read-only monitor's channel for a room. The display never subscribes to
+ * it, so a monitor — however widely its link is shared — shares no channel with
+ * the on-screen output and cannot move it. A monitor in one room never sees
+ * another: the room is part of the channel name.
  */
-export function monitorChannelName(): string {
-  return `${lyricsChannelName()}:monitor`
+export function monitorChannelName(roomId: string): string {
+  return `${lyricsChannelName(roomId)}:monitor`
 }
