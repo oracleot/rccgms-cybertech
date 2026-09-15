@@ -17,7 +17,7 @@ Rotas, rundowns, livestreams, meetings — one app instead of five spreadsheets 
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [OBS Integration](#obs-integration)
-- [Fusion Lyrics / Prayer Points](#fusion-lyrics--prayer-points)
+- [Worship Library (Lyrics & Prayer Points)](#worship-library-lyrics--prayer-points)
 - [Architecture](#architecture)
 - [Development](#development)
 - [Database Migrations](#database-migrations)
@@ -36,7 +36,7 @@ Rotas, rundowns, livestreams, meetings — one app instead of five spreadsheets 
 | 🎨 **Designs** | Design request tracking, assignment, and file delivery |
 | 🎓 **Training** | Training tracks, step-by-step progress, and certificates |
 | 📖 **Bible Reader** | AI voice-detection that auto-displays Bible passages on the projection screen — with OBS overlay + dock support |
-| 🎤 **Fusion Lyrics** | Transparent worship-caption overlay for song lyrics and prayer points, with its own OBS display + dock, entirely separate from the Bible module |
+| 🎤 **Worship Library** | Transparent worship-caption overlay for songs, hymns and prayer points, with its own OBS display + dock + read-only monitor, room-isolated and entirely separate from the Bible module |
 
 ## Quick Start
 
@@ -295,15 +295,50 @@ Passages load through one store: a memory cache, a bounded IndexedDB cache (by t
 
 ---
 
-## Fusion Lyrics / Prayer Points
+## Worship Library (Lyrics & Prayer Points)
 
-A second, independent live-text overlay for song lyrics and prayer points — built the same way as the Bible OBS module (transparent Browser Source + realtime dock), but on its own routes, its own realtime channel namespace (`lyrics-obs:<hostname>`, vs. Bible's `bible-obs:<hostname>`), its own lock, and its own localStorage keys. Nothing here can affect `/bible/obs`, and nothing in Bible can affect `/lyrics/obs`.
+A second, independent live-text overlay for songs, hymns and prayer points — built the same way as the Bible OBS module (transparent Browser Source + realtime dock), but on its own routes, its own realtime channel namespace, its own lock, and its own storage. Nothing here can affect `/bible/obs`, and nothing in Bible can affect `/lyrics/obs`.
 
-| Route | Purpose |
-|-------|---------|
-| `/lyrics` | Full management page — create songs/prayer sets, paste-and-split, edit, reorder |
-| `/lyrics/obs` | Transparent OBS Browser Source — text only, no logo, no watermark |
-| `/lyrics/obs/dock` | Compact OBS Custom Browser Dock — pick a set, drive it live |
+The shared library (songs, hymns, prayer sets) lives in Supabase so it's the same across every browser and inside OBS. The OBS tools are a **public, standalone plugin** — no Fusion account needed to run a service — while the **Worship Library management page at `/lyrics` stays login-only**.
+
+Sessions are isolated by a **Broadcast ID** (a room). Every realtime channel is namespaced `lyrics-obs:<host>:<roomId>` (and `…:<roomId>:monitor` for the read-only monitor), so two operators on the same domain — the church live, and someone testing elsewhere — never touch each other's display, dock or monitor. There is no shared global channel: a surface with no Broadcast ID shows a **Join** screen rather than joining anything.
+
+The **URLs are permanent** — no `?room=` — so you set OBS up once and never edit the URLs to switch broadcasts. The Broadcast ID is entered *inside* each surface, which remembers it and reconnects after a reload or OBS restart.
+
+| Route (permanent) | Purpose | Access |
+|-------|---------|--------|
+| `/lyrics` | Worship Library — create/edit songs, hymns and prayer sets, structured editor, `.docx` import | Fusion login |
+| `/lyrics/obs` | Transparent OBS Browser Source — text only, no logo, no watermark | Public |
+| `/lyrics/obs/dock` | Compact OBS Custom Browser Dock — pick a set, drive it live | Public |
+| `/lyrics/obs/monitor` | Read-only monitor — follow lyric progress from a phone/laptop, no controls | Public |
+
+### OBS setup
+
+Configure the permanent URLs once; the Broadcast ID is entered in each surface, not in the URL.
+
+**1. Add the dock and create a broadcast.** In OBS, **View → Docks → Custom Browser Docks**, add a dock named `Lyrics Control` with the permanent URL:
+
+```
+https://rccgms-cybertech.vercel.app/lyrics/obs/dock
+```
+
+With no broadcast yet, the dock shows **Create new broadcast** / **Join existing**. Press **Create** — it generates a random **Broadcast ID** like `26N6UZ72`, shows it prominently, and remembers it on this machine so reopening OBS doesn't ask again.
+
+**2. Add the display and enter the same ID.** In your scene, **+ → Browser Source**, placed above your background, with the permanent URL:
+
+```
+https://rccgms-cybertech.vercel.app/lyrics/obs
+```
+
+It opens on an **Enter Broadcast ID** screen — type the ID from the dock (`26N6UZ72`) and Join. It's transparent from then on and remembers the ID. Leave OBS's default size — text fits whatever size you give it and reflows on resize. Tick **Shutdown source when not visible**. To position it first, add `?preview=1` temporarily (a sample line, no broadcast needed).
+
+**3. (Optional) Add the monitor.** Same idea — open the permanent monitor URL on a phone or laptop and enter the same Broadcast ID. It's read-only: it shows the current song, cue and what's coming up, but has no controls and cannot change the display.
+
+```
+https://rccgms-cybertech.vercel.app/lyrics/obs/monitor
+```
+
+Enter the same Broadcast ID into the dock, display and monitor and they're in one session. **To switch broadcasts, use the interface** (the dock's **Switch**, the display's hover-only switch, the monitor's **Switch**) — never by editing an OBS URL. Knowing a room's ID is what grants access to it (like a meeting ID), so share the Broadcast ID only with people who should operate or watch. An old `?room=<id>` link still works — it joins that room, saves it, and cleans itself out of the URL.
 
 ### Data model
 
@@ -338,7 +373,9 @@ Lock, Clear and Undo work exactly as they do in the Bible module: the OBS displa
 
 ### Persistence
 
-Songs, prayer sets, appearance settings, safe margins and interface mode are kept in localStorage for now (`lyrics-sets`, `lyrics-obs-scene-settings`, `lyrics-obs-locked`, `lyrics-dock-ui-mode`) — deliberately no database migration for the MVP. Storage is accessed only through `lib/lyrics/store.ts`, so a shared Supabase library can be layered in later without touching the dock or display code. The `/lyrics` page and the dock pick up each other's changes live via the browser's `storage` event.
+The **library** (songs, hymns, prayer sets) lives in Supabase (`lyric_sets`), so it's the same across every browser and inside OBS's own — accessed only through `lib/lyrics/store.ts`, with a localStorage cache for instant paint and offline fallback (read-only while offline, so a stale cache never overwrites newer server data). Background **presets** and uploaded background images are shared the same way (`lyric_backgrounds` table + a Storage bucket). Realtime keeps `/lyrics`, the dock and the display in sync without a manual reload.
+
+**Session state** — appearance/background settings and the lock — is scoped **per room** and cached in room-suffixed localStorage keys (`lyrics-obs-scene-settings:<roomId>`, `lyrics-obs-locked:<roomId>`), so a reload restores only that room's look and lock and nothing leaks when switching rooms. The remembered Broadcast ID is in `lyrics-room-id`.
 
 ---
 
