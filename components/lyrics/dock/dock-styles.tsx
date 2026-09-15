@@ -110,6 +110,12 @@ export function LyricsDockStyles() {
       input[type="checkbox"] { accent-color: #7c6af7; cursor: pointer; height: 15px; width: 15px; }
       .val { color: #6e6a92; font-family: monospace; font-size: 10.5px; min-width: 32px; text-align: right; }
       .hint { color: #52526e; font-size: 10.5px; line-height: 1.45; }
+      /* The manage-page URL, shown so it can be selected by hand when the
+         clipboard API isn't available (plain-http dock = insecure origin). */
+      .url-field {
+        background: #16161f; border: 1px solid #313244; border-radius: 5px; color: #a6adc8;
+        font-family: monospace; font-size: 10.5px; margin: 5px 0 6px; padding: 5px 6px; width: 100%;
+      }
       .margin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .margin-cell { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
       kbd {
