@@ -87,18 +87,42 @@ export async function deletePreset(id: string): Promise<void> {
   if (error) throw error
 }
 
-/** Uploads a background image to Storage and returns its public URL. */
+/** A background-upload failure with a machine-readable code the UI maps to a message. */
+export class BackgroundUploadError extends Error {
+  constructor(public code: string) {
+    super(code)
+    this.name = "BackgroundUploadError"
+  }
+}
+
+export const MAX_BACKGROUND_BYTES = 10 * 1024 * 1024
+export const ALLOWED_BACKGROUND_TYPES = ["image/jpeg", "image/png", "image/webp"]
+
+/**
+ * Uploads a background image and returns its public URL. Goes through the
+ * server route (which writes with the service role), because the public dock
+ * has no permission to write to Storage directly. Throws a
+ * BackgroundUploadError with a code so the operator gets a specific message.
+ */
 export async function uploadBackgroundImage(file: File): Promise<string> {
-  const supabase = createClient()
-  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg"
-  const path = `${crypto.randomUUID()}.${ext}`
-  const { error } = await supabase.storage.from("lyric-backgrounds").upload(path, file, {
-    cacheControl: "3600",
-    upsert: false,
-  })
-  if (error) throw error
-  const { data } = supabase.storage.from("lyric-backgrounds").getPublicUrl(path)
-  return data.publicUrl
+  // Fail fast on the obvious cases so the operator gets instant feedback and we
+  // don't ship a doomed request; the server re-checks authoritatively.
+  if (!ALLOWED_BACKGROUND_TYPES.includes(file.type)) throw new BackgroundUploadError("UNSUPPORTED_TYPE")
+  if (file.size > MAX_BACKGROUND_BYTES) throw new BackgroundUploadError("TOO_LARGE")
+
+  const form = new FormData()
+  form.append("file", file)
+
+  let res: Response
+  try {
+    res = await fetch("/api/lyrics/background", { method: "POST", body: form })
+  } catch {
+    throw new BackgroundUploadError("STORAGE_UNAVAILABLE")
+  }
+
+  const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
+  if (!res.ok || !data.url) throw new BackgroundUploadError(data.error || "UPLOAD_FAILED")
+  return data.url
 }
 
 export function subscribeToPresets(onChange: () => void): () => void {

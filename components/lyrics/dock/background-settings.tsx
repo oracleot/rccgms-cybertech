@@ -17,6 +17,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { backgroundCss, type BackgroundMode, type LyricsSettings } from "@/lib/lyrics/settings"
 import {
+  BackgroundUploadError,
   deletePreset,
   loadPresets,
   savePreset,
@@ -24,6 +25,24 @@ import {
   uploadBackgroundImage,
   type BackgroundPreset,
 } from "@/lib/lyrics/backgrounds"
+
+/** A specific, safe message per failure code — never a raw Supabase error, never a catch-all. */
+function uploadErrorMessage(code: string): string {
+  switch (code) {
+    case "UNSUPPORTED_TYPE":
+      return "Unsupported image type — use JPG, PNG or WebP"
+    case "TOO_LARGE":
+      return "File is too large — max 10 MB"
+    case "PERMISSION_DENIED":
+      return "Upload permission denied"
+    case "STORAGE_UNAVAILABLE":
+      return "Storage unavailable — try again shortly"
+    case "RATE_LIMITED":
+      return "Too many uploads — wait a moment and retry"
+    default:
+      return "Upload failed — retry"
+  }
+}
 import type { LyricsDock } from "./use-dock"
 
 type Draft = Pick<
@@ -99,13 +118,16 @@ export function BackgroundSettings({ dock }: { dock: LyricsDock }) {
     setBusy("Uploading…")
     try {
       const url = await uploadBackgroundImage(file)
+      // Only on success does the draft point at the new image. A failed upload
+      // leaves the draft (and the applied background) exactly as they were, so
+      // nothing implies the failed image went live.
       update({ backgroundMode: "image", backgroundImageUrl: url })
-    } catch {
-      setBusy("Upload failed — check your connection")
-      setTimeout(() => setBusy(null), 3000)
-      return
+      setBusy(null)
+    } catch (e) {
+      const code = e instanceof BackgroundUploadError ? e.code : "UPLOAD_FAILED"
+      setBusy(uploadErrorMessage(code))
+      setTimeout(() => setBusy((b) => (b === uploadErrorMessage(code) ? null : b)), 4000)
     }
-    setBusy(null)
   }
 
   const onSavePreset = async () => {
