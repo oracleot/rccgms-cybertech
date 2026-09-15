@@ -129,5 +129,63 @@ const check = (ok: boolean, msg: string) => {
   check(songs[0].groups.length === 1 && songs[0].groups[0].primary.includes("\n"), "a long imported line is phrase-segmented, same as pasted content")
 }
 
+// 10. Real-world pattern (RCCG-style praise list): "Title." then 18 numbered
+// one-line choruses with no other structure — merged into one set, one cue
+// per line, not 18 near-empty songs and not one jumbled song mixing lines.
+{
+  const lines = ["Praise."]
+  for (let i = 1; i <= 18; i++) lines.push(`${i}, Praise line number ${i} goes here`)
+  const songs = importSongsFromHtml(lines.map((l) => `<p>${l}</p>`).join(""))
+  check(songs.length === 1, `flat numbered praise list -> merged into 1 set (got ${songs.length})`)
+  check(songs[0]?.title === "Praise", `merged set takes the preceding loose title (got "${songs[0]?.title}")`)
+  check(songs[0]?.groups.length === 18, `18 numbered lines -> 18 cues, one each (got ${songs[0]?.groups.length})`)
+  check(!songs[0]?.groups.some((g) => g.primary.includes("goes here\nPraise")), "no cue mixes two different numbered lines together")
+}
+
+// 11. Real-world pattern: a document that bolds every single paragraph —
+// the bold-title heuristic must not fire on every short line, or a
+// multi-verse hymn fragments into one "song" per line.
+{
+  const html = [
+    "<p><strong>1, Amazing grace how sweet the sound</strong></p>",
+    "<p><strong>That saved a wretch like me</strong></p>",
+    "<p><strong>I once was lost but now am found</strong></p>",
+    "<p><strong>Chorus</strong></p>",
+    "<p><strong>Was blind but now I see</strong></p>",
+    "<p><strong>2, Twas grace that taught my heart to fear</strong></p>",
+    "<p><strong>And grace my fears relieved</strong></p>",
+  ].join("")
+  const songs = importSongsFromHtml(html)
+  check(songs.length === 2, `indiscriminately-bold hymn doc -> 2 real songs, not one per line (got ${songs.length})`)
+  check(songs[0]?.groups.length >= 3, "first hymn keeps its multiple lines together as one song")
+}
+
+// 12. Real-world pattern: "Bible Reading" label + reference + quoted passage
+// text must never become lyric cues, even with a translation abbreviation
+// and an en-dash verse range in the reference.
+{
+  const html = [
+    "<p><strong>1. I SEE THE LORD</strong></p>",
+    "<p><strong>Bible Reading</strong></p>",
+    "<p><strong>Isaiah 6:1–3 (NIV)</strong></p>",
+    "<p>“I saw the Lord, high and exalted, seated on a throne.”</p>",
+    "<p><strong>Song 1</strong></p>",
+    "<p><strong>I see the lord, I see the lord</strong></p>",
+  ].join("")
+  const songs = importSongsFromHtml(html)
+  check(songs.length === 1, `Bible-reading-prefixed song -> 1 song (got ${songs.length})`)
+  check(songs[0]?.scriptureReference === "Isaiah 6:1–3 (NIV)", `en-dash + (NIV) reference captured (got "${songs[0]?.scriptureReference}")`)
+  check(!songs[0]?.groups.some((g) => g.primary.includes("throne")), "quoted scripture text never becomes a lyric cue")
+  check(!songs[0]?.groups.some((g) => g.primary.toLowerCase().includes("bible reading")), "'Bible Reading' label never becomes a lyric cue")
+}
+
+// 13. A bare "Song"/"Song N" marker mid-song is a divider, not a second song.
+{
+  const html = ["<p><strong>MY TITLE</strong></p>", "<p><strong>Song 1</strong></p>", "<p><strong>Line one</strong></p>", "<p><strong>Line two</strong></p>"].join("")
+  const songs = importSongsFromHtml(html)
+  check(songs.length === 1, `bare 'Song 1' marker mid-song doesn't start a new song (got ${songs.length})`)
+  check(!songs[0]?.groups.some((g) => g.primary === "Song 1"), "'Song 1' marker text itself never becomes a cue")
+}
+
 console.log(failed ? `\n${failed} check(s) FAILED` : "\nall checks passed")
 process.exit(failed ? 1 : 0)
