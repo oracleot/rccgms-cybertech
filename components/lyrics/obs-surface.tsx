@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/client"
 import { lyricsChannelName } from "@/lib/lyrics/channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/lyrics/lock"
 import {
+  backgroundCss,
   LYRICS_DEFAULTS,
   loadSettings,
   normalize,
@@ -310,6 +311,12 @@ export function LyricsObsSurface() {
           pointer-events: none;
           transition: none !important;
         }
+        .bg-layer {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+        }
         .primary { line-height: 1.3; overflow-wrap: break-word; }
         /* Hymn verses are read together by a congregation rather than
            advanced phrase by phrase, so the lines sit a little more open. */
@@ -353,10 +360,28 @@ export function LyricsObsSurface() {
       `}</style>
 
       <div ref={surfaceRef} className="surface">
+        {/* Optional background, behind the text and filling whatever size the
+            Browser Source is. Absolutely positioned so it never affects the
+            measured text layout or the safe margins. Only shown while
+            something is live, so Clear always returns the source to fully
+            transparent regardless of the chosen background. Transparent mode
+            renders nothing. */}
+        {settings.backgroundMode !== "transparent" && (
+          <div
+            className="bg-layer"
+            style={{
+              background: backgroundCss(settings),
+              opacity: visible ? settings.backgroundOpacity / 100 : 0,
+              transition: transitionCss,
+            }}
+          />
+        )}
         <div ref={measureRef} className="content measure" aria-hidden />
         {layout && item && (
           <div
             style={{
+              position: "relative",
+              zIndex: 1,
               display: "flex",
               flexDirection: "column",
               flex: 1,

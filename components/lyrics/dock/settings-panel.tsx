@@ -1,6 +1,7 @@
 "use client"
 
 import { LYRICS_DEFAULTS, applyPositionPreset, type PositionPreset, type Align, type VAlign, type TransitionStyle } from "@/lib/lyrics/settings"
+import { BackgroundSettings } from "./background-settings"
 import type { LyricsDock } from "./use-dock"
 
 export function LyricsSettingsPanel({ dock }: { dock: LyricsDock }) {
@@ -149,6 +150,9 @@ export function LyricsSettingsPanel({ dock }: { dock: LyricsDock }) {
                 <span className="val">{settings.shadowStrength}%</span>
               </div>
             </div>
+
+            <div className="divider" />
+            <BackgroundSettings dock={dock} />
 
             <div className="divider" />
             <span className="section-label">Advanced — Transitions</span>
