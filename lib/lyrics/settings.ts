@@ -59,7 +59,9 @@ export const LYRICS_DEFAULTS: LyricsSettings = {
   safeLeft: 6,
   safeRight: 6,
   font: "sans",
-  scale: 1,
+  // A modest default so a fresh Browser Source isn't huge; the operator can
+  // scale up to 150% or down to 1% from the dock.
+  scale: 0.5,
   color: "#ffffff",
   secondaryColor: "#cfd0e6",
   shadowStrength: 70,
@@ -103,7 +105,9 @@ export function normalize(raw: unknown): LyricsSettings {
     safeLeft: clamp(p.safeLeft, 0, 40, LYRICS_DEFAULTS.safeLeft),
     safeRight: clamp(p.safeRight, 0, 40, LYRICS_DEFAULTS.safeRight),
     font: p.font === "serif" ? "serif" : "sans",
-    scale: clamp(p.scale, 0.5, 3, LYRICS_DEFAULTS.scale),
+    // Down to 0.01 (1%) so the Text size slider can reach its new minimum;
+    // anything below is clamped up rather than hitting zero.
+    scale: clamp(p.scale, 0.01, 3, LYRICS_DEFAULTS.scale),
     color: parseHex(p.color, LYRICS_DEFAULTS.color),
     secondaryColor: parseHex(p.secondaryColor, LYRICS_DEFAULTS.secondaryColor),
     shadowStrength: clamp(p.shadowStrength, 0, 100, LYRICS_DEFAULTS.shadowStrength),

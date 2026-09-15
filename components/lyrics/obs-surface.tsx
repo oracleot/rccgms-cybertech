@@ -92,11 +92,13 @@ function itemHtml(item: LyricItemPayload, s: LyricsSettings): string {
 
 /**
  * The size a cue is shown at when it fits — a broadcast caption's normal
- * weight on screen, as a fraction of the safe area's height. Tuned so a
- * typical one- or two-line worship phrase reads large without a short cue
- * ballooning to fill the frame.
+ * weight on screen, as a fraction of the safe area's height, at 100% text
+ * size. Lowered from 0.17 after real production use: 0.17 made even a short
+ * single line fill far too much of the frame (its 100% default was ~150px on
+ * 1080). This is the baseline; the operator scales around it with the Text
+ * size control (1%–150%).
  */
-const PREFERRED_HEIGHT_RATIO = 0.17
+const PREFERRED_HEIGHT_RATIO = 0.09
 /** Hard ceiling for short/thin sources, so the preferred size can't overflow a caption bar. */
 const MAX_HEIGHT_RATIO = 0.42
 

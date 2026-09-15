@@ -106,9 +106,9 @@ export function LyricsSettingsPanel({ dock }: { dock: LyricsDock }) {
               <div className="ctl">
                 <input
                   type="range"
-                  min={50}
+                  min={1}
                   max={150}
-                  step={5}
+                  step={1}
                   value={Math.round(settings.scale * 100)}
                   onChange={(e) => update("scale", Number(e.target.value) / 100)}
                 />
