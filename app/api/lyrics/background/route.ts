@@ -1,22 +1,29 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { checkRateLimit } from "@/lib/rate-limit"
+import { isValidRoomId } from "@/lib/lyrics/room"
 
 /**
  * Background image upload for the Lyrics OBS dock.
  *
- * The dock is a public surface (no login), so it cannot — and must not — write
- * to Storage directly: the lyric-backgrounds bucket denies anonymous writes,
- * which is why a direct upload from the dock failed. Instead the dock POSTs the
- * file here and this trusted server route writes it with the service role,
- * after validating it. That keeps the bucket closed to client writes while
- * still letting a public dock upload a background.
+ * The dock is a public surface (no login), so it cannot write to Storage
+ * directly — the bucket denies anonymous writes. This route writes with the
+ * service role after validating the file AND verifying that the requester is
+ * the registered controller for the given Broadcast Room.
  *
- * Constraints enforced here (defense in depth — the bucket also enforces the
- * type/size allowlist): image MIME only, ≤10MB, a random safe filename so
- * nothing can be overwritten, and create-only (this route never deletes or
- * lists). The bucket is created on demand if missing, because creating it via
- * SQL migration proved unreliable (the storage schema isn't owned by the
- * migration role).
+ * Controller verification: the dock upserts into `broadcast_controllers` when
+ * it claims control. This route reads that table (service role, bypassing RLS)
+ * and checks that the supplied controllerId matches the registered controller
+ * and the claim is recent. An attacker must guess a valid 8-char room ID
+ * (24^8 ≈ 110B possibilities) AND actively register as controller (which
+ * disrupts the real session — visible to all participants).
+ *
+ * Rate limiting uses the project's shared in-memory limiter. On Vercel
+ * serverless each instance has its own Map, so the limit is per-instance and
+ * best-effort — it constrains a single instance being hammered but does not
+ * provide global rate limiting. The project does not have a shared store (e.g.
+ * Redis/Upstash) for rate limiting; the controller verification is the primary
+ * gate, and the rate limiter is defense in depth.
  */
 
 export const runtime = "nodejs"
@@ -29,31 +36,15 @@ const ALLOWED: Record<string, string> = {
   "image/webp": "webp",
 }
 
-// A light per-IP limiter so a public write endpoint can't be used to spam the
-// bucket. In-memory, best-effort — same approach as the magic-link route.
-const rate = new Map<string, { count: number; reset: number }>()
-function rateLimited(ip: string): boolean {
-  const now = Date.now()
-  const windowMs = 10 * 60 * 1000
-  const max = 30
-  const rec = rate.get(ip)
-  if (!rec || now > rec.reset) {
-    rate.set(ip, { count: 1, reset: now + windowMs })
-    return false
-  }
-  if (rec.count >= max) return true
-  rec.count++
-  return false
-}
+const MAX_CLAIM_AGE_MS = 8 * 60 * 60 * 1000
 
-/** Confirms the bytes really are the image type they claim, so a spoofed type can't slip through. */
 function magicMatches(mime: string, bytes: Uint8Array): boolean {
   if (mime === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
   if (mime === "image/png") return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47
   if (mime === "image/webp")
     return (
-      bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && // RIFF
-      bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50 // WEBP
+      bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+      bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
     )
   return false
 }
@@ -64,24 +55,31 @@ function err(code: string, status: number) {
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-  if (rateLimited(ip)) return err("RATE_LIMITED", 429)
+  const { allowed } = checkRateLimit(`bg-upload:${ip}`, 30, 10 * 60 * 1000)
+  if (!allowed) return err("RATE_LIMITED", 429)
 
-  // Reject an oversized body before parsing it — a very large multipart body
-  // otherwise fails to parse and would report a generic error instead of the
-  // real "too large" reason. 1MB of slack covers multipart framing overhead;
-  // the exact file.size check below is still authoritative.
   const contentLength = Number(request.headers.get("content-length") || 0)
   if (contentLength > MAX_BYTES + 1024 * 1024) return err("TOO_LARGE", 413)
 
   let file: File | null = null
+  let roomId: string | null = null
+  let controllerId: string | null = null
   try {
     const form = await request.formData()
     const f = form.get("file")
     if (f instanceof File) file = f
+    const r = form.get("roomId")
+    if (typeof r === "string") roomId = r
+    const c = form.get("controllerId")
+    if (typeof c === "string") controllerId = c
   } catch {
     return err("UPLOAD_FAILED", 400)
   }
   if (!file) return err("NO_FILE", 400)
+
+  // --- controller verification -------------------------------------------
+  if (!roomId || !isValidRoomId(roomId)) return err("INVALID_ROOM", 403)
+  if (!controllerId) return err("NOT_CONTROLLER", 403)
 
   const ext = ALLOWED[file.type]
   if (!ext) return err("UNSUPPORTED_TYPE", 415)
@@ -95,18 +93,44 @@ export async function POST(request: NextRequest) {
   try {
     admin = createAdminClient()
   } catch {
-    // Missing service-role config — a deployment problem, not the operator's.
     console.error("[background upload] admin client unavailable — check SUPABASE_SERVICE_ROLE_KEY")
     return err("STORAGE_UNAVAILABLE", 500)
   }
 
+  // Verify the controller claim in the server-side registry. The admin client
+  // bypasses RLS (anonymous users cannot SELECT this table).
+  try {
+    const { data: claim, error: claimError } = await admin
+      .from("broadcast_controllers")
+      .select("controller_id, claimed_at")
+      .eq("room_id", roomId)
+      .single()
+
+    if (claimError || !claim) {
+      console.error("[background upload] no controller claim for room:", roomId)
+      return err("INVALID_ROOM", 403)
+    }
+    if (claim.controller_id !== controllerId) {
+      console.error("[background upload] controllerId mismatch for room:", roomId)
+      return err("NOT_CONTROLLER", 403)
+    }
+    const age = Date.now() - new Date(claim.claimed_at).getTime()
+    if (age > MAX_CLAIM_AGE_MS) {
+      console.error("[background upload] stale controller claim for room:", roomId, "age:", Math.round(age / 60000), "min")
+      return err("NOT_CONTROLLER", 403)
+    }
+  } catch (e) {
+    console.error("[background upload] controller verification error:", e)
+    return err("STORAGE_UNAVAILABLE", 500)
+  }
+
+  // --- file upload -------------------------------------------------------
   const path = `${crypto.randomUUID()}.${ext}`
   const doUpload = () =>
     admin!.storage.from(BUCKET).upload(path, bytes, { contentType: file!.type, upsert: false })
 
   let { error } = await doUpload()
   if (error && /bucket not found/i.test(error.message)) {
-    // Self-heal: create the bucket (idempotent) and retry once.
     await admin.storage.createBucket(BUCKET, {
       public: true,
       fileSizeLimit: MAX_BYTES,
@@ -116,7 +140,6 @@ export async function POST(request: NextRequest) {
   }
 
   if (error) {
-    // Full technical detail in the server log; never the raw message to the UI.
     console.error("[background upload] storage error:", error.name, error.message)
     const msg = error.message.toLowerCase()
     if (/row-level security|permission|not authorized/.test(msg)) return err("PERMISSION_DENIED", 403)

@@ -255,7 +255,7 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
         ) : view === "session" ? (
           <SessionPanel roomId={roomId} presence={presence} onLeave={onLeave} />
         ) : (
-          <LyricsSettingsPanel dock={dock} />
+          <LyricsSettingsPanel dock={dock} roomId={roomId} controllerId={presence.isController ? presence.participantId : null} />
         )}
 
         <div className="toolbar">

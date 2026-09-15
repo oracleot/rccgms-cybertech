@@ -31,6 +31,7 @@ import {
   type Participant,
   type ParticipantRole,
 } from "@/lib/lyrics/presence"
+import { registerController } from "@/lib/lyrics/controller-registry"
 
 export type PresenceConnection = "connecting" | "joined" | "error"
 
@@ -124,6 +125,7 @@ export function useRoomPresence(roomId: string, role: ParticipantRole): RoomPres
                 const mine: ControllerClaim = { controllerId: participantId, at: Date.now() }
                 adopt(mine)
                 channel.send({ type: "broadcast", event: "controller", payload: mine })
+                void registerController(roomId, participantId)
               }
             }, 900)
           }
@@ -149,15 +151,17 @@ export function useRoomPresence(roomId: string, role: ParticipantRole): RoomPres
         const mine: ControllerClaim = { controllerId: participantId, at: Date.now() }
         setClaim(mine)
         channelRef.current?.send({ type: "broadcast", event: "controller", payload: mine })
+        void registerController(roomId, participantId)
       }
     }
-  }, [participants, claim, role, participantId])
+  }, [participants, claim, role, participantId, roomId])
 
   const takeControl = useCallback(() => {
     const mine: ControllerClaim = { controllerId: participantId, at: Date.now() }
     setClaim(mine)
     channelRef.current?.send({ type: "broadcast", event: "controller", payload: mine })
-  }, [participantId])
+    void registerController(roomId, participantId)
+  }, [roomId, participantId])
 
   const controllerId = claim && controllerIsPresent(claim, participants) ? claim.controllerId : null
 

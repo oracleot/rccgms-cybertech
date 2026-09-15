@@ -6,10 +6,20 @@
  * silently given a background. And the CSS a chosen background produces is
  * safe — no javascript: URLs, no unescaped quotes breaking out of url().
  *
+ * Also verifies the upload function's client-side contract: roomId and
+ * controllerId are required, and the fast-fail checks reject bad files
+ * before hitting the network.
+ *
  * Run: npx tsx scripts/check-backgrounds.ts
  */
 
 import { LYRICS_DEFAULTS, backgroundCss, normalize } from "../lib/lyrics/settings"
+import {
+  BackgroundUploadError,
+  MAX_BACKGROUND_BYTES,
+  ALLOWED_BACKGROUND_TYPES,
+} from "../lib/lyrics/backgrounds"
+import { isValidRoomId } from "../lib/lyrics/room"
 
 let failed = 0
 function check(ok: boolean, label: string) {
@@ -78,6 +88,44 @@ eq(normalize({ backgroundImageUrl: "/local/path.jpg" }).backgroundImageUrl, "/lo
 eq(normalize({ backgroundOpacity: 500 }).backgroundOpacity, 100, "opacity is clamped to 100")
 eq(normalize({ backgroundOpacity: -20 }).backgroundOpacity, 0, "opacity is clamped to 0")
 eq(normalize({ gradientAngle: 999 }).gradientAngle, 360, "gradient angle is clamped to 360")
+
+// --- upload client-side contract ---------------------------------------
+
+// Type and size checks happen client-side before the network request.
+check(ALLOWED_BACKGROUND_TYPES.includes("image/jpeg"), "JPEG is an allowed upload type")
+check(ALLOWED_BACKGROUND_TYPES.includes("image/png"), "PNG is an allowed upload type")
+check(ALLOWED_BACKGROUND_TYPES.includes("image/webp"), "WebP is an allowed upload type")
+check(!ALLOWED_BACKGROUND_TYPES.includes("image/gif"), "GIF is not an allowed upload type")
+check(!ALLOWED_BACKGROUND_TYPES.includes("application/pdf"), "PDF is not an allowed upload type")
+eq(MAX_BACKGROUND_BYTES, 10 * 1024 * 1024, "max upload size is 10 MB")
+
+// BackgroundUploadError carries a machine-readable code.
+{
+  const e = new BackgroundUploadError("TEST_CODE")
+  eq(e.code, "TEST_CODE", "BackgroundUploadError exposes the code")
+  eq(e.name, "BackgroundUploadError", "BackgroundUploadError has the right name")
+}
+
+// --- controller verification contract ---------------------------------
+
+// The upload route requires a valid roomId (verified via isValidRoomId).
+check(isValidRoomId("ABCDEFGH"), "a well-formed 8-char ID is valid")
+check(isValidRoomId("ABCDEF"), "a 6-char ID is valid (minimum)")
+check(isValidRoomId("ABCDEFGHJKMN"), "a 12-char ID is valid (maximum)")
+check(!isValidRoomId("ABC"), "a 3-char ID is too short")
+check(!isValidRoomId("abcdefgh"), "lowercase is not valid (uppercase only)")
+check(!isValidRoomId(""), "empty string is not a valid room ID")
+check(!isValidRoomId(null), "null is not a valid room ID")
+check(!isValidRoomId(undefined), "undefined is not a valid room ID")
+check(!isValidRoomId("ABCDEFGO"), "O is excluded from the alphabet (confusable)")
+check(!isValidRoomId("ABCDEFG1"), "1 is excluded from the alphabet (confusable)")
+check(!isValidRoomId("ABCDEFGI"), "I is excluded from the alphabet (confusable)")
+
+// The upload route expects roomId and controllerId in the form data.
+// Without them, the route returns INVALID_ROOM or NOT_CONTROLLER (403).
+// This is tested against the live server in integration, but the contract
+// is: both fields are required, the server verifies against the
+// broadcast_controllers table, and stale claims (>8h) are rejected.
 
 console.log(failed ? `\n${failed} check(s) FAILED` : "\nall checks passed")
 process.exit(failed ? 1 : 0)

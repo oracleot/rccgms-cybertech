@@ -39,6 +39,10 @@ function uploadErrorMessage(code: string): string {
       return "Storage unavailable — try again shortly"
     case "RATE_LIMITED":
       return "Too many uploads — wait a moment and retry"
+    case "INVALID_ROOM":
+      return "Upload not authorized — no active broadcast room"
+    case "NOT_CONTROLLER":
+      return "Only the active controller can upload — take control first"
     default:
       return "Upload failed — retry"
   }
@@ -80,7 +84,7 @@ function sameDraft(a: Draft, b: Draft): boolean {
   )
 }
 
-export function BackgroundSettings({ dock }: { dock: LyricsDock }) {
+export function BackgroundSettings({ dock, roomId, controllerId }: { dock: LyricsDock; roomId: string; controllerId: string | null }) {
   const { settings, pushSettings } = dock
   const [draft, setDraft] = useState<Draft>(() => draftOf(settings))
   const [presets, setPresets] = useState<BackgroundPreset[]>([])
@@ -114,10 +118,13 @@ export function BackgroundSettings({ dock }: { dock: LyricsDock }) {
     })
   }
 
+  const canUpload = !!controllerId
+
   const onUpload = async (file: File) => {
+    if (!controllerId) return
     setBusy("Uploading…")
     try {
-      const url = await uploadBackgroundImage(file)
+      const url = await uploadBackgroundImage(file, roomId, controllerId)
       // Only on success does the draft point at the new image. A failed upload
       // leaves the draft (and the applied background) exactly as they were, so
       // nothing implies the failed image went live.
@@ -212,10 +219,11 @@ export function BackgroundSettings({ dock }: { dock: LyricsDock }) {
         <>
           <div className="srow">
             <span>Image</span>
-            <button className="btn-ghost" onClick={() => fileRef.current?.click()}>
+            <button className="btn-ghost" disabled={!canUpload} onClick={() => fileRef.current?.click()}>
               Upload…
             </button>
           </div>
+          {!canUpload && <div className="hint">Only the active controller can upload images.</div>}
           <input
             ref={fileRef}
             type="file"

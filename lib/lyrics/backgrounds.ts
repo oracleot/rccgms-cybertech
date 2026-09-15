@@ -101,17 +101,19 @@ export const ALLOWED_BACKGROUND_TYPES = ["image/jpeg", "image/png", "image/webp"
 /**
  * Uploads a background image and returns its public URL. Goes through the
  * server route (which writes with the service role), because the public dock
- * has no permission to write to Storage directly. Throws a
- * BackgroundUploadError with a code so the operator gets a specific message.
+ * has no permission to write to Storage directly. The server verifies the
+ * roomId/controllerId against the broadcast_controllers registry before
+ * accepting the upload. Throws a BackgroundUploadError with a code so the
+ * operator gets a specific message.
  */
-export async function uploadBackgroundImage(file: File): Promise<string> {
-  // Fail fast on the obvious cases so the operator gets instant feedback and we
-  // don't ship a doomed request; the server re-checks authoritatively.
+export async function uploadBackgroundImage(file: File, roomId: string, controllerId: string): Promise<string> {
   if (!ALLOWED_BACKGROUND_TYPES.includes(file.type)) throw new BackgroundUploadError("UNSUPPORTED_TYPE")
   if (file.size > MAX_BACKGROUND_BYTES) throw new BackgroundUploadError("TOO_LARGE")
 
   const form = new FormData()
   form.append("file", file)
+  form.append("roomId", roomId)
+  form.append("controllerId", controllerId)
 
   let res: Response
   try {
