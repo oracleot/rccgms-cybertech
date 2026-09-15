@@ -9,10 +9,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { lyricsChannelName } from "@/lib/lyrics/channel"
+import { lyricsChannelName, monitorChannelName } from "@/lib/lyrics/channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/lyrics/lock"
 import { LYRICS_DEFAULTS, loadSettings, saveSettings, type LyricsSettings } from "@/lib/lyrics/settings"
 import { loadCachedSets, subscribeToSets, syncSets } from "@/lib/lyrics/store"
+import { buildMonitorState, MONITOR_REQUEST_EVENT, MONITOR_STATE_EVENT } from "@/lib/lyrics/monitor"
 import type { LyricItemPayload, LyricSet } from "@/lib/lyrics/types"
 
 const UI_MODE_KEY = "lyrics-dock-ui-mode"
@@ -74,6 +75,8 @@ export function useLyricsDock() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase's RealtimeChannel type isn't exported for a ref
   const channelRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- as above; the monitor-only channel
+  const monitorChannelRef = useRef<any>(null)
   const setsRef = useRef<LyricSet[]>([])
   const activeSetRef = useRef<LyricSet | null>(null)
   const activeIndexRef = useRef(0)
@@ -181,6 +184,50 @@ export function useLyricsDock() {
       channel.unsubscribe()
     }
   }, [applyLock])
+
+  // Snapshot for a monitor, read from refs so it's callable from the channel
+  // handler (a stable closure). Never carries anything a monitor could use to
+  // change the broadcast.
+  const snapshotFromRefs = useCallback(
+    () =>
+      buildMonitorState({
+        activeSet: activeSetRef.current,
+        onScreen: onScreenRef.current,
+        staged: stagedRef.current,
+        locked: lockedRef.current,
+        previewFirst: previewFirstRef.current,
+        autoOn: autoOnRef.current,
+        autoPaused: autoPausedRef.current,
+        autoInterval: autoIntervalRef.current,
+      }),
+    []
+  )
+
+  // Monitors live on a SEPARATE channel from the display. The display never
+  // subscribes to it, so nothing a monitor sends — even a hand-crafted
+  // broadcast from someone the link was forwarded to — can reach the on-screen
+  // output. The dock is the only publisher of monitor-state; a monitor only
+  // ever asks for a snapshot.
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase.channel(monitorChannelName(), { config: { broadcast: { self: false } } })
+    channel
+      .on("broadcast", { event: MONITOR_REQUEST_EVENT }, () => {
+        channel.send({ type: "broadcast", event: MONITOR_STATE_EVENT, payload: snapshotFromRefs() })
+      })
+      .subscribe()
+    monitorChannelRef.current = channel
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [snapshotFromRefs])
+
+  // Push a fresh monitor snapshot whenever anything a monitor shows changes, so
+  // an already-connected monitor tracks the service live rather than only on
+  // its initial request.
+  useEffect(() => {
+    monitorChannelRef.current?.send({ type: "broadcast", event: MONITOR_STATE_EVENT, payload: snapshotFromRefs() })
+  }, [snapshotFromRefs, onScreen, staged, locked, previewFirst, autoOn, autoPaused, autoInterval, activeSet, activeIndex])
 
   const pushSettings = useCallback((next: LyricsSettings) => {
     settingsRef.current = next

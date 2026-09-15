@@ -89,7 +89,7 @@ function ManageLibraryLink() {
   )
 }
 
-export function LyricsDock() {
+export function LyricsDock({ unprotectedNotice = false }: { unprotectedNotice?: boolean }) {
   const dock = useLyricsDock()
   const [view, setView] = useState<"main" | "settings">("main")
   const advanced = dock.uiMode === "advanced"
@@ -100,6 +100,11 @@ export function LyricsDock() {
     <Tooltip.Provider>
       <LyricsDockStyles />
       <div className={`dock${dock.locked ? " is-locked" : ""}`}>
+        {unprotectedNotice && (
+          <div className="dev-notice">
+            No operator key set — this dock is open. Set <code>LYRICS_DOCK_KEY</code> in production.
+          </div>
+        )}
         {view === "main" ? (
           <div className="pane">
             <span className="section-label">Song / Prayer set</span>

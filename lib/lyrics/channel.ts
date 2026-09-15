@@ -9,3 +9,13 @@ export function lyricsChannelName(): string {
   const host = typeof window === "undefined" ? "server" : window.location.hostname
   return `lyrics-obs:${host}`
 }
+
+/**
+ * A separate channel for read-only monitors. The display never subscribes to
+ * it, so a monitor — however widely its link is shared — shares no channel
+ * with the on-screen output and cannot move it. Same hostname namespacing, so
+ * a production monitor sees the production service and dev stays isolated.
+ */
+export function monitorChannelName(): string {
+  return `${lyricsChannelName()}:monitor`
+}

@@ -110,6 +110,31 @@ export function LyricsDockStyles() {
       input[type="checkbox"] { accent-color: #7c6af7; cursor: pointer; height: 15px; width: 15px; }
       .val { color: #6e6a92; font-family: monospace; font-size: 10.5px; min-width: 32px; text-align: right; }
       .hint { color: #52526e; font-size: 10.5px; line-height: 1.45; }
+      .dev-notice {
+        background: #33301a; border: 1px solid #5a5320; color: #e0c257; border-radius: 6px;
+        font-size: 10.5px; line-height: 1.4; margin-bottom: 8px; padding: 6px 8px;
+      }
+      .dev-notice code { background: #1e1e2e; border-radius: 3px; padding: 0 3px; }
+      /* Background settings */
+      .bg-preview {
+        position: relative; height: 72px; border-radius: 8px; overflow: hidden;
+        border: 1px solid #313244; margin: 8px 0; display: flex; align-items: center; justify-content: center;
+      }
+      .bg-preview-fill { position: absolute; inset: 0; }
+      .bg-preview-text { position: relative; font-size: 15px; font-weight: 800; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+      .bg-preview-tag { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #6e6a92; }
+      .btn-primary.wide, .btn-ghost.wide { width: 100%; margin-top: 6px; }
+      .preset-name { flex: 1; }
+      .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; }
+      .preset-chip { position: relative; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+      .preset-swatch { height: 30px; width: 100%; border-radius: 5px; border: 1px solid #313244; cursor: pointer; }
+      .preset-swatch:hover { border-color: #7c6af7; }
+      .preset-label { font-size: 9.5px; color: #a6adc8; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .preset-del {
+        position: absolute; top: -4px; right: -4px; height: 15px; width: 15px; border-radius: 50%;
+        background: #1e1e2e; border: 1px solid #45455e; color: #a6adc8; font-size: 11px; line-height: 1; cursor: pointer;
+      }
+      .preset-del:hover { background: #3a1e1e; color: #f38ba8; }
       /* The manage-page URL, shown so it can be selected by hand when the
          clipboard API isn't available (plain-http dock = insecure origin). */
       .url-field {
