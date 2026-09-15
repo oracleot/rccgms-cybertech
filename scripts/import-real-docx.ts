@@ -7,12 +7,15 @@
  * authenticated session, the same trusted-operation pattern as
  * lib/supabase/admin.ts.
  *
- * This is NOT the reviewed import path — it writes every non-empty
- * detected song directly, with no per-song rename/exclude/split step.
- * Run it only after eyeballing scripts/inspect-docx.ts output for the same
- * files, and expect to still touch up titles/splits afterwards on /lyrics.
+ * This is NOT the reviewed import path — it has no per-song rename/exclude/
+ * split step, so anything the importer flagged as ambiguous (a section that
+ * may hold more than one song) is SKIPPED and reported rather than written:
+ * persisting a combined record unreviewed is how Bible-reading text and two
+ * different songs ended up in one set before. Those belong on the
+ * authenticated /lyrics page, where the review screen can split them.
+ * --include-ambiguous overrides that, deliberately and explicitly.
  *
- * Run: npx tsx scripts/import-real-docx.ts <path-to-docx> [<path-to-docx> ...]
+ * Run: npx tsx scripts/import-real-docx.ts [--include-ambiguous] <path-to-docx> ...
  */
 
 import { readFileSync } from "node:fs"
@@ -21,9 +24,11 @@ import { createClient } from "@supabase/supabase-js"
 import mammoth from "../lib/lyrics/vendor/mammoth.browser.js"
 import { importSongsFromHtml } from "../lib/lyrics/docx-import"
 
-const paths = process.argv.slice(2)
+const args = process.argv.slice(2)
+const includeAmbiguous = args.includes("--include-ambiguous")
+const paths = args.filter((a) => !a.startsWith("--"))
 if (!paths.length) {
-  console.error("usage: npx tsx scripts/import-real-docx.ts <path-to-docx> [<path-to-docx> ...]")
+  console.error("usage: npx tsx scripts/import-real-docx.ts [--include-ambiguous] <path-to-docx> [<path-to-docx> ...]")
   process.exit(1)
 }
 
@@ -46,6 +51,7 @@ async function main() {
   }
 
   let totalSongs = 0
+  const skipped: Array<{ file: string; title: string; reason: string }> = []
   for (const path of paths) {
     const buf = readFileSync(path)
     const arrayBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
@@ -54,6 +60,11 @@ async function main() {
 
     console.log(`\n${basename(path)}: ${songs.length} song(s)/set(s) detected`)
     for (const s of songs) {
+      if (s.ambiguous && !includeAmbiguous) {
+        skipped.push({ file: basename(path), title: s.title, reason: s.ambiguousReason ?? "flagged ambiguous" })
+        console.log(`  ⊘ "${s.title}" skipped — ambiguous, needs review`)
+        continue
+      }
       const { error } = await supabase.from("lyric_sets").insert({
         type: "lyrics",
         title: s.title,
@@ -63,7 +74,7 @@ async function main() {
       if (error) {
         console.error(`  ✗ "${s.title}" — ${error.message}`)
       } else {
-        const flag = s.ambiguous ? " ⚠ ambiguous — review this one on /lyrics" : ""
+        const flag = s.ambiguous ? " ⚠ ambiguous, imported under --include-ambiguous" : ""
         console.log(`  ✓ "${s.title}" (${s.groups.length} cues)${flag}`)
         totalSongs++
       }
@@ -71,6 +82,10 @@ async function main() {
   }
 
   console.log(`\nImported ${totalSongs} song(s)/set(s) total. Review and adjust on the /lyrics page before using live.`)
+  if (skipped.length) {
+    console.log(`\n${skipped.length} ambiguous section(s) NOT imported — import these through /lyrics, where they can be split:`)
+    for (const s of skipped) console.log(`  · ${s.file} — "${s.title}"\n      ${s.reason}`)
+  }
 }
 
 void main()

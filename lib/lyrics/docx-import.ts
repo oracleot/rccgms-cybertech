@@ -99,7 +99,7 @@ const SONG_N_RE = /^song\s*#?\s*\d+\b/i
 // mid-song, right before the actual singable lines start, as a divider
 // rather than a real second title (the real title is usually a numbered
 // line just above it). See the isBareMarker handling in the main loop.
-const SONG_MARKER_RE = /^songs?\s*#?\s*\d*\.?\s*:?\s*$/i
+const SONG_MARKER_RE = /^songs?\s*#?\s*\d*\s*[.,:;]?\s*$/i
 const LEADING_NUMBER_RE = /^\d+[.,)]\s*/
 
 // A permissive "looks like a scripture reference" gate — deliberately its own
@@ -133,6 +133,25 @@ function looksLikeQuotedScripture(text: string): boolean {
   return OPENS_WITH_QUOTE_RE.test(text.trim())
 }
 
+// Real readings often run the reference straight into the passage in one
+// paragraph ("Psalms 8:3 When I consider …") instead of putting it on a line
+// of its own, so the standalone-only SCRIPTURE_RE never sees them. Used only
+// inside a "Bible Reading" section, where a leading reference is unambiguous.
+const SCRIPTURE_PREFIX_RE =
+  /^(?:[1-3]\s?)?[A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)?\s+\d{1,3}(?:[:.]\d{1,3}(?:[-–—]\d{1,3})?)?(?:\s*\([A-Za-z]+\))?(?=\s|$)/
+
+/** The reference opening a reading paragraph, or null — "Psalms 8:3 When I consider …" → "Psalms 8:3". */
+export function scriptureRefAtStart(text: string): string | null {
+  const m = text.trim().match(SCRIPTURE_PREFIX_RE)
+  if (!m) return null
+  const firstWord = m[0].replace(/^[1-3]\s?/, "").split(/\s+/)[0]
+  return NOT_A_BOOK_NAME.test(firstWord) ? null : m[0].trim()
+}
+
+// A reading section ends at the next real boundary. This cap is only a
+// backstop, so a document that never gives one can't swallow a whole song.
+const READING_MAX_BLOCKS = 12
+
 // Production/operator instructions seen in real service documents — never
 // meant for the screen. Two shapes: a short word trailing off in an
 // ellipsis ("Choir......", "Solo......"), and a curated set of common
@@ -146,6 +165,16 @@ const TRAILING_ELLIPSIS_RE = /^[A-Za-z][A-Za-z\s]{0,20}\.{3,}\s*$/
 function looksLikeProductionNote(text: string): boolean {
   const t = text.trim()
   return NOTE_PHRASE_RE.test(t) || TRAILING_ELLIPSIS_RE.test(t)
+}
+
+// Structural dividers that mark where a section starts — they label the
+// lyrics, they are never sung, and on screen they would read as part of the
+// caption below them. Only a line that is nothing but the label (optionally
+// numbered/punctuated) counts, so a real lyric containing the word is safe.
+const STRUCTURE_LABEL_RE = /^(chorus|verse|refrain|bridge|pre-?chorus|tag|intro|outro|coda)\s*\d*\s*[.,:;]?\s*$/i
+
+function isStructureLabel(text: string): boolean {
+  return STRUCTURE_LABEL_RE.test(text.trim())
 }
 
 const PAREN_LINE_RE = /^\((.+)\)$/
@@ -222,7 +251,12 @@ function looksLikeSongBoundary(block: HtmlBlock, useBoldHeuristic: boolean): Bou
   const numbered = t.match(/^(\d{1,3})[.,]\s*(.*)$/)
   if (numbered && numbered[2].trim().length >= 2) {
     const rest = numbered[2].trim()
-    return { title: rest, confidence: "high", seedLine: rest }
+    // An ALL-CAPS numbered line is a section title ("6. HOW GREAT THY ARE") —
+    // it is never the song's opening line, so unlike a mixed-case numbered
+    // line ("1, I will enter his gate…", which may well be the whole song)
+    // it isn't seeded as content, where it would show on screen as part of
+    // the first caption.
+    return { title: rest, confidence: "high", seedLine: isAllCapsTitle(rest) ? undefined : rest }
   }
 
   if (block.type === "heading") {
@@ -312,16 +346,29 @@ export function importSongsFromHtml(html: string): ImportedSong[] {
   // sequence the operator will actually see.
   let fallbackIndex = 0
 
+  // A reading that opens a section arrives before the song it belongs to has
+  // started, so its references wait here for the next song rather than being
+  // attached to the previous one.
+  let pendingScripture: string | null = null
+  let readingMode = false
+  let readingConsumed = 0
+
   const startSong = (boundary: Boundary | undefined) => {
     const clean = boundary?.title?.trim()
     const useReal = !!clean && !SONG_N_RE.test(clean)
     const lines = boundary?.seedLine ? [boundary.seedLine] : []
+    let draft: Draft
     if (useReal) {
-      current = { title: clean!, confidence: boundary!.confidence, lines, notes: [], bareMarkerCount: 0 }
+      draft = { title: clean!, confidence: boundary!.confidence, lines, notes: [], bareMarkerCount: 0 }
     } else {
       fallbackIndex++
-      current = { title: `Song ${fallbackIndex}`, confidence: "low", lines, notes: [], bareMarkerCount: 0 }
+      draft = { title: `Song ${fallbackIndex}`, confidence: "low", lines, notes: [], bareMarkerCount: 0 }
     }
+    if (pendingScripture) {
+      draft.scripture = pendingScripture
+      pendingScripture = null
+    }
+    current = draft
   }
 
   const flush = () => {
@@ -352,9 +399,46 @@ export function importSongsFromHtml(html: string): ImportedSong[] {
     const text = block.text.trim()
     if (!text) continue
 
-    // Never content, never a title — the reading label and the directly-
-    // quoted scripture text that follows it in real documents.
-    if (isReadingLabel(text) || looksLikeQuotedScripture(text)) continue
+    // A "Bible Reading" label opens a reading section: everything under it is
+    // scripture, not lyrics — however many paragraphs it runs to, and whether
+    // or not the passage is wrapped in quotation marks (real documents do
+    // both, and run the reference straight into the passage). Only the
+    // references survive, as metadata; the passage text never becomes a cue.
+    if (isReadingLabel(text)) {
+      readingMode = true
+      readingConsumed = 0
+      continue
+    }
+
+    const boundary = looksLikeSongBoundary(block, useBoldHeuristic)
+
+    if (readingMode) {
+      const ref = scriptureRefAtStart(text)
+      if (ref) {
+        readingConsumed++
+        if (current) {
+          const draft: Draft = current
+          draft.scripture = draft.scripture ? `${draft.scripture}; ${ref}` : ref
+        } else {
+          pendingScripture = pendingScripture ? `${pendingScripture}; ${ref}` : ref
+        }
+        continue
+      }
+      // The section ends at the next real boundary ("Song 6", a numbered or
+      // ALL-CAPS title); everything before that is passage text, dropped.
+      if (boundary || readingConsumed >= READING_MAX_BLOCKS) {
+        readingMode = false
+      } else {
+        readingConsumed++
+        continue
+      }
+    }
+
+    // Quoted passage text outside a labelled reading section.
+    if (looksLikeQuotedScripture(text)) continue
+
+    // "Chorus" / "Verse 2" section dividers — labels, not lyrics.
+    if (isStructureLabel(text)) continue
 
     // Production/operator notes ("Need a solo for verse", "Choir......")
     // are excluded from the cues but kept on the draft for the review
@@ -365,7 +449,6 @@ export function importSongsFromHtml(html: string): ImportedSong[] {
       continue
     }
 
-    const boundary = looksLikeSongBoundary(block, useBoldHeuristic)
     if (boundary) {
       // A bare "Song" / "Song N" seen mid-song (the real title was already
       // captured a line or two earlier) is usually just a divider — but a

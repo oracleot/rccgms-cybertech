@@ -187,5 +187,98 @@ const check = (ok: boolean, msg: string) => {
   check(!songs[0]?.groups.some((g) => g.primary === "Song 1"), "'Song 1' marker text itself never becomes a cue")
 }
 
+// 14. The real "HOW GREAT THY ARE" section shape, with placeholder text in
+// place of the actual passage and lyrics: an emoji-prefixed reading label, a
+// reference run inline with the passage ("Psalms 8:3 <text>"), a continuation
+// paragraph with no quote mark at all, a second reference, then a quoted
+// paragraph whose continuation also lacks a quote mark. None of the reading
+// body may reach the cues; both references are kept as metadata.
+{
+  const html = [
+    "<p><strong>6. HOW GREAT THY ARE</strong></p>",
+    "<p><strong>📖 Bible Reading</strong></p>",
+    "<p>Psalms 8:3 Reading body alpha, the work of example,</p>",
+    "<p>Reading body bravo, which continues unquoted,</p>",
+    "<p>Psalm 19:1-2</p>",
+    '<p>"Reading body charlie opens with a quote mark,</p>',
+    "<p>Reading body delta continues without one.</p>",
+    "<p><strong>Song 6</strong></p>",
+    "<p><strong>Placeholder lyric line one</strong></p>",
+    "<p><strong>Choir......</strong></p>",
+    "<p><strong>Placeholder lyric line two</strong></p>",
+    // The real document bolds body text throughout (only the reading is
+    // plain), which is what switches the bold-title heuristic off. Keeping
+    // that ratio here is what makes this fixture representative.
+    "<p><strong>Placeholder lyric line three</strong></p>",
+    "<p><strong>Placeholder lyric line four</strong></p>",
+    "<p><strong>Placeholder lyric line five</strong></p>",
+    "<p><strong>Placeholder lyric line six</strong></p>",
+  ].join("")
+  const songs = importSongsFromHtml(html)
+  check(songs.length === 1, `emoji-labelled multi-paragraph reading -> 1 song (got ${songs.length})`)
+  const cues = songs[0]?.groups.map((g) => g.primary).join(" | ") ?? ""
+  check(!/Reading body/i.test(cues), "no reading-body paragraph becomes a cue, quoted or not")
+  check(!/Psalms? \d/i.test(cues), "a reference run inline with the passage never becomes a cue")
+  check(
+    songs[0]?.scriptureReference === "Psalms 8:3; Psalm 19:1-2",
+    `both reading references kept as metadata (got "${songs[0]?.scriptureReference}")`
+  )
+  check(/Placeholder lyric line one/.test(cues), "real lyrics after the reading are still imported")
+  check(/Placeholder lyric line two/.test(cues), "lyrics after an excluded production note are still imported")
+  check(songs[0]?.excludedNotes.length === 1, `production note excluded and reported (got ${songs[0]?.excludedNotes.length})`)
+  check(!/HOW GREAT THY ARE/.test(cues), "an ALL-CAPS numbered section title is not seeded as a lyric line")
+}
+
+// 15. A second bare "Song" divider after real lyrics have accumulated is the
+// signal that one numbered section holds two songs — flagged, never guessed.
+{
+  const html = [
+    "<p><strong>6. SECTION TITLE</strong></p>",
+    "<p><strong>Song 6</strong></p>",
+    "<p><strong>First song placeholder line</strong></p>",
+    "<p><strong>Song</strong></p>",
+    "<p><strong>Second song placeholder line</strong></p>",
+  ].join("")
+  const songs = importSongsFromHtml(html)
+  check(songs.length === 1 && songs[0].ambiguous === true, "a second bare divider after lyrics flags the section ambiguous")
+  check(!!songs[0]?.ambiguousReason, "an ambiguous section carries a human-readable reason for the review screen")
+}
+
+// 16. Standalone structural dividers label the lyrics; they are never sung and
+// must not reach the screen. A real lyric merely containing the word is safe.
+{
+  const html = [
+    "<p><strong>1, Placeholder opening line</strong></p>",
+    "<p><strong>Chorus</strong></p>",
+    "<p><strong>Placeholder chorus line</strong></p>",
+    "<p><strong>Refrain:</strong></p>",
+    "<p><strong>God of the universe, hear us</strong></p>",
+  ].join("")
+  const songs = importSongsFromHtml(html)
+  const cues = songs[0]?.groups.map((g) => g.primary).join(" | ") ?? ""
+  check(!/\bChorus\b/.test(cues), "a standalone 'Chorus' divider never becomes a cue")
+  check(!/Refrain/.test(cues), "a standalone 'Refrain:' divider never becomes a cue")
+  check(/God of the universe/.test(cues), "a real lyric containing 'verse' inside a word is untouched")
+}
+
+// 17. A "Song 8," divider — the marker with trailing punctuation — is still a
+// divider, and must not survive as a cue the way it did before.
+{
+  const html = [
+    "<p><strong>8. SECTION TITLE</strong></p>",
+    "<p><strong>Bible Reading</strong></p>",
+    "<p>Psalm 42:1–2 (NKJV)</p>",
+    "<p>“Reading body placeholder.”</p>",
+    "<p><strong>Song 8,</strong></p>",
+    "<p><strong>Placeholder lyric after the divider</strong></p>",
+  ].join("")
+  const songs = importSongsFromHtml(html)
+  const cues = songs[0]?.groups.map((g) => g.primary).join(" | ") ?? ""
+  check(!/Song 8/.test(cues), "'Song 8,' with trailing punctuation never becomes a cue")
+  check(!/Reading body/.test(cues), "the reading body before it is still excluded")
+  check(/Placeholder lyric after the divider/.test(cues), "the lyric after the divider is imported")
+  check(songs[0]?.scriptureReference === "Psalm 42:1–2 (NKJV)", `reference kept as metadata (got "${songs[0]?.scriptureReference}")`)
+}
+
 console.log(failed ? `\n${failed} check(s) FAILED` : "\nall checks passed")
 process.exit(failed ? 1 : 0)
