@@ -14,7 +14,7 @@
  */
 
 import { splitLyrics } from "./parse"
-import type { LyricGroup } from "./types"
+import { newGroupId, type LyricGroup } from "./types"
 
 export interface ImportedSong {
   title: string
@@ -23,6 +23,11 @@ export interface ImportedSong {
   groups: LyricGroup[]
   /** Raw lines that became lyrics — kept for the review screen, not saved. */
   sourceLines: string[]
+  /** Production/operator notes excluded from the cues — "Need a solo for verse", "Choir......" — shown for transparency, never saved. */
+  excludedNotes: string[]
+  /** Set when a second "Song"/"Song N" divider turned up after real content — a sign this section may actually contain more than one song. */
+  ambiguous?: boolean
+  ambiguousReason?: string
 }
 
 interface HtmlBlock {
@@ -128,6 +133,56 @@ function looksLikeQuotedScripture(text: string): boolean {
   return OPENS_WITH_QUOTE_RE.test(text.trim())
 }
 
+// Production/operator instructions seen in real service documents — never
+// meant for the screen. Two shapes: a short word trailing off in an
+// ellipsis ("Choir......", "Solo......"), and a curated set of common
+// instruction phrasings. Deliberately conservative (a short, specific
+// list) rather than a broad guess, so an unusual but real lyric line is
+// never silently dropped — anything not matched just stays a normal cue,
+// visible and removable in review either way.
+const NOTE_PHRASE_RE = /^(need\s+a\s+solo|solo\s+for\s+verse|solo\s*:|choir\s+only|leader\s+only|all\s+sing|instrumental|interlude|repeat\s+chorus\s+only)\b/i
+const TRAILING_ELLIPSIS_RE = /^[A-Za-z][A-Za-z\s]{0,20}\.{3,}\s*$/
+
+function looksLikeProductionNote(text: string): boolean {
+  const t = text.trim()
+  return NOTE_PHRASE_RE.test(t) || TRAILING_ELLIPSIS_RE.test(t)
+}
+
+const PAREN_LINE_RE = /^\((.+)\)$/
+
+/**
+ * "Okan mi k'orin iyin" then "(My soul sings songs of praises)" right
+ * after it, in real hymnals, is the original line followed by its English
+ * translation — not two separate cues. Detects that alternating pattern
+ * and pairs them as primary+secondary; everything else passes through
+ * untouched to the normal phrase segmentation. A parenthesized line with
+ * no plain line directly before it (e.g. a stray "(Repeat)") is left as
+ * plain text rather than guessed at.
+ */
+type LineSegment = { kind: "plain"; lines: string[] } | { kind: "pair"; primary: string; secondary: string }
+
+function pairTranslationLines(lines: string[]): LineSegment[] {
+  const segments: LineSegment[] = []
+  let plainBuffer: string[] = []
+  const flushPlain = () => {
+    if (plainBuffer.length) segments.push({ kind: "plain", lines: plainBuffer })
+    plainBuffer = []
+  }
+  for (const line of lines) {
+    const m = line.match(PAREN_LINE_RE)
+    const prev = plainBuffer[plainBuffer.length - 1]
+    if (m && prev && !PAREN_LINE_RE.test(prev)) {
+      plainBuffer.pop()
+      flushPlain()
+      segments.push({ kind: "pair", primary: prev, secondary: m[1].trim() })
+    } else {
+      plainBuffer.push(line)
+    }
+  }
+  flushPlain()
+  return segments
+}
+
 /** ALL-CAPS short lines read as a title in every real document seen, bold or not — "I SEE THE LORD", "ABOVE ALL". */
 function isAllCapsTitle(text: string): boolean {
   const letters = text.replace(/[^A-Za-z]/g, "")
@@ -196,16 +251,31 @@ interface Draft {
   confidence: "high" | "low"
   scripture?: string
   lines: string[]
+  notes: string[]
+  bareMarkerCount: number
+  ambiguous?: boolean
+  ambiguousReason?: string
 }
 
 function finish(d: Draft): ImportedSong {
-  const raw = d.lines.join("\n")
+  const groups: LyricGroup[] = []
+  for (const seg of pairTranslationLines(d.lines)) {
+    if (seg.kind === "pair") {
+      groups.push({ id: newGroupId(), primary: seg.primary, secondary: seg.secondary })
+    } else {
+      const raw = seg.lines.join("\n")
+      if (raw.trim()) groups.push(...splitLyrics(raw))
+    }
+  }
   return {
     title: d.title,
     titleConfidence: d.confidence,
     scriptureReference: d.scripture,
-    groups: raw.trim() ? splitLyrics(raw) : [],
+    groups,
     sourceLines: d.lines,
+    excludedNotes: d.notes,
+    ambiguous: d.ambiguous,
+    ambiguousReason: d.ambiguousReason,
   }
 }
 
@@ -247,10 +317,10 @@ export function importSongsFromHtml(html: string): ImportedSong[] {
     const useReal = !!clean && !SONG_N_RE.test(clean)
     const lines = boundary?.seedLine ? [boundary.seedLine] : []
     if (useReal) {
-      current = { title: clean!, confidence: boundary!.confidence, lines }
+      current = { title: clean!, confidence: boundary!.confidence, lines, notes: [], bareMarkerCount: 0 }
     } else {
       fallbackIndex++
-      current = { title: `Song ${fallbackIndex}`, confidence: "low", lines }
+      current = { title: `Song ${fallbackIndex}`, confidence: "low", lines, notes: [], bareMarkerCount: 0 }
     }
   }
 
@@ -273,6 +343,7 @@ export function importSongsFromHtml(html: string): ImportedSong[] {
           titleConfidence: "low",
           groups: raw.trim() ? splitLyrics(raw) : [],
           sourceLines: rest,
+          excludedNotes: [],
         })
       }
       continue
@@ -285,12 +356,33 @@ export function importSongsFromHtml(html: string): ImportedSong[] {
     // quoted scripture text that follows it in real documents.
     if (isReadingLabel(text) || looksLikeQuotedScripture(text)) continue
 
+    // Production/operator notes ("Need a solo for verse", "Choir......")
+    // are excluded from the cues but kept on the draft for the review
+    // screen and this feature's reporting — never silently dropped.
+    if (looksLikeProductionNote(text)) {
+      if (!current) startSong(undefined)
+      current!.notes.push(text)
+      continue
+    }
+
     const boundary = looksLikeSongBoundary(block, useBoldHeuristic)
     if (boundary) {
       // A bare "Song" / "Song N" seen mid-song (the real title was already
-      // captured a line or two earlier) is a divider, not a second song —
-      // only treat it as a boundary when nothing is open yet.
-      if (boundary.isBareMarker && current) continue
+      // captured a line or two earlier) is usually just a divider — but a
+      // *second* one after real content has already accumulated is a sign
+      // this section may actually contain more than one song (e.g. a
+      // "How Great Is Our God" / "How Great Thou Art" pair both filed
+      // under one numbered heading) — flagged for the operator rather
+      // than guessed at.
+      if (boundary.isBareMarker && current) {
+        const draft: Draft = current
+        draft.bareMarkerCount++
+        if (draft.bareMarkerCount >= 2 && draft.lines.length > 0) {
+          draft.ambiguous = true
+          draft.ambiguousReason = "A second “Song” marker appeared after this song already had lyrics — it may actually contain more than one song. Look for a natural break below and split it."
+        }
+        continue
+      }
       flush()
       startSong(boundary)
       continue
@@ -356,6 +448,7 @@ function mergeFlatNumberedRuns(songs: ImportedSong[]): ImportedSong[] {
       titleConfidence: "low",
       groups: run.flatMap((s) => s.groups),
       sourceLines: run.flatMap((s) => s.sourceLines),
+      excludedNotes: run.flatMap((s) => s.excludedNotes),
     })
     i = j
   }

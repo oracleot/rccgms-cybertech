@@ -26,12 +26,21 @@ async function main() {
   }
 
   const songs = importSongsFromHtml(result.value)
-  console.log(`\ndetected ${songs.length} song(s):\n`)
+  const pairCount = songs.reduce((n, s) => n + s.groups.filter((g) => g.secondary).length, 0)
+  const noteCount = songs.reduce((n, s) => n + s.excludedNotes.length, 0)
+  const ambiguousCount = songs.filter((s) => s.ambiguous).length
+  console.log(
+    `\ndetected ${songs.length} song(s)/set(s)  |  ${pairCount} primary+secondary pair(s)  |  ${noteCount} excluded note(s)  |  ${ambiguousCount} flagged ambiguous\n`
+  )
   songs.forEach((s, i) => {
-    console.log(`${i + 1}. "${s.title}" [${s.titleConfidence}]  scripture=${s.scriptureReference ?? "—"}  cues=${s.groups.length}`)
+    const flags = [s.ambiguous ? "AMBIGUOUS" : null].filter(Boolean).join(" ")
+    console.log(`${i + 1}. "${s.title}" [${s.titleConfidence}]  scripture=${s.scriptureReference ?? "—"}  cues=${s.groups.length}${flags ? `  ⚠ ${flags}` : ""}`)
+    if (s.ambiguousReason) console.log(`     ⚠ ${s.ambiguousReason}`)
+    if (s.excludedNotes.length) console.log(`     excluded notes: ${s.excludedNotes.map((n) => JSON.stringify(n)).join(", ")}`)
     for (const g of s.groups.slice(0, 4)) {
       const rep = g.repeat ? ` (x${g.repeat})` : ""
-      console.log(`     - ${JSON.stringify(g.primary)}${rep}`)
+      const sec = g.secondary ? `  |  secondary=${JSON.stringify(g.secondary)}` : ""
+      console.log(`     - ${JSON.stringify(g.primary)}${rep}${sec}`)
     }
     if (s.groups.length > 4) console.log(`     ... (${s.groups.length - 4} more cues)`)
   })

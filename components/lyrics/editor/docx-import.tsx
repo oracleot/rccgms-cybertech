@@ -10,14 +10,14 @@
  */
 
 import { useRef, useState } from "react"
-import { AlertTriangle, ChevronDown, ChevronUp, FileUp, Loader2, Merge, Scissors, X } from "lucide-react"
+import { AlertTriangle, ChevronDown, ChevronUp, FileUp, Loader2, Merge, ScanLine, Scissors, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { importSongsFromHtml, type ImportedSong } from "@/lib/lyrics/docx-import"
 import { saveSet } from "@/lib/lyrics/store"
-import { newSetId, type ContentType, type LyricGroup, type LyricSet } from "@/lib/lyrics/types"
+import { newGroupId, newSetId, type ContentType, type LyricGroup, type LyricSet } from "@/lib/lyrics/types"
 import { GroupRow } from "./group-row"
 
 interface Draft {
@@ -29,6 +29,9 @@ interface Draft {
   groups: LyricGroup[]
   excluded: boolean
   open: boolean
+  excludedNotes: string[]
+  ambiguous: boolean
+  ambiguousReason?: string
 }
 
 let draftKeySeq = 0
@@ -42,7 +45,10 @@ function toDraft(s: ImportedSong): Draft {
     type: "lyrics",
     groups: s.groups,
     excluded: false,
-    open: false,
+    open: !!s.ambiguous,
+    excludedNotes: s.excludedNotes,
+    ambiguous: !!s.ambiguous,
+    ambiguousReason: s.ambiguousReason,
   }
 }
 
@@ -96,16 +102,43 @@ export function DocxImportPanel({ onImported, onClose }: { onImported: () => voi
       const d = ds[i]
       if (groupIndex <= 0 || groupIndex >= d.groups.length) return ds
       draftKeySeq += 1
-      const first: Draft = { ...d, groups: d.groups.slice(0, groupIndex) }
+      // The operator has now resolved whatever made this ambiguous, so both halves start clean.
+      const first: Draft = { ...d, groups: d.groups.slice(0, groupIndex), ambiguous: false, ambiguousReason: undefined }
       const second: Draft = {
         ...d,
         key: `d${draftKeySeq}`,
         title: `${d.title} (part 2)`,
         groups: d.groups.slice(groupIndex),
         scripture: "",
+        ambiguous: false,
+        ambiguousReason: undefined,
       }
       const next = [...ds]
       next.splice(i, 1, first, second)
+      return next
+    })
+
+  /** Pulls one cue out into its own standalone song — for a flat medley (Praise) where a single item deserves to stand alone. */
+  const extractCueAsSong = (i: number, groupIndex: number) =>
+    setDrafts((ds) => {
+      const d = ds[i]
+      const group = d.groups[groupIndex]
+      if (!group) return ds
+      draftKeySeq += 1
+      const remaining: Draft = { ...d, groups: d.groups.filter((_, gi) => gi !== groupIndex) }
+      const extracted: Draft = {
+        ...d,
+        key: `d${draftKeySeq}`,
+        title: group.primary.split("\n")[0].slice(0, 60) || `${d.title} (item)`,
+        confidence: "low",
+        groups: [{ ...group, id: newGroupId() }],
+        scripture: "",
+        ambiguous: false,
+        ambiguousReason: undefined,
+      }
+      const next = [...ds]
+      if (remaining.groups.length === 0) next.splice(i, 1, extracted)
+      else next.splice(i, 1, remaining, extracted)
       return next
     })
 
@@ -229,6 +262,13 @@ export function DocxImportPanel({ onImported, onClose }: { onImported: () => voi
                       </div>
                     </div>
 
+                    {d.ambiguous && (
+                      <p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+                        <ScanLine className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                        {d.ambiguousReason ?? "This section may contain more than one song — check the cues below."}
+                      </p>
+                    )}
+
                     <Input
                       value={d.scripture}
                       onChange={(e) => update(d.key, { scripture: e.target.value })}
@@ -236,6 +276,13 @@ export function DocxImportPanel({ onImported, onClose }: { onImported: () => voi
                       className="h-8 text-sm"
                       disabled={d.excluded}
                     />
+
+                    {d.excludedNotes.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Excluded {d.excludedNotes.length} production note{d.excludedNotes.length === 1 ? "" : "s"} (not shown on screen):{" "}
+                        {d.excludedNotes.map((n) => `“${n}”`).join(", ")}
+                      </p>
+                    )}
 
                     {d.open && (
                       <div className="space-y-1.5 border-t pt-3">
@@ -280,18 +327,31 @@ export function DocxImportPanel({ onImported, onClose }: { onImported: () => voi
                               }
                               onDelete={() => updateGroups(d.key, (gs) => gs.filter((x) => x.id !== g.id))}
                             />
-                            {gi > 0 && gi < d.groups.length && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-5 w-full text-[10px] text-muted-foreground"
-                                onClick={() => splitSongAt(i, gi)}
-                                title="Split into two songs here"
-                              >
-                                <Scissors className="mr-1 h-3 w-3" />
-                                Split into a new song from here
-                              </Button>
-                            )}
+                            <div className="flex gap-1">
+                              {gi > 0 && gi < d.groups.length && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 flex-1 text-[10px] text-muted-foreground"
+                                  onClick={() => splitSongAt(i, gi)}
+                                  title="Everything from here becomes a new song"
+                                >
+                                  <Scissors className="mr-1 h-3 w-3" />
+                                  Split into a new song from here
+                                </Button>
+                              )}
+                              {d.groups.length > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 flex-1 text-[10px] text-muted-foreground"
+                                  onClick={() => extractCueAsSong(i, gi)}
+                                  title="Just this one cue becomes its own standalone song"
+                                >
+                                  Make this cue its own song
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </div>
