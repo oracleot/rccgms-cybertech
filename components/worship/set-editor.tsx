@@ -9,10 +9,17 @@
  * list and can be given structure without being retyped. Both write the same
  * `groups` list, so whatever the operator does here, the dock and the OBS
  * display keep reading one thing.
+ *
+ * Two editing modes
+ * -----------------
+ * **Structured** — the default, per-section visual editor.
+ * **Edit as text** — one large editor for the entire item. Section markers
+ * (`[Verse 1]`, `[Chorus]`) are typed directly. The text mode round-trips
+ * safely through serializeSections / parseTextToSections.
  */
 
-import { useState } from "react"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { ArrowLeft, FileText, List, Plus, Sparkles, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -24,13 +31,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { GroupRow } from "@/components/lyrics/editor/group-row"
 import { mergeGroups, splitGroup } from "@/lib/lyrics/parse"
 import { parseSections } from "@/lib/lyrics/sections"
 import {
+  normalizeSongCues,
+  parseTextToSections,
+  previewNormalize,
+  serializeFlat,
+  serializeSections,
+  type NormalizeDiff,
+} from "@/lib/lyrics/text-format"
+import {
   SECTION_LABELS,
   defaultPresentation,
   flattenSections,
+  newGroupId,
   newSectionId,
   nextSectionNumber,
   sectionTitle,
@@ -43,6 +60,13 @@ import {
 } from "@/lib/lyrics/types"
 
 const SECTION_TYPES = Object.keys(SECTION_LABELS) as SectionType[]
+
+const ADD_SECTION_TYPES: SectionType[] = [
+  "verse", "chorus", "bridge", "prechorus", "intro",
+  "outro", "interlude", "refrain", "tag", "ending", "other",
+]
+
+type EditorMode = "structured" | "text"
 
 /** Section edits rewrite `groups` from the sections, keeping one projection list. */
 function withSections(set: LyricSet, sections: LyricSection[]): LyricSet {
@@ -65,17 +89,63 @@ export function SetEditor({
   const presentation = set.presentation ?? defaultPresentation(set.type)
   const musical = set.type !== "prayer"
 
+  const [editorMode, setEditorMode] = useState<EditorMode>("structured")
+  const [textDraft, setTextDraft] = useState("")
+  const [textErrors, setTextErrors] = useState<string[]>([])
+  const [normPreview, setNormPreview] = useState<NormalizeDiff[] | null>(null)
+
   const updateSections = (mutate: (sections: LyricSection[]) => LyricSection[]) => {
     onChange((s) => withSections(s, mutate(s.sections ?? [])))
   }
 
-  /** Flat sets keep being edited flat until the operator adds structure. */
   const updateFlatGroups = (mutate: (groups: LyricSet["groups"]) => LyricSet["groups"]) => {
     onChange((s) => ({ ...s, groups: mutate(s.groups), sections: undefined }))
   }
 
+  const switchToText = () => {
+    const text = set.sections?.length
+      ? serializeSections(set.sections)
+      : serializeFlat(set.groups)
+    setTextDraft(text)
+    setTextErrors([])
+    setEditorMode("text")
+  }
+
+  const applyText = () => {
+    const { sections, errors } = parseTextToSections(textDraft)
+    if (errors.length) {
+      setTextErrors(errors)
+      return
+    }
+    if (!sections.length) {
+      setTextErrors(["No sections found. Add at least one section marker like [Verse 1]."])
+      return
+    }
+    setTextErrors([])
+    onChange((s) => withSections(s, sections))
+    setEditorMode("structured")
+  }
+
+  const discardText = () => {
+    setTextErrors([])
+    setEditorMode("structured")
+  }
+
+  const showNormalize = () => {
+    if (!set.sections?.length) return
+    const diffs = previewNormalize(set.sections)
+    setNormPreview(diffs)
+  }
+
+  const applyNormalize = () => {
+    if (!set.sections?.length) return
+    onChange((s) => withSections(s, normalizeSongCues(s.sections ?? [])))
+    setNormPreview(null)
+  }
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Back to library">
@@ -95,6 +165,7 @@ export function SetEditor({
         </Button>
       </div>
 
+      {/* Metadata */}
       <Card>
         <CardContent className="grid gap-3 pt-6 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -198,7 +269,89 @@ export function SetEditor({
         </CardContent>
       </Card>
 
-      {set.sections?.length ? (
+      {/* Mode toggle + actions */}
+      {(set.sections?.length || editorMode === "text") ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-md border">
+            <Button
+              variant={editorMode === "structured" ? "secondary" : "ghost"}
+              size="sm"
+              className="rounded-r-none"
+              onClick={() => editorMode === "text" ? discardText() : undefined}
+              disabled={disabled}
+            >
+              <List className="mr-1.5 h-3.5 w-3.5" />
+              Structured
+            </Button>
+            <Button
+              variant={editorMode === "text" ? "secondary" : "ghost"}
+              size="sm"
+              className="rounded-l-none"
+              onClick={() => editorMode === "structured" ? switchToText() : undefined}
+              disabled={disabled}
+            >
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
+              Edit as text
+            </Button>
+          </div>
+
+          {editorMode === "structured" && set.type === "song" && set.sections?.length ? (
+            <Button variant="outline" size="sm" onClick={showNormalize} disabled={disabled}>
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+              Normalize song cues
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Normalize preview */}
+      {normPreview !== null && (
+        <Card className="border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+          <CardContent className="space-y-3 pt-6">
+            {normPreview.length ? (
+              <>
+                <p className="text-sm font-medium">
+                  Normalize: split multi-line cues into one line per cue
+                </p>
+                <ul className="space-y-1 text-sm">
+                  {normPreview.map((d, i) => (
+                    <li key={i}>
+                      {d.sectionTitle}: {d.beforeCues} cue{d.beforeCues === 1 ? "" : "s"} → {d.afterCues} cue{d.afterCues === 1 ? "" : "s"}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={applyNormalize} disabled={disabled}>
+                    Apply
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setNormPreview(null)}>
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="flex-1 text-sm">All cues are already one line each — nothing to normalize.</p>
+                <Button size="sm" variant="ghost" onClick={() => setNormPreview(null)}>
+                  Dismiss
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Editor body */}
+      {editorMode === "text" ? (
+        <TextEditor
+          draft={textDraft}
+          errors={textErrors}
+          disabled={disabled}
+          onDraftChange={setTextDraft}
+          onApply={applyText}
+          onDiscard={discardText}
+        />
+      ) : set.sections?.length ? (
         <SectionList set={set} disabled={disabled} updateSections={updateSections} />
       ) : (
         <FlatCueList set={set} disabled={disabled} updateFlatGroups={updateFlatGroups} onChange={onChange} musical={musical} />
@@ -206,6 +359,80 @@ export function SetEditor({
     </div>
   )
 }
+
+// ---------------------------------------------------------------------------
+// Text editor mode
+// ---------------------------------------------------------------------------
+
+function TextEditor({
+  draft,
+  errors,
+  disabled,
+  onDraftChange,
+  onApply,
+  onDiscard,
+}: {
+  draft: string
+  errors: string[]
+  disabled: boolean
+  onDraftChange: (text: string) => void
+  onApply: () => void
+  onDiscard: () => void
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    ref.current?.focus()
+  }, [])
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Section markers: <code className="rounded bg-muted px-1">[Verse 1]</code>{" "}
+        <code className="rounded bg-muted px-1">[Chorus]</code>{" "}
+        <code className="rounded bg-muted px-1">[Bridge]</code> ·
+        Blank line = new cue ·
+        Secondary: <code className="rounded bg-muted px-1">&gt; text</code> ·
+        Repeat: <code className="rounded bg-muted px-1">(x2)</code> ·
+        Section repeat: <code className="rounded bg-muted px-1">[Chorus] x2</code>
+      </p>
+
+      <Textarea
+        ref={ref}
+        value={draft}
+        onChange={(e) => onDraftChange(e.target.value)}
+        disabled={disabled}
+        rows={Math.max(16, draft.split("\n").length + 2)}
+        className="font-mono text-sm leading-relaxed"
+        spellCheck={false}
+      />
+
+      {errors.length > 0 && (
+        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300">
+          <p className="mb-1 font-medium">Validation errors — fix before applying:</p>
+          <ul className="list-inside list-disc space-y-0.5">
+            {errors.map((e, i) => (
+              <li key={i}>{e}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button size="sm" onClick={onApply} disabled={disabled}>
+          Apply changes
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDiscard}>
+          Discard
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Structured section editor
+// ---------------------------------------------------------------------------
 
 function SectionList({
   set,
@@ -219,12 +446,13 @@ function SectionList({
   const sections = set.sections ?? []
 
   const addSection = (type: SectionType) => {
+    const needsNumber = type === "verse" || type === "chorus"
     updateSections((prev) => [
       ...prev,
       {
         id: newSectionId(),
         type,
-        number: type === "verse" ? nextSectionNumber(prev, "verse") : undefined,
+        number: needsNumber ? nextSectionNumber(prev, type) : undefined,
         groups: [],
       },
     ])
@@ -235,6 +463,7 @@ function SectionList({
       {sections.map((section, si) => (
         <Card key={section.id}>
           <CardContent className="space-y-3 pt-6">
+            {/* Section header controls */}
             <div className="flex flex-wrap items-center gap-2">
               <Select
                 value={section.type}
@@ -348,69 +577,109 @@ function SectionList({
               {sectionTitle(section)}
             </p>
 
+            {/* Cues */}
             <div className="space-y-2">
-              {section.groups.map((group, gi) => (
-                <GroupRow
-                  key={group.id}
-                  group={group}
-                  index={gi}
-                  total={section.groups.length}
+              {section.groups.length === 0 ? (
+                <Button
+                  variant="outline"
+                  size="sm"
                   disabled={disabled}
-                  onChange={(patch) =>
+                  className="w-full border-dashed"
+                  onClick={() =>
                     updateSections((prev) =>
                       prev.map((s, i) =>
-                        i === si ? { ...s, groups: s.groups.map((g, j) => (j === gi ? { ...g, ...patch } : g)) } : s
+                        i === si ? { ...s, groups: [{ id: newGroupId(), primary: "" }] } : s
                       )
                     )
                   }
-                  onMove={(delta) =>
-                    updateSections((prev) =>
-                      prev.map((s, i) => {
-                        if (i !== si) return s
-                        const groups = [...s.groups]
-                        const target = gi + delta
-                        if (target < 0 || target >= groups.length) return s
-                        ;[groups[gi], groups[target]] = [groups[target], groups[gi]]
-                        return { ...s, groups }
-                      })
-                    )
-                  }
-                  onSplit={() =>
-                    updateSections((prev) =>
-                      prev.map((s, i) => {
-                        if (i !== si) return s
-                        const pair = splitGroup(s.groups[gi])
-                        if (!pair) return s
-                        const groups = [...s.groups]
-                        groups.splice(gi, 1, ...pair)
-                        return { ...s, groups }
-                      })
-                    )
-                  }
-                  onMerge={() =>
-                    updateSections((prev) =>
-                      prev.map((s, i) => {
-                        if (i !== si || gi === 0) return s
-                        const groups = [...s.groups]
-                        groups.splice(gi - 1, 2, mergeGroups(groups[gi - 1], groups[gi]))
-                        return { ...s, groups }
-                      })
-                    )
-                  }
-                  onDelete={() =>
-                    updateSections((prev) =>
-                      prev.map((s, i) => (i === si ? { ...s, groups: s.groups.filter((_, j) => j !== gi) } : s))
-                    )
-                  }
-                />
-              ))}
+                >
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  Add first cue
+                </Button>
+              ) : (
+                section.groups.map((group, gi) => (
+                  <GroupRow
+                    key={group.id}
+                    group={group}
+                    index={gi}
+                    total={section.groups.length}
+                    disabled={disabled}
+                    onChange={(patch) =>
+                      updateSections((prev) =>
+                        prev.map((s, i) =>
+                          i === si ? { ...s, groups: s.groups.map((g, j) => (j === gi ? { ...g, ...patch } : g)) } : s
+                        )
+                      )
+                    }
+                    onMove={(delta) =>
+                      updateSections((prev) =>
+                        prev.map((s, i) => {
+                          if (i !== si) return s
+                          const groups = [...s.groups]
+                          const target = gi + delta
+                          if (target < 0 || target >= groups.length) return s
+                          ;[groups[gi], groups[target]] = [groups[target], groups[gi]]
+                          return { ...s, groups }
+                        })
+                      )
+                    }
+                    onSplit={() =>
+                      updateSections((prev) =>
+                        prev.map((s, i) => {
+                          if (i !== si) return s
+                          const pair = splitGroup(s.groups[gi])
+                          if (!pair) return s
+                          const groups = [...s.groups]
+                          groups.splice(gi, 1, ...pair)
+                          return { ...s, groups }
+                        })
+                      )
+                    }
+                    onMerge={() =>
+                      updateSections((prev) =>
+                        prev.map((s, i) => {
+                          if (i !== si || gi >= s.groups.length - 1) return s
+                          const groups = [...s.groups]
+                          groups.splice(gi, 2, mergeGroups(groups[gi], groups[gi + 1]))
+                          return { ...s, groups }
+                        })
+                      )
+                    }
+                    onDelete={() =>
+                      updateSections((prev) =>
+                        prev.map((s, i) => (i === si ? { ...s, groups: s.groups.filter((_, j) => j !== gi) } : s))
+                      )
+                    }
+                    onAddAbove={() =>
+                      updateSections((prev) =>
+                        prev.map((s, i) => {
+                          if (i !== si) return s
+                          const groups = [...s.groups]
+                          groups.splice(gi, 0, { id: newGroupId(), primary: "" })
+                          return { ...s, groups }
+                        })
+                      )
+                    }
+                    onAddBelow={() =>
+                      updateSections((prev) =>
+                        prev.map((s, i) => {
+                          if (i !== si) return s
+                          const groups = [...s.groups]
+                          groups.splice(gi + 1, 0, { id: newGroupId(), primary: "" })
+                          return { ...s, groups }
+                        })
+                      )
+                    }
+                  />
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
       ))}
 
       <div className="flex flex-wrap gap-2">
-        {(["verse", "chorus", "bridge", "prechorus", "refrain", "tag", "other"] as SectionType[]).map((t) => (
+        {ADD_SECTION_TYPES.map((t) => (
           <Button key={t} variant="outline" size="sm" disabled={disabled} onClick={() => addSection(t)}>
             <Plus className="mr-1.5 h-3.5 w-3.5" />
             {SECTION_LABELS[t]}
@@ -421,12 +690,10 @@ function SectionList({
   )
 }
 
-/**
- * A set with no sections — everything imported before V2. It stays editable
- * exactly as it is, and "Detect sections" is offered rather than applied, so
- * an operator opting into structure is a deliberate act and never silently
- * reshapes working content.
- */
+// ---------------------------------------------------------------------------
+// Flat cue list (pre-V2 sets without sections)
+// ---------------------------------------------------------------------------
+
 function FlatCueList({
   set,
   disabled,
@@ -528,13 +795,27 @@ function FlatCueList({
             }
             onMerge={() =>
               updateFlatGroups((gs) => {
-                if (i === 0) return gs
+                if (i >= gs.length - 1) return gs
                 const next = [...gs]
-                next.splice(i - 1, 2, mergeGroups(next[i - 1], next[i]))
+                next.splice(i, 2, mergeGroups(next[i], next[i + 1]))
                 return next
               })
             }
             onDelete={() => updateFlatGroups((gs) => gs.filter((_, j) => j !== i))}
+            onAddAbove={() =>
+              updateFlatGroups((gs) => {
+                const next = [...gs]
+                next.splice(i, 0, { id: newGroupId(), primary: "" })
+                return next
+              })
+            }
+            onAddBelow={() =>
+              updateFlatGroups((gs) => {
+                const next = [...gs]
+                next.splice(i + 1, 0, { id: newGroupId(), primary: "" })
+                return next
+              })
+            }
           />
         ))}
       </div>
