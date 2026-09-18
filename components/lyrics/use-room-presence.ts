@@ -145,13 +145,16 @@ export function useRoomPresence(roomId: string, role: ParticipantRole): RoomPres
   useEffect(() => {
     if (role !== "dock") return
     if (claim && !controllerIsPresent(claim, participants) && participants.some((p) => p.participantId === participantId)) {
-      // Only claim if we're the lowest dock id present, to avoid every dock claiming at once.
       const docks = participants.filter((p) => p.role === "dock").map((p) => p.participantId).sort()
       if (docks[0] === participantId) {
-        const mine: ControllerClaim = { controllerId: participantId, at: Date.now() }
-        setClaim(mine)
-        channelRef.current?.send({ type: "broadcast", event: "controller", payload: mine })
-        void registerController(roomId, participantId)
+        // Deferred so the setState doesn't cascade synchronously inside
+        // the effect body (same pattern as the auto-claim timeout above).
+        window.setTimeout(() => {
+          const mine: ControllerClaim = { controllerId: participantId, at: Date.now() }
+          setClaim(mine)
+          channelRef.current?.send({ type: "broadcast", event: "controller", payload: mine })
+          void registerController(roomId, participantId)
+        }, 0)
       }
     }
   }, [participants, claim, role, participantId, roomId])
