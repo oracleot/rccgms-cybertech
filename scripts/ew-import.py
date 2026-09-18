@@ -23,7 +23,11 @@ import os
 import sys
 import re
 import time
+import uuid
 import zlib
+import zipfile
+import tempfile
+import shutil
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -201,7 +205,41 @@ def rtf_to_slides(raw):
     slide = "".join(buf).strip()
     if slide:
         slides.append(slide)
+
+    if len(slides) == 1:
+        slides = _split_inline_sections(slides[0])
+
     return slides
+
+
+def _split_inline_sections(text):
+    """Split a single slide into multiple when it contains inline section headings
+    separated by blank lines. Common in EW databases that store all verses/choruses
+    as one continuous RTF block instead of using \\page separators."""
+    lines = text.split("\n")
+    chunks = []
+    current = []
+
+    for i, line in enumerate(lines):
+        if line.strip() == "" and current:
+            next_non_blank = None
+            for j in range(i + 1, len(lines)):
+                if lines[j].strip():
+                    next_non_blank = lines[j]
+                    break
+            if next_non_blank and parse_heading(next_non_blank):
+                chunk = "\n".join(current).strip()
+                if chunk:
+                    chunks.append(chunk)
+                current = []
+                continue
+        current.append(line)
+
+    chunk = "\n".join(current).strip()
+    if chunk:
+        chunks.append(chunk)
+
+    return chunks if len(chunks) > 1 else [text]
 
 # ---------------------------------------------------------------------------
 # Heading detection (mirrors lib/lyrics/sections.ts)
@@ -403,6 +441,40 @@ def slides_to_fusion(slides, content_type):
     return (sections if recognised else None, flat_groups)
 
 # ---------------------------------------------------------------------------
+# .ewsx extraction
+# ---------------------------------------------------------------------------
+
+def extract_ewsx(ewsx_path):
+    """Extract a .ewsx profile export to a temp directory. Returns the temp dir
+    path containing the extracted files. The caller is responsible for cleanup.
+    Note: .ewsx profile exports typically contain themes/scriptures, not songs.
+    The song database lives in the installed EW data directory instead."""
+    if not zipfile.is_zipfile(ewsx_path):
+        return None
+    tmp = tempfile.mkdtemp(prefix="ewsx-")
+    with zipfile.ZipFile(ewsx_path, "r") as zf:
+        for info in zf.infolist():
+            if info.file_size == 0 and not info.filename.endswith("/"):
+                dirpath = os.path.join(tmp, info.filename)
+                if os.path.isfile(dirpath):
+                    os.remove(dirpath)
+                os.makedirs(dirpath, exist_ok=True)
+            else:
+                zf.extract(info, tmp)
+    return tmp
+
+
+def find_songs_in_ewsx(extract_dir):
+    """Look for Songs.db + SongWords.db inside an extracted .ewsx. If found,
+    returns the directory containing them. Otherwise returns None."""
+    for root, _dirs, files in os.walk(extract_dir):
+        lower_files = [f.lower() for f in files]
+        if "songs.db" in lower_files and "songwords.db" in lower_files:
+            return root
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Read EasyWorship database
 # ---------------------------------------------------------------------------
 
@@ -520,7 +592,7 @@ def build_fusion_record(ew_song):
         presentation = {"sectionLabels": "off", "verseNumberStyle": "none"}
 
     record = {
-        "id": new_set_id(),
+        "id": str(uuid.uuid4()),
         "type": content_type,
         "title": ew_song["title"],
         "groups": groups,
@@ -544,7 +616,8 @@ def main():
     parser.add_argument(
         "--dir",
         default=DEFAULT_EW_DIR,
-        help="Path to the EW data directory containing Songs.db + SongWords.db",
+        help="Path to the EW data directory (containing Songs.db + SongWords.db) "
+             "or a .ewsx profile export file",
     )
     parser.add_argument(
         "--import",
@@ -566,8 +639,32 @@ def main():
     print(f"  Source: {args.dir}")
     print()
 
+    # --- Handle .ewsx files ---
+    data_dir = args.dir
+    ewsx_tmp = None
+
+    if data_dir.lower().endswith(".ewsx") and os.path.isfile(data_dir):
+        print("  Detected .ewsx profile export, extracting...")
+        ewsx_tmp = extract_ewsx(data_dir)
+        if not ewsx_tmp:
+            print("  ERROR: Could not extract .ewsx (not a valid ZIP archive)")
+            return 1
+        songs_dir = find_songs_in_ewsx(ewsx_tmp)
+        if songs_dir:
+            print(f"  Found Songs.db inside .ewsx at: {songs_dir}")
+            data_dir = songs_dir
+        else:
+            print("  WARNING: .ewsx does not contain Songs.db/SongWords.db.")
+            print("  Profile exports typically contain themes/scriptures, not songs.")
+            print("  The song database is in the installed EW data directory:")
+            print(f"    {DEFAULT_EW_DIR}")
+            if ewsx_tmp:
+                shutil.rmtree(ewsx_tmp, ignore_errors=True)
+            return 1
+        print()
+
     # --- Read EW database ---
-    ew_songs = read_ew_songs(args.dir)
+    ew_songs = read_ew_songs(data_dir)
     if not ew_songs:
         print("  No songs found in the EasyWorship database.")
         print()
@@ -646,6 +743,8 @@ def main():
         print()
         if args.json_out:
             print("  JSON export completed. Review and import manually.")
+        if ewsx_tmp:
+            shutil.rmtree(ewsx_tmp, ignore_errors=True)
         return 1
 
     print("  Checking existing Fusion library for duplicates...")
@@ -724,6 +823,10 @@ def main():
     print(f"  Import complete: {imported} imported, {failed} failed,"
           f" {len(duplicates)} skipped (duplicates)")
     print()
+
+    if ewsx_tmp:
+        shutil.rmtree(ewsx_tmp, ignore_errors=True)
+
     return 0
 
 
