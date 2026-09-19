@@ -197,8 +197,7 @@ export function newGroupId(): string {
 }
 
 export function newSetId(): string {
-  counter += 1
-  return `s${Date.now().toString(36)}${counter.toString(36)}`
+  return crypto.randomUUID()
 }
 
 export function newSectionId(): string {
