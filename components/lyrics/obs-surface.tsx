@@ -111,8 +111,8 @@ const MAX_HEIGHT_RATIO = 0.42
  * over songs, then treat that as a hard ceiling; auto-fit may shrink from
  * there, never grow past it.
  */
-const HYMN_PREFERRED_MULTIPLIER = 1.25
-const HYMN_UPPER_BOUND_PX = 96
+const HYMN_PREFERRED_MULTIPLIER = 1
+const HYMN_UPPER_BOUND_PX = 72
 
 interface Layout {
   font: number
@@ -295,8 +295,9 @@ function ObsDisplay({ room, preview, onLeave }: { room: string | null; preview: 
     setLayout(computeLayout(item, settings, surfaceRef.current, measureRef.current))
   }, [item, settings, resizeTick])
 
-  const isHymnItem = item?.type === "hymn"
-  const vAlign = isHymnItem ? "center" : settings.vAlign
+  // Production overlays must respect the operator's chosen position for every
+  // content type. Hymns must not silently force themselves to centre-screen.
+  const vAlign = settings.vAlign
   const justify = vAlign === "top" ? "flex-start" : vAlign === "bottom" ? "flex-end" : "center"
   const alignItems = settings.align === "left" ? "flex-start" : settings.align === "right" ? "flex-end" : "center"
   const textAlign = settings.align
