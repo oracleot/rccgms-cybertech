@@ -111,8 +111,7 @@ const MAX_HEIGHT_RATIO = 0.42
  * over songs, then treat that as a hard ceiling; auto-fit may shrink from
  * there, never grow past it.
  */
-const HYMN_PREFERRED_MULTIPLIER = 1
-const HYMN_UPPER_BOUND_PX = 72
+const HYMN_PREFERRED_MULTIPLIER = 1.15
 
 interface Layout {
   font: number
@@ -151,8 +150,7 @@ function computeLayout(
   const preferredMultiplier = isHymn ? HYMN_PREFERRED_MULTIPLIER : 1
   const operatorPreferred = safeH * PREFERRED_HEIGHT_RATIO * s.scale * preferredMultiplier
   const hardHeightCap = Math.max(18, safeH * MAX_HEIGHT_RATIO) * s.scale * preferredMultiplier
-  const contentCap = isHymn ? HYMN_UPPER_BOUND_PX : Number.POSITIVE_INFINITY
-  const MAX = Math.max(MIN, Math.min(operatorPreferred, hardHeightCap, contentCap))
+  const MAX = Math.max(MIN, Math.min(operatorPreferred, hardHeightCap))
 
   const html = itemHtml(item, s)
   measurer.innerHTML = html
