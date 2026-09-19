@@ -26,7 +26,7 @@ import {
   saveSettings,
   type LyricsSettings,
 } from "@/lib/lyrics/settings"
-import { defaultPresentation, type LyricItemPayload } from "@/lib/lyrics/types"
+import { type LyricItemPayload } from "@/lib/lyrics/types"
 import { useRoomSelection } from "./use-room-selection"
 import { JoinScreen } from "./join-screen"
 import { PresenceBeacon } from "./presence-beacon"
@@ -46,7 +46,7 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
 
 function primaryHtml(primary: string): string {
-  return primary.split("\n").map(esc).join("<br/>")
+  return primary.split("\n").map(esc).join(" ")
 }
 
 /**
@@ -58,28 +58,8 @@ function primaryHtml(primary: string): string {
  * Songs get nothing here: "Verse 1" / "Chorus" are operator metadata and must
  * never reach the congregation's screen.
  */
-function verseMarkerHtml(item: LyricItemPayload): { lead: string; heading: string } {
-  const none = { lead: "", heading: "" }
-  if (item.type !== "hymn") return none
-  const presentation = item.presentation ?? defaultPresentation(item.type)
-  if (presentation.verseNumberStyle === "none" || presentation.sectionLabels === "off") return none
-
-  const section = item.group.section
-  // Only numbered sections carry a marker — a chorus has no verse number, and
-  // inventing one would mislabel it.
-  if (!section || section.number === undefined) return none
-  const n = esc(String(section.number))
-
-  switch (presentation.verseNumberStyle) {
-    case "heading":
-      return { lead: "", heading: `<div class="verse-heading">${n}</div>` }
-    case "inline":
-      return { lead: `<span class="verse-inline">${n}</span>`, heading: "" }
-    case "superscript":
-      return { lead: `<span class="verse-sup">${n}</span>`, heading: "" }
-    default:
-      return none
-  }
+function verseMarkerHtml(_item: LyricItemPayload): { lead: string; heading: string } {
+  return { lead: "", heading: "" }
 }
 
 /** One HTML builder shared by the hidden measurer and the visible layer, so what is measured is exactly what shows. */
