@@ -21,45 +21,60 @@ export async function GET(request: Request) {
   const next = readNext(searchParams)
   const type = searchParams.get("type")
 
-  if (code) {
-    const supabase = await createClient()
-    const { error, data } = await supabase.auth.exchangeCodeForSession(code)
-    
-    if (!error && data.user) {
-      // Handle different auth types
-      if (type === "invite") {
-        // For invitations, check if profile is complete (has name)
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("name")
-          .eq("auth_user_id", data.user.id)
-          .maybeSingle()
-        
-        // If profile doesn't exist or has no name, redirect to accept-invite to complete profile
-        const profileData = profile as { name: string | null } | null
-        if (!profileData || !profileData.name) {
-          return NextResponse.redirect(`${origin}/accept-invite`)
-        }
-        
-        // Profile is complete, go to dashboard
-        return NextResponse.redirect(`${origin}/dashboard`)
-      }
-      
-      if (type === "magiclink") {
-        // For magic link logins, redirect to the requested destination
-        return NextResponse.redirect(new URL(next, origin))
-      }
-      
-      if (type === "recovery") {
-        // For password recovery, redirect to reset-password
-        return NextResponse.redirect(`${origin}/reset-password`)
-      }
-      
-      // Default: redirect to next URL or dashboard
-      return NextResponse.redirect(new URL(next, origin))
-    }
+  if (!code) {
+    console.error("[auth/callback] No code parameter in callback URL")
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_error&reason=missing_code`)
   }
 
-  // If there's no code or an error, redirect to login with error
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_error`)
+  const supabase = await createClient()
+  const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (error) {
+    // Log enough to diagnose without exposing tokens.
+    // The most common cause is a PKCE code_verifier mismatch: the browser
+    // that opens the email link is not the same one that requested the
+    // magic link, so the cookie holding the verifier is absent.
+    console.error(
+      "[auth/callback] exchangeCodeForSession failed:",
+      error.message,
+      "| status:", error.status,
+      "| type:", type,
+    )
+    const reason = error.message.includes("code verifier")
+      ? "pkce_mismatch"
+      : "exchange_failed"
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_error&reason=${reason}`)
+  }
+
+  if (!data.user) {
+    console.error("[auth/callback] Exchange succeeded but no user returned")
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_error&reason=no_user`)
+  }
+
+  // Handle different auth types
+  if (type === "invite") {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("auth_user_id", data.user.id)
+      .maybeSingle()
+
+    const profileData = profile as { name: string | null } | null
+    if (!profileData || !profileData.name) {
+      return NextResponse.redirect(`${origin}/accept-invite`)
+    }
+
+    return NextResponse.redirect(`${origin}/dashboard`)
+  }
+
+  if (type === "magiclink") {
+    return NextResponse.redirect(new URL(next, origin))
+  }
+
+  if (type === "recovery") {
+    return NextResponse.redirect(`${origin}/reset-password`)
+  }
+
+  // Default: redirect to next URL or dashboard
+  return NextResponse.redirect(new URL(next, origin))
 }

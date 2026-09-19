@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -47,6 +47,21 @@ export default function LoginPage() {
   const [emailSent, setEmailSent] = useState(false)
   const [notInvited, setNotInvited] = useState(false)
   const [sentEmail, setSentEmail] = useState("")
+
+  useEffect(() => {
+    const error = searchParams.get("error")
+    const reason = searchParams.get("reason")
+    if (error === "auth_callback_error") {
+      if (reason === "pkce_mismatch") {
+        toast.error(
+          "Sign-in failed: the magic link was opened in a different browser from the one that requested it. Please request a new link and open it in the same browser.",
+          { duration: 10000 },
+        )
+      } else {
+        toast.error("Sign-in failed. Please request a new magic link.", { duration: 6000 })
+      }
+    }
+  }, [searchParams])
 
   const form = useForm<MagicLinkFormInput>({
     resolver: zodResolver(magicLinkSchema),
