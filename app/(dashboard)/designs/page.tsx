@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { DesignRequestList } from "@/components/designs/design-request-list"
 
 export const metadata: Metadata = {
-  title: "Design Requests | Cyber Tech",
+  title: "Design Requests",
   description: "View and manage design requests",
 }
 

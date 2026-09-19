@@ -181,40 +181,34 @@ export async function PATCH(
       }
     }
 
-    // Build update object
-    const updates: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    }
-
-    if (status) {
-      updates.status = status
-    }
-
-    if (priority) {
-      updates.priority = priority
-    }
-
-    // Append internal notes with timestamp
+    // Build conditional note fields
+    let appendedInternalNotes: string | undefined
     if (internalNotes?.trim()) {
       const timestamp = new Date().toISOString()
       const newNote = `[${timestamp}] ${internalNotes.trim()}`
-      updates.internal_notes = currentRequest.internal_notes
+      appendedInternalNotes = currentRequest.internal_notes
         ? `${currentRequest.internal_notes}\n\n${newNote}`
         : newNote
     }
 
-    // Append revision notes with timestamp (for revision requests)
+    let appendedRevisionNotes: string | undefined
     if (revisionNotes?.trim()) {
       const timestamp = new Date().toISOString()
       const newNote = `[${timestamp}] ${revisionNotes.trim()}`
-      updates.revision_notes = currentRequest.revision_notes
+      appendedRevisionNotes = currentRequest.revision_notes
         ? `${currentRequest.revision_notes}\n\n${newNote}`
         : newNote
     }
 
     const { error: updateError } = await supabase
       .from("design_requests")
-      .update(updates)
+      .update({
+        updated_at: new Date().toISOString(),
+        ...(status && { status }),
+        ...(priority && { priority }),
+        ...(appendedInternalNotes !== undefined && { internal_notes: appendedInternalNotes }),
+        ...(appendedRevisionNotes !== undefined && { revision_notes: appendedRevisionNotes }),
+      } as never)
       .eq("id", id)
 
     if (updateError) {

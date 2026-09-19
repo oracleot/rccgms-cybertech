@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { DescriptionForm } from "@/components/livestream/description-form"
 
 export const metadata = {
-  title: "Livestream Generator | Cyber Tech",
+  title: "Livestream Generator",
   description: "Generate livestream descriptions for YouTube and Facebook",
 }
 

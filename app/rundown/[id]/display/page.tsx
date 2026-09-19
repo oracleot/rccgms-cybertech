@@ -27,7 +27,7 @@ export async function generateMetadata({
   return {
     title: rundownData?.title
       ? `Display: ${rundownData.title} | Fusion`
-      : "Display | Fusion",
+      : "Display",
     description: "Extended display for service rundown projection",
     // PWA metadata for fullscreen capability
     appleWebApp: {

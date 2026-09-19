@@ -117,21 +117,17 @@ export async function PATCH(
 
     const { content, mediaUrls, platforms, scheduledFor, status } = parsed.data
 
-    // Build update object
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    }
-
-    if (content !== undefined) updateData.content = content
-    if (mediaUrls !== undefined) updateData.media_urls = mediaUrls
-    if (platforms !== undefined) updateData.platforms = platforms
-    if (scheduledFor !== undefined) updateData.scheduled_for = scheduledFor
-    if (status !== undefined) updateData.status = status
-
     const adminClient = createAdminClient()
     const { data: post, error } = await adminClient
       .from("social_posts")
-      .update(updateData as Record<string, unknown>)
+      .update({
+        updated_at: new Date().toISOString(),
+        ...(content !== undefined && { content }),
+        ...(mediaUrls !== undefined && { media_urls: mediaUrls }),
+        ...(platforms !== undefined && { platforms }),
+        ...(scheduledFor !== undefined && { scheduled_for: scheduledFor }),
+        ...(status !== undefined && { status }),
+      } as never)
       .eq("id", id)
       .select()
       .single()

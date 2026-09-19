@@ -1,7 +1,7 @@
 import { RundownPageClient } from "./rundown-page-client"
 
 export const metadata = {
-  title: "Rundown | Cyber Tech",
+  title: "Rundown",
   description: "Create and manage service rundowns",
 }
 

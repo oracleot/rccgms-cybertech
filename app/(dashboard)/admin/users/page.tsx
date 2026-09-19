@@ -15,7 +15,7 @@ import type { UserRole } from "@/lib/constants"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "User Management | Admin | Cyber Tech",
+  title: "User Management | Admin",
   description: "Manage team members, roles, and permissions",
 }
 

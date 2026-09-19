@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { HistoryList } from "@/components/livestream/history-list"
 
 export const metadata = {
-  title: "Description History | Cyber Tech",
+  title: "Description History",
   description: "View your generated livestream descriptions",
 }
 

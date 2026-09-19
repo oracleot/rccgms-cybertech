@@ -37,19 +37,14 @@ export async function PATCH(
     .eq("auth_user_id", authResult.user.id)
     .single()
 
-  const updatePayload: Record<string, unknown> = {
-    is_approved: isApproved,
-    approved_by: approverProfile?.id ?? null,
-    approved_at: new Date().toISOString(),
-  }
-
-  if (correctedOutput !== undefined) {
-    updatePayload.corrected_output = correctedOutput
-  }
-
   const { error } = await supabase
     .from("ai_feedback")
-    .update(updatePayload)
+    .update({
+      is_approved: isApproved,
+      approved_by: approverProfile?.id ?? null,
+      approved_at: new Date().toISOString(),
+      ...(correctedOutput !== undefined && { corrected_output: correctedOutput }),
+    } as never)
     .eq("id", id)
 
   if (error) {

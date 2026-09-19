@@ -12,6 +12,7 @@ import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { OrbitingCircles } from "@/components/ui/orbiting-circles"
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
 import { Meteors } from "@/components/ui/meteors"
+import Image from "next/image"
 import {
   MonitorPlay,
   Calendar,
@@ -21,7 +22,9 @@ import {
   Mic,
   Camera,
   Headphones,
-  Radio
+  Radio,
+  Music,
+  BookOpen
 } from "lucide-react"
 
 export default function Home() {
@@ -85,8 +88,8 @@ export default function Home() {
         <div className="text-center">
           <div className="relative h-16 w-16 mx-auto mb-6">
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 animate-pulse" />
-            <div className="absolute inset-1 rounded-full bg-black flex items-center justify-center">
-              <MonitorPlay className="h-6 w-6 text-violet-400 animate-pulse" />
+            <div className="absolute inset-1 rounded-full bg-black flex items-center justify-center overflow-hidden">
+              <Image src="/icons/icon-192.png" alt="Fusion" width={56} height={56} className="object-cover" />
             </div>
           </div>
           <TextAnimate animation="blurInUp" by="character" className="text-white/70 text-sm tracking-widest uppercase">
@@ -132,7 +135,7 @@ export default function Home() {
           <BlurFade delay={0.1} direction="up">
             <AnimatedGradientText className="mb-4 inline-flex">
               <span className="text-xs md:text-sm font-medium tracking-widest uppercase">
-                ✨ RCCG Morningstar Tech Department
+                ✨ Songs · Scripture · Together
               </span>
             </AnimatedGradientText>
           </BlurFade>
@@ -140,19 +143,19 @@ export default function Home() {
           <BlurFade delay={0.2} direction="up">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6">
               <span className="bg-gradient-to-r from-white via-violet-200 to-violet-400 bg-clip-text text-transparent">
-                Cyber
+                Fusion
               </span>
               <br />
               <span className="bg-gradient-to-r from-violet-400 via-indigo-400 to-indigo-600 bg-clip-text text-transparent">
-                Tech
+                Worship
               </span>
             </h1>
           </BlurFade>
           
           <BlurFade delay={0.3} direction="up">
             <p className="text-lg md:text-xl text-white/60 max-w-md mb-8 leading-relaxed">
-              The complete platform for managing your tech team.
-              <span className="text-violet-400"> Rotas, rundowns, livestreams</span> — all in one place.
+              Worship presentation, Bible broadcast, and church tech management.
+              <span className="text-violet-400"> Songs, scripture, scheduling</span> — all in one place.
             </p>
           </BlurFade>
           
@@ -160,9 +163,9 @@ export default function Home() {
           <BlurFade delay={0.4} direction="up">
             <div className="flex flex-wrap gap-3 mb-10">
               {[
+                { icon: Music, label: "Worship Lyrics" },
+                { icon: BookOpen, label: "Bible Broadcast" },
                 { icon: Calendar, label: "Smart Scheduling" },
-                { icon: FileText, label: "Service Rundowns" },
-                { icon: Users, label: "Team Management" },
                 { icon: Radio, label: "Livestream" },
               ].map((feature, i) => (
                 <div 
@@ -208,8 +211,8 @@ export default function Home() {
           
           {/* Central icon */}
           <div className="relative z-10 flex items-center justify-center">
-            <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-2xl shadow-violet-500/30">
-              <MonitorPlay className="h-12 w-12 text-white" />
+            <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-2xl shadow-violet-500/30">
+              <Image src="/icons/fusion-logo.webp" alt="Fusion Worship" width={96} height={96} className="object-cover" />
               <BorderBeam 
                 size={100} 
                 duration={8} 

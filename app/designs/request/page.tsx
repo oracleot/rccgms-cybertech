@@ -3,7 +3,7 @@ import { Palette } from "lucide-react"
 import { DesignRequestForm } from "@/components/designs/design-request-form"
 
 export const metadata: Metadata = {
-  title: "Request a Design | RCCG Morning Star",
+  title: "Request a Design",
   description: "Submit a design request for banners, flyers, social graphics, and more.",
 }
 

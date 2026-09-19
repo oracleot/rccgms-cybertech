@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         scheduled_for: scheduledFor || null,
         status,
         created_by: profile.id,
-      } as Record<string, unknown>)
+      })
       .select()
       .single()
 

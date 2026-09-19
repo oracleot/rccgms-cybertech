@@ -16,7 +16,7 @@ import { requireAdminOrDeveloper } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata = {
-  title: "Admin | Cyber Tech",
+  title: "Admin",
   description: "System administration and management",
 }
 

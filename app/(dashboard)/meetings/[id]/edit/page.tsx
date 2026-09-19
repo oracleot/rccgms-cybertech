@@ -9,7 +9,7 @@ import { getMeetingById } from "@/lib/meetings/queries"
 import { MeetingForm, isoToFormFields } from "@/components/meetings/meeting-form"
 
 export const metadata: Metadata = {
-  title: "Edit Meeting | Cyber Tech",
+  title: "Edit Meeting",
 }
 
 export default async function EditMeetingPage({

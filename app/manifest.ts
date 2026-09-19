@@ -1,19 +1,16 @@
 import type { MetadataRoute } from "next"
 
-/**
- * PWA Manifest for Fusion
- * Defines the app's appearance when installed on devices
- */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Fusion - Church Tech Management",
+    name: "Fusion Worship",
     short_name: "Fusion",
-    description: "Church tech department management app for scheduling, equipment tracking, and service coordination",
-    start_url: "/",
+    description:
+      "Songs, Scripture, Together — worship presentation, Bible broadcast, and church tech management.",
+    start_url: "/dashboard",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#0f172a",
-    orientation: "portrait-primary",
+    background_color: "#050212",
+    theme_color: "#0c0a1a",
+    orientation: "any",
     categories: ["productivity", "utilities"],
     icons: [
       {
@@ -35,32 +32,12 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icons/icon-512.png",
         sizes: "512x512",
         type: "image/png",
+      },
+      {
+        src: "/icons/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
         purpose: "maskable",
-      },
-    ],
-    screenshots: [
-      {
-        src: "/screenshots/dashboard.png",
-        sizes: "1280x720",
-        type: "image/png",
-        form_factor: "wide" as const,
-        label: "Dashboard overview showing upcoming duties and quick actions",
-      },
-      {
-        src: "/screenshots/rota.png",
-        sizes: "390x844",
-        type: "image/png",
-        form_factor: "narrow" as const,
-        label: "Rota calendar view on mobile",
-      },
-    ],
-    shortcuts: [
-      {
-        name: "My Schedule",
-        short_name: "Schedule",
-        description: "View your upcoming duties",
-        url: "/rota/my-schedule",
-        icons: [{ src: "/icons/calendar.png", sizes: "96x96" }],
       },
     ],
   }

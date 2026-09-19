@@ -1,7 +1,7 @@
 import { RundownForm } from "@/components/rundown/rundown-form"
 
 export const metadata = {
-  title: "New Rundown | Cyber Tech",
+  title: "New Rundown",
   description: "Create a new service rundown",
 }
 

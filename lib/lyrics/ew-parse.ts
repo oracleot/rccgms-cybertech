@@ -77,7 +77,7 @@ async function decompressBlobAsync(raw: Uint8Array): Promise<string> {
     try {
       const ds = new DecompressionStream("deflate")
       const writer = ds.writable.getWriter()
-      writer.write(raw)
+      writer.write(new Uint8Array(raw))
       writer.close()
       const reader = ds.readable.getReader()
       const chunks: Uint8Array[] = []

@@ -5,7 +5,7 @@ import { CalendarDays } from "lucide-react"
 import { PublicAvailabilityForm } from "@/components/rota/public-availability-form"
 
 export const metadata: Metadata = {
-  title: "Set Your Availability | RCCG Morning Star",
+  title: "Set Your Availability",
   description: "Let your team know when you're available to serve.",
 }
 

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Code2, Brain, ExternalLink } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Settings | Cyber Tech",
+  title: "Settings",
   description: "Manage your account settings and preferences",
 }
 

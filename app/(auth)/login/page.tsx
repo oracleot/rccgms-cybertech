@@ -5,7 +5,8 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { MonitorPlay, Mail, CheckCircle2 } from "lucide-react"
+import { Mail, CheckCircle2 } from "lucide-react"
+import Image from "next/image"
 
 import {
   Card,
@@ -245,8 +246,15 @@ export default function LoginPage() {
         <CardHeader className="space-y-4 text-center pb-2">
           {/* Logo */}
           <BlurFade delay={0.2} direction="down">
-            <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-              <MonitorPlay className="h-7 w-7 text-white" />
+            <div className="mx-auto w-20 h-20 rounded-2xl overflow-hidden shadow-lg shadow-violet-500/25">
+              <Image
+                src="/icons/fusion-logo.webp"
+                alt="Fusion Worship"
+                width={80}
+                height={80}
+                className="object-cover"
+                priority
+              />
             </div>
           </BlurFade>
           

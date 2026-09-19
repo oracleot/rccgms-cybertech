@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   BookOpen,
@@ -134,17 +135,14 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-4 group">
-          <div
-            className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg",
-              "bg-gradient-to-br from-violet-600 to-indigo-600",
-              "text-white shadow-md",
-              "transition-all duration-300 ease-out",
-              "group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-violet-500/30",
-              "group-hover:rotate-3"
-            )}
-          >
-            <MonitorPlay className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+          <div className="h-8 w-8 rounded-lg overflow-hidden shadow-md transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-violet-500/30">
+            <Image
+              src="/icons/icon-192.png"
+              alt="Fusion"
+              width={32}
+              height={32}
+              className="object-cover"
+            />
           </div>
           <span className="font-semibold transition-colors duration-200 group-hover:text-violet-600 dark:group-hover:text-violet-400">
             Fusion

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MLTrainingClient } from "./_components/ml-training-client"
 
 export const metadata: Metadata = {
-  title: "ML Training | Dev Tools | Fusion",
+  title: "ML Training | Dev Tools",
   description: "Review and approve AI feedback to improve caption and description generation",
 }
 

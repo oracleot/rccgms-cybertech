@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { AvailabilityCalendar } from "@/components/rota/availability-calendar"
 
 export const metadata: Metadata = {
-  title: "My Availability | Cyber Tech",
+  title: "My Availability",
   description: "Set your availability for upcoming services",
 }
 

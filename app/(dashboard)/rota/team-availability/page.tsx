@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { TeamAvailabilityGrid } from "@/components/rota/team-availability-grid"
 
 export const metadata: Metadata = {
-  title: "Team Availability | Cyber Tech",
+  title: "Team Availability",
   description: "View team member availability for scheduling",
 }
 

@@ -10,7 +10,7 @@ import { getCurrentProfile } from "@/lib/auth/profile"
 import { ROUTES } from "@/lib/constants"
 
 export const metadata: Metadata = {
-  title: "Meetings | Cyber Tech",
+  title: "Meetings",
   description: "Team meetings, calls, and RSVPs",
 }
 

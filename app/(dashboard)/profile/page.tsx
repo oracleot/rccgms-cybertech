@@ -6,7 +6,7 @@ import { ProfileForm } from "./_components/profile-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata: Metadata = {
-  title: "Profile | Cyber Tech",
+  title: "Profile",
   description: "Manage your profile and personal information",
 }
 

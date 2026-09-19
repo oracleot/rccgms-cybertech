@@ -28,7 +28,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params
   const meeting = await getMeetingById(id)
-  return { title: meeting ? `${meeting.title} | Cyber Tech` : "Meeting | Cyber Tech" }
+  return { title: meeting ? `${meeting.title}` : "Meeting" }
 }
 
 export default async function MeetingDetailPage({

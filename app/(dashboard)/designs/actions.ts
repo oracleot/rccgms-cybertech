@@ -199,26 +199,25 @@ export async function unclaimRequest(
   }
 
   // Reset status to pending from any non-terminal status and clear deliverables
-  const updates: Record<string, unknown> = {
-    assigned_to: null,
-    assigned_at: null,
-    assigned_by: null,
-    status: "pending",
-    deliverable_files: [],
-  }
-
-  // Log reason to internal notes if developer
+  let internalNotes: string | undefined
   if (isDeveloper && reason?.trim()) {
     const timestamp = new Date().toISOString()
     const newNote = `[${timestamp}] UNCLAIM by ${profile.name || "Developer"}: ${reason.trim()}`
-    updates.internal_notes = request.internal_notes
+    internalNotes = request.internal_notes
       ? `${request.internal_notes}\n\n${newNote}`
       : newNote
   }
 
   const { error } = await supabase
     .from("design_requests")
-    .update(updates)
+    .update({
+      assigned_to: null,
+      assigned_at: null,
+      assigned_by: null,
+      status: "pending" as const,
+      deliverable_files: [],
+      ...(internalNotes !== undefined && { internal_notes: internalNotes }),
+    } as never)
     .eq("id", requestId)
 
   if (error) {
@@ -310,18 +309,14 @@ export async function reassignRequest(
     }
 
     // Update lead assignee on design_requests (denormalized)
-    const updateData: Record<string, unknown> = {
-      assigned_to: leadAssignee.profileId,
-      assigned_at: new Date().toISOString(),
-      assigned_by: profile.id,
-    }
-    if (deadline !== undefined) {
-      updateData.deadline = deadline
-    }
-
     const { error: updateError } = await supabase
       .from("design_requests")
-      .update(updateData)
+      .update({
+        assigned_to: leadAssignee.profileId,
+        assigned_at: new Date().toISOString(),
+        assigned_by: profile.id,
+        ...(deadline !== undefined && { deadline }),
+      } as never)
       .eq("id", requestId)
 
     if (updateError) {
@@ -473,45 +468,35 @@ export async function updateRequest(
     }
   }
 
-  // Build update object
-  const updates: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  }
-
-  if (status) {
-    updates.status = status
-  }
-
-  if (priority) {
-    updates.priority = priority
-  }
-
-  // Append internal notes with timestamp
+  // Build update fields
+  let appendedInternalNotes: string | undefined
   if (internalNotes?.trim()) {
     const timestamp = new Date().toISOString()
     const newNote = `[${timestamp}] ${internalNotes.trim()}`
-    updates.internal_notes = currentRequest.internal_notes
+    appendedInternalNotes = currentRequest.internal_notes
       ? `${currentRequest.internal_notes}\n\n${newNote}`
       : newNote
   }
 
-  // Append revision notes with timestamp
+  let appendedRevisionNotes: string | undefined
   if (revisionNotes?.trim()) {
     const timestamp = new Date().toISOString()
     const newNote = `[${timestamp}] ${revisionNotes.trim()}`
-    updates.revision_notes = currentRequest.revision_notes
+    appendedRevisionNotes = currentRequest.revision_notes
       ? `${currentRequest.revision_notes}\n\n${newNote}`
       : newNote
   }
 
-  // Save deliverable files when transitioning to review
-  if (deliverableFiles && deliverableFiles.length > 0) {
-    updates.deliverable_files = deliverableFiles
-  }
-
   const { error: updateError } = await supabase
     .from("design_requests")
-    .update(updates)
+    .update({
+      updated_at: new Date().toISOString(),
+      ...(status && { status }),
+      ...(priority && { priority }),
+      ...(appendedInternalNotes !== undefined && { internal_notes: appendedInternalNotes }),
+      ...(appendedRevisionNotes !== undefined && { revision_notes: appendedRevisionNotes }),
+      ...(deliverableFiles && deliverableFiles.length > 0 && { deliverable_files: deliverableFiles }),
+    } as never)
     .eq("id", requestId)
 
   if (updateError) {
@@ -811,18 +796,13 @@ export async function updateDeadline(
     return { success: false, error: "Only admins and leaders can update deadlines" }
   }
 
-  const updates: Record<string, unknown> = {
-    deadline,
-    updated_at: new Date().toISOString(),
-  }
-
-  if (delayReason?.trim()) {
-    updates.delay_reason = delayReason.trim()
-  }
-
   const { error } = await supabase
     .from("design_requests")
-    .update(updates)
+    .update({
+      deadline,
+      updated_at: new Date().toISOString(),
+      ...(delayReason?.trim() && { delay_reason: delayReason.trim() }),
+    } as never)
     .eq("id", requestId)
 
   if (error) {

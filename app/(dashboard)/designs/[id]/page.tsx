@@ -50,8 +50,8 @@ export async function generateMetadata({
 
   return {
     title: request?.title
-      ? `${request.title} | Design Requests | Cyber Tech`
-      : "Design Request | Cyber Tech",
+      ? `${request.title} | Design Requests`
+      : "Design Request",
   }
 }
 

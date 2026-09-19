@@ -7,7 +7,7 @@ import { USER_ROLES, ROUTES } from "@/lib/constants"
 import { MeetingForm } from "@/components/meetings/meeting-form"
 
 export const metadata: Metadata = {
-  title: "New Meeting | Cyber Tech",
+  title: "New Meeting",
   description: "Schedule a new meeting",
 }
 

@@ -114,20 +114,14 @@ export async function POST(
         )
       }
 
-      // Reset status to pending if currently in progress
-      const updates: Record<string, unknown> = {
-        assigned_to: null,
-        assigned_at: null,
-        assigned_by: null,
-      }
-
-      if (existingRequest.status === "in_progress") {
-        updates.status = "pending"
-      }
-
       const { error } = await supabase
         .from("design_requests")
-        .update(updates)
+        .update({
+          assigned_to: null,
+          assigned_at: null,
+          assigned_by: null,
+          ...(existingRequest.status === "in_progress" && { status: "pending" as const }),
+        } as never)
         .eq("id", requestId)
 
       if (error) {

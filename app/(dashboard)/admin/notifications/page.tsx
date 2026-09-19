@@ -9,7 +9,7 @@ import { LoadingSkeleton } from "@/components/shared/loading-skeleton"
 import type { NotificationLogEntry } from "@/types/notification"
 
 export const metadata = {
-  title: "Notification Logs | Admin | Cyber Tech",
+  title: "Notification Logs | Admin",
   description: "View notification logs and retry failed sends",
 }
 

@@ -5,7 +5,7 @@ import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { DeveloperToolsClient } from "./_components/developer-tools-client"
 
 export const metadata: Metadata = {
-  title: "Developer Tools | Admin | Cyber Tech",
+  title: "Developer Tools | Admin",
   description: "System health, diagnostics, and developer utilities",
 }
 

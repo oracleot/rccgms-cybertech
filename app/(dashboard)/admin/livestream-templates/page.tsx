@@ -5,7 +5,7 @@ import { TemplateEditor } from "@/components/admin/template-editor"
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 
 export const metadata = {
-  title: "Livestream Templates | Admin | Cyber Tech",
+  title: "Livestream Templates | Admin",
   description: "Manage AI prompt templates for livestream descriptions",
 }
 

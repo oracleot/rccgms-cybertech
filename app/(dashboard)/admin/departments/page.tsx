@@ -7,7 +7,7 @@ import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import type { Profile, Department, Position } from "@/types/auth"
 
 export const metadata = {
-  title: "Department Management | Admin | Cyber Tech",
+  title: "Department Management | Admin",
   description: "Configure departments and positions",
 }
 

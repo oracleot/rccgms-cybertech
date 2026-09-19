@@ -17,7 +17,7 @@ export async function retryNotification(
         status: "pending",
         error_message: null,
         retry_count: 0,
-      } as Record<string, unknown>)
+      })
       .eq("id", notificationId)
       .eq("status", "failed")
 
@@ -53,7 +53,7 @@ export async function retryAllFailedNotifications(): Promise<{
         status: "pending",
         error_message: null,
         retry_count: 0,
-      } as Record<string, unknown>)
+      })
       .eq("status", "failed")
 
     if (error) {

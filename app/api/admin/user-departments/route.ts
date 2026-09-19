@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       // Use upsert with ON CONFLICT for atomic insert-or-update
       const { error: upsertError } = await supabase
         .from("user_departments")
-        .upsert(assignmentsToUpsert as Record<string, unknown>[], {
+        .upsert(assignmentsToUpsert as never[], {
           onConflict: "user_id,department_id",
           ignoreDuplicates: false, // Update existing rows
         })
@@ -196,7 +196,7 @@ export async function PUT(request: NextRequest) {
         department_id: departmentId,
         is_primary: isPrimary,
         assigned_by: assignedById,
-      } as Record<string, unknown>)
+      })
 
     if (error) {
       // Check for duplicate
@@ -278,7 +278,7 @@ export async function PATCH(request: NextRequest) {
     // The database trigger will handle unsetting other primaries
     const { error } = await supabase
       .from("user_departments")
-      .update({ is_primary: true } as Record<string, unknown>)
+      .update({ is_primary: true })
       .eq("user_id", userId)
       .eq("department_id", departmentId)
 

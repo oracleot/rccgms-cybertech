@@ -9,7 +9,7 @@ import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
 import type { TrackWithDepartment, ProgressWithDetails } from "@/types/training"
 
 export const metadata = {
-  title: "Training | Cyber Tech",
+  title: "Training",
   description: "Complete training modules and track progress",
 }
 

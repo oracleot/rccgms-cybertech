@@ -137,13 +137,12 @@ export async function updateRundown(
       return { success: false, error: "Only admins and leaders can update rundowns" }
     }
 
-    const updateData: Record<string, unknown> = {}
-    if (parsed.data.title !== undefined) updateData.title = parsed.data.title
-    if (parsed.data.status !== undefined) updateData.status = parsed.data.status
-
     const { error } = await supabase
       .from("rundowns")
-      .update(updateData as never)
+      .update({
+        ...(parsed.data.title !== undefined && { title: parsed.data.title }),
+        ...(parsed.data.status !== undefined && { status: parsed.data.status }),
+      } as never)
       .eq("id", parsed.data.id)
 
     if (error) {
