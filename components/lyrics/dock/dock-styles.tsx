@@ -208,6 +208,49 @@ export function LyricsDockStyles() {
         color: #cdd6f4; font-family: monospace; font-size: 10px; padding: 1px 5px;
       }
 
+      /* Searchable set picker */
+      .set-picker { position: relative; width: 100%; }
+      .set-search {
+        background: #1e1e2e; border: 1px solid #313244; border-radius: 6px;
+        color: #cdd6f4; font-size: 12px; padding: 7px 10px; outline: none; width: 100%;
+        font-family: inherit; transition: border-color 0.15s;
+      }
+      .set-search:focus { border-color: #7c6af7; }
+      .set-search::placeholder { color: #585878; }
+      .set-dropdown {
+        position: absolute; top: 100%; left: 0; right: 0; z-index: 40;
+        background: #1b1b28; border: 1px solid #313244; border-radius: 6px;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.55); margin-top: 3px;
+        max-height: 260px; overflow-y: auto; padding: 4px;
+        display: flex; flex-direction: column; gap: 2px;
+      }
+      .set-dropdown::-webkit-scrollbar { width: 7px; }
+      .set-dropdown::-webkit-scrollbar-thumb { background: #313244; border-radius: 4px; }
+      .set-section-label {
+        font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #6e6a92; padding: 4px 6px 2px;
+      }
+      .set-empty { color: #52526e; font-size: 11.5px; text-align: center; padding: 12px 8px; }
+      .set-result {
+        display: flex; flex-direction: column; gap: 2px; width: 100%;
+        background: none; border: 1px solid transparent; border-radius: 5px;
+        color: #a6adc8; cursor: pointer; font-size: 12px; padding: 6px 8px; text-align: left;
+        transition: background 0.08s;
+      }
+      .set-result:hover, .set-result.hl { background: #232336; border-color: #3d3d55; color: #cdd6f4; }
+      .set-result.active { border-color: #7c6af7; }
+      .set-result-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .set-result-meta { display: flex; gap: 8px; font-size: 10px; color: #6e6a92; }
+      .set-type {
+        background: #2a2040; border-radius: 3px; padding: 0 4px;
+        font-size: 9px; font-weight: 700; color: #b4a8ff; text-transform: uppercase; letter-spacing: 0.04em;
+      }
+      .set-cues { font-family: monospace; font-size: 10px; }
+      .set-result-preview {
+        font-size: 10px; color: #585878; font-style: italic;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+
       /* Bottom toolbar */
       .toolbar { display: flex; gap: 5px; align-items: center; border-top: 1px solid #252535; padding-top: 8px; }
       .tool-btn {

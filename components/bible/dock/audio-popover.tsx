@@ -6,7 +6,7 @@
  * SpeechRecognition exists — typically the dock opened in Chrome or Edge.
  */
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import * as Popover from "@radix-ui/react-popover"
 import { Mic, MicOff } from "lucide-react"
 import { STATUS_LABEL, useListening } from "@/components/bible/listening/use-listening"
@@ -16,6 +16,8 @@ import type { Dock } from "./use-dock"
 import { Tip } from "./tip"
 
 const LANG_KEY = "bible-dock-lang"
+const VOICE_ACTION_KEY = "bible-dock-voice-action"
+type VoiceAction = "suggest" | "auto-send"
 const LANGS = [
   ["en-NG", "Nigerian English"],
   ["en-GH", "Ghanaian English"],
@@ -34,16 +36,43 @@ export function AudioPopover({ dock }: { dock: Dock }) {
   const [deviceId, setDeviceId] = useState<string | null>(null)
   const meter = useAudioMeter(meterOn && open, deviceId)
   const diag = useRecognitionDiagnostics(listening, meter.devices, deviceId)
+  const [voiceAction, setVoiceAction] = useState<VoiceAction>("suggest")
+  const [lastSent, setLastSent] = useState<string | null>(null)
+  const autoSentRef = useRef(new Set<string>())
 
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(LANG_KEY)
       if (saved) setLang(saved)
+      const savedAction = window.localStorage.getItem(VOICE_ACTION_KEY)
+      if (savedAction === "auto-send") setVoiceAction("auto-send")
     } catch {
       // ignore
     }
     setDeviceId(loadPreferredMeterDevice())
   }, [])
+
+  // Auto-send high confidence references
+  useEffect(() => {
+    if (voiceAction !== "auto-send") return
+    if (dock.locked || dock.busy) return
+    for (const r of listening.refs) {
+      if (r.confidence !== "high") continue
+      if (autoSentRef.current.has(r.reference)) continue
+      autoSentRef.current.add(r.reference)
+      setLastSent(r.reference)
+      void dock.send({ apiPath: r.apiPath, reference: r.reference })
+      break
+    }
+  }, [listening.refs, voiceAction, dock])
+
+  // Reset auto-sent set when listening restarts
+  useEffect(() => {
+    if (listening.status !== "listening") {
+      autoSentRef.current.clear()
+      setLastSent(null)
+    }
+  }, [listening.status])
 
   // Resolve device labels (and so "System Default" → an actual device name) even when the
   // level meter itself is off — this only enumerates, it never opens a stream.
@@ -84,25 +113,38 @@ export function AudioPopover({ dock }: { dock: Dock }) {
 
           {listening.refs.length > 0 ? (
             <div className="chooser">
-              <span className="title">Heard</span>
-              {listening.refs.map((r) => (
-                <button
-                  key={r.reference}
-                  type="button"
-                  onClick={() => {
-                    void dock.send({ apiPath: r.apiPath, reference: r.reference })
-                    setOpen(false)
-                  }}
-                  disabled={dock.locked || dock.busy}
-                  title={r.span}
-                >
-                  {r.reference}
-                  {r.confidence !== "high" && <span className="note"> — check</span>}
-                </button>
-              ))}
+              <span className="title">
+                {voiceAction === "auto-send" ? "Detected" : "Heard"}
+                {dock.locked && <span className="note"> — LOCKED</span>}
+              </span>
+              {listening.refs.map((r) => {
+                const wasSent = autoSentRef.current.has(r.reference)
+                return (
+                  <button
+                    key={r.reference}
+                    type="button"
+                    onClick={() => {
+                      void dock.send({ apiPath: r.apiPath, reference: r.reference })
+                      setLastSent(r.reference)
+                      setOpen(false)
+                    }}
+                    disabled={dock.locked || dock.busy}
+                    title={r.span}
+                  >
+                    {r.reference}
+                    {r.confidence !== "high" && <span className="note"> — check</span>}
+                    {wasSent && <span className="note sent"> ✓ sent</span>}
+                  </button>
+                )
+              })}
             </div>
-          ) : (
-            listening.status === "listening" && <div className="hint">References appear here as they're spoken.</div>
+          ) : listening.status === "listening" ? (
+            <div className="hint">
+              {listening.transcript ? "Hearing speech — no reference detected yet." : "Listening for Bible references…"}
+            </div>
+          ) : null}
+          {lastSent && voiceAction === "auto-send" && (
+            <div className="hint" style={{ color: "#4ade80" }}>Sent: {lastSent}</div>
           )}
 
           <div className="srow">
@@ -124,6 +166,27 @@ export function AudioPopover({ dock }: { dock: Dock }) {
                   {label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div className="srow">
+            <span>Voice action</span>
+            <select
+              className="compact"
+              value={voiceAction}
+              onChange={(e) => {
+                const v = e.target.value as VoiceAction
+                setVoiceAction(v)
+                autoSentRef.current.clear()
+                try {
+                  window.localStorage.setItem(VOICE_ACTION_KEY, v)
+                } catch {
+                  // ignore
+                }
+              }}
+            >
+              <option value="suggest">Suggest only</option>
+              <option value="auto-send">Auto-send high confidence</option>
             </select>
           </div>
 

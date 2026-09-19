@@ -116,5 +116,21 @@ export function normalizeSpeechTranscript(raw: string): string {
     (m) => String(ONES[m.toLowerCase()] ?? TENS[m.toLowerCase()] ?? m)
   )
 
+  // 7. Remaining base number words (one through ten) — spoken references
+  //    without "chapter"/"verse" markers, e.g. "john three sixteen" → "john 3 16"
+  s = s.replace(
+    /\b(one|two|three|four|five|six|seven|eight|nine|ten)\b/gi,
+    (m) => String(ONES[m.toLowerCase()] ?? m)
+  )
+
+  // 8. "N hundred M" → combined number (after all word→digit conversions)
+  s = s.replace(
+    /\b(\d+)\s+hundred\s+(?:and\s+)?(\d+)\b/gi,
+    (_, h, rest) => String(Number(h) * 100 + Number(rest))
+  )
+
+  // 9. Strip commas that Web Speech API adds between numbers
+  s = s.replace(/,\s*/g, " ")
+
   return s
 }

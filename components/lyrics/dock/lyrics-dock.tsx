@@ -12,6 +12,7 @@ import * as Tooltip from "@radix-ui/react-tooltip"
 import { ExternalLink, Lock, LockOpen, Music2, Radio, RotateCcw, Settings } from "lucide-react"
 import { LyricsDockStyles } from "./dock-styles"
 import { ItemList } from "./item-list"
+import { SetPicker } from "./set-picker"
 import { LyricsSettingsPanel } from "./settings-panel"
 import { RoomGate } from "./room-panel"
 import { SessionPanel } from "./session-panel"
@@ -142,17 +143,7 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
         {view === "main" ? (
           <div className="pane">
             <span className="section-label">Song / Prayer set</span>
-            <select value={activeSet?.id ?? ""} onChange={(e) => dock.selectSet(e.target.value)}>
-              <option value="" disabled>
-                {dock.sets.length ? "Choose a set…" : "No sets yet — create one at /lyrics"}
-              </option>
-              {dock.sets.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.type === "prayer" ? "Prayer — " : "Lyrics — "}
-                  {s.title} ({s.groups.length})
-                </option>
-              ))}
-            </select>
+            <SetPicker sets={dock.sets} activeId={activeSet?.id ?? null} onSelect={dock.selectSet} />
             {dock.setsError && <div className="error-msg">{dock.setsError}</div>}
 
             {staged && (

@@ -75,9 +75,9 @@ function numberSpan(words: string[]): { text: string; consumed: number } {
   for (; i < words.length; i++) {
     const w = words[i].toLowerCase().replace(/[,.;!?]+$/, "")
     if (!w) continue
-    if (/^\d+(-\d+)?$/.test(w) || w === "-") {
+    if (/^\d+([:.]\d+)?(-\d+([:.]\d+)?)?$/.test(w) || w === "-") {
       flushTens()
-      out.push(w)
+      out.push(w.replace(/[:.]/g, " "))
       continue
     }
     if (/^-\d+$/.test(w)) {

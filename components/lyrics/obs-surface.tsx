@@ -105,6 +105,15 @@ const PREFERRED_HEIGHT_RATIO = 0.09
 /** Hard ceiling for short/thin sources, so the preferred size can't overflow a caption bar. */
 const MAX_HEIGHT_RATIO = 0.42
 
+/**
+ * Hymns show a complete verse as one cue (3–5 lines). At the song baseline
+ * (~50% slider) the text is tiny because the MAX is capped at PREFERRED.
+ * Hymns get their own sizing: the slider still influences the result, but the
+ * algorithm fills available space rather than capping at a subtitle size.
+ */
+const HYMN_MAX_HEIGHT_RATIO = 0.82
+const HYMN_UPPER_BOUND_PX = 140
+
 interface Layout {
   font: number
   html: string
@@ -129,22 +138,21 @@ function computeLayout(
   const safeW = Math.max(10, totalW - padLeft - padRight)
   const safeH = Math.max(10, totalH - padTop - padBottom)
 
-  // Lyrics/prayer overlays are usually wide bands (a lower-third, a full-width
-  // caption bar) rather than the squarish boxes a Bible passage fills, so type
-  // size scales off the safe area's height, not min(W,H) — a short caption in a
-  // 1920x300 bar should still read like a broadcast caption, not shrink to fit
-  // an imaginary square. Width is still enforced for real by fits() below.
-  //
-  // Auto-fit PREVENTS OVERFLOW; it does not fill the safe area. Every cue
-  // starts at the same preferred size and only shrinks if it genuinely
-  // doesn't fit, so consecutive cues hold a steady size instead of the text
-  // jumping between enormous and tiny as short and long lines alternate —
-  // which is what a purely maximising fit did in rehearsal.
-  const MIN = Math.max(11, safeH * 0.05 * s.scale)
+  const isHymn = item.type === "hymn"
+
+  // Songs: auto-fit prevents overflow but does not fill the safe area. Every
+  // cue starts at the same preferred size and only shrinks.
+  // Hymns: fill available space — a complete verse should be large and centred,
+  // not tiny subtitle text at the bottom.
+  const MIN = Math.max(11, safeH * 0.05 * (isHymn ? Math.max(s.scale, 0.5) : s.scale))
   const PREFERRED = Math.max(MIN, safeH * PREFERRED_HEIGHT_RATIO * s.scale)
-  // The cap only matters in a very short source (a thin caption bar), where
-  // the preferred size would otherwise exceed what the band can show.
-  const MAX = Math.max(MIN, Math.min(PREFERRED, Math.max(18, safeH * MAX_HEIGHT_RATIO) * s.scale))
+  let MAX: number
+  if (isHymn) {
+    const hymnScale = Math.max(s.scale, 0.5)
+    MAX = Math.max(MIN, Math.min(HYMN_UPPER_BOUND_PX, safeH * HYMN_MAX_HEIGHT_RATIO * hymnScale))
+  } else {
+    MAX = Math.max(MIN, Math.min(PREFERRED, Math.max(18, safeH * MAX_HEIGHT_RATIO) * s.scale))
+  }
 
   const html = itemHtml(item, s)
   measurer.innerHTML = html
@@ -153,10 +161,11 @@ function computeLayout(
   const fits = (font: number): boolean => {
     measurer.style.setProperty("--fs", `${font}px`)
     if (measurer.scrollHeight > safeH + 0.5 || measurer.scrollWidth > safeW + 0.5) return false
-    if (s.maxLines > 0) {
+    // maxLines limits song cues (subtitle-style); hymn verses show all lines.
+    if (s.maxLines > 0 && !isHymn) {
       const p = measurer.querySelector<HTMLElement>(".primary")
       if (p) {
-        const lineHeightPx = font * 1.3
+        const lineHeightPx = font * (isHymn ? 1.42 : 1.3)
         const lines = Math.round(p.scrollHeight / lineHeightPx)
         if (lines > s.maxLines) return false
       }
@@ -287,7 +296,9 @@ function ObsDisplay({ room, preview, onLeave }: { room: string | null; preview: 
     setLayout(computeLayout(item, settings, surfaceRef.current, measureRef.current))
   }, [item, settings, resizeTick])
 
-  const justify = settings.vAlign === "top" ? "flex-start" : settings.vAlign === "bottom" ? "flex-end" : "center"
+  const isHymnItem = item?.type === "hymn"
+  const vAlign = isHymnItem ? "center" : settings.vAlign
+  const justify = vAlign === "top" ? "flex-start" : vAlign === "bottom" ? "flex-end" : "center"
   const alignItems = settings.align === "left" ? "flex-start" : settings.align === "right" ? "flex-end" : "center"
   const textAlign = settings.align
   const fontFamily = settings.font === "serif"

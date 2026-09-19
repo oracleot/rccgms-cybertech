@@ -116,6 +116,55 @@ const CASES: Array<{
     label: "ephesians misheard as ephesian",
   },
 
+  // ---- Natural spoken references (number words, no "chapter"/"verse") ----
+  {
+    input: "john three sixteen",
+    expect: ["John 3:16"],
+    label: "bare number words without chapter/verse markers",
+  },
+  {
+    input: "John 3 16",
+    expect: ["John 3:16"],
+    label: "digits without colon",
+  },
+  {
+    input: "john three verse sixteen",
+    expect: ["John 3:16"],
+    label: "partial markers (verse only)",
+  },
+  {
+    input: "first corinthians thirteen four",
+    expect: ["1 Corinthians 13:4"],
+    label: "ordinal book + bare numbers",
+  },
+  {
+    input: "1 corinthians 13 4",
+    expect: ["1 Corinthians 13:4"],
+    label: "digit ordinal + digits",
+  },
+  {
+    input: "psalm twenty three verse one",
+    expect: ["Psalm 23:1"],
+    label: "psalm with number words",
+  },
+  {
+    input: "romans eight twenty eight",
+    expect: ["Romans 8:28"],
+    label: "compound number words (twenty eight)",
+  },
+
+  // ---- Punctuation/noise from recognition ----
+  {
+    input: "John, chapter 3, verse 16.",
+    expect: ["John 3:16"],
+    label: "commas and period in transcript",
+  },
+  {
+    input: "PSALM TWENTY THREE",
+    expect: ["Psalm 23"],
+    label: "all-caps input",
+  },
+
   // ---- Strict mode — these should NOT fire ----
   {
     input: "someone went to the store and came back with verse two things",

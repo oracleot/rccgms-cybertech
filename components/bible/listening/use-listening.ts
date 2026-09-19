@@ -404,11 +404,51 @@ export function useListening(lang: string) {
     }
   }, [])
 
-  const refs = useMemo<VoiceReference[]>(() => {
-    if (!transcript) return []
-    const all = detectVoiceReferences(transcript)
-    return all.slice(-6)
+  // Debounced reference detection: wait for the transcript to stabilise before
+  // committing new references so an incomplete interim like "John three" doesn't
+  // fire prematurely while the speaker is still saying "sixteen".
+  const [stableTranscript, setStableTranscript] = useState("")
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (!transcript) {
+      setStableTranscript("")
+      return
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => setStableTranscript(transcript), 400)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [transcript])
+
+  // Track which references have already been surfaced in this listening session
+  // to suppress duplicates from the accumulating transcript. A reference is
+  // "consumed" when displayed; if the speaker says the same reference again as
+  // a genuinely new utterance (new final text containing it), it re-appears.
+  const lastFinalLenRef = useRef(0)
+  const consumedRefsRef = useRef(new Set<string>())
+
+  const refs = useMemo<VoiceReference[]>(() => {
+    if (!stableTranscript) return []
+    const all = detectVoiceReferences(stableTranscript)
+
+    // Reset consumed set when a new final segment arrives (the speaker said
+    // something new), so a genuinely repeated reference can fire again.
+    const currentFinalLen = finalRef.current.length
+    if (currentFinalLen > lastFinalLenRef.current + 10) {
+      consumedRefsRef.current.clear()
+    }
+    lastFinalLenRef.current = currentFinalLen
+
+    const fresh = all.filter((r) => !consumedRefsRef.current.has(r.reference))
+    for (const r of fresh) consumedRefsRef.current.add(r.reference)
+    return fresh.slice(-6)
+  }, [stableTranscript])
+
+  // Reset consumed refs when listening starts fresh
+  const startWrapped = useCallback(() => {
+    consumedRefsRef.current.clear()
+    lastFinalLenRef.current = 0
+    start()
+  }, [start])
 
   return {
     supported,
@@ -416,7 +456,7 @@ export function useListening(lang: string) {
     detail,
     transcript,
     refs,
-    start,
+    start: startWrapped,
     stop,
     clearTranscript,
     listening: status === "listening",
