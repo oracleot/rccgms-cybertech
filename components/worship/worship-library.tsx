@@ -12,14 +12,15 @@
  * of this belongs in the dock.
  */
 
-import { useMemo, useState } from "react"
-import { Music2, Plus, Search, Upload, WifiOff } from "lucide-react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { ChevronDown, Database, FileText, Music2, Plus, Search, Upload, WifiOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DocxImportPanel } from "@/components/lyrics/editor/docx-import"
+import { EwImportPanel } from "@/components/worship/ew-import-panel"
 import type { ContentType, LyricSet } from "@/lib/lyrics/types"
 import { useWorshipLibrary } from "./use-library"
 import { LibraryRow } from "./library-row"
@@ -41,7 +42,20 @@ export function WorshipLibrary() {
   const [filter, setFilter] = useState<Filter>("all")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
-  const [importing, setImporting] = useState(false)
+  const [importMode, setImportMode] = useState<null | "docx" | "ew">(null)
+  const [importMenuOpen, setImportMenuOpen] = useState(false)
+  const importMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!importMenuOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (importMenuRef.current && !importMenuRef.current.contains(e.target as Node)) {
+        setImportMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [importMenuOpen])
 
   const editing = library.sets.find((s) => s.id === editingId) ?? null
 
@@ -89,10 +103,41 @@ export function WorshipLibrary() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setImporting(true)} disabled={library.offline}>
-            <Upload className="mr-2 h-4 w-4" />
-            Import .docx
-          </Button>
+          <div className="relative" ref={importMenuRef}>
+            <Button
+              variant="outline"
+              onClick={() => setImportMenuOpen(!importMenuOpen)}
+              disabled={library.offline}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Import
+              <ChevronDown className="ml-1 h-3 w-3" />
+            </Button>
+            {importMenuOpen && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-lg border bg-popover p-1 shadow-lg">
+                <button
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent"
+                  onClick={() => {
+                    setImportMode("docx")
+                    setImportMenuOpen(false)
+                  }}
+                >
+                  <FileText className="h-4 w-4 text-blue-500" />
+                  Word Document (.docx)
+                </button>
+                <button
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent"
+                  onClick={() => {
+                    setImportMode("ew")
+                    setImportMenuOpen(false)
+                  }}
+                >
+                  <Database className="h-4 w-4 text-violet-500" />
+                  EasyWorship Database
+                </button>
+              </div>
+            )}
+          </div>
           <Button onClick={() => setCreating(true)} disabled={library.offline}>
             <Plus className="mr-2 h-4 w-4" />
             New
@@ -183,11 +228,19 @@ export function WorshipLibrary() {
         />
       )}
 
-      {importing && (
+      {importMode === "docx" && (
         <div className="rounded-lg border p-4">
-          {/* The panel writes the reviewed songs itself; the library's realtime
-              subscription picks them up, so nothing is created twice here. */}
-          <DocxImportPanel onClose={() => setImporting(false)} onImported={() => setImporting(false)} />
+          <DocxImportPanel onClose={() => setImportMode(null)} onImported={() => setImportMode(null)} />
+        </div>
+      )}
+
+      {importMode === "ew" && (
+        <div className="rounded-lg border p-4">
+          <EwImportPanel
+            existingLibrary={library.sets}
+            onClose={() => setImportMode(null)}
+            onImported={() => setImportMode(null)}
+          />
         </div>
       )}
     </div>
