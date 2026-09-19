@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { LyricSet } from "@/lib/lyrics/types"
+import type { LyricGroup, LyricSet } from "@/lib/lyrics/types"
+import { SECTION_LABELS } from "@/lib/lyrics/types"
 
 const RECENT_KEY = "lyrics-dock-recent"
 const MAX_RECENT = 10
@@ -36,17 +37,73 @@ function typeLabel(type: string): string {
   }
 }
 
-function matchScore(set: LyricSet, q: string): number {
-  const title = set.title.toLowerCase()
-  if (title === q) return 100
-  if (title.startsWith(q)) return 90
-  if (title.includes(q)) return 70
-  const firstCue = set.groups[0]?.primary?.toLowerCase() ?? ""
-  if (firstCue.includes(q)) return 50
-  for (let i = 1; i < Math.min(set.groups.length, 5); i++) {
-    if (set.groups[i]?.primary?.toLowerCase().includes(q)) return 30
+/**
+ * Search should feel like an operator remembering words, not a database query.
+ * Ignore case, punctuation and repeated whitespace so:
+ *   "how great, thou art" matches "How Great Thou Art"
+ * and a remembered chorus/verse fragment finds the parent song.
+ */
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ")
+}
+
+function sectionSearchText(group: LyricGroup): string {
+  if (!group.section) return ""
+  const label =
+    group.section.type === "other"
+      ? group.section.label ?? ""
+      : SECTION_LABELS[group.section.type] ?? group.section.type
+  return group.section.number ? `${label} ${group.section.number}` : label
+}
+
+type MatchInfo = {
+  score: number
+  preview?: string
+}
+
+function matchSet(set: LyricSet, q: string): MatchInfo {
+  const title = normalizeSearchText(set.title)
+  if (title === q) return { score: 100 }
+  if (title.startsWith(q)) return { score: 90 }
+  if (title.includes(q)) return { score: 80 }
+
+  let best: MatchInfo = { score: 0 }
+
+  for (let i = 0; i < set.groups.length; i++) {
+    const group = set.groups[i]
+    const primary = normalizeSearchText(group.primary)
+    const secondary = normalizeSearchText(group.secondary ?? "")
+    const section = normalizeSearchText(sectionSearchText(group))
+
+    const primaryScore = primary.includes(q) ? (i === 0 ? 70 : 65) : 0
+    const secondaryScore = secondary.includes(q) ? 60 : 0
+    const sectionScore = section.includes(q) ? 45 : 0
+    const score = Math.max(primaryScore, secondaryScore, sectionScore)
+
+    if (score > best.score) {
+      const rawPreview =
+        primaryScore > 0
+          ? group.primary
+          : secondaryScore > 0
+            ? group.secondary ?? ""
+            : sectionSearchText(group)
+
+      best = {
+        score,
+        preview: rawPreview.split("\n")[0]?.trim() || undefined,
+      }
+
+      if (score >= 70) break
+    }
   }
-  return 0
+
+  return best
 }
 
 export function SetPicker({
@@ -69,15 +126,14 @@ export function SetPicker({
     setRecentIds(loadRecent())
   }, [])
 
-  const q = query.trim().toLowerCase().replace(/\s+/g, " ")
+  const q = normalizeSearchText(query)
 
   const results = useMemo(() => {
     if (!q) return null
-    const scored = sets
-      .map((s) => ({ set: s, score: matchScore(s, q) }))
-      .filter((x) => x.score > 0)
-      .sort((a, b) => b.score - a.score || a.set.title.localeCompare(b.set.title))
-    return scored.map((x) => x.set)
+    return sets
+      .map((set) => ({ set, match: matchSet(set, q) }))
+      .filter(({ match }) => match.score > 0)
+      .sort((a, b) => b.match.score - a.match.score || a.set.title.localeCompare(b.set.title))
   }, [sets, q])
 
   const recentSets = useMemo(() => {
@@ -85,7 +141,7 @@ export function SetPicker({
     return recentIds.map((id) => sets.find((s) => s.id === id)).filter((s): s is LyricSet => !!s)
   }, [recentIds, sets, q])
 
-  const visibleList = results ?? recentSets ?? []
+  const visibleList = results?.map(({ set }) => set) ?? recentSets ?? []
   const showRecent = !q && recentSets && recentSets.length > 0
 
   useEffect(() => {
@@ -141,7 +197,7 @@ export function SetPicker({
   useEffect(() => {
     const el = listRef.current
     if (!el) return
-    const highlighted = el.children[highlightIdx] as HTMLElement | undefined
+    const highlighted = el.querySelectorAll<HTMLButtonElement>(".set-result")[highlightIdx]
     if (highlighted) highlighted.scrollIntoView({ block: "nearest" })
   }, [highlightIdx])
 
@@ -165,7 +221,7 @@ export function SetPicker({
         ref={inputRef}
         type="text"
         className="set-search"
-        placeholder={activeName ? `${activeName}` : "Search songs, hymns, prayers…"}
+        placeholder={activeName ? `${activeName}` : "Search title, chorus or lyrics…"}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value)
@@ -185,8 +241,7 @@ export function SetPicker({
           {visibleList.map((s, i) => {
             const isActive = s.id === activeId
             const isHighlighted = i === highlightIdx
-            const firstLine = s.groups[0]?.primary?.split("\n")[0] ?? ""
-            const matchedCue = q && !s.title.toLowerCase().includes(q) && firstLine.toLowerCase().includes(q)
+            const matchedPreview = q ? results?.find(({ set }) => set.id === s.id)?.match.preview : undefined
             return (
               <button
                 key={s.id}
@@ -199,8 +254,10 @@ export function SetPicker({
                   <span className="set-type">{typeLabel(s.type)}</span>
                   <span className="set-cues">{s.groups.length} cue{s.groups.length !== 1 ? "s" : ""}</span>
                 </div>
-                {matchedCue && (
-                  <div className="set-result-preview">{firstLine.length > 60 ? firstLine.slice(0, 60) + "…" : firstLine}</div>
+                {matchedPreview && (
+                  <div className="set-result-preview">
+                    {matchedPreview.length > 80 ? matchedPreview.slice(0, 80) + "…" : matchedPreview}
+                  </div>
                 )}
               </button>
             )
