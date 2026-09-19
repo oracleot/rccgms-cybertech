@@ -81,13 +81,24 @@ export async function POST(request: NextRequest) {
   if (!roomId || !isValidRoomId(roomId)) return err("INVALID_ROOM", 403)
   if (!controllerId) return err("NOT_CONTROLLER", 403)
 
-  const ext = ALLOWED[file.type]
+  const lowerName = file.name.toLowerCase()
+  const inferredMime =
+    ALLOWED[file.type]
+      ? file.type
+      : lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")
+        ? "image/jpeg"
+        : lowerName.endsWith(".png")
+          ? "image/png"
+          : lowerName.endsWith(".webp")
+            ? "image/webp"
+            : ""
+  const ext = ALLOWED[inferredMime]
   if (!ext) return err("UNSUPPORTED_TYPE", 415)
   if (file.size > MAX_BYTES) return err("TOO_LARGE", 413)
   if (file.size === 0) return err("UPLOAD_FAILED", 400)
 
   const bytes = new Uint8Array(await file.arrayBuffer())
-  if (!magicMatches(file.type, bytes)) return err("UNSUPPORTED_TYPE", 415)
+  if (!magicMatches(inferredMime, bytes)) return err("UNSUPPORTED_TYPE", 415)
 
   let admin
   try {
@@ -127,7 +138,7 @@ export async function POST(request: NextRequest) {
   // --- file upload -------------------------------------------------------
   const path = `${crypto.randomUUID()}.${ext}`
   const doUpload = () =>
-    admin!.storage.from(BUCKET).upload(path, bytes, { contentType: file!.type, upsert: false })
+    admin!.storage.from(BUCKET).upload(path, bytes, { contentType: inferredMime, upsert: false })
 
   let { error } = await doUpload()
   if (error && /bucket not found/i.test(error.message)) {
