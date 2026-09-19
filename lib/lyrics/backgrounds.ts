@@ -98,6 +98,15 @@ export class BackgroundUploadError extends Error {
 export const MAX_BACKGROUND_BYTES = 10 * 1024 * 1024
 export const ALLOWED_BACKGROUND_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
+function inferredBackgroundMime(file: File): string | null {
+  if (ALLOWED_BACKGROUND_TYPES.includes(file.type)) return file.type
+  const name = file.name.toLowerCase()
+  if (name.endsWith(".jpg") || name.endsWith(".jpeg")) return "image/jpeg"
+  if (name.endsWith(".png")) return "image/png"
+  if (name.endsWith(".webp")) return "image/webp"
+  return null
+}
+
 /**
  * Uploads a background image and returns its public URL. Goes through the
  * server route (which writes with the service role), because the public dock
@@ -107,11 +116,18 @@ export const ALLOWED_BACKGROUND_TYPES = ["image/jpeg", "image/png", "image/webp"
  * operator gets a specific message.
  */
 export async function uploadBackgroundImage(file: File, roomId: string, controllerId: string): Promise<string> {
-  if (!ALLOWED_BACKGROUND_TYPES.includes(file.type)) throw new BackgroundUploadError("UNSUPPORTED_TYPE")
+  const mime = inferredBackgroundMime(file)
+  if (!mime) throw new BackgroundUploadError("UNSUPPORTED_TYPE")
   if (file.size > MAX_BACKGROUND_BYTES) throw new BackgroundUploadError("TOO_LARGE")
 
+  // OBS/CEF on Windows can report an empty or misleading File.type even when
+  // the selected file is a valid PNG/WebP. Normalize the multipart MIME from
+  // the extension; the server still verifies the actual magic bytes.
+  const uploadFile =
+    file.type === mime ? file : new File([file], file.name, { type: mime, lastModified: file.lastModified })
+
   const form = new FormData()
-  form.append("file", file)
+  form.append("file", uploadFile)
   form.append("roomId", roomId)
   form.append("controllerId", controllerId)
 
