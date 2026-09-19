@@ -106,13 +106,13 @@ const PREFERRED_HEIGHT_RATIO = 0.09
 const MAX_HEIGHT_RATIO = 0.42
 
 /**
- * Hymns show a complete verse as one cue (3–5 lines). At the song baseline
- * (~50% slider) the text is tiny because the MAX is capped at PREFERRED.
- * Hymns get their own sizing: the slider still influences the result, but the
- * algorithm fills available space rather than capping at a subtitle size.
+ * Hymns show a complete verse as one cue, but they must still obey the
+ * operator's Text size control. Give hymns a modest readability multiplier
+ * over songs, then treat that as a hard ceiling; auto-fit may shrink from
+ * there, never grow past it.
  */
-const HYMN_MAX_HEIGHT_RATIO = 0.82
-const HYMN_UPPER_BOUND_PX = 140
+const HYMN_PREFERRED_MULTIPLIER = 1.25
+const HYMN_UPPER_BOUND_PX = 96
 
 interface Layout {
   font: number
@@ -140,19 +140,19 @@ function computeLayout(
 
   const isHymn = item.type === "hymn"
 
-  // Songs: auto-fit prevents overflow but does not fill the safe area. Every
-  // cue starts at the same preferred size and only shrinks.
-  // Hymns: fill available space — a complete verse should be large and centred,
-  // not tiny subtitle text at the bottom.
-  const MIN = Math.max(11, safeH * 0.05 * (isHymn ? Math.max(s.scale, 0.5) : s.scale))
-  const PREFERRED = Math.max(MIN, safeH * PREFERRED_HEIGHT_RATIO * s.scale)
-  let MAX: number
-  if (isHymn) {
-    const hymnScale = Math.max(s.scale, 0.5)
-    MAX = Math.max(MIN, Math.min(HYMN_UPPER_BOUND_PX, safeH * HYMN_MAX_HEIGHT_RATIO * hymnScale))
-  } else {
-    MAX = Math.max(MIN, Math.min(PREFERRED, Math.max(18, safeH * MAX_HEIGHT_RATIO) * s.scale))
-  }
+  // The operator-selected scale is authoritative for every content type.
+  // Auto-fit is only a safety mechanism: it can shrink text to prevent
+  // overflow, but it must never enlarge text beyond the operator's ceiling.
+  //
+  // Hymns keep a small readability multiplier because a complete verse is
+  // presented together, but the slider still works across its full range —
+  // including below 50%, which the old Math.max(scale, 0.5) clamp broke.
+  const MIN = Math.max(8, safeH * 0.025 * s.scale)
+  const preferredMultiplier = isHymn ? HYMN_PREFERRED_MULTIPLIER : 1
+  const operatorPreferred = safeH * PREFERRED_HEIGHT_RATIO * s.scale * preferredMultiplier
+  const hardHeightCap = Math.max(18, safeH * MAX_HEIGHT_RATIO) * s.scale * preferredMultiplier
+  const contentCap = isHymn ? HYMN_UPPER_BOUND_PX : Number.POSITIVE_INFINITY
+  const MAX = Math.max(MIN, Math.min(operatorPreferred, hardHeightCap, contentCap))
 
   const html = itemHtml(item, s)
   measurer.innerHTML = html
@@ -173,10 +173,9 @@ function computeLayout(
     return true
   }
 
-  // Take the preferred size whenever it fits — no growing past it just
-  // because there is room. Only when it overflows do we search downward for
-  // the largest size that does fit, floored at MIN (clipping is never the
-  // answer; slightly small text is).
+  // Start at the operator-selected ceiling. If it does not fit, search
+  // downward. Never search upward: spare space is not permission to make
+  // worship text larger than the operator requested.
   let font = MAX
   if (!fits(MAX)) {
     let lo = MIN
