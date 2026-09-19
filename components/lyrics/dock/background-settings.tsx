@@ -227,7 +227,7 @@ export function BackgroundSettings({ dock, roomId, controllerId }: { dock: Lyric
           <input
             ref={fileRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept=".jpg,.jpeg,.png,.webp"
             style={{ display: "none" }}
             onChange={(e) => {
               const f = e.target.files?.[0]
