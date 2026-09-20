@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { currentPathWithQuery } from "@/lib/auth/next-url"
+import {
+  OBS_ACCESS_COOKIE,
+  getObsAccessSecret,
+  isObsDockPath,
+  verifyObsSessionToken,
+} from "@/lib/obs-access"
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -59,6 +65,27 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/availability") || // Public availability form
     request.nextUrl.pathname.startsWith("/bible/obs") || // OBS browser source overlay (no auth)
     request.nextUrl.pathname.startsWith("/lyrics/obs") // OBS browser source overlay (no auth)
+
+  // OBS control docks: the display overlays under /bible/obs and /lyrics/obs
+  // stay fully public (OBS browser sources render them with no session), but
+  // the EXACT dock paths (/bible/obs/dock, /lyrics/obs/dock) require either a
+  // Fusion login or a redeemed OBS access session (see lib/obs-access.ts).
+  // The OBS cookie is consulted here and nowhere else, so it can never grant
+  // access to any other route.
+  if (!user && isObsDockPath(request.nextUrl.pathname)) {
+    const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
+    const secret = getObsAccessSecret()
+    const hasObsSession =
+      token && secret ? await verifyObsSessionToken(token, secret) : false
+    if (!hasObsSession) {
+      const url = request.nextUrl.clone()
+      const destination = currentPathWithQuery(request.nextUrl)
+      url.pathname = "/login"
+      url.search = ""
+      url.searchParams.set("next", destination)
+      return NextResponse.redirect(url)
+    }
+  }
 
   // If user is not logged in and trying to access protected route.
   // The whole path including its query is preserved, so "/lyrics?mode=edit"

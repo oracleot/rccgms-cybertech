@@ -14,6 +14,9 @@ import {
   Globe,
   GitCommit,
   ExternalLink,
+  KeyRound,
+  Copy,
+  Check,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -182,6 +185,9 @@ export function SystemOverview() {
         </CardContent>
       </Card>
 
+      {/* OBS Access */}
+      <ObsAccessCard />
+
       {/* Table row counts */}
       {data?.tables && Object.keys(data.tables).length > 0 && (
         <Card>
@@ -201,6 +207,97 @@ export function SystemOverview() {
         </Card>
       )}
     </div>
+  )
+}
+
+function ObsAccessCard() {
+  const [result, setResult] = useState<{ code: string; expiresAtMs: number } | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [remaining, setRemaining] = useState(0)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (!result) return
+    const tick = () =>
+      setRemaining(Math.max(0, Math.round((result.expiresAtMs - Date.now()) / 1000)))
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [result])
+
+  const generate = async () => {
+    setGenerating(true)
+    setError(null)
+    setCopied(false)
+    try {
+      const res = await fetch("/api/admin/developer/obs-access", { method: "POST" })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.code) {
+        setError(data?.error ?? "Failed to generate code")
+        return
+      }
+      setResult({ code: data.code, expiresAtMs: Date.parse(data.expiresAt) })
+    } catch {
+      setError("Failed to generate code")
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const copy = async () => {
+    if (!result) return
+    try {
+      await navigator.clipboard.writeText(result.code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard unavailable — code is still visible on screen
+    }
+  }
+
+  const mm = String(Math.floor(remaining / 60)).padStart(2, "0")
+  const ss = String(remaining % 60).padStart(2, "0")
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">OBS Access</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-xs text-muted-foreground">
+          Generates a single-use code an operator can enter on the login screen for
+          temporary access to the OBS control docks only. Redeem within 10 minutes;
+          the session lasts 12 hours.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" onClick={generate} disabled={generating}>
+            <KeyRound className={cn("h-4 w-4 mr-1", generating && "animate-pulse")} />
+            Generate Access Code
+          </Button>
+          {result && remaining > 0 && (
+            <>
+              <span className="font-mono text-2xl font-semibold tracking-[0.2em]">
+                {result.code}
+              </span>
+              <Badge variant="secondary">Expires in {mm}:{ss}</Badge>
+              <Button variant="ghost" size="sm" onClick={copy}>
+                {copied ? (
+                  <Check className="h-4 w-4 mr-1 text-green-600 dark:text-green-400" />
+                ) : (
+                  <Copy className="h-4 w-4 mr-1" />
+                )}
+                {copied ? "Copied" : "Copy Code"}
+              </Button>
+            </>
+          )}
+          {result && remaining === 0 && (
+            <Badge variant="outline" className="text-muted-foreground">Code expired — generate a new one</Badge>
+          )}
+        </div>
+        {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+      </CardContent>
+    </Card>
   )
 }
 

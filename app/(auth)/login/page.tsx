@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Mail, CheckCircle2 } from "lucide-react"
+import { Mail, CheckCircle2, KeyRound } from "lucide-react"
 import Image from "next/image"
 
 import {
@@ -48,6 +48,8 @@ export default function LoginPage() {
   const [emailSent, setEmailSent] = useState(false)
   const [notInvited, setNotInvited] = useState(false)
   const [sentEmail, setSentEmail] = useState("")
+  const [obsCode, setObsCode] = useState("")
+  const [obsLoading, setObsLoading] = useState(false)
 
   useEffect(() => {
     const error = searchParams.get("error")
@@ -101,6 +103,30 @@ export default function LoginPage() {
       toast.error("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function onObsCodeSubmit() {
+    if (obsCode.length !== 6 || obsLoading) return
+    setObsLoading(true)
+    try {
+      const res = await fetch("/api/obs-access/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // `next` is only a hint: the server validates it against the two
+        // dock paths and never redirects anywhere else.
+        body: JSON.stringify({ code: obsCode, next }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        toast.error(data?.error ?? "Invalid or expired access code")
+        return
+      }
+      window.location.assign(data.redirect)
+    } catch (_error) {
+      toast.error("An unexpected error occurred. Please try again.")
+    } finally {
+      setObsLoading(false)
     }
   }
 
@@ -326,6 +352,51 @@ export default function LoginPage() {
               </BlurFade>
             </form>
           </Form>
+
+          <BlurFade delay={0.7} direction="up">
+            <div className="flex items-center gap-3 my-5">
+              <span className="flex-1 border-t border-white/10" />
+              <span className="text-xs uppercase tracking-wider text-white/40">or</span>
+              <span className="flex-1 border-t border-white/10" />
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-white/70">OBS Access Code</p>
+              <Input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="6-digit code"
+                maxLength={6}
+                value={obsCode}
+                disabled={obsLoading}
+                onChange={(e) => setObsCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    onObsCodeSubmit()
+                  }
+                }}
+                className="bg-white/5 border-white/10 text-white tracking-[0.3em] font-mono placeholder:tracking-normal placeholder:font-sans placeholder:text-white/30 focus:border-violet-500/50 focus:ring-violet-500/20"
+              />
+              <button
+                type="button"
+                onClick={onObsCodeSubmit}
+                disabled={obsLoading || obsCode.length !== 6}
+                className="w-full h-11 rounded-md border border-white/10 bg-white/5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {obsLoading ? (
+                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <KeyRound className="h-4 w-4" />
+                )}
+                Open OBS Controls
+              </button>
+              <p className="text-xs text-white/40">
+                Temporary access to the OBS control docks only. Ask a developer for a code.
+              </p>
+            </div>
+          </BlurFade>
         </CardContent>
       </Card>
     </BlurFade>
