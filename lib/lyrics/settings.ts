@@ -48,6 +48,10 @@ export interface LyricsSettings {
   backgroundImageUrl: string
   /** 0–100; only applied to a solid/gradient/image background, never to text. */
   backgroundOpacity: number
+  /** Highlight behind just the text (not full screen). */
+  highlightColor: string
+  /** 0–100; 0 is invisible, default is almost transparent. */
+  highlightOpacity: number
 }
 
 export const LYRICS_DEFAULTS: LyricsSettings = {
@@ -74,6 +78,8 @@ export const LYRICS_DEFAULTS: LyricsSettings = {
   gradientAngle: 180,
   backgroundImageUrl: "",
   backgroundOpacity: 100,
+  highlightColor: "#e8e8e8",
+  highlightOpacity: 6,
 }
 
 export const LYRICS_SETTINGS_KEY = "lyrics-obs-scene-settings"
@@ -128,6 +134,8 @@ export function normalize(raw: unknown): LyricsSettings {
     // allowed, so a malformed or javascript: value can't reach the display.
     backgroundImageUrl: safeImageUrl(p.backgroundImageUrl),
     backgroundOpacity: clamp(p.backgroundOpacity, 0, 100, LYRICS_DEFAULTS.backgroundOpacity),
+    highlightColor: parseHex(p.highlightColor, LYRICS_DEFAULTS.highlightColor),
+    highlightOpacity: clamp(p.highlightOpacity, 0, 100, LYRICS_DEFAULTS.highlightOpacity),
   }
 }
 
@@ -151,6 +159,14 @@ export function backgroundCss(s: LyricsSettings): string {
     default:
       return "transparent"
   }
+}
+
+export function highlightRgba(s: LyricsSettings): string {
+  const hex = s.highlightColor.replace("#", "")
+  const r = parseInt(hex.slice(0, 2), 16)
+  const g = parseInt(hex.slice(2, 4), 16)
+  const b = parseInt(hex.slice(4, 6), 16)
+  return `rgba(${r},${g},${b},${s.highlightOpacity / 100})`
 }
 
 function cssUrlEscape(url: string): string {

@@ -20,6 +20,7 @@ import { lyricsChannelName } from "@/lib/lyrics/channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/lyrics/lock"
 import {
   backgroundCss,
+  highlightRgba,
   LYRICS_DEFAULTS,
   loadSettings,
   normalize,
@@ -135,6 +136,7 @@ function computeLayout(
   const html = itemHtml(item, s)
   measurer.innerHTML = html
   measurer.style.width = `${safeW}px`
+  measurer.style.padding = s.highlightOpacity > 0 ? "0.25em 0.4em" : "0"
 
   const fits = (font: number): boolean => {
     measurer.style.setProperty("--fs", `${font}px`)
@@ -290,6 +292,7 @@ function ObsDisplay({ room, preview, onLeave }: { room: string | null; preview: 
       : "none"
   const transitionCss =
     settings.transition === "fade" ? "opacity 220ms ease, transform 220ms cubic-bezier(0.22,1,0.36,1)" : "none"
+  const highlight = settings.highlightOpacity > 0 ? highlightRgba(settings) : "transparent"
 
   return (
     <>
@@ -454,6 +457,9 @@ function ObsDisplay({ room, preview, onLeave }: { room: string | null; preview: 
                 color: settings.color,
                 textShadow,
                 fontFamily,
+                background: highlight,
+                borderRadius: settings.highlightOpacity > 0 ? "0.25em" : undefined,
+                padding: settings.highlightOpacity > 0 ? "0.25em 0.4em" : undefined,
                 transition: transitionCss,
                 opacity: visible ? 1 : 0,
                 transform: visible ? "translateY(0)" : "translateY(0.4em)",

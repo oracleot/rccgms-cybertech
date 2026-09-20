@@ -152,6 +152,28 @@ export function LyricsSettingsPanel({ dock, roomId, controllerId }: { dock: Lyri
             </div>
 
             <div className="divider" />
+            <span className="section-label">Advanced — Text highlight</span>
+            <div className="hint">A subtle background just behind the text. Default is almost invisible — raise opacity to make it stand out.</div>
+            <div className="srow">
+              <span>Highlight colour</span>
+              <input type="color" value={settings.highlightColor} onChange={(e) => update("highlightColor", e.target.value)} />
+            </div>
+            <div className="srow">
+              <span>Highlight opacity</span>
+              <div className="ctl">
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={settings.highlightOpacity}
+                  onChange={(e) => update("highlightOpacity", Number(e.target.value))}
+                />
+                <span className="val">{settings.highlightOpacity}%</span>
+              </div>
+            </div>
+
+            <div className="divider" />
             <BackgroundSettings dock={dock} roomId={roomId} controllerId={controllerId} />
 
             <div className="divider" />
