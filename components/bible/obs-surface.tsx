@@ -42,6 +42,8 @@ interface PassagePayload {
   verseNumber?: number
   focusId?: string
   verses?: Verse[]
+  /** Explicit subset chosen by the operator for display. */
+  selectedIds?: string[]
   /** Replaying what is already live (scene switch, reconnect) rather than changing it. */
   restore?: boolean
 }
@@ -89,7 +91,11 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
 
 function versesOf(p: PassagePayload): Verse[] {
-  return p.verses?.length ? p.verses : [{ verse: p.verseNumber ?? 1, text: p.text }]
+  if (!p.verses?.length) return [{ verse: p.verseNumber ?? 1, text: p.text }]
+  if (!p.selectedIds?.length) return p.verses
+  const selected = new Set(p.selectedIds)
+  const filtered = p.verses.filter((v) => selected.has(verseId(v)))
+  return filtered.length ? filtered : p.verses
 }
 
 /** The verse a payload asks us to show — by id, else by number for older senders, else the first. */
