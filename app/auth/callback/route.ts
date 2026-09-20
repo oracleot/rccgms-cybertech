@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { readNext } from "@/lib/auth/next-url"
+import { emitEvent } from "@/lib/telemetry"
 
 /**
  * Auth callback route for handling Supabase redirects
@@ -30,10 +31,6 @@ export async function GET(request: Request) {
   const { error, data } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    // Log enough to diagnose without exposing tokens.
-    // The most common cause is a PKCE code_verifier mismatch: the browser
-    // that opens the email link is not the same one that requested the
-    // magic link, so the cookie holding the verifier is absent.
     console.error(
       "[auth/callback] exchangeCodeForSession failed:",
       error.message,
@@ -43,6 +40,7 @@ export async function GET(request: Request) {
     const reason = error.message.includes("code verifier")
       ? "pkce_mismatch"
       : "exchange_failed"
+    void emitEvent({ subsystem: "auth", action: "login_callback", status: "error", severity: "error", metadata: { type, reason } })
     return NextResponse.redirect(`${origin}/login?error=auth_callback_error&reason=${reason}`)
   }
 
@@ -50,6 +48,8 @@ export async function GET(request: Request) {
     console.error("[auth/callback] Exchange succeeded but no user returned")
     return NextResponse.redirect(`${origin}/login?error=auth_callback_error&reason=no_user`)
   }
+
+  void emitEvent({ subsystem: "auth", action: "login_callback", status: "ok", actor_id: data.user.id, metadata: { type: type ?? "default" } })
 
   // Handle different auth types
   if (type === "invite") {

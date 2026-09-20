@@ -35,6 +35,9 @@ import { TableBrowser } from "./table-browser"
 import { SchemaInspector } from "./schema-inspector"
 import { SqlQueryRunner } from "./sql-query-runner"
 import { EmailBlast } from "./email-blast"
+import { SystemOverview } from "./system-overview"
+import { ActivityFeed } from "./activity-feed"
+import { ErrorFeed } from "./error-feed"
 
 interface HealthData {
   status: "healthy" | "degraded" | "error"
@@ -139,8 +142,20 @@ export function DeveloperToolsClient({
     : XCircle
 
   return (
-    <Tabs defaultValue="health" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-6">
+    <Tabs defaultValue="overview" className="space-y-4">
+      <TabsList className="flex w-full overflow-x-auto">
+        <TabsTrigger value="overview" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Globe className="h-4 w-4" />
+          <span className="hidden sm:inline">Overview</span>
+        </TabsTrigger>
+        <TabsTrigger value="activity" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Zap className="h-4 w-4" />
+          <span className="hidden sm:inline">Activity</span>
+        </TabsTrigger>
+        <TabsTrigger value="errors" className="flex items-center gap-1 text-xs sm:text-sm">
+          <AlertTriangle className="h-4 w-4" />
+          <span className="hidden sm:inline">Errors</span>
+        </TabsTrigger>
         <TabsTrigger value="health" className="flex items-center gap-1 text-xs sm:text-sm">
           <Activity className="h-4 w-4" />
           <span className="hidden sm:inline">Health</span>
@@ -166,6 +181,21 @@ export function DeveloperToolsClient({
           <span className="hidden sm:inline">Email</span>
         </TabsTrigger>
       </TabsList>
+
+      {/* System Overview Tab */}
+      <TabsContent value="overview" className="space-y-4">
+        <SystemOverview />
+      </TabsContent>
+
+      {/* Activity Feed Tab */}
+      <TabsContent value="activity" className="space-y-4">
+        <ActivityFeed />
+      </TabsContent>
+
+      {/* Error Feed Tab */}
+      <TabsContent value="errors" className="space-y-4">
+        <ErrorFeed />
+      </TabsContent>
 
       {/* System Health Tab */}
       <TabsContent value="health" className="space-y-4">

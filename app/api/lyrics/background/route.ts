@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { isValidRoomId } from "@/lib/lyrics/room"
+import { emitEvent } from "@/lib/telemetry"
 
 /**
  * Background image upload for the Lyrics OBS dock.
@@ -56,7 +57,10 @@ function err(code: string, status: number) {
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
   const { allowed } = checkRateLimit(`bg-upload:${ip}`, 30, 10 * 60 * 1000)
-  if (!allowed) return err("RATE_LIMITED", 429)
+  if (!allowed) {
+    void emitEvent({ subsystem: "worship", action: "background_upload", status: "rate_limited", severity: "warn" })
+    return err("RATE_LIMITED", 429)
+  }
 
   const contentLength = Number(request.headers.get("content-length") || 0)
   if (contentLength > MAX_BYTES + 1024 * 1024) return err("TOO_LARGE", 413)
@@ -119,15 +123,18 @@ export async function POST(request: NextRequest) {
 
     if (claimError || !claim) {
       console.error("[background upload] no controller claim for room:", roomId)
+      void emitEvent({ subsystem: "worship", action: "background_upload", status: "error", severity: "warn", metadata: { roomId, reason: "no_claim" } })
       return err("INVALID_ROOM", 403)
     }
     if (claim.controller_id !== controllerId) {
       console.error("[background upload] controllerId mismatch for room:", roomId)
+      void emitEvent({ subsystem: "worship", action: "background_upload", status: "error", severity: "warn", metadata: { roomId, reason: "controller_mismatch" } })
       return err("NOT_CONTROLLER", 403)
     }
     const age = Date.now() - new Date(claim.claimed_at).getTime()
     if (age > MAX_CLAIM_AGE_MS) {
       console.error("[background upload] stale controller claim for room:", roomId, "age:", Math.round(age / 60000), "min")
+      void emitEvent({ subsystem: "worship", action: "background_upload", status: "error", severity: "warn", metadata: { roomId, reason: "stale_claim", age_min: Math.round(age / 60000) } })
       return err("NOT_CONTROLLER", 403)
     }
   } catch (e) {
@@ -152,6 +159,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error("[background upload] storage error:", error.name, error.message)
+    void emitEvent({ subsystem: "worship", action: "background_upload", status: "error", severity: "error", metadata: { roomId, error: error.message } })
     const msg = error.message.toLowerCase()
     if (/row-level security|permission|not authorized/.test(msg)) return err("PERMISSION_DENIED", 403)
     if (/exceeded|too large|maximum size/.test(msg)) return err("TOO_LARGE", 413)
@@ -161,5 +169,6 @@ export async function POST(request: NextRequest) {
   }
 
   const { data } = admin.storage.from(BUCKET).getPublicUrl(path)
+  void emitEvent({ subsystem: "worship", action: "background_upload", status: "ok", metadata: { roomId, mime: inferredMime, size: file.size } })
   return NextResponse.json({ url: data.publicUrl })
 }

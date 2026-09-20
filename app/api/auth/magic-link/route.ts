@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { magicLinkSchema } from "@/lib/validations/auth"
 import { getAppUrl } from "@/lib/constants"
 import { sanitizeNext } from "@/lib/auth/next-url"
+import { emitEvent } from "@/lib/telemetry"
 
 /**
  * Simple in-memory rate limiter for magic link requests
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
 
   // Check rate limit
   if (isRateLimited(email.toLowerCase())) {
+    void emitEvent({ subsystem: "auth", action: "magic_link_sent", status: "rate_limited", severity: "warn" })
     return NextResponse.json(
       { error: "RATE_LIMITED", message: "Too many requests. Please try again later." },
       { status: 429 }
@@ -118,8 +120,8 @@ export async function POST(request: NextRequest) {
     // Only log the actual error for debugging
   }
 
-  // Always return success message regardless of whether email exists (FR-007)
-  // This prevents email enumeration attacks
+  void emitEvent({ subsystem: "auth", action: "magic_link_sent", status: error ? "error" : "ok", severity: error ? "warn" : "info" })
+
   return NextResponse.json({
     success: true,
     message: "If an account exists, a magic link has been sent to your email.",

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { inviteUserSchema } from "@/lib/validations/auth"
+import { emitEvent } from "@/lib/telemetry"
 
 /**
  * POST /api/auth/invite
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
 
   if (inviteError) {
     console.error("Invite error:", inviteError)
+    void emitEvent({ subsystem: "auth", action: "invite_sent", status: "error", severity: "error", actor_id: user.id, metadata: { role } })
     return NextResponse.json(
       { error: "INVITE_FAILED", message: "Failed to send invitation" },
       { status: 500 }
@@ -103,6 +105,8 @@ export async function POST(request: NextRequest) {
   // Calculate expiration (7 days from now)
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7)
+
+  void emitEvent({ subsystem: "auth", action: "invite_sent", status: "ok", actor_id: user.id, metadata: { role } })
 
   return NextResponse.json({
     success: true,

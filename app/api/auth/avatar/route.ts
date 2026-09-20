@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { emitEvent } from "@/lib/telemetry"
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"]
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
 
   if (uploadError) {
     console.error("Avatar upload error:", uploadError)
+    void emitEvent({ subsystem: "storage", action: "avatar_upload", status: "error", severity: "error", actor_id: user.id, metadata: { error: uploadError.message } })
     return NextResponse.json(
       { error: "UPLOAD_FAILED", message: "Failed to upload avatar" },
       { status: 500 }
@@ -132,6 +134,8 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+
+  void emitEvent({ subsystem: "storage", action: "avatar_upload", status: "ok", actor_id: user.id, metadata: { type: file.type, size: file.size } })
 
   return NextResponse.json({
     success: true,

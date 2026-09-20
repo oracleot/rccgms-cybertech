@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { Plus, RefreshCw } from "lucide-react"
+import { Plus, RefreshCw, ClipboardPaste } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { AddItemModal } from "@/components/rundown/add-item-modal"
 import { SortableItem } from "@/components/rundown/sortable-item"
 import { TemplateSelector } from "@/components/rundown/template-selector"
+import { PasteRundownModal } from "@/components/rundown/paste-rundown-modal"
 import type { RundownEditorItem } from "@/components/rundown/types"
 import type { RundownItemType } from "@/types/rundown"
 
@@ -44,6 +45,7 @@ export function RundownEditor({ rundownId, initialItems, canEdit }: RundownEdito
   )
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  const [pasteOpen, setPasteOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<RundownEditorItem | null>(null)
   const sensors = useSensors(useSensor(PointerSensor))
 
@@ -194,6 +196,10 @@ export function RundownEditor({ rundownId, initialItems, canEdit }: RundownEdito
             <Button variant="outline" size="icon" onClick={fetchItems}>
               <RefreshCw className="h-4 w-4" />
             </Button>
+            <Button variant="outline" onClick={() => setPasteOpen(true)}>
+              <ClipboardPaste className="mr-2 h-4 w-4" />
+              Paste Rundown
+            </Button>
             <Button onClick={() => { setEditingItem(null); setModalOpen(true) }}>
               <Plus className="mr-2 h-4 w-4" />
               Add item
@@ -246,16 +252,25 @@ export function RundownEditor({ rundownId, initialItems, canEdit }: RundownEdito
       </Card>
 
       {canEdit && (
-        <AddItemModal
-          open={modalOpen}
-          onOpenChange={(open) => {
-            setModalOpen(open)
-            if (!open) setEditingItem(null)
-          }}
-          rundownId={rundownId}
-          initialItem={editingItem}
-          onItemSaved={handleItemSaved}
-        />
+        <>
+          <AddItemModal
+            open={modalOpen}
+            onOpenChange={(open) => {
+              setModalOpen(open)
+              if (!open) setEditingItem(null)
+            }}
+            rundownId={rundownId}
+            initialItem={editingItem}
+            onItemSaved={handleItemSaved}
+          />
+          <PasteRundownModal
+            open={pasteOpen}
+            onOpenChange={setPasteOpen}
+            rundownId={rundownId}
+            existingItemCount={items.length}
+            onImported={fetchItems}
+          />
+        </>
       )}
     </div>
   )

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { emitEvent } from "@/lib/telemetry"
 
 /**
  * POST /api/admin/developer/query
@@ -106,6 +107,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    void emitEvent({ subsystem: "system", action: "sql_query", status: "ok", duration_ms: duration, actor_id: user.id, metadata: { rowCount: Array.isArray(data) ? data.length : 0 } })
+
     return NextResponse.json({
       rows: data ?? [],
       rowCount: Array.isArray(data) ? data.length : 0,
@@ -113,6 +116,7 @@ export async function POST(request: NextRequest) {
       query: sql,
     })
   } catch (error) {
+    void emitEvent({ subsystem: "system", action: "sql_query", status: "error", severity: "error", metadata: { error: error instanceof Error ? error.message : "Unknown error" } })
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
