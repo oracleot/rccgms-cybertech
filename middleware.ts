@@ -5,6 +5,7 @@ import {
   OBS_ACCESS_COOKIE,
   getObsAccessSecret,
   isObsDockPath,
+  sanitizeDockNext,
   verifyObsSessionToken,
 } from "@/lib/obs-access"
 
@@ -72,6 +73,20 @@ export async function middleware(request: NextRequest) {
   // Fusion login or a redeemed OBS access session (see lib/obs-access.ts).
   // The OBS cookie is consulted here and nowhere else, so it can never grant
   // access to any other route.
+  // Self-heal for OBS: a login page left sitting at /login?next=<dock> (e.g.
+  // an OBS browser panel that was redirected before the code was redeemed)
+  // bounces straight back to the dock once a valid OBS session exists.
+  if (!user && request.nextUrl.pathname === "/login") {
+    const dockNext = sanitizeDockNext(request.nextUrl.searchParams.get("next"))
+    if (dockNext) {
+      const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
+      const secret = getObsAccessSecret()
+      if (token && secret && (await verifyObsSessionToken(token, secret))) {
+        return NextResponse.redirect(new URL(dockNext, request.url))
+      }
+    }
+  }
+
   if (!user && isObsDockPath(request.nextUrl.pathname)) {
     const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
     const secret = getObsAccessSecret()
