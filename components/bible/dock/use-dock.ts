@@ -45,8 +45,8 @@ export interface PassagePayload {
   verseNumber?: number
   focusId?: string
   verses?: Verse[]
-  /** Explicit verses selected for display. When present, the display renders only these. */
-  selectedIds?: string[]
+  /** Full loaded chapter for the dock picker. OBS only receives/renders `verses`. */
+  availableVerses?: Verse[]
   /** Replaying what is already live (scene switch, reconnect) rather than changing it. */
   restore?: boolean
 }
@@ -120,18 +120,17 @@ export function withFocus(p: PassagePayload, id: string | undefined): PassagePay
 }
 
 function toPayload(p: FetchedPassage, target?: Target): PassagePayload {
-  const allIds = p.verses.map(verseId)
-  // A chapter-only reference such as "Gen 1" should never dump the whole
-  // chapter onto OBS. Start with a readable first three verses; the operator
-  // can then toggle individual verses in the dock.
   const chapterOnly = !!target && !target.reference.includes(":") && p.verses.length > 3
+  const selected = chapterOnly ? p.verses.slice(0, 3) : p.verses
   return {
     reference: p.reference,
-    text: p.text,
+    text: selected.map((v) => v.text).join(" "),
     translation: p.translationId,
     translationName: p.translationName,
-    verses: p.verses,
-    selectedIds: chapterOnly ? allIds.slice(0, 3) : allIds,
+    // Critical safety: the display payload itself contains only selected verses.
+    // The full chapter is retained separately for the dock picker.
+    verses: selected,
+    availableVerses: p.verses,
   }
 }
 
@@ -452,17 +451,16 @@ export function useDock() {
     (v: Verse) => {
       const cur = onScreenRef.current
       if (!cur || lockedRef.current) return
+      const all = cur.availableVerses ?? cur.verses ?? []
+      const selected = cur.verses ?? []
       const id = verseId(v)
-      const all = cur.verses ?? []
-      const selected = cur.selectedIds ?? all.map(verseId)
-      const isSelected = selected.includes(id)
-      // Keep at least one verse selected; Clear Screen is the explicit way to
-      // remove scripture from output.
+      const isSelected = selected.some((x) => verseId(x) === id)
       if (isSelected && selected.length === 1) return
-      const nextSelected = isSelected ? selected.filter((x) => x !== id) : [...selected, id]
-      const ordered = all.map(verseId).filter((x) => nextSelected.includes(x))
-      const nextFocus = ordered.includes(cur.focusId ?? "") ? cur.focusId : ordered[0]
-      broadcast(withFocus({ ...cur, selectedIds: ordered }, nextFocus))
+      const next = isSelected
+        ? selected.filter((x) => verseId(x) !== id)
+        : all.filter((x) => selected.some((s) => verseId(s) === verseId(x)) || verseId(x) === id)
+      const nextFocus = next.some((x) => verseId(x) === (cur.focusId ?? "")) ? cur.focusId : verseId(next[0])
+      broadcast(withFocus({ ...cur, verses: next, text: next.map((x) => x.text).join(" ") }, nextFocus))
     },
     [broadcast]
   )
@@ -472,7 +470,7 @@ export function useDock() {
     channelRef.current?.send({ type: "broadcast", event: "nav", payload: { delta } })
   }, [])
 
-  const verses = onScreen?.verses ?? []
+  const verses = onScreen?.availableVerses ?? onScreen?.verses ?? []
 
   /** Where we are, from the first verse the display says is showing. */
   const position = useMemo<Position | null>(() => {
