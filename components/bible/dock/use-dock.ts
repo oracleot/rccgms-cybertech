@@ -45,6 +45,8 @@ export interface PassagePayload {
   verseNumber?: number
   focusId?: string
   verses?: Verse[]
+  /** Explicit verses selected for display. When present, the display renders only these. */
+  selectedIds?: string[]
   /** Replaying what is already live (scene switch, reconnect) rather than changing it. */
   restore?: boolean
 }
@@ -117,13 +119,19 @@ export function withFocus(p: PassagePayload, id: string | undefined): PassagePay
   return { ...p, focusId: v ? id : undefined, verseNumber: v?.verse }
 }
 
-function toPayload(p: FetchedPassage): PassagePayload {
+function toPayload(p: FetchedPassage, target?: Target): PassagePayload {
+  const allIds = p.verses.map(verseId)
+  // A chapter-only reference such as "Gen 1" should never dump the whole
+  // chapter onto OBS. Start with a readable first three verses; the operator
+  // can then toggle individual verses in the dock.
+  const chapterOnly = !!target && !target.reference.includes(":") && p.verses.length > 3
   return {
     reference: p.reference,
     text: p.text,
     translation: p.translationId,
     translationName: p.translationName,
     verses: p.verses,
+    selectedIds: chapterOnly ? allIds.slice(0, 3) : allIds,
   }
 }
 
@@ -352,7 +360,7 @@ export function useDock() {
       try {
         const passage = await loadPassage(target.apiPath, t, "high")
         const single = passage.verses.length === 1 ? verseId(passage.verses[0]) : undefined
-        const payload = withFocus(toPayload(passage), opts?.focusId ?? single)
+        const payload = withFocus(toPayload(passage, target), opts?.focusId ?? single ?? (passage.verses[0] ? verseId(passage.verses[0]) : undefined))
         const loaded = { apiPath: target.apiPath, reference: passage.reference }
         prefetchTranslationsWhenIdle(target.apiPath, t, passage.verses.length)
         if (previewFirstRef.current && !opts?.live) {
@@ -444,7 +452,17 @@ export function useDock() {
     (v: Verse) => {
       const cur = onScreenRef.current
       if (!cur || lockedRef.current) return
-      broadcast(withFocus(cur, verseId(v)))
+      const id = verseId(v)
+      const all = cur.verses ?? []
+      const selected = cur.selectedIds ?? all.map(verseId)
+      const isSelected = selected.includes(id)
+      // Keep at least one verse selected; Clear Screen is the explicit way to
+      // remove scripture from output.
+      if (isSelected && selected.length === 1) return
+      const nextSelected = isSelected ? selected.filter((x) => x !== id) : [...selected, id]
+      const ordered = all.map(verseId).filter((x) => nextSelected.includes(x))
+      const nextFocus = ordered.includes(cur.focusId ?? "") ? cur.focusId : ordered[0]
+      broadcast(withFocus({ ...cur, selectedIds: ordered }, nextFocus))
     },
     [broadcast]
   )
