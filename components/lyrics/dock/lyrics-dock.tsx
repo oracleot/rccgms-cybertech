@@ -7,9 +7,9 @@
  * same useLyricsDock state; Simple just hides secondary controls.
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import * as Tooltip from "@radix-ui/react-tooltip"
-import { ExternalLink, Lock, LockOpen, Music2, Radio, RotateCcw, Settings } from "lucide-react"
+import { Lock, LockOpen, Music2, Radio, RotateCcw, Settings } from "lucide-react"
 import { LyricsDockStyles } from "./dock-styles"
 import { ItemList } from "./item-list"
 import { SetPicker } from "./set-picker"
@@ -44,79 +44,6 @@ export function LyricsDockApp() {
   // key={room} remounts the dock on a room switch, so no live/session state
   // from the previous room can linger.
   return <LyricsDock key={room} roomId={room} onLeave={leave} />
-}
-
-/**
- * The management page has to be opened in the operator's *normal* browser,
- * not from in here.
- *
- * This dock runs inside OBS's embedded Chromium, which keeps its own cookie
- * store, entirely separate from Chrome/Edge. A target="_blank" link just
- * opens another OBS-owned window, and signing in there is a dead end: the
- * magic-link email gets opened in the real browser, so the session lands in
- * the real browser and the OBS window stays on the login screen forever.
- *
- * So instead of a link that leads somewhere useless, this hands over the URL
- * to paste. Clipboard access needs a secure context, which a dock served over
- * plain http on a LAN address isn't, so the URL is also shown in a read-only
- * field the operator can select by hand when the copy fails.
- */
-function ManageLibraryLink() {
-  // "selected" is the honest outcome when the browser refuses clipboard
-  // access: the URL is highlighted and Ctrl+C will work, which is worth
-  // saying rather than leaving the button looking like it did nothing.
-  const [status, setStatus] = useState<"idle" | "copied" | "selected">("idle")
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  // Filled in after mount rather than during render: window.location doesn't
-  // exist server-side, and writing the field directly avoids both a
-  // hydration mismatch and a state round trip.
-  useEffect(() => {
-    if (inputRef.current) inputRef.current.value = `${window.location.origin}/lyrics`
-  }, [])
-
-  async function copy() {
-    // Select first, so the fallback is already in place whichever path wins.
-    inputRef.current?.focus()
-    inputRef.current?.select()
-    let ok = false
-    try {
-      await navigator.clipboard.writeText(inputRef.current?.value ?? "/lyrics")
-      ok = true
-    } catch {
-      // Clipboard API needs a secure context; a dock served over plain http
-      // on a LAN address doesn't get one. execCommand is the older path.
-      try {
-        ok = document.execCommand("copy")
-      } catch {
-        ok = false
-      }
-    }
-    setStatus(ok ? "copied" : "selected")
-    window.setTimeout(() => setStatus("idle"), 6000)
-  }
-
-  const label =
-    status === "copied"
-      ? "Copied — paste it into your browser"
-      : status === "selected"
-        ? "Selected below — press Ctrl+C to copy"
-        : "Copy the manage-songs link (/lyrics)"
-
-  return (
-    <>
-      <button className="btn-ghost wide" onClick={copy}>
-        <ExternalLink style={{ height: 12, width: 12, marginRight: 5, verticalAlign: -2 }} />
-        {label}
-      </button>
-      <input ref={inputRef} className="url-field" defaultValue="/lyrics" readOnly onFocus={(e) => e.target.select()} />
-      <div className="hint">
-        Open this in Chrome or Edge, not in OBS — signing in needs the same browser you read
-        your email in. Create, edit, reorder and delete sets there; changes appear here
-        automatically.
-      </div>
-    </>
-  )
 }
 
 function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }) {
@@ -232,16 +159,6 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
               <ItemList dock={dock} />
             </div>
 
-            {advanced && (
-              <>
-                <div className="divider" />
-                {/* Creating/editing/deleting sets happens on /lyrics, not here — the dock
-                    has no login session (an OBS Browser Source can't authenticate), and
-                    only signed-in staff can write to the shared library. The dock only
-                    ever reads it. */}
-                <ManageLibraryLink />
-              </>
-            )}
           </div>
         ) : view === "session" ? (
           <SessionPanel roomId={roomId} presence={presence} onLeave={onLeave} />
