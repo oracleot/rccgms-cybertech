@@ -28,6 +28,11 @@ self.addEventListener("fetch", (event) => {
   // Let Supabase Realtime, auth, and API requests always go to network
   const url = new URL(event.request.url)
   if (
+    url.pathname === "/obs-access" ||
+    url.pathname === "/bible/obs" ||
+    url.pathname.startsWith("/bible/obs/") ||
+    url.pathname === "/lyrics/obs" ||
+    url.pathname.startsWith("/lyrics/obs/") ||
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/auth/") ||
     url.hostname.includes("supabase")

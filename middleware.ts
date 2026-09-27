@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { currentPathWithQuery } from "@/lib/auth/next-url"
 import {
   OBS_ACCESS_COOKIE,
+  buildObsAccessGateUrl,
   getObsAccessSecret,
   isObsDockPath,
   sanitizeDockNext,
@@ -57,7 +58,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/reset-password") ||
     request.nextUrl.pathname.startsWith("/auth/callback") ||
     request.nextUrl.pathname.startsWith("/accept-invite") ||
-    request.nextUrl.pathname.startsWith("/verify")
+    request.nextUrl.pathname.startsWith("/verify") ||
+    request.nextUrl.pathname === "/obs-access"
 
   const isPublicRoute = request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname.startsWith("/api/") || // API routes handle their own auth
@@ -73,10 +75,11 @@ export async function middleware(request: NextRequest) {
   // Fusion login or a redeemed OBS access session (see lib/obs-access.ts).
   // The OBS cookie is consulted here and nowhere else, so it can never grant
   // access to any other route.
-  // Self-heal for OBS: a login page left sitting at /login?next=<dock> (e.g.
-  // an OBS browser panel that was redirected before the code was redeemed)
-  // bounces straight back to the dock once a valid OBS session exists.
-  if (!user && request.nextUrl.pathname === "/login") {
+  // Self-heal for OBS: an OBS code page left sitting at
+  // /obs-access?next=<dock> bounces straight back to the dock once a valid
+  // OBS session exists. The legacy /login destination is retained only for
+  // OBS panels that were opened before this dedicated gate existed.
+  if (!user && (request.nextUrl.pathname === "/obs-access" || request.nextUrl.pathname === "/login")) {
     const dockNext = sanitizeDockNext(request.nextUrl.searchParams.get("next"))
     if (dockNext) {
       const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
@@ -93,12 +96,11 @@ export async function middleware(request: NextRequest) {
     const hasObsSession =
       token && secret ? await verifyObsSessionToken(token, secret) : false
     if (!hasObsSession) {
-      const url = request.nextUrl.clone()
       const destination = currentPathWithQuery(request.nextUrl)
-      url.pathname = "/login"
-      url.search = ""
-      url.searchParams.set("next", destination)
-      return NextResponse.redirect(url)
+      const gateUrl = buildObsAccessGateUrl(destination)
+      // destination is an exact OBS dock path here, so this fallback is only
+      // defensive if the route list and sanitizer ever drift apart.
+      return NextResponse.redirect(new URL(gateUrl ?? "/obs-access", request.url))
     }
   }
 

@@ -67,6 +67,17 @@ export function sanitizeDockNext(raw: string | null | undefined): string | null 
   return `${url.pathname}${url.search}`
 }
 
+/**
+ * Builds the only permitted anonymous entry point for a protected OBS dock.
+ * Keeping this beside sanitizeDockNext makes the middleware destination easy
+ * to test and prevents an OBS code redemption flow from ever targeting a
+ * normal Fusion route.
+ */
+export function buildObsAccessGateUrl(raw: string | null | undefined): string | null {
+  const next = sanitizeDockNext(raw)
+  return next ? `/obs-access?next=${encodeURIComponent(next)}` : null
+}
+
 export function isValidObsCodeFormat(code: string): boolean {
   return /^\d{6}$/.test(code)
 }
