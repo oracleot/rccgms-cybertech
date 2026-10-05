@@ -9,8 +9,15 @@ import {
   sanitizeDockNext,
   verifyObsSessionToken,
 } from "@/lib/obs-access"
+import { isMaintenanceMode, isMaintenanceExcluded } from "@/lib/maintenance"
 
 export async function middleware(request: NextRequest) {
+  if (isMaintenanceMode() && !isMaintenanceExcluded(request.nextUrl.pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/maintenance"
+    url.search = ""
+    return NextResponse.redirect(url)
+  }
   let supabaseResponse = NextResponse.next({
     request,
   })
