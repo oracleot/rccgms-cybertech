@@ -26,7 +26,7 @@
 
 // Deployment-controlled switch for releases without Vercel dashboard access.
 // Set false only after migrations, bootstrap and production verification pass.
-export const RELEASE_MAINTENANCE = true
+export const RELEASE_MAINTENANCE = false
 
 export function isMaintenanceMode(): boolean {
   return RELEASE_MAINTENANCE || process.env.FUSION_MAINTENANCE_MODE === "true"

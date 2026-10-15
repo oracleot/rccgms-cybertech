@@ -165,4 +165,3 @@ export async function POST() {
     return NextResponse.json({error:"Bootstrap incomplete; keep maintenance enabled and retry after resolving the failed step",steps},{status:500})
   }
 }
-

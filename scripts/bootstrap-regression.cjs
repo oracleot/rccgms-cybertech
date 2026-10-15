@@ -88,4 +88,3 @@ async function invoke(db,opts={}) {
  assert.equal((await invoke(fixture(),{maintenance:false})).status,409)
  console.log('PASS: partial recovery, no-op retry, exact roles, all backfills and entitlements, returned errors, missing identities, auth and maintenance gates')
 })().catch(e=>{console.error(e);process.exitCode=1})
-
