@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache"
 
 import { createClient } from "@/lib/supabase/server"
+import { getActiveParishId } from "@/lib/parish/context"
+import { enforceFeature } from "@/lib/features/enforce"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 import {
   createRundownSchema,
   updateRundownSchema,
@@ -74,10 +77,6 @@ async function requireProfile(): Promise<RequireProfileResult> {
   return { supabase, profile: profileData as Profile }
 }
 
-function assertLeaderOrAdmin(profile: Profile) {
-  return profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer" || profile.role === "leader"
-}
-
 export async function createRundown(
   input: CreateRundownInput
 ): Promise<ActionResult<{ id: string }>> {
@@ -92,6 +91,12 @@ export async function createRundown(
 
     const { supabase, profile } = result
 
+    const parishId = await getActiveParishId()
+    if (!parishId) return { success: false, error: "No active parish" }
+
+    const denied = await enforceFeature("rundown", parishId)
+    if (denied) return { success: false, error: denied }
+
     // All authenticated users (any role) can create rundowns
 
     const { data, error } = await supabase
@@ -102,6 +107,7 @@ export async function createRundown(
         title: parsed.data.title,
         status: "draft",
         created_by: profile.id,
+        parish_id: parishId,
       } as never)
       .select("id")
       .single()
@@ -128,14 +134,13 @@ export async function updateRundown(
       return { success: false, error: parsed.error.issues[0].message }
     }
 
-    const result = await requireProfile()
-    if ("error" in result) return { success: false, error: result.error }
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
-    const { supabase, profile } = result
+    const updateDenied = await enforceFeature("rundown")
+    if (updateDenied) return { success: false, error: updateDenied }
 
-    if (!assertLeaderOrAdmin(profile)) {
-      return { success: false, error: "Only admins and leaders can update rundowns" }
-    }
+    const supabase = await createClient()
 
     const { error } = await supabase
       .from("rundowns")
@@ -168,14 +173,13 @@ export async function addRundownItem(
       return { success: false, error: parsed.error.issues[0].message }
     }
 
-    const result = await requireProfile()
-    if ("error" in result) return { success: false, error: result.error }
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
-    const { supabase, profile } = result
+    const addItemDenied = await enforceFeature("rundown", auth.parishId)
+    if (addItemDenied) return { success: false, error: addItemDenied }
 
-    if (!assertLeaderOrAdmin(profile)) {
-      return { success: false, error: "Only admins and leaders can add items" }
-    }
+    const supabase = await createClient()
 
     const { data: lastItem } = await supabase
       .from("rundown_items")
@@ -199,6 +203,7 @@ export async function addRundownItem(
         assigned_to: parsed.data.assignedTo || null,
         media_url: parsed.data.mediaUrl || null,
         song_id: parsed.data.songId || null,
+        parish_id: auth.parishId,
       } as never)
       .select("id")
       .single()
@@ -225,14 +230,13 @@ export async function updateRundownItem(
       return { success: false, error: parsed.error.issues[0].message }
     }
 
-    const result = await requireProfile()
-    if ("error" in result) return { success: false, error: result.error }
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
-    const { supabase, profile } = result
+    const updateItemDenied = await enforceFeature("rundown", auth.parishId)
+    if (updateItemDenied) return { success: false, error: updateItemDenied }
 
-    if (!assertLeaderOrAdmin(profile)) {
-      return { success: false, error: "Only admins and leaders can update items" }
-    }
+    const supabase = await createClient()
 
     const { error } = await supabase
       .from("rundown_items")
@@ -267,14 +271,13 @@ export async function deleteRundownItem(
       return { success: false, error: "Invalid item id" }
     }
 
-    const result = await requireProfile()
-    if ("error" in result) return { success: false, error: result.error }
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
-    const { supabase, profile } = result
+    const deleteItemDenied = await enforceFeature("rundown", auth.parishId)
+    if (deleteItemDenied) return { success: false, error: deleteItemDenied }
 
-    if (!assertLeaderOrAdmin(profile)) {
-      return { success: false, error: "Only admins and leaders can delete items" }
-    }
+    const supabase = await createClient()
 
     const { error } = await supabase
       .from("rundown_items")
@@ -302,14 +305,13 @@ export async function reorderRundownItems(
       return { success: false, error: parsed.error.issues[0].message }
     }
 
-    const result = await requireProfile()
-    if ("error" in result) return { success: false, error: result.error }
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
-    const { supabase, profile } = result
+    const reorderDenied = await enforceFeature("rundown", auth.parishId)
+    if (reorderDenied) return { success: false, error: reorderDenied }
 
-    if (!assertLeaderOrAdmin(profile)) {
-      return { success: false, error: "Only admins and leaders can reorder items" }
-    }
+    const supabase = await createClient()
 
     // Use individual UPDATE calls instead of upsert
     // (upsert fails because NOT NULL columns like type/title aren't in the payload)
@@ -356,14 +358,13 @@ export async function duplicateRundown(
       return { success: false, error: parsed.error.issues[0].message }
     }
 
-    const result = await requireProfile()
-    if ("error" in result) return { success: false, error: result.error }
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
-    const { supabase, profile } = result
+    const dupDenied = await enforceFeature("rundown", auth.parishId)
+    if (dupDenied) return { success: false, error: dupDenied }
 
-    if (!assertLeaderOrAdmin(profile)) {
-      return { success: false, error: "Only admins and leaders can duplicate rundowns" }
-    }
+    const supabase = await createClient()
 
     const { data: existing, error: rundownError } = await supabase
       .from("rundowns")
@@ -384,7 +385,8 @@ export async function duplicateRundown(
         date: parsed.data.newDate,
         title: parsed.data.newTitle || source.title,
         status: "draft",
-        created_by: profile.id,
+        created_by: auth.profileId,
+        parish_id: auth.parishId,
       } as never)
       .select("id")
       .single()
@@ -415,6 +417,7 @@ export async function duplicateRundown(
         assigned_to: item.assigned_to,
         media_url: item.media_url,
         song_id: item.song_id,
+        parish_id: auth.parishId,
       }))
 
       const { error: copyError } = await supabase

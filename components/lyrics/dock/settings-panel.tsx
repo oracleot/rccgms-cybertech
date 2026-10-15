@@ -4,7 +4,7 @@ import { LYRICS_DEFAULTS, applyPositionPreset, type PositionPreset, type Align, 
 import { BackgroundSettings } from "./background-settings"
 import type { LyricsDock } from "./use-dock"
 
-export function LyricsSettingsPanel({ dock, roomId, controllerId }: { dock: LyricsDock; roomId: string; controllerId: string | null }) {
+export function LyricsSettingsPanel({ dock, roomId, controllerId, parishId }: { dock: LyricsDock; roomId: string; controllerId: string | null; parishId?: string }) {
   const { settings, updateSetting: update, pushSettings, uiMode, setUiMode, previewFirst, setPreviewFirst } = dock
   const advanced = uiMode === "advanced"
 
@@ -174,7 +174,7 @@ export function LyricsSettingsPanel({ dock, roomId, controllerId }: { dock: Lyri
             </div>
 
             <div className="divider" />
-            <BackgroundSettings dock={dock} roomId={roomId} controllerId={controllerId} />
+            <BackgroundSettings dock={dock} roomId={roomId} controllerId={controllerId} parishId={parishId} />
 
             <div className="divider" />
             <span className="section-label">Advanced — Transitions</span>

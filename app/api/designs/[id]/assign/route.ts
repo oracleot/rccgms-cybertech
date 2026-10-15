@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { assignDesignRequestSchema } from "@/lib/validations/designs"
+import { requireActiveParishMember, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 /**
  * POST /api/designs/[id]/assign - Claim/unclaim/reassign a design request
@@ -9,18 +10,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient()
-
-  // Check authentication
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-  }
-
   try {
+    const auth = await requireActiveParishMember()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
+
+    const supabase = await createClient()
+
     const { id: requestId } = await params
     const body = await request.json()
 
@@ -34,17 +31,6 @@ export async function POST(
     }
 
     const { action, assigneeId } = parsed.data
-
-    // Get user profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
-    }
 
     // Handle claim
     if (action === "claim") {
@@ -70,9 +56,9 @@ export async function POST(
       const { error } = await supabase
         .from("design_requests")
         .update({
-          assigned_to: profile.id,
+          assigned_to: auth.profileId,
           assigned_at: new Date().toISOString(),
-          assigned_by: profile.id,
+          assigned_by: auth.profileId,
         })
         .eq("id", requestId)
 
@@ -85,7 +71,7 @@ export async function POST(
       }
 
       return NextResponse.json(
-        { success: true, assignedTo: profile.id },
+        { success: true, assignedTo: auth.profileId },
         { status: 200 }
       )
     }
@@ -104,8 +90,8 @@ export async function POST(
       }
 
       // Only the assignee or an admin can unclaim
-      const isAssignee = existingRequest.assigned_to === profile.id
-      const isAdmin = profile.role === "admin" || profile.role === "lead_developer" || profile.role === "developer"
+      const isAssignee = existingRequest.assigned_to === auth.profileId
+      const isAdmin = auth.isPlatformDeveloper || auth.parishRole === "parish_admin"
       
       if (!isAssignee && !isAdmin) {
         return NextResponse.json(
@@ -141,7 +127,7 @@ export async function POST(
     // Handle reassign (admin/leader only)
     if (action === "reassign") {
       // Check role
-      if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
+      if (auth.parishRole !== "parish_admin" && auth.parishRole !== "leader" && !auth.isPlatformDeveloper) {
         return NextResponse.json(
           { error: "Only admins and leaders can reassign requests" },
           { status: 403 }
@@ -172,7 +158,7 @@ export async function POST(
         .update({
           assigned_to: assigneeId,
           assigned_at: new Date().toISOString(),
-          assigned_by: profile.id,
+          assigned_by: auth.profileId,
         })
         .eq("id", requestId)
 

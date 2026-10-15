@@ -12,10 +12,10 @@ import {
 import { isMaintenanceMode, isMaintenanceExcluded } from "@/lib/maintenance"
 
 export async function middleware(request: NextRequest) {
-  // The maintenance page must render without an auth session or auth service.
-  if (request.nextUrl.pathname === "/maintenance") {
-    return NextResponse.next({ request })
-  }
+  if (request.nextUrl.pathname === "/maintenance") return NextResponse.next({ request })
+  // Maintenance mode: redirect all non-excluded paths to /maintenance.
+  // This module has ZERO multi-parish table dependencies and can be
+  // deployed before schema migrations. See lib/maintenance.ts.
   if (isMaintenanceMode() && !isMaintenanceExcluded(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = "/maintenance"
@@ -57,14 +57,15 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Redirect /register to /login (self-registration disabled - invite-only)
+  // Legacy /register redirects to signup
   if (request.nextUrl.pathname.startsWith("/register")) {
     const url = request.nextUrl.clone()
-    url.pathname = "/login"
+    url.pathname = "/signup"
     return NextResponse.redirect(url)
   }
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login") ||
+    request.nextUrl.pathname.startsWith("/signup") ||
     request.nextUrl.pathname.startsWith("/forgot-password") ||
     request.nextUrl.pathname.startsWith("/reset-password") ||
     request.nextUrl.pathname.startsWith("/auth/callback") ||
@@ -95,8 +96,11 @@ export async function middleware(request: NextRequest) {
     if (dockNext) {
       const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
       const secret = getObsAccessSecret()
-      if (token && secret && (await verifyObsSessionToken(token, secret))) {
-        return NextResponse.redirect(new URL(dockNext, request.url))
+      if (token && secret) {
+        const result = await verifyObsSessionToken(token, secret)
+        if (result.valid) {
+          return NextResponse.redirect(new URL(dockNext, request.url))
+        }
       }
     }
   }
@@ -104,8 +108,11 @@ export async function middleware(request: NextRequest) {
   if (!user && isObsDockPath(request.nextUrl.pathname)) {
     const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
     const secret = getObsAccessSecret()
-    const hasObsSession =
-      token && secret ? await verifyObsSessionToken(token, secret) : false
+    let hasObsSession = false
+    if (token && secret) {
+      const result = await verifyObsSessionToken(token, secret)
+      hasObsSession = result.valid
+    }
     if (!hasObsSession) {
       const destination = currentPathWithQuery(request.nextUrl)
       const gateUrl = buildObsAccessGateUrl(destination)

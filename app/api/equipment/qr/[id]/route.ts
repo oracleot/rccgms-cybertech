@@ -2,44 +2,20 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { createClient } from "@/lib/supabase/server"
 import { generateEquipmentQR, getEquipmentUrl } from "@/lib/equipment/qr"
+import { enforceFeature } from "@/lib/features/enforce"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-type Role = "admin" | "lead_developer" | "developer" | "leader" | "member"
-
-interface Profile {
-  id: string
-  role: Role
-}
-
-async function requireLeaderOrAdmin() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return { error: "UNAUTHORIZED" as const, status: 401 }
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single<Profile>()
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader")) {
-    return { error: "FORBIDDEN" as const, status: 403 }
-  }
-
-  return { supabase, profile }
-}
-
 export async function POST(_request: NextRequest, context: RouteContext) {
-  const auth = await requireLeaderOrAdmin()
-  if ("error" in auth) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
+  const equipDenied = await enforceFeature("equipment", auth.parishId)
+  if (equipDenied) {
+    return NextResponse.json({ error: equipDenied }, { status: 403 })
   }
 
   const { id: equipmentId } = await context.params
@@ -47,7 +23,7 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "INVALID_ID" }, { status: 400 })
   }
 
-  const { supabase } = auth
+  const supabase = await createClient()
 
   const { data: equipment, error } = await supabase
     .from("equipment")

@@ -56,10 +56,14 @@ function rowToPreset(row: PresetRow): BackgroundPreset {
   }
 }
 
-export async function loadPresets(): Promise<BackgroundPreset[]> {
+export async function loadPresets(parishId?: string): Promise<BackgroundPreset[]> {
   const supabase = createClient()
   try {
-    const { data, error } = await table(supabase).select("*").order("created_at", { ascending: false })
+    let query = table(supabase).select("*").order("created_at", { ascending: false })
+    if (parishId) {
+      query = query.eq("parish_id", parishId)
+    }
+    const { data, error } = await query
     if (error) throw error
     return ((data ?? []) as PresetRow[]).map(rowToPreset)
   } catch {
@@ -67,9 +71,24 @@ export async function loadPresets(): Promise<BackgroundPreset[]> {
   }
 }
 
-export async function savePreset(preset: Omit<BackgroundPreset, "id">): Promise<void> {
+/**
+ * Fetch background presets via the server API, scoped to a broadcast room's
+ * parish. Used by the OBS dock when running without an authenticated session.
+ */
+export async function loadPresetsForRoom(roomId: string): Promise<BackgroundPreset[]> {
+  try {
+    const res = await fetch(`/api/lyrics/backgrounds?room=${encodeURIComponent(roomId)}`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return ((data.presets ?? []) as PresetRow[]).map(rowToPreset)
+  } catch {
+    return []
+  }
+}
+
+export async function savePreset(preset: Omit<BackgroundPreset, "id">, parishId: string): Promise<void> {
   const supabase = createClient()
-  const { error } = await table(supabase).insert({
+  const row: Record<string, unknown> = {
     name: preset.name,
     mode: preset.mode,
     color: preset.color ?? null,
@@ -77,7 +96,9 @@ export async function savePreset(preset: Omit<BackgroundPreset, "id">): Promise<
     gradient_to: preset.gradientTo ?? null,
     gradient_angle: preset.gradientAngle ?? null,
     image_url: preset.imageUrl ?? null,
-  })
+    parish_id: parishId,
+  }
+  const { error } = await table(supabase).insert(row)
   if (error) throw error
 }
 

@@ -52,7 +52,7 @@ function toDraft(s: ImportedSong): Draft {
   }
 }
 
-export function DocxImportPanel({ onImported, onClose }: { onImported: () => void; onClose: () => void }) {
+export function DocxImportPanel({ onImported, onClose, parishId }: { onImported: () => void; onClose: () => void; parishId?: string }) {
   const [phase, setPhase] = useState<"pick" | "reviewing" | "importing">("pick")
   const [fileName, setFileName] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -158,7 +158,7 @@ export function DocxImportPanel({ onImported, onClose }: { onImported: () => voi
         scriptureReference: d.scripture.trim() || undefined,
       }
       try {
-        await saveSet(set)
+        await saveSet(set, parishId!)
       } catch {
         failures.push(d.title)
       }

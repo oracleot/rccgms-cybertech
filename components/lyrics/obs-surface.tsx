@@ -47,7 +47,7 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
 
 function primaryHtml(primary: string): string {
-  return primary.split("\n").map(esc).join(" ")
+  return (primary ?? "").split("\n").map(esc).join(" ")
 }
 
 /**
@@ -202,6 +202,7 @@ function ObsDisplay({ room, preview, onLeave }: { room: string | null; preview: 
 
   useEffect(() => {
     if (preview) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
       setItem(PREVIEW_ITEM)
       setVisible(true)
       return

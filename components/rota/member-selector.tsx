@@ -36,7 +36,6 @@ interface MemberSelectorProps {
 interface MemberOption {
   id: string
   name: string
-  email: string
   avatarUrl: string | null
   isAvailable?: boolean
   availabilityNotes?: string | null
@@ -45,7 +44,6 @@ interface MemberOption {
 interface ProfileQueryResult {
   id: string
   name: string
-  email: string
   avatar_url: string | null
   department_id: string | null
 }
@@ -83,7 +81,7 @@ export function MemberSelector({
         // Build query - don't filter by department initially to ensure we get results
         const { data, error: queryError } = await supabase
           .from("profiles")
-          .select("id, name, email, avatar_url, department_id")
+          .select("id, name, avatar_url, department_id")
           .order("name", { ascending: true })
 
         if (queryError) {
@@ -117,8 +115,7 @@ export function MemberSelector({
 
         const options: MemberOption[] = filteredProfiles.map((p) => ({
           id: p.id,
-          name: p.name || p.email || "Unknown",
-          email: p.email || "",
+          name: p.name || "Unknown",
           avatarUrl: p.avatar_url,
           isAvailable: date ? (availabilityMap[p.id]?.isAvailable ?? undefined) : undefined,
           availabilityNotes: date ? (availabilityMap[p.id]?.notes ?? null) : null,

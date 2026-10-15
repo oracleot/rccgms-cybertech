@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { updateDesignRequestSchema } from "@/lib/validations/designs"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 import type { DesignRequestStatus as _DesignRequestStatus } from "@/types/designs"
 
 // Status transition rules
@@ -236,33 +237,15 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient()
-
-  // Check authentication
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-  }
-
   try {
     const { id } = await params
 
-    // Check user role
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "developer" && profile.role !== "leader")) {
-      return NextResponse.json(
-        { error: "Only admins, developers, and leaders can delete requests" },
-        { status: 403 }
-      )
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
+
+    const supabase = await createClient()
 
     // Delete the request
     const { error } = await supabase

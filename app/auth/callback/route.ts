@@ -71,6 +71,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL(next, origin))
   }
 
+  if (type === "signup") {
+    return NextResponse.redirect(`${origin}/dashboard`)
+  }
+
   if (type === "recovery") {
     return NextResponse.redirect(`${origin}/reset-password`)
   }

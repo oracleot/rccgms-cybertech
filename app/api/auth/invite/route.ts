@@ -3,41 +3,22 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { inviteUserSchema } from "@/lib/validations/auth"
 import { emitEvent } from "@/lib/telemetry"
+import { requireActiveParishAdmin, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 /**
  * POST /api/auth/invite
  * Invite a new user to the platform (Admin only)
  */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  // Verify current user is authenticated
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
+  const auth = await requireActiveParishAdmin()
+  if (isParishAuthFailure(auth)) {
     return NextResponse.json(
-      { error: "UNAUTHORIZED", message: "Not authenticated" },
-      { status: 401 }
+      { error: auth.error },
+      { status: auth.status }
     )
   }
 
-  // Check if user is admin
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
-    return NextResponse.json(
-      { error: "FORBIDDEN", message: "Admin access required" },
-      { status: 403 }
-    )
-  }
+  const _supabase = await createClient()
 
   // Parse and validate request body
   let body
@@ -95,7 +76,7 @@ export async function POST(request: NextRequest) {
 
   if (inviteError) {
     console.error("Invite error:", inviteError)
-    void emitEvent({ subsystem: "auth", action: "invite_sent", status: "error", severity: "error", actor_id: user.id, metadata: { role } })
+    void emitEvent({ subsystem: "auth", action: "invite_sent", status: "error", severity: "error", actor_id: auth.profileId, metadata: { role } })
     return NextResponse.json(
       { error: "INVITE_FAILED", message: "Failed to send invitation" },
       { status: 500 }
@@ -106,7 +87,7 @@ export async function POST(request: NextRequest) {
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7)
 
-  void emitEvent({ subsystem: "auth", action: "invite_sent", status: "ok", actor_id: user.id, metadata: { role } })
+  void emitEvent({ subsystem: "auth", action: "invite_sent", status: "ok", actor_id: auth.profileId, metadata: { role } })
 
   return NextResponse.json({
     success: true,

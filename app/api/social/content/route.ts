@@ -8,32 +8,19 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createContentSchema } from "@/lib/validations/social"
+import { requireActiveParishOperator, isParishAuthFailure } from "@/lib/parish/require-active-parish"
+import { enforceFeature } from "@/lib/features/enforce"
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const auth = await requireActiveParishOperator()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    // Check user role
-    const profileQuery = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    const profile = profileQuery.data as { id: string; role: string } | null
-
-    if (!profile || profile.role === "member") {
-      return NextResponse.json(
-        { error: "Only leaders and admins can create social content" },
-        { status: 403 }
-      )
+    const postDenied = await enforceFeature("social", auth.parishId)
+    if (postDenied) {
+      return NextResponse.json({ error: postDenied }, { status: 403 })
     }
 
     const body = await request.json()
@@ -60,7 +47,8 @@ export async function POST(request: NextRequest) {
         platforms: platforms,
         scheduled_for: scheduledFor || null,
         status,
-        created_by: profile.id,
+        created_by: auth.profileId,
+        parish_id: auth.parishId,
       })
       .select()
       .single()
@@ -92,6 +80,11 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const getDenied = await enforceFeature("social")
+    if (getDenied) {
+      return NextResponse.json({ error: getDenied }, { status: 403 })
     }
 
     // Get query params

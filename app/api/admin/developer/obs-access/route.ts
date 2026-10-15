@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { emitEvent } from "@/lib/telemetry"
+import { getActiveParishId } from "@/lib/parish/context"
 import {
   OBS_CODE_TTL_MS,
   canGenerateObsCode,
@@ -54,6 +55,8 @@ export async function POST() {
     return NextResponse.json({ error: "Not configured" }, { status: 500 })
   }
 
+  const parishId = await getActiveParishId()
+
   // Retry on the (vanishingly rare) code_hash collision with a live code.
   for (let attempt = 0; attempt < 3; attempt++) {
     const code = generateObsCode()
@@ -65,6 +68,7 @@ export async function POST() {
       code_hash: codeHash,
       created_by: profile.id,
       expires_at: expiresAt.toISOString(),
+      ...(parishId ? { parish_id: parishId } : {}),
     })
 
     if (!error) {

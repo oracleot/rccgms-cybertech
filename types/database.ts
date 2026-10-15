@@ -237,6 +237,7 @@ export type Database = {
           is_lead: boolean
           assigned_at: string
           assigned_by: string | null
+          parish_id: string | null
         }
         Insert: {
           id?: string
@@ -245,6 +246,7 @@ export type Database = {
           is_lead?: boolean
           assigned_at?: string
           assigned_by?: string | null
+          parish_id?: string | null
         }
         Update: {
           id?: string
@@ -253,6 +255,7 @@ export type Database = {
           is_lead?: boolean
           assigned_at?: string
           assigned_by?: string | null
+          parish_id?: string | null
         }
         Relationships: [
           {
@@ -309,6 +312,7 @@ export type Database = {
           status: Database["public"]["Enums"]["design_request_status"]
           title: string
           updated_at: string
+          parish_id: string | null
         }
         Insert: {
           assigned_at?: string | null
@@ -318,6 +322,7 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           delay_reason?: string | null
+          parish_id?: string | null
           deliverable_files?: Json | null
           deliverable_url?: string | null
           description: string
@@ -371,6 +376,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["design_request_status"]
           title?: string
           updated_at?: string
+          parish_id?: string | null
         }
         Relationships: [
           {
@@ -704,6 +710,7 @@ export type Database = {
           timezone: string
           title: string
           updated_at: string
+          parish_id: string | null
         }
         Insert: {
           agenda?: string | null
@@ -722,6 +729,7 @@ export type Database = {
           timezone?: string
           title: string
           updated_at?: string
+          parish_id?: string | null
         }
         Update: {
           agenda?: string | null
@@ -740,6 +748,7 @@ export type Database = {
           timezone?: string
           title?: string
           updated_at?: string
+          parish_id?: string | null
         }
         Relationships: [
           {
@@ -760,6 +769,7 @@ export type Database = {
           responded_at: string | null
           response: Database["public"]["Enums"]["attendee_response"]
           user_id: string
+          parish_id: string | null
         }
         Insert: {
           created_at?: string
@@ -769,6 +779,7 @@ export type Database = {
           responded_at?: string | null
           response?: Database["public"]["Enums"]["attendee_response"]
           user_id: string
+          parish_id?: string | null
         }
         Update: {
           created_at?: string
@@ -778,6 +789,7 @@ export type Database = {
           responded_at?: string | null
           response?: Database["public"]["Enums"]["attendee_response"]
           user_id?: string
+          parish_id?: string | null
         }
         Relationships: [
           {
@@ -1696,6 +1708,412 @@ export type Database = {
           {
             foreignKeyName: "member_progress_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisations: {
+        Row: {
+          id: string
+          name: string
+          short_name: string | null
+          slug: string
+          status: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          short_name?: string | null
+          slug: string
+          status?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          short_name?: string | null
+          slug?: string
+          status?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      parishes: {
+        Row: {
+          id: string
+          organisation_id: string
+          name: string
+          spiritual_expression: string | null
+          locality: string | null
+          region: string | null
+          country: string | null
+          slug: string
+          status: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organisation_id: string
+          name: string
+          spiritual_expression?: string | null
+          locality?: string | null
+          region?: string | null
+          country?: string | null
+          slug: string
+          status?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organisation_id?: string
+          name?: string
+          spiritual_expression?: string | null
+          locality?: string | null
+          region?: string | null
+          country?: string | null
+          slug?: string
+          status?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parishes_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parish_memberships: {
+        Row: {
+          id: string
+          parish_id: string
+          profile_id: string
+          role: string
+          status: string
+          requested_at: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          parish_id: string
+          profile_id: string
+          role?: string
+          status?: string
+          requested_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          parish_id?: string
+          profile_id?: string
+          role?: string
+          status?: string
+          requested_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parish_memberships_parish_id_fkey"
+            columns: ["parish_id"]
+            isOneToOne: false
+            referencedRelation: "parishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parish_memberships_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisation_aliases: {
+        Row: {
+          id: string
+          organisation_id: string
+          alias: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organisation_id: string
+          alias: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organisation_id?: string
+          alias?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organisation_aliases_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisation_requests: {
+        Row: {
+          id: string
+          name: string
+          short_name: string | null
+          requested_by: string
+          status: string
+          reviewed_by: string | null
+          reviewed_at: string | null
+          reviewer_note: string | null
+          linked_org_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          short_name?: string | null
+          requested_by: string
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          reviewer_note?: string | null
+          linked_org_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          short_name?: string | null
+          requested_by?: string
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          reviewer_note?: string | null
+          linked_org_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      parish_requests: {
+        Row: {
+          id: string
+          organisation_id: string | null
+          organisation_name: string | null
+          parish_name: string
+          spiritual_expression: string | null
+          locality: string | null
+          region: string | null
+          country: string
+          requested_by: string
+          status: string
+          reviewed_by: string | null
+          reviewed_at: string | null
+          reviewer_note: string | null
+          linked_parish_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organisation_id?: string | null
+          organisation_name?: string | null
+          parish_name: string
+          spiritual_expression?: string | null
+          locality?: string | null
+          region?: string | null
+          country: string
+          requested_by: string
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          reviewer_note?: string | null
+          linked_parish_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organisation_id?: string | null
+          organisation_name?: string | null
+          parish_name?: string
+          spiritual_expression?: string | null
+          locality?: string | null
+          region?: string | null
+          country?: string
+          requested_by?: string
+          status?: string
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          reviewer_note?: string | null
+          linked_parish_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parish_requests_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      features: {
+        Row: {
+          id: string
+          slug: string
+          name: string
+          description: string | null
+          category: string
+          is_default: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          name: string
+          description?: string | null
+          category?: string
+          is_default?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          name?: string
+          description?: string | null
+          category?: string
+          is_default?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      parish_feature_entitlements: {
+        Row: {
+          id: string
+          parish_id: string
+          feature_id: string
+          enabled: boolean
+          granted_by: string | null
+          granted_at: string
+          expires_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          parish_id: string
+          feature_id: string
+          enabled?: boolean
+          granted_by?: string | null
+          granted_at?: string
+          expires_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          parish_id?: string
+          feature_id?: string
+          enabled?: boolean
+          granted_by?: string | null
+          granted_at?: string
+          expires_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parish_feature_entitlements_parish_id_fkey"
+            columns: ["parish_id"]
+            isOneToOne: false
+            referencedRelation: "parishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parish_feature_entitlements_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_access_requests: {
+        Row: {
+          id: string
+          parish_id: string
+          feature_id: string
+          requested_by: string
+          status: string
+          reviewer_id: string | null
+          reviewed_at: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          parish_id: string
+          feature_id: string
+          requested_by: string
+          status?: string
+          reviewer_id?: string | null
+          reviewed_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          parish_id?: string
+          feature_id?: string
+          requested_by?: string
+          status?: string
+          reviewer_id?: string | null
+          reviewed_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_access_requests_parish_id_fkey"
+            columns: ["parish_id"]
+            isOneToOne: false
+            referencedRelation: "parishes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_access_requests_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_access_requests_requested_by_fkey"
+            columns: ["requested_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

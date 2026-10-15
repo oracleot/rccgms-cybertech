@@ -113,7 +113,7 @@ async function sendDesignDeadlineReminders() {
   const { data: requests, error } = await supabase
     .from("design_requests")
     .select(`
-      id, title, deadline, reminders_sent, assigned_to,
+      id, parish_id, title, deadline, reminders_sent, assigned_to,
       assignee:profiles!design_requests_assigned_to_fkey(name, email)
     `)
     .not("deadline", "is", null)
@@ -152,6 +152,7 @@ async function sendDesignDeadlineReminders() {
       await supabase.from("notifications").insert({
         type: "design_deadline",
         recipient_id: request.assigned_to,
+        parish_id: request.parish_id,
         title: reminderType === "overdue"
           ? `Design request "${request.title}" is overdue`
           : `Design request "${request.title}" is due within 24 hours`,

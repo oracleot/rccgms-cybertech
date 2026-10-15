@@ -17,6 +17,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
 interface NewRequestParams {
   requestId: string
+  parishId: string | null
   title: string
   type: string
   priority: string
@@ -83,6 +84,7 @@ export async function notifyTeamNewRequest(params: NewRequestParams): Promise<vo
         // Queue notification for tracking
         await queueNotification({
           userId: member.id,
+          parish_id: params.parishId || "",
           type: "design_request_new",
           title: `New Design Request: ${params.title}`,
           body: `A new ${params.type} design has been requested by ${params.requesterName}. Priority: ${params.priority}.`,

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createSwapRequestSchema, updateSwapRequestSchema } from "@/lib/validations/rota"
 import { requireCurrentProfile } from "@/lib/auth/profile"
+import { getActiveParishId } from "@/lib/parish/context"
+import { enforceFeature } from "@/lib/features/enforce"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 /**
  * POST /api/rota/swaps - Create a new swap request
@@ -27,6 +30,14 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
+
+    const parishId = await getActiveParishId()
+    if (!parishId) {
+      return NextResponse.json({ error: "No active parish" }, { status: 400 })
+    }
+
+    const denied = await enforceFeature("rota", parishId)
+    if (denied) return NextResponse.json({ error: denied }, { status: 403 })
 
     // Verify the assignment belongs to the requester
     const { data: assignmentResult } = await supabase
@@ -80,6 +91,7 @@ export async function POST(request: NextRequest) {
       target_user_id: targetUserId || null,
       reason: parsed.data.reason || null,
       status: "pending" as const,
+      parish_id: parishId,
     }
 
     const { data: swapRequest, error } = await supabase
@@ -134,6 +146,9 @@ export async function PATCH(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
+
+    const patchDenied = await enforceFeature("rota")
+    if (patchDenied) return NextResponse.json({ error: patchDenied }, { status: 403 })
 
     // Get the swap request
     const { data: swapRequestResult } = await supabase
@@ -229,11 +244,9 @@ export async function PATCH(request: NextRequest) {
       }
 
       case "approve": {
-        if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-          return NextResponse.json(
-            { error: "Only leaders can approve swap requests" },
-            { status: 403 }
-          )
+        const approveAuth = await requireActiveParishLeader()
+        if (isParishAuthFailure(approveAuth)) {
+          return NextResponse.json({ error: approveAuth.error }, { status: approveAuth.status })
         }
 
         if (swapRequest.status !== "accepted") {
@@ -297,11 +310,9 @@ export async function PATCH(request: NextRequest) {
       }
 
       case "reject": {
-        if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-          return NextResponse.json(
-            { error: "Only leaders can reject swap requests" },
-            { status: 403 }
-          )
+        const rejectAuth = await requireActiveParishLeader()
+        if (isParishAuthFailure(rejectAuth)) {
+          return NextResponse.json({ error: rejectAuth.error }, { status: rejectAuth.status })
         }
 
         if (swapRequest.status !== "accepted") {
@@ -372,6 +383,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
+    const getDenied = await enforceFeature("rota")
+    if (getDenied) return NextResponse.json({ error: getDenied }, { status: 403 })
+
     // Build query based on type
     let query = supabase
       .from("swap_requests")
@@ -403,8 +417,9 @@ export async function GET(request: NextRequest) {
       query = query.eq("requester_id", profile.id)
     } else if (type === "pending-approval") {
       // Leaders only
-      if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-        return NextResponse.json({ error: "Not authorized" }, { status: 403 })
+      const pendingAuth = await requireActiveParishLeader()
+      if (isParishAuthFailure(pendingAuth)) {
+        return NextResponse.json({ error: pendingAuth.error }, { status: pendingAuth.status })
       }
       query = query.eq("status", "accepted")
     }

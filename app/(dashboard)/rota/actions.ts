@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache"
 
 import { createClient } from "@/lib/supabase/server"
+import { enforceFeature } from "@/lib/features/enforce"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 import {
   createRotaSchema,
   updateAssignmentsSchema,
@@ -26,30 +28,13 @@ export async function createRota(input: CreateRotaInput): Promise<ActionResult<{
       return { success: false, error: parsed.error.issues[0].message }
     }
 
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+    const denied = await enforceFeature("rota", auth.parishId)
+    if (denied) return { success: false, error: denied }
+
     const supabase = await createClient()
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    // Get profile with role
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return { success: false, error: "Profile not found" }
-    }
-
-    const profile = profileData as { id: string; role: string }
-
-    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-      return { success: false, error: "Only admins and leaders can create rotas" }
-    }
 
     // Check if rota already exists for this date and service
     const { data: existing } = await supabase
@@ -70,7 +55,8 @@ export async function createRota(input: CreateRotaInput): Promise<ActionResult<{
         service_id: parsed.data.serviceId,
         date: parsed.data.date,
         status: "draft",
-        created_by: profile.id,
+        created_by: auth.profileId,
+        parish_id: auth.parishId,
       } as never)
       .select("id")
       .single()
@@ -100,30 +86,13 @@ export async function updateRotaAssignments(input: UpdateAssignmentsInput): Prom
       return { success: false, error: parsed.error.issues[0].message }
     }
 
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+    const denied = await enforceFeature("rota", auth.parishId)
+    if (denied) return { success: false, error: denied }
+
     const supabase = await createClient()
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    // Get profile with role
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return { success: false, error: "Profile not found" }
-    }
-
-    const profile = profileData as { id: string; role: string }
-
-    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-      return { success: false, error: "Only admins and leaders can update assignments" }
-    }
 
     // Delete existing assignments for this rota
     const { error: deleteError } = await supabase
@@ -143,6 +112,7 @@ export async function updateRotaAssignments(input: UpdateAssignmentsInput): Prom
         user_id: a.userId,
         position_id: a.positionId,
         status: "pending",
+        parish_id: auth.parishId,
       }))
 
       const { error: insertError } = await supabase
@@ -174,30 +144,13 @@ export async function publishRota(input: PublishRotaInput): Promise<ActionResult
       return { success: false, error: parsed.error.issues[0].message }
     }
 
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+    const denied = await enforceFeature("rota", auth.parishId)
+    if (denied) return { success: false, error: denied }
+
     const supabase = await createClient()
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    // Get profile with role
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return { success: false, error: "Profile not found" }
-    }
-
-    const profile = profileData as { id: string; role: string }
-
-    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-      return { success: false, error: "Only admins and leaders can publish rotas" }
-    }
 
     // Update rota status
     const { error } = await supabase
@@ -237,30 +190,13 @@ export async function deleteRota(rotaId: string): Promise<ActionResult> {
       return { success: false, error: "Rota ID is required" }
     }
 
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+    const denied = await enforceFeature("rota", auth.parishId)
+    if (denied) return { success: false, error: denied }
+
     const supabase = await createClient()
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    // Get profile with role
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return { success: false, error: "Profile not found" }
-    }
-
-    const profile = profileData as { id: string; role: string }
-
-    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "developer" && profile.role !== "leader") {
-      return { success: false, error: "Only admins, developers, and leaders can delete rotas" }
-    }
 
     // Check rota status (only allow deleting drafts)
     const { data: rotaData, error: rotaError } = await supabase

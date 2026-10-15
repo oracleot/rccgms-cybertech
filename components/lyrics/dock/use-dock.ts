@@ -12,7 +12,7 @@ import { createClient } from "@/lib/supabase/client"
 import { lyricsChannelName, monitorChannelName } from "@/lib/lyrics/channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/lyrics/lock"
 import { LYRICS_DEFAULTS, loadSettings, saveSettings, type LyricsSettings } from "@/lib/lyrics/settings"
-import { loadCachedSets, subscribeToSets, syncSets } from "@/lib/lyrics/store"
+import { loadCachedSets, subscribeToSets, syncSets, syncSetsForRoom } from "@/lib/lyrics/store"
 import { buildMonitorState, MONITOR_REQUEST_EVENT, MONITOR_STATE_EVENT } from "@/lib/lyrics/monitor"
 import type { LyricItemPayload, LyricSet } from "@/lib/lyrics/types"
 
@@ -102,6 +102,7 @@ export function useLyricsDock(roomId: string, isController: boolean) {
   useEffect(() => {
     const stored = loadSettings(roomId)
     settingsRef.current = stored
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
     setSettings(stored)
     const wasLocked = loadLock(roomId)
     lockedRef.current = wasLocked
@@ -120,7 +121,25 @@ export function useLyricsDock(roomId: string, isController: boolean) {
    * comes back — the next successful fetch simply replaces the cache outright.
    */
   const refreshSets = useCallback(async () => {
-    const { sets: fresh, source } = await syncSets()
+    // Try direct Supabase first (works for authenticated users).
+    // If that returns empty (RLS blocks anonymous), fall back to the
+    // room-scoped API (works for OBS access code sessions).
+    let fresh: LyricSet[]
+    let source: "remote" | "cache"
+
+    const direct = await syncSets()
+    if (direct.source === "remote" && direct.sets.length > 0) {
+      fresh = direct.sets
+      source = direct.source
+    } else if (roomId) {
+      const roomResult = await syncSetsForRoom(roomId)
+      fresh = roomResult.sets
+      source = roomResult.source
+    } else {
+      fresh = direct.sets
+      source = direct.source
+    }
+
     setsRef.current = fresh
     setSets(fresh)
     setOffline(source === "cache")
@@ -130,7 +149,7 @@ export function useLyricsDock(roomId: string, isController: boolean) {
       activeSetRef.current = refreshed
       setActiveSetState(refreshed)
     }
-  }, [])
+  }, [roomId])
 
   // The library lives in Supabase (lyric_sets) so it's visible to every client,
   // including an OBS Browser Source — which runs inside OBS's own embedded
@@ -141,6 +160,7 @@ export function useLyricsDock(roomId: string, isController: boolean) {
   useEffect(() => {
     const cached = loadCachedSets()
     setsRef.current = cached
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
     setSets(cached)
     void refreshSets()
     const unsubscribe = subscribeToSets(() => void refreshSets())

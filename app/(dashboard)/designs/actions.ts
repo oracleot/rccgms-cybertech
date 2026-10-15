@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 import {
   updateDesignRequestSchema,
   reassignMultiSchema,
@@ -17,6 +18,8 @@ import {
   notifyRequesterCompleted,
 } from "@/lib/notifications/design-notifications"
 import type { DesignRequestStatus as _DesignRequestStatus } from "@/types/designs"
+import { getActiveParishId } from "@/lib/parish/context"
+import { enforceFeature } from "@/lib/features/enforce"
 
 export type ActionResult<T = void> =
   | { success: true; data: T }
@@ -37,6 +40,9 @@ const allowedTransitions: Record<string, string[]> = {
  * Claim a design request (assign to current user)
  */
 export async function claimRequest(requestId: string): Promise<ActionResult> {
+  const claimDenied = await enforceFeature("designs")
+  if (claimDenied) return { success: false, error: claimDenied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -90,6 +96,12 @@ export async function claimRequest(requestId: string): Promise<ActionResult> {
     return { success: false, error: "Failed to claim request" }
   }
 
+  // Resolve parish for assignment
+  const parishId = await getActiveParishId()
+  if (!parishId) {
+    return { success: false, error: "No active parish" }
+  }
+
   // Also insert into junction table as lead assignee
   const { error: upsertError } = await supabase
     .from("design_request_assignments")
@@ -100,6 +112,7 @@ export async function claimRequest(requestId: string): Promise<ActionResult> {
         is_lead: true,
         assigned_at: new Date().toISOString(),
         assigned_by: profile.id,
+        parish_id: parishId,
       },
       { onConflict: "request_id,profile_id" }
     )
@@ -138,6 +151,9 @@ export async function unclaimRequest(
   requestId: string,
   reason?: string
 ): Promise<ActionResult> {
+  const unclaimDenied = await enforceFeature("designs")
+  if (unclaimDenied) return { success: false, error: unclaimDenied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -149,27 +165,22 @@ export async function unclaimRequest(
     return { success: false, error: "Not authenticated" }
   }
 
-  // Get user profile with role
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+  // Get profile name for notes
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, name")
-    .eq("auth_user_id", user.id)
+    .select("id, name")
+    .eq("id", auth.profileId)
     .single()
 
   if (!profile) {
     return { success: false, error: "Profile not found" }
   }
 
-  // Only admin (free) or developer (with reason) can unclaim
-  const isAdmin = profile.role === "admin"
-  const isDeveloper = profile.role === "developer"
-
-  if (!isAdmin && !isDeveloper) {
-    return { success: false, error: "Only admins and developers can unclaim design requests" }
-  }
-
-  // Developer must provide a reason
-  if (isDeveloper && !reason?.trim()) {
+  // Platform developers (not parish admins) must provide a reason
+  if (auth.isPlatformDeveloper && auth.parishRole !== "parish_admin" && !reason?.trim()) {
     return { success: false, error: "A reason is required when unclaiming as a developer" }
   }
 
@@ -200,7 +211,7 @@ export async function unclaimRequest(
 
   // Reset status to pending from any non-terminal status and clear deliverables
   let internalNotes: string | undefined
-  if (isDeveloper && reason?.trim()) {
+  if (auth.isPlatformDeveloper && reason?.trim()) {
     const timestamp = new Date().toISOString()
     const newNote = `[${timestamp}] UNCLAIM by ${profile.name || "Developer"}: ${reason.trim()}`
     internalNotes = request.internal_notes
@@ -249,6 +260,9 @@ export async function reassignRequest(
   newAssigneeId: string,
   input?: ReassignMultiInput
 ): Promise<ActionResult> {
+  const reassignDenied = await enforceFeature("designs")
+  if (reassignDenied) return { success: false, error: reassignDenied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -260,20 +274,8 @@ export async function reassignRequest(
     return { success: false, error: "Not authenticated" }
   }
 
-  // Get user profile and check role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader" && profile.role !== "developer") {
-    return { success: false, error: "Only admins, leaders, and developers can reassign requests" }
-  }
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
   // Multi-assignee path
   if (input) {
@@ -299,7 +301,7 @@ export async function reassignRequest(
     }
 
     // Leader restriction: can only assign to members or other leaders
-    if (profile.role === "leader") {
+    if (auth.parishRole === "leader") {
       const invalid = profiles.find(
         (p) => p.role !== "member" && p.role !== "leader"
       )
@@ -314,7 +316,7 @@ export async function reassignRequest(
       .update({
         assigned_to: leadAssignee.profileId,
         assigned_at: new Date().toISOString(),
-        assigned_by: profile.id,
+        assigned_by: auth.profileId,
         ...(deadline !== undefined && { deadline }),
       } as never)
       .eq("id", requestId)
@@ -343,7 +345,8 @@ export async function reassignRequest(
           profile_id: a.profileId,
           is_lead: a.isLead,
           assigned_at: new Date().toISOString(),
-          assigned_by: profile.id,
+          assigned_by: auth.profileId,
+          parish_id: auth.parishId,
         }))
       )
 
@@ -369,7 +372,7 @@ export async function reassignRequest(
     return { success: false, error: "Assignee not found" }
   }
 
-  if (profile.role === "leader") {
+  if (auth.parishRole === "leader") {
     if (newAssignee.role !== "member" && newAssignee.role !== "leader") {
       return { success: false, error: "Leaders can only assign designs to members or other leaders" }
     }
@@ -381,7 +384,7 @@ export async function reassignRequest(
     .update({
       assigned_to: newAssigneeId,
       assigned_at: new Date().toISOString(),
-      assigned_by: profile.id,
+      assigned_by: auth.profileId,
     })
     .eq("id", requestId)
 
@@ -403,7 +406,8 @@ export async function reassignRequest(
       profile_id: newAssigneeId,
       is_lead: true,
       assigned_at: new Date().toISOString(),
-      assigned_by: profile.id,
+      assigned_by: auth.profileId,
+      parish_id: auth.parishId,
     })
 
   revalidatePath("/designs")
@@ -418,6 +422,9 @@ export async function updateRequest(
   requestId: string,
   input: UpdateDesignRequestInput
 ): Promise<ActionResult> {
+  const updateReqDenied = await enforceFeature("designs")
+  if (updateReqDenied) return { success: false, error: updateReqDenied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -553,6 +560,9 @@ export async function updateRequest(
 export async function approveRequest(
   requestId: string
 ): Promise<ActionResult> {
+  const approveDenied = await enforceFeature("designs")
+  if (approveDenied) return { success: false, error: approveDenied }
+
   const supabase = await createClient()
 
   const {
@@ -563,20 +573,8 @@ export async function approveRequest(
     return { success: false, error: "Not authenticated" }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  // Only admin, leader, or lead_developer can approve
-  if (!["admin", "lead_developer", "leader"].includes(profile.role)) {
-    return { success: false, error: "Only admins, leaders, and lead developers can approve requests" }
-  }
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
   const { data: request, error: fetchError } = await supabase
     .from("design_requests")
@@ -643,6 +641,9 @@ export async function approveRequest(
  * Delete a design request (admin/leader only)
  */
 export async function deleteRequest(requestId: string): Promise<ActionResult> {
+  const deleteReqDenied = await enforceFeature("designs")
+  if (deleteReqDenied) return { success: false, error: deleteReqDenied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -654,20 +655,8 @@ export async function deleteRequest(requestId: string): Promise<ActionResult> {
     return { success: false, error: "Not authenticated" }
   }
 
-  // Get user profile and check role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "developer" && profile.role !== "leader") {
-    return { success: false, error: "Only admins, developers, and leaders can delete requests" }
-  }
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
   // Delete the request
   const { error } = await supabase
@@ -691,6 +680,9 @@ export async function deleteRequest(requestId: string): Promise<ActionResult> {
 export async function createSubIssue(
   input: CreateSubIssueInput
 ): Promise<ActionResult<string>> {
+  const subIssueDenied = await enforceFeature("designs")
+  if (subIssueDenied) return { success: false, error: subIssueDenied }
+
   const supabase = await createClient()
 
   const {
@@ -701,20 +693,8 @@ export async function createSubIssue(
     return { success: false, error: "Not authenticated" }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  // Only team members with appropriate roles can create sub-issues
-  if (!["admin", "lead_developer", "leader", "developer"].includes(profile.role)) {
-    return { success: false, error: "You don't have permission to create sub-issues" }
-  }
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
   const parsed = createSubIssueSchema.safeParse(input)
   if (!parsed.success) {
@@ -750,6 +730,7 @@ export async function createSubIssue(
       requester_phone: parent.requester_phone,
       requester_ministry: parent.requester_ministry,
       request_type: parent.request_type,
+      parish_id: auth.parishId,
     })
     .select("id")
     .single()
@@ -782,19 +763,11 @@ export async function updateDeadline(
     return { success: false, error: "Not authenticated" }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
 
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  if (!["admin", "lead_developer", "leader"].includes(profile.role)) {
-    return { success: false, error: "Only admins and leaders can update deadlines" }
-  }
+  const deadlineDenied = await enforceFeature("designs", auth.parishId)
+  if (deadlineDenied) return { success: false, error: deadlineDenied }
 
   const { error } = await supabase
     .from("design_requests")

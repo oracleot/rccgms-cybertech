@@ -8,7 +8,6 @@ import {
   CalendarDays,
   Clapperboard,
   Home,
-  MonitorPlay,
   Settings,
   GraduationCap,
   Users,
@@ -21,9 +20,11 @@ import {
   Radio,
   Music2,
   Video,
+  Church,
 } from "lucide-react"
 
 import { ROUTES } from "@/lib/constants"
+import { FEATURE_SLUGS } from "@/lib/features/types"
 import { cn } from "@/lib/utils"
 import {
   Sidebar,
@@ -38,21 +39,26 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Items every role can see
-const coreItems = [
-  { title: "Home", href: ROUTES.HOME, icon: Home },
-  { title: "Rota", href: ROUTES.ROTA, icon: CalendarDays },
-  { title: "Meetings", href: ROUTES.MEETINGS, icon: Video },
-  { title: "Rundown", href: ROUTES.RUNDOWN, icon: Clapperboard },
-  { title: "Bible", href: ROUTES.BIBLE, icon: BookOpen },
+interface NavItemDef {
+  title: string
+  href: string
+  icon: React.ElementType
+  feature?: string
+}
+
+const coreItems: NavItemDef[] = [
+  { title: "Home", href: ROUTES.HOME, icon: Home, feature: FEATURE_SLUGS.DASHBOARD },
+  { title: "Rota", href: ROUTES.ROTA, icon: CalendarDays, feature: FEATURE_SLUGS.ROTA },
+  { title: "Meetings", href: ROUTES.MEETINGS, icon: Video, feature: FEATURE_SLUGS.MEETINGS },
+  { title: "Rundown", href: ROUTES.RUNDOWN, icon: Clapperboard, feature: FEATURE_SLUGS.RUNDOWN },
+  { title: "Bible", href: ROUTES.BIBLE, icon: BookOpen, feature: FEATURE_SLUGS.BIBLE },
 ]
 
-// Content & production items
-const contentItems = [
-  { title: "Livestream", href: ROUTES.LIVESTREAM, icon: Radio },
-  { title: "Worship Library", href: ROUTES.WORSHIP_LIBRARY, icon: Music2 },
-  { title: "Designs", href: ROUTES.DESIGNS, icon: Palette },
-  { title: "Training", href: ROUTES.TRAINING, icon: GraduationCap },
+const contentItems: NavItemDef[] = [
+  { title: "Livestream", href: ROUTES.LIVESTREAM, icon: Radio, feature: FEATURE_SLUGS.LIVESTREAM },
+  { title: "Worship Library", href: ROUTES.WORSHIP_LIBRARY, icon: Music2, feature: FEATURE_SLUGS.WORSHIP_LIBRARY },
+  { title: "Designs", href: ROUTES.DESIGNS, icon: Palette, feature: FEATURE_SLUGS.DESIGNS },
+  { title: "Training", href: ROUTES.TRAINING, icon: GraduationCap, feature: FEATURE_SLUGS.TRAINING },
 ]
 
 // Admin-only management items (NOT shown to developers)
@@ -61,6 +67,7 @@ const adminOnlyItems = [
   { title: "Users", href: ROUTES.ADMIN_USERS, icon: Users },
   { title: "Departments", href: ROUTES.ADMIN_DEPARTMENTS, icon: Building2 },
   { title: "Notifications", href: ROUTES.ADMIN_NOTIFICATIONS, icon: Bell },
+  { title: "Parish", href: ROUTES.ADMIN_PARISH, icon: Church },
 ]
 
 // Admin items also shown to developers (shared management)
@@ -69,6 +76,7 @@ const sharedAdminItems = [
   { title: "Users", href: ROUTES.ADMIN_USERS, icon: Users },
   { title: "Departments", href: ROUTES.ADMIN_DEPARTMENTS, icon: Building2 },
   { title: "Notifications", href: ROUTES.ADMIN_NOTIFICATIONS, icon: Bell },
+  { title: "Parish", href: ROUTES.ADMIN_PARISH, icon: Church },
 ]
 
 // Developer-exclusive items
@@ -77,11 +85,52 @@ const developerOnlyItems = [
   { title: "ML Training", href: ROUTES.ADMIN_ML_TRAINING, icon: Brain },
 ]
 
-interface AppSidebarProps {
-  userRole?: "admin" | "lead_developer" | "developer" | "leader" | "member"
+function NavItem({ item, active }: { item: { title: string; href: string; icon: React.ElementType }; active: boolean }) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={active}
+        className={cn(
+          "relative transition-all duration-200 ease-out",
+          "hover:bg-violet-50 dark:hover:bg-violet-900/20",
+          "hover:translate-x-0.5",
+          active && [
+            "bg-violet-100 dark:bg-violet-900/30",
+            "text-violet-700 dark:text-violet-300",
+            "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
+            "before:h-6 before:w-1 before:rounded-r-full",
+            "before:bg-gradient-to-b before:from-violet-500 before:to-indigo-600",
+            "before:shadow-sm before:shadow-violet-400/50",
+          ]
+        )}
+      >
+        <Link href={item.href} className="group/link">
+          <item.icon
+            className={cn(
+              "h-4 w-4 transition-all duration-200",
+              "group-hover/link:scale-110",
+              active
+                ? "text-violet-600 dark:text-violet-400"
+                : "group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400"
+            )}
+          />
+          <span className={cn("transition-colors duration-200", active && "font-medium")}>
+            {item.title}
+          </span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
 }
 
-export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
+interface AppSidebarProps {
+  userRole?: "admin" | "lead_developer" | "developer" | "leader" | "member"
+  parishRole?: string | null
+  enabledFeatures?: string[]
+}
+
+export function AppSidebar({ userRole = "member", parishRole, enabledFeatures = [] }: AppSidebarProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -91,45 +140,11 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
 
   const isDeveloper = userRole === "lead_developer" || userRole === "developer"
   const isAdmin = userRole === "admin" || userRole === "leader"
+  const isParishAdmin = parishRole === "parish_admin"
 
-  function NavItem({ item }: { item: { title: string; href: string; icon: React.ElementType } }) {
-    return (
-      <SidebarMenuItem key={item.href}>
-        <SidebarMenuButton
-          asChild
-          isActive={isActive(item.href)}
-          className={cn(
-            "relative transition-all duration-200 ease-out",
-            "hover:bg-violet-50 dark:hover:bg-violet-900/20",
-            "hover:translate-x-0.5",
-            isActive(item.href) && [
-              "bg-violet-100 dark:bg-violet-900/30",
-              "text-violet-700 dark:text-violet-300",
-              "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
-              "before:h-6 before:w-1 before:rounded-r-full",
-              "before:bg-gradient-to-b before:from-violet-500 before:to-indigo-600",
-              "before:shadow-sm before:shadow-violet-400/50",
-            ]
-          )}
-        >
-          <Link href={item.href} className="group/link">
-            <item.icon
-              className={cn(
-                "h-4 w-4 transition-all duration-200",
-                "group-hover/link:scale-110",
-                isActive(item.href)
-                  ? "text-violet-600 dark:text-violet-400"
-                  : "group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400"
-              )}
-            />
-            <span className={cn("transition-colors duration-200", isActive(item.href) && "font-medium")}>
-              {item.title}
-            </span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    )
-  }
+  const featureSet = new Set(enabledFeatures)
+  const isFeatureEnabled = (item: NavItemDef) =>
+    !item.feature || isDeveloper || featureSet.has(item.feature)
 
   return (
     <Sidebar>
@@ -156,7 +171,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
           <SidebarGroupLabel>My Space</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {coreItems.map((item) => <NavItem key={item.href} item={item} />)}
+              {coreItems.filter(isFeatureEnabled).map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -166,7 +181,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
           <SidebarGroupLabel>Content &amp; Media</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {contentItems.map((item) => <NavItem key={item.href} item={item} />)}
+              {contentItems.filter(isFeatureEnabled).map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -177,7 +192,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminOnlyItems.map((item) => <NavItem key={item.href} item={item} />)}
+                {adminOnlyItems.map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -189,7 +204,19 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
             <SidebarGroupLabel>Management</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {sharedAdminItems.map((item) => <NavItem key={item.href} item={item} />)}
+                {sharedAdminItems.map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Parish Management — parish_admin who is NOT already seeing admin/developer sections */}
+        {isParishAdmin && !isAdmin && !isDeveloper && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Parish</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <NavItem item={{ title: "Parish", href: ROUTES.ADMIN_PARISH, icon: Church }} active={isActive(ROUTES.ADMIN_PARISH)} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -201,7 +228,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
             <SidebarGroupLabel className="text-violet-500 dark:text-violet-400">Developer</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {developerOnlyItems.map((item) => <NavItem key={item.href} item={item} />)}
+                {developerOnlyItems.map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -246,7 +273,7 @@ export function AppSidebar({ userRole = "member" }: AppSidebarProps) {
         </SidebarMenu>
         <div className="px-2 py-2" suppressHydrationWarning>
           <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-            © {new Date().getFullYear()} RCCG Morning Star
+            Fusion
           </p>
         </div>
       </SidebarFooter>

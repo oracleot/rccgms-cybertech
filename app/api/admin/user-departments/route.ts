@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { requireRole } from "@/lib/auth/guards"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 import {
   assignUserDepartmentsSchema,
   addUserDepartmentSchema,
@@ -18,7 +18,10 @@ import { revalidatePath } from "next/cache"
 // GET /api/admin/user-departments - Get user department assignments
 export async function GET(request: NextRequest) {
   try {
-    await requireRole(["admin", "lead_developer", "leader"])
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
@@ -68,7 +71,10 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/user-departments - Assign user to departments (replace all)
 export async function POST(request: NextRequest) {
   try {
-    await requireRole(["admin", "lead_developer", "leader"])
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
     const supabase = createAdminClient()
     const body = await request.json()
 
@@ -82,20 +88,7 @@ export async function POST(request: NextRequest) {
 
     const { userId, departments } = parsed.data
 
-    // Get current user for assigned_by using the helper
-    const serverSupabase = await createClient()
-    const { data: authData } = await serverSupabase.auth.getUser()
-    const authUserId = authData?.user?.id
-    
-    let assignedById: string | null = null
-    if (authUserId) {
-      const { data: currentUser } = await serverSupabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_user_id", authUserId)
-        .single()
-      assignedById = (currentUser as { id: string } | null)?.id || null
-    }
+    const assignedById = auth.profileId
 
     // Get current department IDs for this user
     const { data: existingAssignments } = await supabase
@@ -131,6 +124,7 @@ export async function POST(request: NextRequest) {
         department_id: d.departmentId,
         is_primary: d.isPrimary || (!hasPrimary && index === 0), // First one is primary if none specified
         assigned_by: assignedById,
+        parish_id: auth.parishId,
       }))
 
       // Use upsert with ON CONFLICT for atomic insert-or-update
@@ -160,7 +154,10 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/user-departments - Add user to a single department
 export async function PUT(request: NextRequest) {
   try {
-    await requireRole(["admin", "lead_developer", "leader"])
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
     const supabase = createAdminClient()
     const body = await request.json()
 
@@ -174,28 +171,14 @@ export async function PUT(request: NextRequest) {
 
     const { userId, departmentId, isPrimary } = parsed.data
 
-    // Get current user for assigned_by
-    const serverSupabase = await createClient()
-    const { data: authData } = await serverSupabase.auth.getUser()
-    const authUserId = authData?.user?.id
-    
-    let assignedById: string | null = null
-    if (authUserId) {
-      const { data: currentUser } = await serverSupabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_user_id", authUserId)
-        .single()
-      assignedById = (currentUser as { id: string } | null)?.id || null
-    }
-
     const { error } = await supabase
       .from("user_departments")
       .insert({
         user_id: userId,
         department_id: departmentId,
         is_primary: isPrimary,
-        assigned_by: assignedById,
+        assigned_by: auth.profileId,
+        parish_id: auth.parishId,
       })
 
     if (error) {
@@ -223,7 +206,10 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/user-departments - Remove user from department
 export async function DELETE(request: NextRequest) {
   try {
-    await requireRole(["admin", "lead_developer", "leader"])
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
     const supabase = createAdminClient()
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId")
@@ -261,7 +247,10 @@ export async function DELETE(request: NextRequest) {
 // PATCH /api/admin/user-departments - Set primary department
 export async function PATCH(request: NextRequest) {
   try {
-    await requireRole(["admin", "lead_developer", "leader"])
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
     const supabase = createAdminClient()
     const body = await request.json()
 

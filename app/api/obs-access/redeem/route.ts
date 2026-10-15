@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- obs_access_codes not in generated types
   const { data: row, error: readError } = await (admin as any)
     .from("obs_access_codes")
-    .select("id, expires_at, redeemed_at")
+    .select("id, expires_at, redeemed_at, parish_id")
     .eq("code_hash", codeHash)
     .maybeSingle()
 
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
   // Atomic claim: the WHERE clause re-checks unused + unexpired inside the
   // single UPDATE, so two concurrent redemptions can never both succeed.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- obs_access_codes not in generated types yet
   const { data: claimed, error: claimError } = await (admin as any)
     .from("obs_access_codes")
     .update({ redeemed_at: nowIso })
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     return fail(400)
   }
 
-  const token = await createObsSessionToken(secret)
+  const token = await createObsSessionToken(secret, row.parish_id ?? null)
   const redirect = sanitizeDockNext(next) ?? DEFAULT_DOCK
 
   const res = NextResponse.json({ redirect })

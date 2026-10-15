@@ -23,6 +23,8 @@ import {
   Table2,
   Code,
   Mail,
+  Church,
+  Shield,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -38,6 +40,9 @@ import { EmailBlast } from "./email-blast"
 import { SystemOverview } from "./system-overview"
 import { ActivityFeed } from "./activity-feed"
 import { ErrorFeed } from "./error-feed"
+import { ParishManager } from "./parish-manager"
+import { PendingRequests } from "./pending-requests"
+import { FeatureManager } from "./feature-manager"
 
 interface HealthData {
   status: "healthy" | "degraded" | "error"
@@ -120,6 +125,7 @@ export function DeveloperToolsClient({
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
     fetchHealth()
   }, [fetchHealth])
 
@@ -179,6 +185,14 @@ export function DeveloperToolsClient({
         <TabsTrigger value="email" className="flex items-center gap-1 text-xs sm:text-sm">
           <Mail className="h-4 w-4" />
           <span className="hidden sm:inline">Email</span>
+        </TabsTrigger>
+        <TabsTrigger value="parishes" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Church className="h-4 w-4" />
+          <span className="hidden sm:inline">Parishes</span>
+        </TabsTrigger>
+        <TabsTrigger value="features" className="flex items-center gap-1 text-xs sm:text-sm">
+          <Shield className="h-4 w-4" />
+          <span className="hidden sm:inline">Features</span>
         </TabsTrigger>
       </TabsList>
 
@@ -569,6 +583,17 @@ export function DeveloperToolsClient({
           <span>This tool sends real emails to users. Use with care. Requires a configured <code className="font-mono text-xs">RESEND_API_KEY</code>.</span>
         </div>
         <EmailBlast />
+      </TabsContent>
+
+      {/* Parishes Tab */}
+      <TabsContent value="parishes" className="space-y-4">
+        <PendingRequests />
+        <ParishManager />
+      </TabsContent>
+
+      {/* Features Tab */}
+      <TabsContent value="features" className="space-y-4">
+        <FeatureManager />
       </TabsContent>
     </Tabs>
   )

@@ -15,7 +15,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 interface AttendeeOption {
   id: string
   name: string
-  email: string
   avatarUrl: string | null
   isAvailable?: boolean
 }
@@ -40,7 +39,7 @@ export function AttendeeSelector({ selectedIds, requiredIds, onChange, date }: A
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, name, email, avatar_url")
+        .select("id, name, avatar_url")
         .order("name", { ascending: true })
 
       let availabilityMap: Record<string, boolean> = {}
@@ -56,8 +55,7 @@ export function AttendeeSelector({ selectedIds, requiredIds, onChange, date }: A
 
       const options: AttendeeOption[] = (profiles || []).map((p) => ({
         id: p.id,
-        name: p.name || p.email || "Unknown",
-        email: p.email || "",
+        name: p.name || "Unknown",
         avatarUrl: p.avatar_url,
         isAvailable: date ? availabilityMap[p.id] : undefined,
       }))
@@ -80,7 +78,7 @@ export function AttendeeSelector({ selectedIds, requiredIds, onChange, date }: A
   const filtered = useMemo(() => {
     if (!search.trim()) return people
     const q = search.toLowerCase()
-    return people.filter((p) => p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q))
+    return people.filter((p) => p.name.toLowerCase().includes(q))
   }, [people, search])
 
   function toggle(id: string) {

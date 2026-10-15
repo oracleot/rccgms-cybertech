@@ -7,7 +7,7 @@
  * same useLyricsDock state; Simple just hides secondary controls.
  */
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import * as Tooltip from "@radix-ui/react-tooltip"
 import { Lock, LockOpen, Music2, Radio, RotateCcw, Settings } from "lucide-react"
 import { LyricsDockStyles } from "./dock-styles"
@@ -20,6 +20,7 @@ import { Tip } from "./tip"
 import { useLyricsDock } from "./use-dock"
 import { useRoomSelection } from "../use-room-selection"
 import { useRoomPresence } from "../use-room-presence"
+import { createClient } from "@/lib/supabase/client"
 
 /**
  * Entry point for the OBS dock. The dock URL is permanent (`/lyrics/obs/dock`,
@@ -46,9 +47,24 @@ export function LyricsDockApp() {
   return <LyricsDock key={room} roomId={room} onLeave={leave} />
 }
 
+function useRoomParishId(roomId: string): string | undefined {
+  const [parishId, setParishId] = useState<string>()
+  useEffect(() => {
+    const supabase = createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- broadcast_controllers not in generated types yet
+    ;(supabase.from as any)("broadcast_controllers")
+      .select("parish_id")
+      .eq("room_id", roomId)
+      .maybeSingle()
+      .then(({ data }: { data: { parish_id?: string } | null }) => { if (data?.parish_id) setParishId(data.parish_id) })
+  }, [roomId])
+  return parishId
+}
+
 function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }) {
   const presence = useRoomPresence(roomId, "dock")
   const dock = useLyricsDock(roomId, presence.isController)
+  const parishId = useRoomParishId(roomId)
   const [view, setView] = useState<"main" | "settings" | "session">("main")
   const advanced = dock.uiMode === "advanced"
   const standby = !presence.isController
@@ -163,7 +179,7 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
         ) : view === "session" ? (
           <SessionPanel roomId={roomId} presence={presence} onLeave={onLeave} />
         ) : (
-          <LyricsSettingsPanel dock={dock} roomId={roomId} controllerId={presence.isController ? presence.participantId : null} />
+          <LyricsSettingsPanel dock={dock} roomId={roomId} controllerId={presence.isController ? presence.participantId : null} parishId={parishId} />
         )}
 
         <div className="toolbar">

@@ -13,6 +13,7 @@ import type { MeetingPlatform } from "@/types/meeting"
 
 interface MeetingForNotification {
   id: string
+  parish_id: string
   title: string
   start_time: string
   end_time: string
@@ -44,7 +45,7 @@ async function fetchMeeting(meetingId: string): Promise<MeetingForNotification |
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from("meetings")
-    .select("id, title, start_time, end_time, timezone, platform, meeting_link, location, reminder_lead_minutes")
+    .select("id, parish_id, title, start_time, end_time, timezone, platform, meeting_link, location, reminder_lead_minutes")
     .eq("id", meetingId)
     .single()
 
@@ -57,13 +58,15 @@ async function queueForUsers(
   type: "meeting_invited" | "meeting_updated" | "meeting_cancelled" | "meeting_reminder",
   title: string,
   body: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  parishId: string
 ): Promise<{ queued: number; failed: number }> {
   if (userIds.length === 0) return { queued: 0, failed: 0 }
 
   const supabase = createAdminClient()
   const rows = userIds.map((userId) => ({
     user_id: userId,
+    parish_id: parishId,
     type,
     channel: "email",
     title,
@@ -99,7 +102,8 @@ export async function notifyMeetingInvited(
     "meeting_invited",
     `You're invited: ${meeting.title}`,
     buildMeetingBody(meeting),
-    { meetingId }
+    { meetingId },
+    meeting.parish_id
   )
 }
 
@@ -119,7 +123,8 @@ export async function notifyMeetingUpdated(
     "meeting_updated",
     `Meeting updated: ${meeting.title}`,
     buildMeetingBody(meeting),
-    { meetingId }
+    { meetingId },
+    meeting.parish_id
   )
 }
 
@@ -138,7 +143,8 @@ export async function notifyMeetingCancelled(
     "meeting_cancelled",
     `Cancelled: ${meeting.title}`,
     buildMeetingBody(meeting),
-    { meetingId }
+    { meetingId },
+    meeting.parish_id
   )
 }
 
@@ -164,7 +170,7 @@ export async function sendDueMeetingReminders(): Promise<{ sent: number; failed:
 
   const { data: candidates, error } = await supabase
     .from("meetings")
-    .select("id, title, start_time, end_time, timezone, platform, meeting_link, location, reminder_lead_minutes")
+    .select("id, parish_id, title, start_time, end_time, timezone, platform, meeting_link, location, reminder_lead_minutes")
     .eq("status", "scheduled")
     .is("reminder_sent_at", null)
     .gt("end_time", now.toISOString())
@@ -191,7 +197,8 @@ export async function sendDueMeetingReminders(): Promise<{ sent: number; failed:
       "meeting_reminder",
       `Reminder: ${meeting.title} starts soon`,
       buildMeetingBody(meeting),
-      { meetingId: meeting.id }
+      { meetingId: meeting.id },
+      meeting.parish_id
     )
 
     // Mark as sent even if some individual queues failed - we don't want

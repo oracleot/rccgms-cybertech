@@ -8,11 +8,10 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
-import { getCurrentProfile } from "@/lib/auth/profile"
 import { getAvailabilityOverlap, suggestMeetingDates } from "@/lib/meetings/availability-overlap"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 const MAX_RANGE_DAYS = 92
-const MANAGER_ROLES = ["admin", "lead_developer", "leader"]
 
 function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00.000Z`)
@@ -21,15 +20,9 @@ function addDays(date: string, days: number): string {
 }
 
 export async function GET(request: NextRequest) {
-  const profile = await getCurrentProfile()
-  if (!profile) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-  }
-  if (!MANAGER_ROLES.includes(profile.role)) {
-    return NextResponse.json(
-      { error: "Only admins, lead developers, and leaders can view team availability" },
-      { status: 403 }
-    )
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
   const { searchParams } = new URL(request.url)

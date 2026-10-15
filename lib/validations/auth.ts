@@ -30,6 +30,27 @@ export const registerSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>
 
+// Multi-parish signup schema (stepper flow)
+export const signupSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
+  email: z.string().email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Must contain at least one number"),
+  confirmPassword: z.string(),
+  organisationId: z.string().uuid("Please select an organisation"),
+  parishId: z.string().uuid("Please select a parish"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+})
+
+export type SignupInput = z.infer<typeof signupSchema>
+
 // Forgot password schema
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),

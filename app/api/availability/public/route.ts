@@ -116,12 +116,60 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const profileId = (profile as { id: string }).id
+
+  // Resolve parish_id: use explicit parishId if provided, otherwise derive from memberships
+  let parishId: string
+
+  if (parsed.data.parishId) {
+    // Verify the user is a member of the specified parish
+    const { data: membership } = await supabase
+      .from("parish_memberships")
+      .select("parish_id")
+      .eq("profile_id", profileId)
+      .eq("parish_id", parsed.data.parishId)
+      .eq("status", "active")
+      .single()
+
+    if (!membership) {
+      return NextResponse.json(
+        { error: "No active membership found in the specified parish." },
+        { status: 404 }
+      )
+    }
+    parishId = membership.parish_id
+  } else {
+    // No parish specified — only works for single-parish users
+    const { data: memberships } = await supabase
+      .from("parish_memberships")
+      .select("parish_id")
+      .eq("profile_id", profileId)
+      .eq("status", "active")
+
+    if (!memberships || memberships.length === 0) {
+      return NextResponse.json(
+        { error: "No active parish membership found for this account." },
+        { status: 404 }
+      )
+    }
+
+    if (memberships.length > 1) {
+      return NextResponse.json(
+        { error: "You belong to multiple parishes. Please specify a parishId in the request." },
+        { status: 400 }
+      )
+    }
+
+    parishId = memberships[0].parish_id
+  }
+
   const rows = parsed.data.dates.map((date) => ({
-    user_id: (profile as { id: string }).id,
+    user_id: profileId,
     date,
     is_available: parsed.data.isAvailable,
     notes: parsed.data.isAvailable ? null : parsed.data.notes || null,
     source: "public_form",
+    parish_id: parishId,
   }))
 
   const { error } = await supabase

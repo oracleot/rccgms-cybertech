@@ -84,7 +84,7 @@ function sameDraft(a: Draft, b: Draft): boolean {
   )
 }
 
-export function BackgroundSettings({ dock, roomId, controllerId }: { dock: LyricsDock; roomId: string; controllerId: string | null }) {
+export function BackgroundSettings({ dock, roomId, controllerId, parishId }: { dock: LyricsDock; roomId: string; controllerId: string | null; parishId?: string }) {
   const { settings, pushSettings } = dock
   const [draft, setDraft] = useState<Draft>(() => draftOf(settings))
   const [presets, setPresets] = useState<BackgroundPreset[]>([])
@@ -149,7 +149,7 @@ export function BackgroundSettings({ dock, roomId, controllerId }: { dock: Lyric
         gradientTo: draft.gradientTo,
         gradientAngle: draft.gradientAngle,
         imageUrl: draft.backgroundImageUrl || undefined,
-      })
+      }, parishId!)
       setPresetName("")
     } catch {
       setBusy("Couldn't save preset")

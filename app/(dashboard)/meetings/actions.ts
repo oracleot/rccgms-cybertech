@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 
 import { createClient } from "@/lib/supabase/server"
 import { getCurrentProfile } from "@/lib/auth/profile"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
+import { enforceFeature } from "@/lib/features/enforce"
 import {
   createMeetingSchema,
   updateMeetingSchema,
@@ -23,15 +25,12 @@ export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string }
 
-const MANAGER_ROLES = ["admin", "lead_developer", "leader"]
-
 async function requireManager() {
-  const profile = await getCurrentProfile()
-  if (!profile) return { ok: false as const, error: "Unauthorized" }
-  if (!MANAGER_ROLES.includes(profile.role)) {
-    return { ok: false as const, error: "Only admins, lead developers, and leaders can manage meetings" }
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) {
+    return { ok: false as const, error: auth.error }
   }
-  return { ok: true as const, profile }
+  return { ok: true as const, profileId: auth.profileId, parishId: auth.parishId }
 }
 
 /**
@@ -46,6 +45,9 @@ export async function createMeeting(input: CreateMeetingInput): Promise<ActionRe
 
     const guard = await requireManager()
     if (!guard.ok) return { success: false, error: guard.error }
+
+    const createDenied = await enforceFeature("meetings", guard.parishId)
+    if (createDenied) return { success: false, error: createDenied }
 
     const supabase = await createClient()
     const data = parsed.data
@@ -63,7 +65,8 @@ export async function createMeeting(input: CreateMeetingInput): Promise<ActionRe
         end_time: data.endTime,
         timezone: data.timezone,
         reminder_lead_minutes: data.reminderLeadMinutes ?? 60,
-        created_by: guard.profile.id,
+        created_by: guard.profileId,
+        parish_id: guard.parishId,
       })
       .select("id")
       .single()
@@ -77,6 +80,7 @@ export async function createMeeting(input: CreateMeetingInput): Promise<ActionRe
       meeting_id: meetingRow.id,
       user_id: userId,
       is_required: requiredSet.has(userId),
+      parish_id: guard.parishId,
     }))
 
     const { error: attendeesError } = await supabase.from("meeting_attendees").insert(attendeeRows)
@@ -114,6 +118,9 @@ export async function updateMeeting(input: UpdateMeetingInput): Promise<ActionRe
 
     const guard = await requireManager()
     if (!guard.ok) return { success: false, error: guard.error }
+
+    const updateDenied = await enforceFeature("meetings", guard.parishId)
+    if (updateDenied) return { success: false, error: updateDenied }
 
     const supabase = await createClient()
     const data = parsed.data
@@ -190,6 +197,7 @@ export async function updateMeeting(input: UpdateMeetingInput): Promise<ActionRe
           meeting_id: data.id,
           user_id: userId,
           is_required: requiredSet.has(userId),
+          parish_id: guard.parishId,
         }))
       )
       if (addError) console.error("Error adding attendees:", addError)
@@ -236,6 +244,9 @@ export async function cancelMeeting(input: { id: string }): Promise<ActionResult
 
     const guard = await requireManager()
     if (!guard.ok) return { success: false, error: guard.error }
+
+    const cancelDenied = await enforceFeature("meetings")
+    if (cancelDenied) return { success: false, error: cancelDenied }
 
     const supabase = await createClient()
 
@@ -284,6 +295,9 @@ export async function deleteMeeting(id: string): Promise<ActionResult> {
     const guard = await requireManager()
     if (!guard.ok) return { success: false, error: guard.error }
 
+    const deleteDenied = await enforceFeature("meetings")
+    if (deleteDenied) return { success: false, error: deleteDenied }
+
     const supabase = await createClient()
     const { error } = await supabase.from("meetings").delete().eq("id", id)
 
@@ -314,6 +328,9 @@ export async function respondToMeeting(input: RespondToMeetingInput): Promise<Ac
 
     const profile = await getCurrentProfile()
     if (!profile) return { success: false, error: "Unauthorized" }
+
+    const respondDenied = await enforceFeature("meetings")
+    if (respondDenied) return { success: false, error: respondDenied }
 
     const supabase = await createClient()
     const { error } = await supabase

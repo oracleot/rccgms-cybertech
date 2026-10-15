@@ -20,6 +20,7 @@ interface RotaAssignmentNotification {
 // Type definitions for Supabase query results
 interface RotaQueryResult {
   id: string
+  parish_id: string
   date: string
   service: { name: string; start_time: string | null; location: string | null } | null
   assignments: Array<{
@@ -41,6 +42,7 @@ interface ReminderAssignment {
   position: { name: string } | null
   rota: {
     id: string
+    parish_id: string
     date: string
     status: string
     service: { name: string; start_time: string | null; location: string | null } | null
@@ -64,6 +66,7 @@ export async function sendRotaPublishedNotifications(rotaId: string): Promise<{
       .from("rotas")
       .select(`
         id,
+        parish_id,
         date,
         service:services(name, start_time, location),
         assignments:rota_assignments(
@@ -115,6 +118,7 @@ export async function sendRotaPublishedNotifications(rotaId: string): Promise<{
             .from("notifications")
             .insert({
               user_id: assignment.userId,
+              parish_id: rota.parish_id,
               type: "rota_assignment",
               channel: "email",
               title: `You've been scheduled for ${assignment.serviceName}`,
@@ -178,6 +182,7 @@ export async function sendRotaReminders(): Promise<{
         position:positions(name),
         rota:rotas(
           id,
+          parish_id,
           date,
           status,
           service:services(name, start_time, location)
@@ -221,6 +226,7 @@ export async function sendRotaReminders(): Promise<{
           .from("notifications")
           .insert({
             user_id: assignment.user.id,
+            parish_id: assignment.rota.parish_id,
             type: "rota_reminder",
             channel: "email",
             title: `Reminder: ${assignment.rota.service?.name} ${daysUntil === "1_day" ? "tomorrow" : "in 3 days"}`,
@@ -245,6 +251,7 @@ export async function sendRotaReminders(): Promise<{
           .from("notifications")
           .insert({
             user_id: assignment.user.id,
+            parish_id: assignment.rota.parish_id,
             type: "rota_reminder",
             channel: "sms",
             title: "Service Reminder",

@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache"
 
 import { createClient } from "@/lib/supabase/server"
+import { getActiveParishId } from "@/lib/parish/context"
+import { enforceFeature } from "@/lib/features/enforce"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 import {
   setAvailabilitySchema,
   bulkSetAvailabilitySchema,
@@ -22,8 +25,11 @@ export async function getMyAvailability(
   endDate: string
 ): Promise<ActionResult<Array<{ date: string; isAvailable: boolean; notes: string | null }>>> {
   try {
+    const availDenied = await enforceFeature("rota")
+    if (availDenied) return { success: false, error: availDenied }
+
     const supabase = await createClient()
-    
+
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
@@ -87,8 +93,16 @@ export async function setAvailability(input: SetAvailabilityInput): Promise<Acti
       return { success: false, error: parsed.error.issues[0].message }
     }
 
+    const parishId = await getActiveParishId()
+    if (!parishId) {
+      return { success: false, error: "No active parish" }
+    }
+
+    const setDenied = await enforceFeature("rota", parishId)
+    if (setDenied) return { success: false, error: setDenied }
+
     const supabase = await createClient()
-    
+
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
@@ -117,6 +131,7 @@ export async function setAvailability(input: SetAvailabilityInput): Promise<Acti
           date: parsed.data.date,
           is_available: parsed.data.isAvailable,
           notes: parsed.data.notes || null,
+          parish_id: parishId,
         } as never,
         { onConflict: "user_id,date" }
       )
@@ -145,8 +160,16 @@ export async function bulkSetAvailability(input: BulkSetAvailabilityInput): Prom
       return { success: false, error: parsed.error.issues[0].message }
     }
 
+    const parishId = await getActiveParishId()
+    if (!parishId) {
+      return { success: false, error: "No active parish" }
+    }
+
+    const bulkDenied = await enforceFeature("rota", parishId)
+    if (bulkDenied) return { success: false, error: bulkDenied }
+
     const supabase = await createClient()
-    
+
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
@@ -172,6 +195,7 @@ export async function bulkSetAvailability(input: BulkSetAvailabilityInput): Prom
       date,
       is_available: parsed.data.isAvailable,
       notes: parsed.data.notes || null,
+      parish_id: parishId,
     }))
 
     // Upsert all at once
@@ -198,8 +222,11 @@ export async function bulkSetAvailability(input: BulkSetAvailabilityInput): Prom
  */
 export async function clearAvailability(date: string): Promise<ActionResult> {
   try {
+    const clearDenied = await enforceFeature("rota")
+    if (clearDenied) return { success: false, error: clearDenied }
+
     const supabase = await createClient()
-    
+
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
@@ -259,31 +286,13 @@ export async function getTeamAvailability(
   >
 > {
   try {
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+    const teamDenied = await enforceFeature("rota", auth.parishId)
+    if (teamDenied) return { success: false, error: teamDenied }
+
     const supabase = await createClient()
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return { success: false, error: "Unauthorized" }
-    }
-
-    // Get profile with role
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    if (profileError || !profileData) {
-      return { success: false, error: "Profile not found" }
-    }
-
-    const profile = profileData as { id: string; role: string }
-
-    // Only leaders and admins can view team availability
-    if (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader") {
-      return { success: false, error: "Only leaders and admins can view team availability" }
-    }
 
     // Build profiles query - fetch profiles separately from departments to avoid join issues
     let profilesQuery = supabase

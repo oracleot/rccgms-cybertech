@@ -36,8 +36,8 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: "prayer", label: "Prayer Points" },
 ]
 
-export function WorshipLibrary() {
-  const library = useWorshipLibrary()
+export function WorshipLibrary({ parishId }: { parishId?: string }) {
+  const library = useWorshipLibrary(parishId)
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState<Filter>("all")
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -230,7 +230,7 @@ export function WorshipLibrary() {
 
       {importMode === "docx" && (
         <div className="rounded-lg border p-4">
-          <DocxImportPanel onClose={() => setImportMode(null)} onImported={() => setImportMode(null)} />
+          <DocxImportPanel onClose={() => setImportMode(null)} onImported={() => setImportMode(null)} parishId={parishId} />
         </div>
       )}
 
@@ -240,6 +240,7 @@ export function WorshipLibrary() {
             existingLibrary={library.sets}
             onClose={() => setImportMode(null)}
             onImported={() => setImportMode(null)}
+            parishId={parishId}
           />
         </div>
       )}

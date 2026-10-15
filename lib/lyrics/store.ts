@@ -19,7 +19,7 @@
 import { createClient } from "@/lib/supabase/client"
 import { defaultPresentation, normalizeContentType, type LyricSet, type Presentation } from "./types"
 
-const CACHE_KEY = "lyrics-sets-cache"
+const CACHE_KEY_PREFIX = "lyrics-sets-cache"
 const LEGACY_KEY = "lyrics-sets"
 const MIGRATED_FLAG = "lyrics-sets-migrated-to-supabase"
 
@@ -88,9 +88,13 @@ function normalizePresentation(raw: unknown, type: LyricSet["type"]): Presentati
   }
 }
 
-function readCache(): LyricSet[] {
+function cacheKey(parishId?: string): string {
+  return parishId ? `${CACHE_KEY_PREFIX}-${parishId}` : CACHE_KEY_PREFIX
+}
+
+function readCache(parishId?: string): LyricSet[] {
   try {
-    const raw = window.localStorage.getItem(CACHE_KEY)
+    const raw = window.localStorage.getItem(cacheKey(parishId))
     if (!raw) return []
     const parsed = JSON.parse(raw)
     return Array.isArray(parsed) ? (parsed as LyricSet[]) : []
@@ -99,17 +103,17 @@ function readCache(): LyricSet[] {
   }
 }
 
-function writeCache(sets: LyricSet[]): void {
+function writeCache(sets: LyricSet[], parishId?: string): void {
   try {
-    window.localStorage.setItem(CACHE_KEY, JSON.stringify(sets))
+    window.localStorage.setItem(cacheKey(parishId), JSON.stringify(sets))
   } catch {
     // non-fatal: Supabase stays the source of truth either way
   }
 }
 
 /** Instant paint while the real fetch is in flight — same-profile only, never a source of truth. */
-export function loadCachedSets(): LyricSet[] {
-  return readCache()
+export function loadCachedSets(parishId?: string): LyricSet[] {
+  return readCache(parishId)
 }
 
 /**
@@ -137,26 +141,47 @@ async function migrateLegacyLocalSets(supabase: ReturnType<typeof createClient>)
 }
 
 /** Fetch the live library. Falls back to the local cache if Supabase can't be reached. */
-export async function syncSets(): Promise<{ sets: LyricSet[]; source: SetsSource }> {
+export async function syncSets(parishId?: string): Promise<{ sets: LyricSet[]; source: SetsSource }> {
   const supabase = createClient()
   try {
     await migrateLegacyLocalSets(supabase)
-    const { data, error } = await table(supabase).select("*").order("updated_at", { ascending: false })
+    let query = table(supabase).select("*").order("updated_at", { ascending: false })
+    if (parishId) {
+      query = query.eq("parish_id", parishId)
+    }
+    const { data, error } = await query
     if (error) throw error
     const sets = ((data ?? []) as LyricSetRow[]).map(rowToSet)
-    writeCache(sets)
+    writeCache(sets, parishId)
     return { sets, source: "remote" }
   } catch {
-    return { sets: readCache(), source: "cache" }
+    return { sets: readCache(parishId), source: "cache" }
   }
 }
 
-export async function saveSet(set: LyricSet): Promise<void> {
+/**
+ * Fetch lyric sets via the server API, scoped to a broadcast room's parish.
+ * Used by the OBS dock when it has no authenticated Supabase session (OBS
+ * access code users). The API uses the service role to bypass RLS and
+ * returns only the room's parish data.
+ */
+export async function syncSetsForRoom(roomId: string): Promise<{ sets: LyricSet[]; source: SetsSource; parishId: string | null }> {
+  try {
+    const res = await fetch(`/api/lyrics/sets?room=${encodeURIComponent(roomId)}`)
+    if (!res.ok) return { sets: readCache(), source: "cache", parishId: null }
+    const data = await res.json()
+    const parishId: string | null = data.parishId ?? null
+    const sets = ((data.sets ?? []) as LyricSetRow[]).map(rowToSet)
+    writeCache(sets, parishId ?? undefined)
+    return { sets, source: "remote", parishId }
+  } catch {
+    return { sets: readCache(), source: "cache", parishId: null }
+  }
+}
+
+export async function saveSet(set: LyricSet, parishId: string): Promise<void> {
   const supabase = createClient()
-  // groups is always written, structured or not, so the dock and the OBS
-  // display keep one thing to read and a set stays playable even if a future
-  // reader ignores `sections` entirely.
-  const { error } = await table(supabase).upsert({
+  const row: Record<string, unknown> = {
     id: set.id,
     type: set.type,
     title: set.title,
@@ -165,7 +190,9 @@ export async function saveSet(set: LyricSet): Promise<void> {
     language: set.language ?? null,
     presentation: set.presentation ?? null,
     scripture_reference: set.scriptureReference ?? null,
-  })
+    parish_id: parishId,
+  }
+  const { error } = await table(supabase).upsert(row)
   if (error) throw error
 }
 
@@ -175,12 +202,20 @@ export async function deleteSet(id: string): Promise<void> {
   if (error) throw error
 }
 
-/** Realtime: any client's create/edit/delete reaches every other open client. Returns an unsubscribe function. */
-export function subscribeToSets(onChange: () => void): () => void {
+/**
+ * Realtime: any client's create/edit/delete reaches every other open client.
+ * When parishId is provided, only changes to that parish's sets trigger onChange.
+ * Returns an unsubscribe function.
+ *
+ * NOTE: postgres_changes requires an authenticated session (RLS SELECT).
+ * OBS/anonymous callers should NOT call this — they use polling via the API.
+ */
+export function subscribeToSets(onChange: () => void, parishId?: string): () => void {
   const supabase = createClient()
+  const filter = parishId ? `parish_id=eq.${parishId}` : undefined
   const channel = supabase
-    .channel("lyrics-sets-sync")
-    .on("postgres_changes", { event: "*", schema: "public", table: "lyric_sets" }, () => onChange())
+    .channel(parishId ? `lyrics-sets-sync-${parishId}` : "lyrics-sets-sync")
+    .on("postgres_changes", { event: "*", schema: "public", table: "lyric_sets", ...(filter ? { filter } : {}) }, () => onChange())
     .subscribe()
   return () => {
     channel.unsubscribe()

@@ -3,6 +3,27 @@
 -- ===========================================
 -- Run this after migrations to populate initial data
 
+-- Feature Catalog
+-- Must contain every slug in FEATURE_SLUGS (lib/features/types.ts).
+-- Migration 052 seeds the first 11; 'social' and 'equipment' were missing, so
+-- all 13 are listed here. ON CONFLICT (slug) DO NOTHING keeps this idempotent
+-- and safe to run after the migration (slug is UNIQUE).
+INSERT INTO public.features (slug, name, description, category, is_default) VALUES
+  ('dashboard',       'Dashboard',        'Main dashboard and overview',           'core',     true),
+  ('rota',            'Rota',             'Team scheduling and rota management',   'module',   true),
+  ('meetings',        'Meetings',         'Meeting scheduling and management',     'module',   true),
+  ('rundown',         'Rundown',          'Service rundown planning',              'module',   false),
+  ('bible',           'Bible',            'Bible reading and OBS display',         'module',   true),
+  ('livestream',      'Livestream',       'Livestream management',                 'module',   false),
+  ('worship_library', 'Worship Library',  'Song library, lyrics display and OBS',  'module',   true),
+  ('designs',         'Designs',          'Design request management',             'module',   false),
+  ('training',        'Training',         'Team training and onboarding tracks',   'module',   false),
+  ('social',          'Social Media',     'Social content planning and scheduled publishing', 'module', false),
+  ('equipment',       'Equipment',        'Equipment inventory, QR labels and tracking',       'module', false),
+  ('admin',           'Administration',   'User and department management',        'admin',    true),
+  ('developer_tools', 'Developer Tools',  'System console and developer tools',    'platform', false)
+ON CONFLICT (slug) DO NOTHING;
+
 -- Equipment Categories
 INSERT INTO equipment_categories (id, name, icon) VALUES
   ('401fac70-8b78-4c8f-9f51-457acdbf3158', 'Cameras', 'camera'),

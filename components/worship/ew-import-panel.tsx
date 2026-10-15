@@ -37,9 +37,10 @@ interface Props {
   existingLibrary: LyricSet[]
   onImported: () => void
   onClose: () => void
+  parishId?: string
 }
 
-export function EwImportPanel({ existingLibrary, onImported, onClose }: Props) {
+export function EwImportPanel({ existingLibrary, onImported, onClose, parishId }: Props) {
   const [phase, setPhase] = useState<Phase>("pick")
   const [error, setError] = useState<string | null>(null)
   const [analysis, setAnalysis] = useState<EwAnalysisResult | null>(null)
@@ -103,7 +104,7 @@ export function EwImportPanel({ existingLibrary, onImported, onClose }: Props) {
     let done = 0
     for (const rec of selected) {
       try {
-        await saveSet(rec.fusionRecord)
+        await saveSet(rec.fusionRecord, parishId!)
         done++
         setImportProgress({ done, total: selected.length })
       } catch (err) {

@@ -136,32 +136,80 @@ export function isCodeRowRedeemable(
   return Number.isFinite(exp) && exp > now.getTime()
 }
 
+export interface ObsSessionResult {
+  valid: boolean
+  parishId?: string
+}
+
 /**
- * OBS session token: "v1.<expiry ms>.<hmac hex>". No user, role, or secret
- * inside — the only claim is "may open the OBS docks until <expiry>".
+ * OBS session token:
+ *   v2.<parishId>.<expiry ms>.<hmac hex>  — parish-scoped (preferred)
+ *   v1.<expiry ms>.<hmac hex>             — legacy, no parish binding
+ *
+ * The parish claim lets middleware, room claim, and the dock itself
+ * know which parish's data the OBS operator should see.
  */
 export async function createObsSessionToken(
   secret: string,
+  parishId: string | null,
   now: Date = new Date(),
 ): Promise<string> {
   const exp = now.getTime() + OBS_SESSION_TTL_MS
+  if (parishId) {
+    const payload = `v2.${parishId}.${exp}`
+    const sig = await hmacHex(secret, `obs-session:${payload}`)
+    return `${payload}.${sig}`
+  }
   const payload = `v1.${exp}`
   const sig = await hmacHex(secret, `obs-session:${payload}`)
   return `${payload}.${sig}`
 }
 
+/**
+ * `bootstrapParishId` is the original (first) parish in the org. Legacy v1
+ * tokens carry no parish claim, so in multi-parish mode callers should pass
+ * it: a v1 token is then pinned to that single parish and can never resolve
+ * to any other one. Callers that omit it get the old behaviour (valid, no
+ * parishId).
+ */
 export async function verifyObsSessionToken(
   token: string,
   secret: string,
   now: Date = new Date(),
-): Promise<boolean> {
-  if (typeof token !== "string" || token.length > 512) return false
+  bootstrapParishId?: string | null,
+): Promise<ObsSessionResult> {
+  if (typeof token !== "string" || token.length > 512) return { valid: false }
   const parts = token.split(".")
-  if (parts.length !== 3 || parts[0] !== "v1") return false
-  const exp = Number(parts[1])
-  if (!Number.isFinite(exp) || exp <= now.getTime()) return false
-  const expected = await hmacHex(secret, `obs-session:v1.${exp}`)
-  return timingSafeEqualHex(parts[2], expected)
+
+  // v2.<parishId>.<expiry>.<hmac>
+  if (parts.length === 4 && parts[0] === "v2") {
+    const parishId = parts[1]
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parishId)) {
+      return { valid: false }
+    }
+    const exp = Number(parts[2])
+    if (!Number.isFinite(exp) || exp <= now.getTime()) return { valid: false }
+    const expected = await hmacHex(secret, `obs-session:v2.${parishId}.${exp}`)
+    if (!timingSafeEqualHex(parts[3], expected)) return { valid: false }
+    return { valid: true, parishId }
+  }
+
+  // v1.<expiry>.<hmac> (legacy — no parish binding)
+  // TODO(v1-sunset): remove v1 support once the migration period ends
+  // (v1 tokens live at most OBS_SESSION_TTL_MS, so after a deploy where every
+  // issuer emits v2 this branch is dead code).
+  if (parts.length === 3 && parts[0] === "v1") {
+    const exp = Number(parts[1])
+    if (!Number.isFinite(exp) || exp <= now.getTime()) return { valid: false }
+    const expected = await hmacHex(secret, `obs-session:v1.${exp}`)
+    if (!timingSafeEqualHex(parts[2], expected)) return { valid: false }
+    // Multi-parish safety: a v1 token is only ever mapped to the bootstrap
+    // (original) parish — never to one derived from the request or elsewhere.
+    if (bootstrapParishId) return { valid: true, parishId: bootstrapParishId }
+    return { valid: true }
+  }
+
+  return { valid: false }
 }
 
 function timingSafeEqualHex(a: string, b: string): boolean {

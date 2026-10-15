@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { updateContentSchema } from "@/lib/validations/social"
+import { requireActiveParishOperator, isParishAuthFailure } from "@/lib/parish/require-active-parish"
+import { enforceFeature } from "@/lib/features/enforce"
 
 export async function GET(
   request: NextRequest,
@@ -23,6 +25,11 @@ export async function GET(
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const getOneDenied = await enforceFeature("social")
+    if (getOneDenied) {
+      return NextResponse.json({ error: getOneDenied }, { status: 403 })
     }
 
     const { data: post, error } = await supabase
@@ -59,27 +66,18 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
+
+    const auth = await requireActiveParishOperator()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
+
+    const patchDenied = await enforceFeature("social", auth.parishId)
+    if (patchDenied) {
+      return NextResponse.json({ error: patchDenied }, { status: 403 })
+    }
+
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Get profile and check role
-    const profileQuery = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    const profile = profileQuery.data as { id: string; role: string } | null
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
-    }
 
     // Get existing post
     const postQuery = await supabase
@@ -97,8 +95,8 @@ export async function PATCH(
       )
     }
 
-    // Only creator or admin can update
-    if (existingPost.created_by !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
+    // Only creator or parish admin can update
+    if (existingPost.created_by !== auth.profileId && auth.parishRole !== "parish_admin" && !auth.isPlatformDeveloper) {
       return NextResponse.json(
         { error: "You can only update your own content" },
         { status: 403 }
@@ -156,27 +154,18 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+
+    const auth = await requireActiveParishOperator()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
+    }
+
+    const deleteDenied = await enforceFeature("social", auth.parishId)
+    if (deleteDenied) {
+      return NextResponse.json({ error: deleteDenied }, { status: 403 })
+    }
+
     const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Get profile and check role
-    const deleteProfileQuery = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
-
-    const profile = deleteProfileQuery.data as { id: string; role: string } | null
-
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
-    }
 
     // Get existing post
     const deletePostQuery = await supabase
@@ -194,8 +183,8 @@ export async function DELETE(
       )
     }
 
-    // Only creator or admin can delete
-    if (existingPost.created_by !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
+    // Only creator or parish admin can delete
+    if (existingPost.created_by !== auth.profileId && auth.parishRole !== "parish_admin" && !auth.isPlatformDeveloper) {
       return NextResponse.json(
         { error: "You can only delete your own content" },
         { status: 403 }

@@ -1,67 +1,38 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { magicLinkSchema, type MagicLinkInput } from "@/lib/validations/auth"
-import { getAppUrl } from "@/lib/constants"
-import { sanitizeNext } from "@/lib/auth/next-url"
+import { loginSchema, type LoginInput } from "@/lib/validations/auth"
 
 /**
- * Send a magic link to the user's email for passwordless authentication
- * SECURITY: Only sends magic links to users who were invited (have a profile)
+ * Sign in with email and password.
  */
-export async function sendMagicLink(data: MagicLinkInput) {
-  const parsed = magicLinkSchema.safeParse(data)
+export async function signInWithPassword(data: LoginInput) {
+  const parsed = loginSchema.safeParse(data)
 
   if (!parsed.success) {
-    return { error: "Please enter a valid email address" }
-  }
-
-  // SECURITY: Verify user was invited before sending magic link
-  // Check the profiles table - profiles are only created when admins invite users
-  const adminClient = createAdminClient()
-  const { data: existingProfile } = await adminClient
-    .from("profiles")
-    .select("id")
-    .ilike("email", parsed.data.email) // Case-insensitive email match
-    .maybeSingle()
-
-  // If no profile exists (user wasn't invited), return special response
-  // This prevents email enumeration while informing the user appropriately
-  if (!existingProfile) {
-    return { success: true, notInvited: true } // Flag to show different UI message
+    const errors = parsed.error.flatten()
+    const firstError = Object.values(errors.fieldErrors)[0]?.[0]
+    return { error: firstError || "Invalid email or password" }
   }
 
   const supabase = await createClient()
-  const appUrl = getAppUrl()
-  // Canonical `next`; `redirectTo` is still read so an older client (or the
-  // desktop shell mid-update) posting the previous field name still works.
-  const next = encodeURIComponent(sanitizeNext(parsed.data.next ?? parsed.data.redirectTo))
 
-  // Desktop shell: redirect through the app's custom URL scheme instead of
-  // the website, so the OS hands the clicked email link back to the Fusion
-  // app instead of just opening it in the default browser. The desktop
-  // app's deep-link handler rewrites this to the same /auth/callback route
-  // on the real site once it receives it (see desktop/src-tauri).
-  const emailRedirectTo =
-    parsed.data.platform === "desktop"
-      ? `fusion://auth-callback?type=magiclink&next=${next}`
-      : `${appUrl}/auth/callback?type=magiclink&next=${next}`
-
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
-    options: {
-      emailRedirectTo,
-    },
+    password: parsed.data.password,
   })
 
   if (error) {
-    // Check for rate limiting
-    if (error.message.includes("rate") || error.status === 429) {
-      return { error: "Too many requests. Please wait a few minutes before trying again." }
+    if (error.message.includes("Invalid login credentials")) {
+      return { error: "Invalid email or password" }
     }
-    // Generic error for security (don't reveal if email exists)
-    return { error: "Unable to send magic link. Please try again later." }
+    if (error.message.includes("Email not confirmed")) {
+      return { error: "Please check your email and confirm your account first" }
+    }
+    if (error.message.includes("rate") || error.status === 429) {
+      return { error: "Too many attempts. Please wait a few minutes." }
+    }
+    return { error: "Unable to sign in. Please try again." }
   }
 
   return { success: true }

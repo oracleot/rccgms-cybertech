@@ -7,6 +7,84 @@ import {
 } from "@/lib/validations/designs"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { notifyTeamNewRequest } from "@/lib/notifications/design-notifications"
+import { enforceFeature } from "@/lib/features/enforce"
+
+type AdminClient = ReturnType<typeof createAdminClient>
+
+/**
+ * Resolve the parish for a public (unauthenticated) submission.
+ *
+ * - With `parishSlug`: look up an ACTIVE parish by slug. Slugs are only unique
+ *   per organisation, so `organisationSlug` narrows the lookup; if the slug is
+ *   still ambiguous the request is rejected rather than guessing a tenant.
+ * - Without a slug: only resolves when the deployment has exactly one active
+ *   parish (single-tenant default). Otherwise returns null.
+ *
+ * Returns null when no single active parish can be determined.
+ *
+ * NOTE: parish slugs are unique per organisation only. A globally unique public
+ * slug (or a dedicated per-parish public intake token) would need a migration;
+ * until then `organisationSlug` is the disambiguator.
+ */
+async function resolvePublicParishId(
+  supabase: AdminClient,
+  parishSlug?: string,
+  organisationSlug?: string
+): Promise<string | null> {
+  let query = supabase.from("parishes").select("id").eq("status", "active")
+
+  if (parishSlug) {
+    query = query.eq("slug", parishSlug)
+
+    if (organisationSlug) {
+      const { data: org } = await supabase
+        .from("organisations")
+        .select("id")
+        .eq("slug", organisationSlug)
+        .eq("status", "active")
+        .maybeSingle()
+      if (!org) return null
+      query = query.eq("organisation_id", org.id)
+    }
+  }
+
+  const { data: parishes } = await query.limit(2)
+  return parishes?.length === 1 ? parishes[0].id : null
+}
+
+/**
+ * Entitlement check for the designs feature, run with the service-role client.
+ *
+ * `enforceFeature()` / `hasFeature()` read entitlements through the cookie
+ * session client, and `parish_feature_entitlements` RLS only allows
+ * authenticated parish members, so for an anonymous visitor they always
+ * return "not available". The public endpoint therefore mirrors the
+ * hasFeature() rules (entitlement row required, enabled, not expired) using
+ * the admin client against the server-resolved parish id.
+ */
+async function isDesignsEnabledForParish(
+  supabase: AdminClient,
+  parishId: string
+): Promise<boolean> {
+  const { data: feature } = await supabase
+    .from("features")
+    .select("id")
+    .eq("slug", "designs")
+    .maybeSingle()
+  if (!feature) return false
+
+  const { data: entitlement } = await supabase
+    .from("parish_feature_entitlements")
+    .select("enabled, expires_at")
+    .eq("parish_id", parishId)
+    .eq("feature_id", feature.id)
+    .maybeSingle()
+  if (!entitlement || !entitlement.enabled) return false
+  if (entitlement.expires_at && new Date(entitlement.expires_at) < new Date()) {
+    return false
+  }
+  return true
+}
 
 /**
  * POST /api/designs - Create a new design request (public, no auth)
@@ -55,6 +133,23 @@ export async function POST(request: NextRequest) {
     // Use admin client to bypass RLS for public insert
     const supabase = createAdminClient()
 
+    // Resolve the tenant server-side from a public slug (never a raw UUID),
+    // then verify the parish is active and has the designs feature enabled.
+    // All failure modes return the same generic response so this endpoint
+    // can't be used to probe which parishes/slugs exist or which features
+    // they have.
+    const parishId = await resolvePublicParishId(
+      supabase,
+      parsed.data.parishSlug,
+      parsed.data.organisationSlug
+    )
+    if (!parishId || !(await isDesignsEnabledForParish(supabase, parishId))) {
+      return NextResponse.json(
+        { error: "Design requests are not available for this parish" },
+        { status: 404 }
+      )
+    }
+
     const { data, error } = await supabase
       .from("design_requests")
       .insert({
@@ -68,6 +163,7 @@ export async function POST(request: NextRequest) {
         requester_ministry: parsed.data.requesterMinistry || null,
         needed_by: parsed.data.neededBy || null,
         reference_urls: parsed.data.referenceUrls || [],
+        parish_id: parishId,
       })
       .select("id")
       .single()
@@ -84,6 +180,7 @@ export async function POST(request: NextRequest) {
     try {
       await notifyTeamNewRequest({
         requestId: data.id,
+        parishId,
         title: parsed.data.title,
         type: parsed.data.type,
         priority: parsed.data.priority,
@@ -124,6 +221,11 @@ export async function GET(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  }
+
+  const getDenied = await enforceFeature("designs")
+  if (getDenied) {
+    return NextResponse.json({ error: getDenied }, { status: 403 })
   }
 
   try {

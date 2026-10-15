@@ -59,6 +59,20 @@ export const createDesignRequestSchema = z.object({
     .max(5, "Maximum 5 reference URLs allowed")
     .optional(),
   website: z.string().max(0, "Invalid submission").optional(), // honeypot field
+  // Public parish selector. Raw parish UUIDs are NOT accepted from the public:
+  // the server resolves the parish from its human-facing slug. Slugs are only
+  // unique per organisation (UNIQUE(organisation_id, slug)), so organisationSlug
+  // disambiguates when two organisations share a parish slug.
+  parishSlug: z
+    .string()
+    .max(100, "Invalid parish")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid parish")
+    .optional(),
+  organisationSlug: z
+    .string()
+    .max(100, "Invalid organisation")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Invalid organisation")
+    .optional(),
 })
 
 export type CreateDesignRequestInput = z.infer<

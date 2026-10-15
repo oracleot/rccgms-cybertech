@@ -19,6 +19,7 @@ const MAX_RETRY_ATTEMPTS = (() => {
 
 export interface NotificationPayload {
   userId: string
+  parish_id: string
   type: NotificationType
   title: string
   body: string
@@ -75,6 +76,7 @@ export async function queueNotification(
       .from("notifications")
       .insert({
         user_id: payload.userId,
+        parish_id: payload.parish_id,
         type: payload.type,
         channel,
         title: payload.title,
@@ -127,6 +129,7 @@ export async function sendNotificationNow(
       .from("notifications")
       .insert({
         user_id: payload.userId,
+        parish_id: payload.parish_id,
         type: payload.type,
         channel,
         title: payload.title,

@@ -106,6 +106,8 @@ export const publicAvailabilitySchema = z.object({
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
   // Honeypot field - real users never fill this in; checked (not validated) by the route handler
   website: z.string().optional(),
+  // Optional parish context — required for multi-parish users
+  parishId: z.string().uuid().optional(),
 })
 
 export type PublicAvailabilityInput = z.infer<typeof publicAvailabilitySchema>

@@ -6,6 +6,7 @@ import { CalendarDays, ChevronRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
 import { TeamAvailabilityGrid } from "@/components/rota/team-availability-grid"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 export const metadata: Metadata = {
   title: "Team Availability",
@@ -13,25 +14,12 @@ export const metadata: Metadata = {
 }
 
 export default async function TeamAvailabilityPage() {
-  const supabase = await createClient()
-  
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect("/login")
-  }
-
-  // Check if user is admin or leader
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer" && profile.role !== "leader")) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) {
     redirect("/rota/availability")
   }
+
+  const supabase = await createClient()
 
   // Fetch departments for filtering
   const { data: departmentsData } = await supabase

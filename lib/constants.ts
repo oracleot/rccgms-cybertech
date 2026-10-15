@@ -355,6 +355,7 @@ export const REMINDER_TIMING_OPTIONS = [
 export const ROUTES = {
   HOME: "/dashboard",
   LOGIN: "/login",
+  SIGNUP: "/signup",
   REGISTER: "/register",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
@@ -390,6 +391,7 @@ export const ROUTES = {
   ADMIN_TRAINING: "/admin/training",
   ADMIN_DEVELOPER_TOOLS: "/admin/developer",
   ADMIN_ML_TRAINING: "/admin/ml-training",
+  ADMIN_PARISH: "/admin/parish",
   TRAINING_REQUEST: "/training/request",
   BIBLE: "/bible",
 } as const

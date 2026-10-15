@@ -6,8 +6,10 @@
  */
 
 import { createClient } from "@/lib/supabase/server"
+import { enforceFeature } from "@/lib/features/enforce"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 // Template row type
 interface TemplateRow {
@@ -28,31 +30,16 @@ const updateTemplateSchema = z.object({
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    
-    // Auth check
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "UNAUTHORIZED", message: "Authentication required" },
-        { status: 401 }
-      )
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    // Get user profile to check role - only admins can access
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("auth_user_id", user.id)
-      .single()
+    const supabase = await createClient()
 
-    const profileRole = (profile as { role: string } | null)?.role
-    if (!profileRole || (profileRole !== "admin" && profileRole !== "lead_developer")) {
-      return NextResponse.json(
-        { error: "FORBIDDEN", message: "Admin access required" },
-        { status: 403 }
-      )
+    const getDenied = await enforceFeature("livestream", auth.parishId)
+    if (getDenied) {
+      return NextResponse.json({ error: getDenied }, { status: 403 })
     }
 
     // Fetch templates
@@ -112,31 +99,16 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient()
-    
-    // Auth check
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "UNAUTHORIZED", message: "Authentication required" },
-        { status: 401 }
-      )
+    const auth = await requireActiveParishLeader()
+    if (isParishAuthFailure(auth)) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status })
     }
 
-    // Get user profile to check role - only admins can access
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, role")
-      .eq("auth_user_id", user.id)
-      .single()
+    const supabase = await createClient()
 
-    const profileData = profile as { id: string; role: string } | null
-    if (!profileData || (profileData.role !== "admin" && profileData.role !== "lead_developer")) {
-      return NextResponse.json(
-        { error: "FORBIDDEN", message: "Admin access required" },
-        { status: 403 }
-      )
+    const putDenied = await enforceFeature("livestream", auth.parishId)
+    if (putDenied) {
+      return NextResponse.json({ error: putDenied }, { status: 403 })
     }
 
     // Parse and validate body
@@ -203,7 +175,8 @@ export async function PUT(request: NextRequest) {
           platform,
           template: systemPrompt,
           is_default: true,
-          created_by: profileData.id,
+          created_by: auth.profileId,
+          parish_id: auth.parishId,
         })
         .select()
         .single()

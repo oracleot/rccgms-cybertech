@@ -12,36 +12,47 @@ import {
 
 import { cn } from "@/lib/utils"
 import { ROUTES } from "@/lib/constants"
+import { FEATURE_SLUGS } from "@/lib/features/types"
 
 const navItems = [
   {
     title: "Home",
     href: ROUTES.HOME,
     icon: Home,
+    feature: FEATURE_SLUGS.DASHBOARD,
   },
   {
     title: "Rota",
     href: ROUTES.ROTA,
     icon: CalendarDays,
+    feature: FEATURE_SLUGS.ROTA,
   },
   {
     title: "Meetings",
     href: ROUTES.MEETINGS,
     icon: Video,
+    feature: FEATURE_SLUGS.MEETINGS,
   },
   {
     title: "Livestream",
     href: ROUTES.LIVESTREAM,
     icon: MonitorPlay,
+    feature: FEATURE_SLUGS.LIVESTREAM,
   },
   {
     title: "Rundown",
     href: ROUTES.RUNDOWN,
     icon: Clapperboard,
+    feature: FEATURE_SLUGS.RUNDOWN,
   },
 ]
 
-export function MobileNav() {
+interface MobileNavProps {
+  enabledFeatures?: string[]
+  isDeveloper?: boolean
+}
+
+export function MobileNav({ enabledFeatures = [], isDeveloper = false }: MobileNavProps) {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -51,10 +62,15 @@ export function MobileNav() {
     return pathname.startsWith(href)
   }
 
+  const featureSet = new Set(enabledFeatures)
+  const visibleItems = navItems.filter(
+    (item) => !item.feature || isDeveloper || featureSet.has(item.feature)
+  )
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background lg:hidden">
       <div className="flex h-16 items-center justify-around">
-        {navItems.map((item) => (
+        {visibleItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}

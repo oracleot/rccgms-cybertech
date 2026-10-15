@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin, requireLeader, requireLeadDeveloper } from "@/lib/auth/guards"
 import { logAuditEvent } from "@/lib/audit-log"
+import { getActiveParishId } from "@/lib/parish/context"
 import type { UserRole } from "@/lib/constants"
 
 interface UpdateUserRoleInput {
@@ -113,6 +114,8 @@ export async function createDepartment(
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
     await requireLeadDeveloper()
+    const parishId = await getActiveParishId()
+    if (!parishId) return { success: false, error: "No active parish" }
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -122,6 +125,7 @@ export async function createDepartment(
         description: input.description || null,
         color: input.color || null,
         leader_id: input.leaderId || null,
+        parish_id: parishId,
       } as Record<string, unknown>)
       .select("id")
       .single()
@@ -245,6 +249,8 @@ export async function createPosition(
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
     await requireLeadDeveloper()
+    const parishId = await getActiveParishId()
+    if (!parishId) return { success: false, error: "No active parish" }
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
@@ -255,6 +261,7 @@ export async function createPosition(
         description: input.description || null,
         min_members: input.minMembers || 1,
         max_members: input.maxMembers || 1,
+        parish_id: parishId,
       } as Record<string, unknown>)
       .select("id")
       .single()

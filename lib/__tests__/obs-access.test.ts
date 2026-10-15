@@ -1,12 +1,13 @@
 /**
- * OBS Access Code tests — run with: npx tsx lib/__tests__/obs-access.test.ts
+ * OBS Access Code unit tests — covers the pure security logic used by
+ * routes and middleware: role gating, code format, keyed hashing,
+ * redeemability, session token v1/v2 sign+verify, path predicates,
+ * and safe destination preservation.
  *
- * Covers the pure security logic the routes and middleware are built on:
- * role gating, code format/randomness, keyed hashing, redeemability
- * (expiry / single-use), session token sign/verify/tamper/expiry, the
- * dock-only path predicate, and safe destination preservation.
+ * Run: npx vitest run lib/__tests__/obs-access.test.ts
  */
 
+import { describe, it, expect } from "vitest"
 import {
   OBS_CODE_TTL_MS,
   OBS_SESSION_TTL_MS,
@@ -21,173 +22,329 @@ import {
   verifyObsSessionToken,
 } from "../obs-access"
 
-let passed = 0
-let failed = 0
-
-function assert(condition: boolean, msg: string) {
-  if (condition) {
-    passed++
-  } else {
-    failed++
-    console.error(`  FAIL: ${msg}`)
-  }
-}
-
 const SECRET = "test-secret-for-obs-access"
+const TEST_PARISH_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
-async function run() {
-  console.log("--- OBS Access Code Tests ---\n")
+describe("canGenerateObsCode — role gating", () => {
+  it("developer can generate", () => expect(canGenerateObsCode("developer")).toBe(true))
+  it("lead_developer can generate", () => expect(canGenerateObsCode("lead_developer")).toBe(true))
+  it("admin cannot generate", () => expect(canGenerateObsCode("admin")).toBe(false))
+  it("leader cannot generate", () => expect(canGenerateObsCode("leader")).toBe(false))
+  it("member cannot generate", () => expect(canGenerateObsCode("member")).toBe(false))
+  it("empty role cannot generate", () => expect(canGenerateObsCode("")).toBe(false))
+  it("role match is case-sensitive", () => expect(canGenerateObsCode("Developer")).toBe(false))
+})
 
-  // 1. developer / lead_developer can generate a code
-  assert(canGenerateObsCode("developer"), "developer can generate")
-  assert(canGenerateObsCode("lead_developer"), "lead_developer can generate")
+describe("generateObsCode — format and randomness", () => {
+  it("generates 6-digit codes", () => {
+    for (let i = 0; i < 100; i++) {
+      expect(generateObsCode()).toMatch(/^\d{6}$/)
+    }
+  })
 
-  // 2. member / admin / leader cannot generate
-  assert(!canGenerateObsCode("admin"), "admin cannot generate")
-  assert(!canGenerateObsCode("leader"), "leader cannot generate")
-  assert(!canGenerateObsCode("member"), "member cannot generate")
-  assert(!canGenerateObsCode(""), "empty role cannot generate")
-  assert(!canGenerateObsCode("Developer"), "role match is exact/case-sensitive")
+  it("codes have reasonable distribution", () => {
+    const codes = new Set<string>()
+    for (let i = 0; i < 1000; i++) codes.add(generateObsCode())
+    expect(codes.size).toBeGreaterThan(900)
+  })
+})
 
-  // Code generation: format and randomness sanity
-  const codes = new Set<string>()
-  for (let i = 0; i < 1000; i++) {
-    const c = generateObsCode()
-    assert(/^\d{6}$/.test(c), `generated code is 6 digits: ${c}`)
-    codes.add(c)
-    if (!/^\d{6}$/.test(c)) break
-  }
-  assert(codes.size > 900, `codes look random (${codes.size}/1000 distinct)`)
+describe("hashObsCode — keyed HMAC", () => {
+  it("is deterministic", async () => {
+    const h1 = await hashObsCode("482913", SECRET)
+    const h2 = await hashObsCode("482913", SECRET)
+    expect(h1).toBe(h2)
+  })
 
-  // Keyed hash: deterministic per (code, secret), differs across either
-  const h1 = await hashObsCode("482913", SECRET)
-  const h2 = await hashObsCode("482913", SECRET)
-  const h3 = await hashObsCode("482914", SECRET)
-  const h4 = await hashObsCode("482913", "other-secret")
-  assert(h1 === h2, "hash is deterministic")
-  assert(h1 !== h3, "different code → different hash")
-  assert(h1 !== h4, "different secret → different hash (keyed, not plain SHA)")
-  assert(/^[0-9a-f]{64}$/.test(h1), "hash is 64 hex chars (HMAC-SHA256)")
+  it("different code → different hash", async () => {
+    const h1 = await hashObsCode("482913", SECRET)
+    const h2 = await hashObsCode("482914", SECRET)
+    expect(h1).not.toBe(h2)
+  })
 
-  // 3. valid code redeems: fresh row is redeemable, then session verifies
+  it("different secret → different hash", async () => {
+    const h1 = await hashObsCode("482913", SECRET)
+    const h2 = await hashObsCode("482913", "other-secret")
+    expect(h1).not.toBe(h2)
+  })
+
+  it("produces 64-char hex (HMAC-SHA256)", async () => {
+    const h = await hashObsCode("482913", SECRET)
+    expect(h).toMatch(/^[0-9a-f]{64}$/)
+  })
+})
+
+describe("isCodeRowRedeemable", () => {
   const now = new Date()
-  const freshRow = {
-    expires_at: new Date(now.getTime() + OBS_CODE_TTL_MS).toISOString(),
-    redeemed_at: null,
-  }
-  assert(isCodeRowRedeemable(freshRow, now), "fresh unused code is redeemable")
-  const token = await createObsSessionToken(SECRET, now)
-  assert(await verifyObsSessionToken(token, SECRET, now), "issued session token verifies")
-  assert(
-    await verifyObsSessionToken(
-      token,
-      SECRET,
-      new Date(now.getTime() + OBS_SESSION_TTL_MS - 1000),
-    ),
-    "session token still valid just before 12h",
-  )
 
-  // 4. expired code fails
-  const expiredRow = {
-    expires_at: new Date(now.getTime() - 1000).toISOString(),
-    redeemed_at: null,
-  }
-  assert(!isCodeRowRedeemable(expiredRow, now), "expired code is not redeemable")
-  assert(
-    !isCodeRowRedeemable(freshRow, new Date(now.getTime() + OBS_CODE_TTL_MS + 1000)),
-    "code not redeemable after its 10-minute window",
-  )
-  assert(
-    !(await verifyObsSessionToken(
-      token,
-      SECRET,
-      new Date(now.getTime() + OBS_SESSION_TTL_MS + 1000),
-    )),
-    "session token rejected after 12h",
-  )
+  it("accepts fresh unused code", () => {
+    expect(isCodeRowRedeemable({
+      expires_at: new Date(now.getTime() + OBS_CODE_TTL_MS).toISOString(),
+      redeemed_at: null,
+    }, now)).toBe(true)
+  })
 
-  // 5. used code fails
-  const usedRow = {
-    expires_at: new Date(now.getTime() + OBS_CODE_TTL_MS).toISOString(),
-    redeemed_at: now.toISOString(),
-  }
-  assert(!isCodeRowRedeemable(usedRow, now), "already-redeemed code is not redeemable")
+  it("rejects expired code", () => {
+    expect(isCodeRowRedeemable({
+      expires_at: new Date(now.getTime() - 1000).toISOString(),
+      redeemed_at: null,
+    }, now)).toBe(false)
+  })
 
-  // 6. malformed code / token fails
-  assert(isValidObsCodeFormat("482913"), "6-digit code accepted")
-  assert(isValidObsCodeFormat("000000"), "leading zeros accepted")
-  assert(!isValidObsCodeFormat("12345"), "5 digits rejected")
-  assert(!isValidObsCodeFormat("1234567"), "7 digits rejected")
-  assert(!isValidObsCodeFormat("12a456"), "letters rejected")
-  assert(!isValidObsCodeFormat(" 482913"), "whitespace-padded rejected")
-  assert(!isValidObsCodeFormat(""), "empty rejected")
-  assert(!isValidObsCodeFormat("482913; DROP TABLE"), "injection-shaped input rejected")
+  it("rejects already-redeemed code", () => {
+    expect(isCodeRowRedeemable({
+      expires_at: new Date(now.getTime() + OBS_CODE_TTL_MS).toISOString(),
+      redeemed_at: now.toISOString(),
+    }, now)).toBe(false)
+  })
+})
 
-  assert(!(await verifyObsSessionToken("", SECRET)), "empty token rejected")
-  assert(!(await verifyObsSessionToken("garbage", SECRET)), "garbage token rejected")
-  assert(!(await verifyObsSessionToken("v1.notanumber.abc", SECRET)), "non-numeric expiry rejected")
-  const [v, exp, sig] = token.split(".")
-  const flipped = sig.endsWith("0") ? "1" : "0"
-  assert(
-    !(await verifyObsSessionToken(`${v}.${exp}.${sig.slice(0, -1)}${flipped}`, SECRET, now)),
-    "tampered signature rejected",
-  )
-  assert(
-    !(await verifyObsSessionToken(`${v}.${Number(exp) + 999999}.${sig}`, SECRET, now)),
-    "tampered expiry rejected",
-  )
-  assert(
-    !(await verifyObsSessionToken(token, "wrong-secret", now)),
-    "token signed with different secret rejected",
-  )
+describe("session tokens — v2 parish-scoped", () => {
+  it("creates v2 token when parishId is provided", async () => {
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID)
+    expect(token).toMatch(/^v2\./)
+    const parts = token.split(".")
+    expect(parts).toHaveLength(4)
+    expect(parts[1]).toBe(TEST_PARISH_ID)
+  })
 
-  // 7. OBS session gate never applies to normal application routes —
-  // middleware consults the OBS cookie ONLY for isObsDockPath() paths, so a
-  // dock session can never open these:
-  for (const path of [
-    "/admin",
-    "/admin/developer",
-    "/dashboard",
-    "/users",
-    "/settings",
-    "/rundown",
-    "/api/admin/developer/query",
-  ]) {
-    assert(!isObsDockPath(path), `${path} is not an OBS dock path`)
-  }
+  it("verifies and returns parishId", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID, now)
+    const result = await verifyObsSessionToken(token, SECRET, now)
+    expect(result.valid).toBe(true)
+    expect(result.parishId).toBe(TEST_PARISH_ID)
+  })
 
-  // 8. /bible/obs (display overlay) stays public — not matched by the gate
-  assert(!isObsDockPath("/bible/obs"), "/bible/obs overlay not gated")
+  it("still valid just before 12h", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID, now)
+    const result = await verifyObsSessionToken(
+      token, SECRET, new Date(now.getTime() + OBS_SESSION_TTL_MS - 1000),
+    )
+    expect(result.valid).toBe(true)
+  })
 
-  // 9. /lyrics/obs (display overlay) stays public — not matched by the gate
-  assert(!isObsDockPath("/lyrics/obs"), "/lyrics/obs overlay not gated")
-  assert(!isObsDockPath("/lyrics/obs/monitor"), "/lyrics/obs/monitor not gated")
+  it("rejects after 12h", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID, now)
+    const result = await verifyObsSessionToken(
+      token, SECRET, new Date(now.getTime() + OBS_SESSION_TTL_MS + 1000),
+    )
+    expect(result.valid).toBe(false)
+  })
 
-  // The two docks ARE matched
-  assert(isObsDockPath("/bible/obs/dock"), "/bible/obs/dock is gated")
-  assert(isObsDockPath("/lyrics/obs/dock"), "/lyrics/obs/dock is gated")
-  assert(isObsDockPath("/lyrics/obs/dock/"), "trailing slash still gated")
+  it("rejects tampered parishId", async () => {
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID)
+    const parts = token.split(".")
+    parts[1] = "ffffffff-ffff-ffff-ffff-ffffffffffff"
+    const result = await verifyObsSessionToken(parts.join("."), SECRET)
+    expect(result.valid).toBe(false)
+  })
 
-  // 10. dock destination is safely preserved
-  assert(
-    sanitizeDockNext("/bible/obs/dock") === "/bible/obs/dock",
-    "bible dock destination preserved",
-  )
-  assert(
-    sanitizeDockNext("/lyrics/obs/dock?room=AB12CD34") === "/lyrics/obs/dock?room=AB12CD34",
-    "lyrics dock destination preserved with room query",
-  )
-  assert(sanitizeDockNext("/dashboard") === null, "non-dock path rejected")
-  assert(sanitizeDockNext("/admin/developer") === null, "admin path rejected")
-  assert(sanitizeDockNext("https://evil.example/bible/obs/dock") === null, "absolute URL rejected")
-  assert(sanitizeDockNext("//evil.example/bible/obs/dock") === null, "protocol-relative rejected")
-  assert(sanitizeDockNext("/\\evil.example") === null, "backslash trick rejected")
-  assert(sanitizeDockNext("/bible/obs") === null, "overlay path not a valid dock destination")
-  assert(sanitizeDockNext(null) === null, "null rejected")
-  assert(sanitizeDockNext("") === null, "empty rejected")
+  it("rejects tampered HMAC", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID, now)
+    const parts = token.split(".")
+    parts[3] = "0".repeat(parts[3].length)
+    const result = await verifyObsSessionToken(parts.join("."), SECRET, now)
+    expect(result.valid).toBe(false)
+  })
 
-  console.log(`\nResults: ${passed} passed, ${failed} failed`)
-  if (failed > 0) process.exit(1)
-}
+  it("rejects tampered expiry", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID, now)
+    const parts = token.split(".")
+    parts[2] = String(Number(parts[2]) + 999999)
+    const result = await verifyObsSessionToken(parts.join("."), SECRET, now)
+    expect(result.valid).toBe(false)
+  })
 
-run()
+  it("rejects invalid UUID format in parishId", async () => {
+    const result = await verifyObsSessionToken(
+      `v2.not-a-uuid.${Date.now() + 60_000}.deadbeef`, SECRET,
+    )
+    expect(result.valid).toBe(false)
+  })
+
+  it("rejects wrong secret", async () => {
+    const token = await createObsSessionToken(SECRET, TEST_PARISH_ID)
+    const result = await verifyObsSessionToken(token, "wrong-secret")
+    expect(result.valid).toBe(false)
+  })
+})
+
+describe("session tokens — v1 legacy (no parish binding)", () => {
+  it("creates v1 token when parishId is null", async () => {
+    const token = await createObsSessionToken(SECRET, null)
+    expect(token).toMatch(/^v1\./)
+    expect(token.split(".")).toHaveLength(3)
+  })
+
+  it("verifies without parishId", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, null, now)
+    const result = await verifyObsSessionToken(token, SECRET, now)
+    expect(result.valid).toBe(true)
+    expect(result.parishId).toBeUndefined()
+  })
+
+  it("rejects after 12h", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, null, now)
+    const result = await verifyObsSessionToken(
+      token, SECRET, new Date(now.getTime() + OBS_SESSION_TTL_MS + 1000),
+    )
+    expect(result.valid).toBe(false)
+  })
+
+  it("rejects tampered signature", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, null, now)
+    const parts = token.split(".")
+    const sig = parts[2]
+    const flipped = sig.endsWith("0") ? "1" : "0"
+    parts[2] = sig.slice(0, -1) + flipped
+    const result = await verifyObsSessionToken(parts.join("."), SECRET, now)
+    expect(result.valid).toBe(false)
+  })
+})
+
+describe("session tokens — v1 sunset (bootstrap parish mapping)", () => {
+  const OTHER_PARISH_ID = "11111111-2222-3333-4444-555555555555"
+
+  it("v1 token with bootstrapParishId returns that parishId", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, null, now)
+    const result = await verifyObsSessionToken(token, SECRET, now, TEST_PARISH_ID)
+    expect(result.valid).toBe(true)
+    expect(result.parishId).toBe(TEST_PARISH_ID)
+  })
+
+  it("v1 token without bootstrapParishId returns no parishId (backward compat)", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, null, now)
+    const result = await verifyObsSessionToken(token, SECRET, now)
+    expect(result.valid).toBe(true)
+    expect(result.parishId).toBeUndefined()
+    const nullResult = await verifyObsSessionToken(token, SECRET, now, null)
+    expect(nullResult.valid).toBe(true)
+    expect(nullResult.parishId).toBeUndefined()
+  })
+
+  it("v1 token with bootstrapParishId never returns a different parish", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, null, now)
+    const result = await verifyObsSessionToken(token, SECRET, now, TEST_PARISH_ID)
+    expect(result.parishId).toBe(TEST_PARISH_ID)
+    expect(result.parishId).not.toBe(OTHER_PARISH_ID)
+  })
+
+  it("invalid/expired v1 token never yields a parishId even with bootstrapParishId", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, null, now)
+    const expired = await verifyObsSessionToken(
+      token, SECRET, new Date(now.getTime() + OBS_SESSION_TTL_MS + 1000), TEST_PARISH_ID,
+    )
+    expect(expired).toEqual({ valid: false })
+    const wrongSecret = await verifyObsSessionToken(token, "wrong-secret", now, TEST_PARISH_ID)
+    expect(wrongSecret).toEqual({ valid: false })
+  })
+
+  it("v2 token ignores bootstrapParishId and keeps its own parish", async () => {
+    const now = new Date()
+    const token = await createObsSessionToken(SECRET, OTHER_PARISH_ID, now)
+    const result = await verifyObsSessionToken(token, SECRET, now, TEST_PARISH_ID)
+    expect(result.valid).toBe(true)
+    expect(result.parishId).toBe(OTHER_PARISH_ID)
+  })
+})
+
+describe("session token edge cases", () => {
+  it("rejects empty token", async () => {
+    expect((await verifyObsSessionToken("", SECRET)).valid).toBe(false)
+  })
+
+  it("rejects garbage", async () => {
+    expect((await verifyObsSessionToken("garbage", SECRET)).valid).toBe(false)
+  })
+
+  it("rejects overly long token", async () => {
+    expect((await verifyObsSessionToken("x".repeat(513), SECRET)).valid).toBe(false)
+  })
+
+  it("rejects non-string input", async () => {
+    // @ts-expect-error — testing runtime guard
+    expect((await verifyObsSessionToken(12345, SECRET)).valid).toBe(false)
+  })
+
+  it("rejects non-numeric expiry", async () => {
+    expect((await verifyObsSessionToken("v1.notanumber.abc", SECRET)).valid).toBe(false)
+  })
+
+  it("rejects v3 format", async () => {
+    const result = await verifyObsSessionToken(
+      `v3.${TEST_PARISH_ID}.${Date.now() + 60_000}.extra.deadbeef`, SECRET,
+    )
+    expect(result.valid).toBe(false)
+  })
+})
+
+describe("isValidObsCodeFormat", () => {
+  it("accepts valid 6-digit codes", () => {
+    expect(isValidObsCodeFormat("482913")).toBe(true)
+    expect(isValidObsCodeFormat("000000")).toBe(true)
+    expect(isValidObsCodeFormat("999999")).toBe(true)
+  })
+
+  it("rejects invalid formats", () => {
+    expect(isValidObsCodeFormat("12345")).toBe(false)
+    expect(isValidObsCodeFormat("1234567")).toBe(false)
+    expect(isValidObsCodeFormat("12a456")).toBe(false)
+    expect(isValidObsCodeFormat(" 482913")).toBe(false)
+    expect(isValidObsCodeFormat("")).toBe(false)
+    expect(isValidObsCodeFormat("482913; DROP TABLE")).toBe(false)
+  })
+})
+
+describe("isObsDockPath", () => {
+  it("matches dock paths", () => {
+    expect(isObsDockPath("/bible/obs/dock")).toBe(true)
+    expect(isObsDockPath("/lyrics/obs/dock")).toBe(true)
+    expect(isObsDockPath("/lyrics/obs/dock/")).toBe(true)
+  })
+
+  it("rejects public overlays", () => {
+    expect(isObsDockPath("/bible/obs")).toBe(false)
+    expect(isObsDockPath("/lyrics/obs")).toBe(false)
+    expect(isObsDockPath("/lyrics/obs/monitor")).toBe(false)
+  })
+
+  it("rejects normal application routes", () => {
+    expect(isObsDockPath("/admin")).toBe(false)
+    expect(isObsDockPath("/admin/developer")).toBe(false)
+    expect(isObsDockPath("/dashboard")).toBe(false)
+    expect(isObsDockPath("/rundown")).toBe(false)
+  })
+})
+
+describe("sanitizeDockNext", () => {
+  it("allows valid dock destinations", () => {
+    expect(sanitizeDockNext("/bible/obs/dock")).toBe("/bible/obs/dock")
+    expect(sanitizeDockNext("/lyrics/obs/dock?room=AB12CD34")).toBe("/lyrics/obs/dock?room=AB12CD34")
+  })
+
+  it("rejects non-dock paths", () => {
+    expect(sanitizeDockNext("/dashboard")).toBeNull()
+    expect(sanitizeDockNext("/admin/developer")).toBeNull()
+    expect(sanitizeDockNext("/bible/obs")).toBeNull()
+  })
+
+  it("rejects malicious inputs", () => {
+    expect(sanitizeDockNext("https://evil.example/bible/obs/dock")).toBeNull()
+    expect(sanitizeDockNext("//evil.example/bible/obs/dock")).toBeNull()
+    expect(sanitizeDockNext("/\\evil.example")).toBeNull()
+    expect(sanitizeDockNext(null)).toBeNull()
+    expect(sanitizeDockNext("")).toBeNull()
+  })
+})

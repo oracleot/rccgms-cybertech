@@ -44,7 +44,7 @@ function typeLabel(type: string): string {
  * and a remembered chorus/verse fragment finds the parent song.
  */
 function normalizeSearchText(value: string): string {
-  return value
+  return (value ?? "")
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -123,6 +123,7 @@ export function SetPicker({
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore recent IDs from localStorage on mount
     setRecentIds(loadRecent())
   }, [])
 
@@ -145,6 +146,7 @@ export function SetPicker({
   const showRecent = !q && recentSets && recentSets.length > 0
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset selection on query change
     setHighlightIdx(0)
   }, [q])
 

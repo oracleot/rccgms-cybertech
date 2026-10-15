@@ -30,7 +30,7 @@ export interface WorshipLibrary {
   remove: (id: string) => void
 }
 
-export function useWorshipLibrary(): WorshipLibrary {
+export function useWorshipLibrary(parishId?: string): WorshipLibrary {
   const [sets, setSets] = useState<LyricSet[]>([])
   const [loading, setLoading] = useState(true)
   const [offline, setOffline] = useState(false)
@@ -42,22 +42,23 @@ export function useWorshipLibrary(): WorshipLibrary {
   // back up, so a reconnect can't clobber newer data written elsewhere while
   // this client was offline.
   const refresh = useCallback(async () => {
-    const { sets: fresh, source } = await syncSets()
+    const { sets: fresh, source } = await syncSets(parishId)
     setsRef.current = fresh
     setSets(fresh)
     setOffline(source === "cache")
     setError(source === "cache" ? "Offline — showing the last cached library (read-only)" : null)
     setLoading(false)
-  }, [])
+  }, [parishId])
 
   useEffect(() => {
-    const cached = loadCachedSets()
+    const cached = loadCachedSets(parishId)
     setsRef.current = cached
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
     setSets(cached)
     void refresh()
-    const unsubscribe = subscribeToSets(() => void refresh())
+    const unsubscribe = subscribeToSets(() => void refresh(), parishId)
     return unsubscribe
-  }, [refresh])
+  }, [refresh, parishId])
 
   const commit = useCallback((next: LyricSet[], write: Promise<void>, previous: LyricSet[], failure: string) => {
     setsRef.current = next
@@ -73,28 +74,28 @@ export function useWorshipLibrary(): WorshipLibrary {
 
   const create = useCallback(
     (set: LyricSet) => {
-      if (offline) return
+      if (offline || !parishId) return
       const previous = setsRef.current
-      commit([set, ...previous], saveSet(set), previous, "Couldn't save — check your connection")
+      commit([set, ...previous], saveSet(set, parishId), previous, "Couldn't save — check your connection")
     },
-    [offline, commit]
+    [offline, commit, parishId]
   )
 
   const update = useCallback(
     (id: string, mutate: (s: LyricSet) => LyricSet) => {
-      if (offline) return
+      if (offline || !parishId) return
       const previous = setsRef.current
       const existing = previous.find((s) => s.id === id)
       if (!existing) return
       const updated = { ...mutate(existing), updatedAt: Date.now() }
       commit(
         previous.map((s) => (s.id === id ? updated : s)),
-        saveSet(updated),
+        saveSet(updated, parishId),
         previous,
         "Couldn't save changes — check your connection"
       )
     },
-    [offline, commit]
+    [offline, commit, parishId]
   )
 
   const remove = useCallback(

@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { 
+import { getActiveParishId } from "@/lib/parish/context"
+import { enforceFeature } from "@/lib/features/enforce"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
+import {
   enrollInTrackSchema,
   completeStepSchema,
   verifyStepSchema,
@@ -16,8 +19,11 @@ import {
 
 // Enroll in a training track
 export async function enrollInTrack(formData: FormData) {
+  const enrollDenied = await enforceFeature("training")
+  if (enrollDenied) return { error: enrollDenied }
+
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: "Unauthorized" }
@@ -56,8 +62,11 @@ export async function enrollInTrack(formData: FormData) {
     return { error: "Already enrolled in this track" }
   }
 
+  const parishId = await getActiveParishId()
+  if (!parishId) return { error: "No active parish" }
+
   // Create enrollment
-   
+
   const { error } = await (supabase
     .from("member_progress") as ReturnType<typeof supabase.from>)
       .insert({
@@ -65,6 +74,7 @@ export async function enrollInTrack(formData: FormData) {
       track_id: parsed.data.trackId,
       status: "in_progress",
       started_at: new Date().toISOString(),
+      parish_id: parishId,
     })
 
   if (error) {
@@ -79,8 +89,11 @@ export async function enrollInTrack(formData: FormData) {
 
 // Complete a step (self-completion or request verification)
 export async function completeStep(formData: FormData) {
+  const completeDenied = await enforceFeature("training")
+  if (completeDenied) return { error: completeDenied }
+
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { error: "Unauthorized" }
@@ -147,6 +160,9 @@ export async function completeStep(formData: FormData) {
     return { error: "Step not found" }
   }
 
+  const parishId = await getActiveParishId()
+  if (!parishId) return { error: "No active parish" }
+
   // Create completion record
   const { error } = await (supabase
     .from("step_completions") as ReturnType<typeof supabase.from>)
@@ -156,6 +172,7 @@ export async function completeStep(formData: FormData) {
       completed_at: new Date().toISOString(),
       score: parsed.data.score,
       attempts: 1,
+      parish_id: parishId,
     })
 
   if (error) {
@@ -210,25 +227,13 @@ export async function requestVerification(formData: FormData) {
 
 // Verify a step (mentor action)
 export async function verifyStep(formData: FormData) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { error: auth.error }
+
+  const verifyDenied = await enforceFeature("training", auth.parishId)
+  if (verifyDenied) return { error: verifyDenied }
+
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  // Check if user is a leader or admin
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { id: string; role: string } | null
-
-  if (!profile || (profile.role !== "leader" && profile.role !== "lead_developer" && profile.role !== "admin")) {
-    return { error: "Only leaders and admins can verify steps" }
-  }
 
   const parsed = verifyStepSchema.safeParse({
     completionId: formData.get("completionId"),
@@ -245,7 +250,7 @@ export async function verifyStep(formData: FormData) {
     const { error } = await (supabase
       .from("step_completions") as ReturnType<typeof supabase.from>)
         .update({
-        mentor_verified_by: profile.id,
+        mentor_verified_by: auth.profileId,
         mentor_verified_at: new Date().toISOString(),
       })
       .eq("id", parsed.data.completionId)
@@ -273,25 +278,13 @@ export async function verifyStep(formData: FormData) {
 
 // Admin: Create a new training track
 export async function createTrack(formData: FormData) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { error: auth.error }
+
+  const createTrackDenied = await enforceFeature("training", auth.parishId)
+  if (createTrackDenied) return { error: createTrackDenied }
+
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  // Check if user is admin
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
-    return { error: "Only admins can create tracks" }
-  }
 
   const parsed = createTrackSchema.safeParse({
     departmentId: formData.get("departmentId"),
@@ -314,6 +307,7 @@ export async function createTrack(formData: FormData) {
       description: parsed.data.description,
       estimated_weeks: parsed.data.estimatedWeeks,
       is_active: false,
+      parish_id: auth.parishId,
     })
 
   if (error) {
@@ -328,24 +322,13 @@ export async function createTrack(formData: FormData) {
 
 // Admin: Update a training track
 export async function updateTrack(formData: FormData) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { error: auth.error }
+
+  const updateTrackDenied = await enforceFeature("training", auth.parishId)
+  if (updateTrackDenied) return { error: updateTrackDenied }
+
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
-    return { error: "Only admins can update tracks" }
-  }
 
   const parsed = updateTrackSchema.safeParse({
     id: formData.get("id"),
@@ -386,24 +369,13 @@ export async function updateTrack(formData: FormData) {
 
 // Admin: Create a step
 export async function createStep(formData: FormData) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { error: auth.error }
+
+  const createStepDenied = await enforceFeature("training", auth.parishId)
+  if (createStepDenied) return { error: createStepDenied }
+
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
-    return { error: "Only admins can create steps" }
-  }
 
   const parsed = createStepSchema.safeParse({
     trackId: formData.get("trackId"),
@@ -431,6 +403,7 @@ export async function createStep(formData: FormData) {
       content_url: parsed.data.contentUrl,
       required: parsed.data.required,
       pass_score: parsed.data.passScore,
+      parish_id: auth.parishId,
     })
 
   if (error) {
@@ -445,24 +418,13 @@ export async function createStep(formData: FormData) {
 
 // Admin: Update a step
 export async function updateStep(formData: FormData) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { error: auth.error }
+
+  const updateStepDenied = await enforceFeature("training", auth.parishId)
+  if (updateStepDenied) return { error: updateStepDenied }
+
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
-    return { error: "Only admins can update steps" }
-  }
 
   const parsed = updateStepSchema.safeParse({
     id: formData.get("id"),
@@ -517,24 +479,13 @@ export async function updateStep(formData: FormData) {
 
 // Admin: Delete a step
 export async function deleteStep(formData: FormData) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { error: auth.error }
+
+  const deleteStepDenied = await enforceFeature("training", auth.parishId)
+  if (deleteStepDenied) return { error: deleteStepDenied }
+
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
-    return { error: "Only admins can delete steps" }
-  }
 
   const parsed = deleteStepSchema.safeParse({
     stepId: formData.get("stepId"),
@@ -572,24 +523,13 @@ export async function deleteStep(formData: FormData) {
 
 // Admin: Reorder steps
 export async function reorderSteps(formData: FormData) {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { error: auth.error }
+
+  const reorderDenied = await enforceFeature("training", auth.parishId)
+  if (reorderDenied) return { error: reorderDenied }
+
   const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: "Unauthorized" }
-  }
-
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as { role: string } | null
-
-  if (!profile || (profile.role !== "admin" && profile.role !== "lead_developer")) {
-    return { error: "Only admins can reorder steps" }
-  }
 
   const stepIds = formData.get("stepIds")
   const parsed = reorderStepsSchema.safeParse({

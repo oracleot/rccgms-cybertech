@@ -6,6 +6,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { saveDescriptionSchema } from "@/lib/validations/livestream"
+import { getActiveParishId } from "@/lib/parish/context"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
@@ -49,6 +50,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { rotaId, title, platform, content, speaker, scripture, metadata } = parsed.data
+
+    const parishId = await getActiveParishId()
+    if (!parishId) {
+      return NextResponse.json(
+        { error: "NO_PARISH", message: "No active parish" },
+        { status: 400 }
+      )
+    }
 
     // Check if a livestream already exists for this rota
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic structure from DB query
@@ -118,6 +127,7 @@ export async function POST(request: NextRequest) {
         youtube_description: platform === "youtube" ? content : null,
         facebook_description: platform === "facebook" ? content : null,
         rota_id: rotaId || null,
+        parish_id: parishId,
       }
 
        

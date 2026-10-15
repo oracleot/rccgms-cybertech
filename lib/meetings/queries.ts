@@ -19,7 +19,7 @@ const MEETING_LIST_SELECT = `
   id, title, agenda, platform, meeting_link, location,
   start_time, end_time, timezone, status, reminder_lead_minutes,
   reminder_sent_at, created_by, created_at, updated_at, cancelled_at,
-  attendees:meeting_attendees(user_id, response)
+  parish_id, attendees:meeting_attendees(user_id, response)
 `
 
 interface MeetingListRow {
@@ -39,6 +39,7 @@ interface MeetingListRow {
   created_at: string
   updated_at: string
   cancelled_at: string | null
+  parish_id: string | null
   attendees: Array<{ user_id: string; response: AttendeeResponse }> | null
 }
 
@@ -65,6 +66,7 @@ function toListItem(row: MeetingListRow, currentProfileId: string | null): Meeti
     created_at: row.created_at,
     updated_at: row.updated_at,
     cancelled_at: row.cancelled_at,
+    parish_id: row.parish_id ?? null,
     attendeeCount: attendees.length,
     myResponse: mine?.response ?? null,
   }

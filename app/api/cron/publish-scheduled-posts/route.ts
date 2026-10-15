@@ -96,6 +96,7 @@ export async function GET(request: NextRequest) {
         // Create a notification for the creator
         await supabase.from("notifications").insert({
           profile_id: post.created_by,
+          parish_id: post.parish_id,
           type: "social_post",
           title: "Post Published",
           message: `Your social media post has been published to ${post.platforms.join(", ")}`,

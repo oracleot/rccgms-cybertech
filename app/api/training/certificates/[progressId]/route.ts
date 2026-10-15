@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { requireActiveParishMember, isParishAuthFailure } from "@/lib/parish/require-active-parish"
 
 interface RouteContext {
   params: Promise<{ progressId: string }>
@@ -17,33 +18,16 @@ interface ProgressData {
   } | null
 }
 
-interface ProfileData {
-  id: string
-  name: string | null
-  role: string
-}
 
 export async function GET(_request: Request, context: RouteContext) {
   const { progressId } = await context.params
+
+  const auth = await requireActiveParishMember()
+  if (isParishAuthFailure(auth)) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  // Get user's profile
-  const { data: profileData } = await supabase
-    .from("profiles")
-    .select("id, name, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  const profile = profileData as ProfileData | null
-  
-  if (!profile) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 })
-  }
 
   // Get the progress record
   const { data: progressData } = await supabase
@@ -60,13 +44,13 @@ export async function GET(_request: Request, context: RouteContext) {
     .single()
 
   const progress = progressData as ProgressData | null
-  
+
   if (!progress) {
     return NextResponse.json({ error: "Progress not found" }, { status: 404 })
   }
 
-  // Verify user owns this progress or is admin
-  if (progress.user_id !== profile.id && profile.role !== "admin" && profile.role !== "lead_developer") {
+  // Verify user owns this progress or is admin/platform developer
+  if (progress.user_id !== auth.profileId && auth.parishRole !== "parish_admin" && !auth.isPlatformDeveloper) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
   }
 

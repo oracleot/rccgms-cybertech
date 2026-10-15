@@ -2,8 +2,11 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { 
-  createSwapRequestSchema, 
+import { getActiveParishId } from "@/lib/parish/context"
+import { enforceFeature } from "@/lib/features/enforce"
+import { requireActiveParishLeader, isParishAuthFailure } from "@/lib/parish/require-active-parish"
+import {
+  createSwapRequestSchema,
   type CreateSwapRequestInput,
 } from "@/lib/validations/rota"
 
@@ -19,6 +22,14 @@ interface ActionResult<T = unknown> {
 export async function createSwapRequest(
   input: CreateSwapRequestInput
 ): Promise<ActionResult<{ id: string }>> {
+  const parishId = await getActiveParishId()
+  if (!parishId) {
+    return { success: false, error: "No active parish" }
+  }
+
+  const denied = await enforceFeature("rota", parishId)
+  if (denied) return { success: false, error: denied }
+
   const supabase = await createClient()
 
   // Validate input
@@ -89,6 +100,7 @@ export async function createSwapRequest(
     target_user_id: targetUserId || null,
     reason: parsed.data.reason || null,
     status: "pending" as const,
+    parish_id: parishId,
   }
 
   const { data: swapRequest, error } = await supabase
@@ -116,6 +128,9 @@ export async function createSwapRequest(
  * Accept a swap request (target user)
  */
 export async function acceptSwapRequest(id: string): Promise<ActionResult> {
+  const denied = await enforceFeature("rota")
+  if (denied) return { success: false, error: denied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -187,6 +202,9 @@ export async function acceptSwapRequest(id: string): Promise<ActionResult> {
  * Decline a swap request (target user)
  */
 export async function declineSwapRequest(id: string): Promise<ActionResult> {
+  const declineDenied = await enforceFeature("rota")
+  if (declineDenied) return { success: false, error: declineDenied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -258,29 +276,13 @@ export async function declineSwapRequest(id: string): Promise<ActionResult> {
  * Approve a swap request (leader only)
  */
 export async function approveSwapRequest(id: string): Promise<ActionResult> {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+  const approveDenied = await enforceFeature("rota", auth.parishId)
+  if (approveDenied) return { success: false, error: approveDenied }
+
   const supabase = await createClient()
-
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { success: false, error: "Not authenticated" }
-  }
-
-  // Get user's profile and verify role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  const profileData = profile as { id: string; role: string }
-  if (profileData.role !== "admin" && profileData.role !== "lead_developer" && profileData.role !== "leader") {
-    return { success: false, error: "Only leaders can approve swap requests" }
-  }
 
   // Get the swap request with assignment details
   const { data: swapRequestData } = await supabase
@@ -356,29 +358,13 @@ export async function approveSwapRequest(id: string): Promise<ActionResult> {
  * Reject a swap request (leader only)
  */
 export async function rejectSwapRequest(id: string): Promise<ActionResult> {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+  const rejectDenied = await enforceFeature("rota", auth.parishId)
+  if (rejectDenied) return { success: false, error: rejectDenied }
+
   const supabase = await createClient()
-
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { success: false, error: "Not authenticated" }
-  }
-
-  // Get user's profile and verify role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  const profileData = profile as { id: string; role: string }
-  if (profileData.role !== "admin" && profileData.role !== "lead_developer" && profileData.role !== "leader") {
-    return { success: false, error: "Only leaders can reject swap requests" }
-  }
 
   // Get the swap request
   const { data: swapRequestData } = await supabase
@@ -428,6 +414,9 @@ export async function getMySwapRequests(): Promise<ActionResult<{
   incoming: SwapRequestWithDetails[]
   outgoing: SwapRequestWithDetails[]
 }>> {
+  const mySwapsDenied = await enforceFeature("rota")
+  if (mySwapsDenied) return { success: false, error: mySwapsDenied }
+
   const supabase = await createClient()
 
   // Get current user
@@ -562,29 +551,13 @@ export async function getMySwapRequests(): Promise<ActionResult<{
  * Get pending swap requests for leader approval
  */
 export async function getPendingApprovals(): Promise<ActionResult<SwapRequestWithDetails[]>> {
+  const auth = await requireActiveParishLeader()
+  if (isParishAuthFailure(auth)) return { success: false, error: auth.error }
+
+  const pendingDenied = await enforceFeature("rota", auth.parishId)
+  if (pendingDenied) return { success: false, error: pendingDenied }
+
   const supabase = await createClient()
-
-  // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { success: false, error: "Not authenticated" }
-  }
-
-  // Get user's profile and verify role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .single()
-
-  if (!profile) {
-    return { success: false, error: "Profile not found" }
-  }
-
-  const profileData = profile as { id: string; role: string }
-  if (profileData.role !== "admin" && profileData.role !== "lead_developer" && profileData.role !== "leader") {
-    return { success: false, error: "Only leaders can view pending approvals" }
-  }
 
   // Get swap requests with "accepted" status (awaiting leader approval)
   const { data, error } = await supabase
