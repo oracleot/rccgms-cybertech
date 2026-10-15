@@ -24,8 +24,12 @@
  *   a redirect to /maintenance (HTTP 307) and fail gracefully.
  */
 
+// Deployment-controlled switch for releases without Vercel dashboard access.
+// Set false only after migrations, bootstrap and production verification pass.
+export const RELEASE_MAINTENANCE = true
+
 export function isMaintenanceMode(): boolean {
-  return process.env.FUSION_MAINTENANCE_MODE === "true"
+  return RELEASE_MAINTENANCE || process.env.FUSION_MAINTENANCE_MODE === "true"
 }
 
 const MAINTENANCE_EXCLUDED_PREFIXES = [

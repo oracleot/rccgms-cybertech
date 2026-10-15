@@ -29,6 +29,7 @@ function request(path) {
     assert.equal((await middleware(request(path))).location, '/maintenance', path)
   }
   process.env.FUSION_MAINTENANCE_MODE = 'false'
-  assert.equal((await middleware(request('/dashboard'))).location, '/login')
+  assert.equal((await middleware(request('/dashboard'))).location,
+    process.env.EXPECT_RELEASE_MAINTENANCE === 'true' ? '/maintenance' : '/login')
   console.log('PASS: anonymous maintenance, login, cron blocking, and protected dashboard')
 })().catch(error => { console.error(error); process.exitCode = 1 })
