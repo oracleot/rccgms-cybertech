@@ -61,13 +61,13 @@ export async function GET() {
       .single(),
     admin
       .from("parish_memberships")
-      .select("id, parish_id, profile_id, role, status, requested_at, approved_at, profiles(name, email)")
+      .select("id, parish_id, profile_id, role, status, requested_at, approved_at, profiles:profiles!parish_memberships_profile_id_fkey(name, email)")
       .eq("parish_id", parishId)
       .eq("status", "active")
       .order("role"),
     admin
       .from("parish_memberships")
-      .select("id, parish_id, profile_id, role, status, requested_at, profiles(name, email)")
+      .select("id, parish_id, profile_id, role, status, requested_at, profiles:profiles!parish_memberships_profile_id_fkey(name, email)")
       .eq("parish_id", parishId)
       .eq("status", "pending")
       .order("requested_at"),
@@ -81,6 +81,9 @@ export async function GET() {
       .select("feature_id, enabled, expires_at")
       .eq("parish_id", parishId),
   ])
+
+  const queryError = [parishRes, membersRes, pendingRes, featuresRes, entitlementsRes].find(result => result.error)?.error
+  if (queryError) return NextResponse.json({ error: queryError.message }, { status: 500 })
 
   const parish = parishRes.data
     ? {

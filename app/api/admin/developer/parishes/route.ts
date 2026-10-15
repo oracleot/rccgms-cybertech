@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   if (parishId && include === "members") {
     const { data: members, error } = await admin
       .from("parish_memberships")
-      .select("id, parish_id, profile_id, role, status, profiles(name, email)")
+      .select("id, parish_id, profile_id, role, status, profiles:profiles!parish_memberships_profile_id_fkey(name, email)")
       .eq("parish_id", parishId)
       .order("role")
 
