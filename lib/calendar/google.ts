@@ -10,7 +10,7 @@
  * through `lib/calendar/index.ts` needs to change.
  */
 
-import { google } from "googleapis"
+import { auth as googleAuth, calendar } from "googleapis/build/src/apis/calendar"
 
 import type { CalendarEvent, CalendarProvider, CalendarSyncResult } from "./types"
 
@@ -52,7 +52,7 @@ class GoogleCalendarProvider implements CalendarProvider {
     const tokens = await getStoredTokensForUser(userId)
     if (!tokens) return null
 
-    const auth = new google.auth.OAuth2(
+    const auth = new googleAuth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET
     )
@@ -61,7 +61,7 @@ class GoogleCalendarProvider implements CalendarProvider {
       refresh_token: tokens.refreshToken,
     })
 
-    return google.calendar({ version: "v3", auth })
+    return calendar({ version: "v3", auth })
   }
 
   async createEvent(userId: string, event: CalendarEvent): Promise<CalendarSyncResult> {

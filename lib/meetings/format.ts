@@ -6,7 +6,7 @@
  * regardless of where they're physically logging in from.
  */
 
-import { utcToZoned } from "@/lib/calendar"
+import { utcToZoned } from "@/lib/calendar/timezone"
 
 function formatTimeParts(time: string): string {
   const [hourStr, minuteStr] = time.split(":")

@@ -9,7 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { getCalendarLinks, type CalendarEvent } from "@/lib/calendar"
+import { getCalendarLinks } from "@/lib/calendar/links"
+import type { CalendarEvent } from "@/lib/calendar/types"
 
 interface AddToCalendarProps {
   meetingId: string

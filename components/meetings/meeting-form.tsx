@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select"
 import { AttendeeSelector } from "@/components/meetings/attendee-selector"
 import { createMeeting, updateMeeting } from "@/app/(dashboard)/meetings/actions"
-import { zonedToUtc, utcToZoned, COMMON_TIMEZONES } from "@/lib/calendar"
+import { zonedToUtc, utcToZoned, COMMON_TIMEZONES } from "@/lib/calendar/timezone"
 import { isRemotePlatform, PLATFORM_LABELS } from "@/lib/meetings/platforms"
 import type { MeetingPlatform, SuggestedMeetingDate } from "@/types/meeting"
 

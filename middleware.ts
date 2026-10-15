@@ -12,6 +12,10 @@ import {
 import { isMaintenanceMode, isMaintenanceExcluded } from "@/lib/maintenance"
 
 export async function middleware(request: NextRequest) {
+  // The maintenance page must render without an auth session or auth service.
+  if (request.nextUrl.pathname === "/maintenance") {
+    return NextResponse.next({ request })
+  }
   if (isMaintenanceMode() && !isMaintenanceExcluded(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = "/maintenance"
