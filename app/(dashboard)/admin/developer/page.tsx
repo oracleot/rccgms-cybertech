@@ -1,5 +1,5 @@
 import { Metadata } from "next"
-import { requireDeveloperOnly } from "@/lib/auth/guards"
+import { requireAdminOrDeveloper } from "@/lib/auth/guards"
 import { createClient } from "@/lib/supabase/server"
 import { AdminBreadcrumb } from "@/components/admin/admin-breadcrumb"
 import { DeveloperToolsClient } from "./_components/developer-tools-client"
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function DeveloperToolsPage() {
-  const { user, profile } = await requireDeveloperOnly()
+  const { user, profile } = await requireAdminOrDeveloper()
   const supabase = await createClient()
 
   // Fetch all profiles for role overview
@@ -34,12 +34,12 @@ export default async function DeveloperToolsPage() {
 
   return (
     <div className="space-y-6">
-      <AdminBreadcrumb items={[{ label: "Developer Tools" }]} />
+      <AdminBreadcrumb items={[{ label: profile.role === "admin" ? "Platform setup" : "Developer Tools" }]} />
 
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Developer Tools</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{profile.role === "admin" ? "Platform setup" : "Developer Tools"}</h1>
         <p className="text-muted-foreground">
-          System diagnostics, health checks, and developer utilities
+          {profile.role === "admin" ? "Create organisations and parishes for Fusion" : "System diagnostics, health checks, and developer utilities"}
         </p>
       </div>
 

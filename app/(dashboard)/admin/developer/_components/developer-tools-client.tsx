@@ -146,26 +146,27 @@ export function DeveloperToolsClient({
     : health?.status === "degraded"
     ? AlertTriangle
     : XCircle
+  const isAdminSetup = currentUserRole === "admin"
 
   return (
-    <Tabs defaultValue="overview" className="space-y-4">
+    <Tabs defaultValue={isAdminSetup ? "parishes" : "overview"} className="space-y-4">
       <TabsList className="flex w-full overflow-x-auto">
-        <TabsTrigger value="overview" className="flex items-center gap-1 text-xs sm:text-sm">
+        {!isAdminSetup && <TabsTrigger value="overview" className="flex items-center gap-1 text-xs sm:text-sm">
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline">Overview</span>
-        </TabsTrigger>
-        <TabsTrigger value="health" className="flex items-center gap-1 text-xs sm:text-sm">
+        </TabsTrigger>}
+        {!isAdminSetup && <TabsTrigger value="health" className="flex items-center gap-1 text-xs sm:text-sm">
           <Activity className="h-4 w-4" />
           <span className="hidden sm:inline">Health</span>
-        </TabsTrigger>
+        </TabsTrigger>}
         <TabsTrigger value="parishes" className="flex items-center gap-1 text-xs sm:text-sm">
           <Church className="h-4 w-4" />
           <span className="hidden sm:inline">Organisations &amp; parishes</span>
         </TabsTrigger>
-        <TabsTrigger value="features" className="flex items-center gap-1 text-xs sm:text-sm">
+        {!isAdminSetup && <TabsTrigger value="features" className="flex items-center gap-1 text-xs sm:text-sm">
           <Shield className="h-4 w-4" />
           <span className="hidden sm:inline">Features</span>
-        </TabsTrigger>
+        </TabsTrigger>}
       </TabsList>
 
       {/* System Overview Tab */}
@@ -559,8 +560,8 @@ export function DeveloperToolsClient({
 
       {/* Parishes Tab */}
       <TabsContent value="parishes" className="space-y-4">
-        <PendingRequests />
-        <ParishManager />
+        {!isAdminSetup && <PendingRequests />}
+        <ParishManager canCreate={!isAdminSetup} />
       </TabsContent>
 
       {/* Features Tab */}

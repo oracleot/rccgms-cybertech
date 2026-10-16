@@ -50,7 +50,7 @@ interface Membership {
   profiles?: { name: string; email: string } | null
 }
 
-export function ParishManager() {
+export function ParishManager({ canCreate = true }: { canCreate?: boolean }) {
   const [orgs, setOrgs] = useState<Organisation[]>([])
   const [parishes, setParishes] = useState<Parish[]>([])
   const [members, setMembers] = useState<Record<string, Membership[]>>({})
@@ -195,17 +195,17 @@ export function ParishManager() {
               Refresh
             </Button>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
+          {canCreate && <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" onClick={() => openCreate("organisation")}>
               <Plus className="mr-1 h-4 w-4" /> New organisation
             </Button>
             <Button size="sm" variant="secondary" onClick={() => openCreate("parish")} disabled={orgs.length === 0}>
               <Plus className="mr-1 h-4 w-4" /> New parish
             </Button>
-          </div>
+          </div>}
         </CardHeader>
         <CardContent>
-          {createMode && (
+          {canCreate && createMode && (
             <form onSubmit={createRecord} className="mb-5 rounded-lg border bg-muted/20 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
