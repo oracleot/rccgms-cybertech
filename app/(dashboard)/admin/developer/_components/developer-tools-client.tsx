@@ -154,41 +154,13 @@ export function DeveloperToolsClient({
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline">Overview</span>
         </TabsTrigger>
-        <TabsTrigger value="activity" className="flex items-center gap-1 text-xs sm:text-sm">
-          <Zap className="h-4 w-4" />
-          <span className="hidden sm:inline">Activity</span>
-        </TabsTrigger>
-        <TabsTrigger value="errors" className="flex items-center gap-1 text-xs sm:text-sm">
-          <AlertTriangle className="h-4 w-4" />
-          <span className="hidden sm:inline">Errors</span>
-        </TabsTrigger>
         <TabsTrigger value="health" className="flex items-center gap-1 text-xs sm:text-sm">
           <Activity className="h-4 w-4" />
           <span className="hidden sm:inline">Health</span>
         </TabsTrigger>
-        <TabsTrigger value="database" className="flex items-center gap-1 text-xs sm:text-sm">
-          <Database className="h-4 w-4" />
-          <span className="hidden sm:inline">DB</span>
-        </TabsTrigger>
-        <TabsTrigger value="browse" className="flex items-center gap-1 text-xs sm:text-sm">
-          <Table2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Tables</span>
-        </TabsTrigger>
-        <TabsTrigger value="schema" className="flex items-center gap-1 text-xs sm:text-sm">
-          <Code className="h-4 w-4" />
-          <span className="hidden sm:inline">Schema</span>
-        </TabsTrigger>
-        <TabsTrigger value="query" className="flex items-center gap-1 text-xs sm:text-sm">
-          <Terminal className="h-4 w-4" />
-          <span className="hidden sm:inline">SQL</span>
-        </TabsTrigger>
-        <TabsTrigger value="email" className="flex items-center gap-1 text-xs sm:text-sm">
-          <Mail className="h-4 w-4" />
-          <span className="hidden sm:inline">Email</span>
-        </TabsTrigger>
         <TabsTrigger value="parishes" className="flex items-center gap-1 text-xs sm:text-sm">
           <Church className="h-4 w-4" />
-          <span className="hidden sm:inline">Parishes</span>
+          <span className="hidden sm:inline">Organisations &amp; parishes</span>
         </TabsTrigger>
         <TabsTrigger value="features" className="flex items-center gap-1 text-xs sm:text-sm">
           <Shield className="h-4 w-4" />

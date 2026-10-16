@@ -46,6 +46,7 @@ function LoginContent() {
   const [obsCode, setObsCode] = useState("")
   const [obsLoading, setObsLoading] = useState(false)
   const [magicLinkLoading, setMagicLinkLoading] = useState(false)
+  const [usePassword, setUsePassword] = useState(false)
 
   useEffect(() => {
     const error = searchParams.get("error")
@@ -206,7 +207,7 @@ function LoginContent() {
                 />
               </BlurFade>
 
-              <BlurFade delay={0.45} direction="up">
+              {usePassword && <BlurFade delay={0.45} direction="up">
                 <FormField
                   control={form.control}
                   name="password"
@@ -249,9 +250,9 @@ function LoginContent() {
                     </FormItem>
                   )}
                 />
-              </BlurFade>
+              </BlurFade>}
 
-              <BlurFade delay={0.5} direction="up">
+              {usePassword && <BlurFade delay={0.5} direction="up">
                 <ShimmerButton
                   type="submit"
                   className="w-full h-11 mt-2 font-medium"
@@ -272,29 +273,46 @@ function LoginContent() {
                     </span>
                   )}
                 </ShimmerButton>
-              </BlurFade>
+              </BlurFade>}
             </form>
           </Form>
 
-          <div className="my-5 flex items-center gap-3 text-xs text-white/30">
-            <div className="h-px flex-1 bg-white/10" />
-            <span>or</span>
-            <div className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <button
-            type="button"
-            onClick={onMagicLinkSubmit}
-            disabled={isLoading || magicLinkLoading}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Mail className="h-4 w-4" />
-            {magicLinkLoading ? "Sending sign-in link..." : "Email me a sign-in link"}
-          </button>
-
-          <p className="mt-2 text-center text-xs text-white/35">
-            Existing users can sign in from their email without setting a new password.
-          </p>
+          {!usePassword ? (
+            <div className="space-y-3">
+              <ShimmerButton
+                type="button"
+                onClick={onMagicLinkSubmit}
+                disabled={isLoading || magicLinkLoading}
+                className="w-full h-11 font-medium"
+                shimmerColor="#ffffff"
+                shimmerSize="0.1em"
+                background="linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)"
+              >
+                <span className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  {magicLinkLoading ? "Sending sign-in link..." : "Email me a sign-in link"}
+                </span>
+              </ShimmerButton>
+              <p className="text-center text-xs text-white/40">
+                Use the email link you already know. No new password is needed.
+              </p>
+              <button
+                type="button"
+                onClick={() => setUsePassword(true)}
+                className="w-full text-xs text-violet-400 hover:text-violet-300 transition-colors"
+              >
+                Use a password instead
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setUsePassword(false)}
+              className="mt-4 w-full text-xs text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              Use an email sign-in link instead
+            </button>
+          )}
 
           <BlurFade delay={0.55} direction="up">
             <p className="text-center text-sm text-white/40 mt-4">

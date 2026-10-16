@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, type FormEvent } from "react"
 import {
   Building2,
   Church,
@@ -11,6 +11,7 @@ import {
   Globe,
   ChevronDown,
   ChevronRight,
+  Plus,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -57,6 +58,19 @@ export function ParishManager() {
   const [expandedOrg, setExpandedOrg] = useState<string | null>(null)
   const [expandedParish, setExpandedParish] = useState<string | null>(null)
   const [search, setSearch] = useState("")
+  const [createMode, setCreateMode] = useState<"organisation" | "parish" | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    name: "",
+    short_name: "",
+    slug: "",
+    organisation_id: "",
+    country: "United Kingdom",
+    locality: "",
+    region: "",
+    spiritual_expression: "",
+  })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -98,6 +112,35 @@ export function ParishManager() {
     } else {
       setExpandedParish(parishId)
       fetchMembers(parishId)
+    }
+  }
+
+  const openCreate = (mode: "organisation" | "parish") => {
+    setCreateMode(mode)
+    setMessage(null)
+    setForm((current) => ({ ...current, name: "", short_name: "", slug: "", organisation_id: mode === "parish" ? (orgs[0]?.id ?? "") : "" }))
+  }
+
+  const createRecord = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!createMode) return
+    setSaving(true)
+    setMessage(null)
+    try {
+      const response = await fetch("/api/admin/developer/parishes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: createMode, ...form }),
+      })
+      const result = await response.json().catch(() => null)
+      if (!response.ok) throw new Error(result?.error ?? "Could not create record")
+      setMessage(`${createMode === "organisation" ? "Organisation" : "Parish"} created.`)
+      setCreateMode(null)
+      await fetchData()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not create record")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -152,8 +195,47 @@ export function ParishManager() {
               Refresh
             </Button>
           </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => openCreate("organisation")}>
+              <Plus className="mr-1 h-4 w-4" /> New organisation
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => openCreate("parish")} disabled={orgs.length === 0}>
+              <Plus className="mr-1 h-4 w-4" /> New parish
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
+          {createMode && (
+            <form onSubmit={createRecord} className="mb-5 rounded-lg border bg-muted/20 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Create {createMode === "organisation" ? "an organisation" : "a parish"}</p>
+                  <p className="text-xs text-muted-foreground">This starts the record. Add members and entitlements separately.</p>
+                </div>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setCreateMode(null)}>Cancel</Button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <Input required placeholder="Stable slug, e.g. morningstar" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-") })} />
+                {createMode === "organisation" ? (
+                  <Input placeholder="Short name (optional)" value={form.short_name} onChange={(e) => setForm({ ...form, short_name: e.target.value })} />
+                ) : (
+                  <select required className="h-10 rounded-md border bg-background px-3 text-sm" value={form.organisation_id} onChange={(e) => setForm({ ...form, organisation_id: e.target.value })}>
+                    <option value="">Choose organisation</option>
+                    {orgs.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}
+                  </select>
+                )}
+                {createMode === "parish" && <>
+                  <Input required placeholder="Country" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+                  <Input placeholder="Locality (optional)" value={form.locality} onChange={(e) => setForm({ ...form, locality: e.target.value })} />
+                  <Input placeholder="Region (optional)" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} />
+                  <Input placeholder="Spiritual expression (optional)" value={form.spiritual_expression} onChange={(e) => setForm({ ...form, spiritual_expression: e.target.value })} />
+                </>}
+              </div>
+              <Button type="submit" disabled={saving}>{saving ? "Creating..." : `Create ${createMode}`}</Button>
+            </form>
+          )}
+          {message && <p className="mb-4 text-sm text-muted-foreground">{message}</p>}
           <div className="mb-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
