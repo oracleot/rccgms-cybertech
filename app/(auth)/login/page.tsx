@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { LogIn, Eye, EyeOff, KeyRound } from "lucide-react"
+import { LogIn, Eye, EyeOff, KeyRound, Mail } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -45,6 +45,7 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false)
   const [obsCode, setObsCode] = useState("")
   const [obsLoading, setObsLoading] = useState(false)
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false)
 
   useEffect(() => {
     const error = searchParams.get("error")
@@ -111,6 +112,34 @@ function LoginContent() {
       toast.error("An unexpected error occurred. Please try again.")
     } finally {
       setObsLoading(false)
+    }
+  }
+
+  async function onMagicLinkSubmit() {
+    const email = form.getValues("email").trim()
+    if (!email) {
+      await form.trigger("email")
+      toast.error("Enter your email first")
+      return
+    }
+
+    setMagicLinkLoading(true)
+    try {
+      const response = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, next }),
+      })
+      const result = await response.json().catch(() => null)
+      if (!response.ok) {
+        toast.error(result?.message ?? "Unable to send a sign-in link")
+        return
+      }
+      toast.success("If that account exists, we sent a sign-in link to your email")
+    } catch {
+      toast.error("Unable to send a sign-in link. Please try again.")
+    } finally {
+      setMagicLinkLoading(false)
     }
   }
 
@@ -246,6 +275,26 @@ function LoginContent() {
               </BlurFade>
             </form>
           </Form>
+
+          <div className="my-5 flex items-center gap-3 text-xs text-white/30">
+            <div className="h-px flex-1 bg-white/10" />
+            <span>or</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <button
+            type="button"
+            onClick={onMagicLinkSubmit}
+            disabled={isLoading || magicLinkLoading}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-md border border-white/10 bg-white/5 px-4 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Mail className="h-4 w-4" />
+            {magicLinkLoading ? "Sending sign-in link..." : "Email me a sign-in link"}
+          </button>
+
+          <p className="mt-2 text-center text-xs text-white/35">
+            Existing users can sign in from their email without setting a new password.
+          </p>
 
           <BlurFade delay={0.55} direction="up">
             <p className="text-center text-sm text-white/40 mt-4">

@@ -28,7 +28,6 @@ import { Input } from "@/components/ui/input"
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validations/auth"
 import { ROUTES } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
-import { updatePassword } from "./actions"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -62,10 +61,13 @@ export default function ResetPasswordPage() {
   async function onSubmit(data: ResetPasswordInput) {
     setIsLoading(true)
     try {
-      const result = await updatePassword(data)
+      // Recovery sessions are established in the browser by Supabase. Update
+      // the password through that same client so the recovery token is present.
+      const supabase = createClient()
+      const { error } = await supabase.auth.updateUser({ password: data.password })
 
-      if (result?.error) {
-        toast.error(result.error)
+      if (error) {
+        toast.error(error.message || "Failed to update password. Please request a new reset link.")
         return
       }
 
