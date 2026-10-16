@@ -144,7 +144,7 @@ export function AppSidebar({ userRole = "member", parishRole, enabledFeatures = 
 
   const featureSet = new Set(enabledFeatures)
   const isFeatureEnabled = (item: NavItemDef) =>
-    !item.feature || isDeveloper || featureSet.has(item.feature)
+    !item.feature || featureSet.has(item.feature)
 
   return (
     <Sidebar>

@@ -64,7 +64,7 @@ export function MobileNav({ enabledFeatures = [], isDeveloper = false }: MobileN
 
   const featureSet = new Set(enabledFeatures)
   const visibleItems = navItems.filter(
-    (item) => !item.feature || isDeveloper || featureSet.has(item.feature)
+    (item) => !item.feature || featureSet.has(item.feature)
   )
 
   return (

@@ -97,9 +97,6 @@ export async function requireFeatureForPage(
     return
   }
 
-  const role = ctx.profile.role ?? "member"
-  if (role === "lead_developer" || role === "developer") return
-
   const parishId = ctx.activeParish?.parish.id
   if (!parishId) return
 
