@@ -2,7 +2,7 @@
 // Network-first for everything — no aggressive caching that could
 // cause stale worship/Bible/auth state.
 
-const CACHE_NAME = "fusion-v1"
+const CACHE_NAME = "fusion-v2"
 const PRECACHE = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -35,6 +35,12 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/lyrics/obs/") ||
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/auth/") ||
+    url.pathname === "/login" ||
+    url.pathname.startsWith("/login/") ||
+    url.pathname === "/signup" ||
+    url.pathname.startsWith("/signup/") ||
+    url.pathname === "/register" ||
+    url.pathname === "/reset-password" ||
     url.hostname.includes("supabase")
   ) {
     return
@@ -42,6 +48,8 @@ self.addEventListener("fetch", (event) => {
 
   // Network-first for everything else
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(() =>
+      caches.match(event.request).then((cached) => cached ?? Response.error())
+    )
   )
 })
