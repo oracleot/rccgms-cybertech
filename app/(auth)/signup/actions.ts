@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { signupSchema, type SignupInput } from "@/lib/validations/auth"
 import { getAppUrl } from "@/lib/constants"
+import { emitEvent } from "@/lib/telemetry"
 
 /**
  * Create a new account with email/password, a profile, and a pending
@@ -16,11 +17,19 @@ import { getAppUrl } from "@/lib/constants"
  * The user cannot log in until they confirm their email.
  */
 export async function signUp(data: SignupInput) {
+  const correlationId = crypto.randomUUID()
+  const safeEmail = typeof data?.email === "string" ? data.email.trim().toLowerCase() : ""
+  const emailDomain = safeEmail.includes("@") ? safeEmail.split("@")[1] : undefined
+  const log = (status: string, stage: string, metadata: Record<string, unknown> = {}) => {
+    void emitEvent({ subsystem: "auth", action: "signup", status, severity: status === "error" ? "error" : "info", correlation_id: correlationId, metadata: { stage, email_domain: emailDomain, ...metadata } })
+  }
+  log("started", "validation")
   const parsed = signupSchema.safeParse(data)
   if (!parsed.success) {
     const errors = parsed.error.flatten()
     const firstError = Object.values(errors.fieldErrors)[0]?.[0]
-    return { error: firstError || "Please check your details" }
+    log("error", "validation", { reason: "invalid_input", field: Object.keys(errors.fieldErrors)[0] })
+    return { error: firstError || "Please check your details", reference: correlationId }
   }
 
   const { firstName, lastName, email, password, parishId } = parsed.data
@@ -36,7 +45,8 @@ export async function signUp(data: SignupInput) {
     .maybeSingle()
 
   if (existingProfile) {
-    return { error: "An account with this email already exists. Please sign in." }
+    log("error", "existing_profile", { reason: "profile_exists" })
+    return { error: "An account with this email already exists. Please sign in.", reference: correlationId }
   }
 
   // Verify the parish exists and is active
@@ -48,7 +58,8 @@ export async function signUp(data: SignupInput) {
     .single()
 
   if (!parish) {
-    return { error: "The selected parish is not available. Please try again." }
+    log("error", "parish_lookup", { reason: "not_found_or_inactive" })
+    return { error: "The selected parish is not available. Please try again.", reference: correlationId }
   }
 
   // 1. Create the auth user
@@ -66,16 +77,20 @@ export async function signUp(data: SignupInput) {
 
   if (authError) {
     if (authError.message.includes("already registered")) {
-      return { error: "An account with this email already exists. Please sign in." }
+      log("error", "supabase_signup", { reason: "already_registered" })
+      return { error: "An account with this email already exists. Please sign in.", reference: correlationId }
     }
     if (authError.message.includes("rate") || authError.status === 429) {
-      return { error: "Too many attempts. Please wait a few minutes." }
+      log("error", "supabase_signup", { reason: "rate_limited", status: authError.status })
+      return { error: "Too many attempts. Please wait a few minutes.", reference: correlationId }
     }
-    return { error: "Unable to create account. Please try again." }
+    log("error", "supabase_signup", { reason: authError.message, status: authError.status })
+    return { error: "Unable to create account. Please try again.", reference: correlationId }
   }
 
   if (!authData.user) {
-    return { error: "Unable to create account. Please try again." }
+    log("error", "supabase_signup", { reason: "no_user_returned" })
+    return { error: "Unable to create account. Please try again.", reference: correlationId }
   }
 
   // 2. Retrieve the trigger-created profile (handle_new_user fires on auth.users INSERT)
@@ -92,7 +107,8 @@ export async function signUp(data: SignupInput) {
   }
 
   if (!profile) {
-    return { error: "Account created but profile setup failed. Please contact support." }
+    log("error", "profile_trigger", { reason: "profile_not_created", auth_user_id: authData.user.id })
+    return { error: "Account created but profile setup failed. Please contact support.", reference: correlationId }
   }
 
   const { error: updateError } = await admin
@@ -101,7 +117,8 @@ export async function signUp(data: SignupInput) {
     .eq("id", profile.id)
 
   if (updateError) {
-    return { error: "Account created but profile update failed. Please contact support." }
+    log("error", "profile_update", { reason: updateError.message })
+    return { error: "Account created but profile update failed. Please contact support.", reference: correlationId }
   }
 
   // 3. Create a pending parish membership
@@ -116,8 +133,10 @@ export async function signUp(data: SignupInput) {
     })
 
   if (membershipError) {
-    return { error: "Account created but parish membership request failed. Please contact your parish admin." }
+    log("error", "membership_insert", { reason: membershipError.message, parish_id: parishId })
+    return { error: "Account created but parish membership request failed. Please contact your parish admin.", reference: correlationId }
   }
 
-  return { success: true }
+  log("ok", "completed", { parish_id: parishId, auth_user_id: authData.user.id })
+  return { success: true, reference: correlationId }
 }

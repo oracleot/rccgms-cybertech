@@ -224,7 +224,7 @@ function SignupContent() {
       const result = await signUp(values)
 
       if (result?.error) {
-        toast.error(result.error)
+        toast.error(result.reference ? `${result.error} (Reference: ${result.reference.slice(0, 8)})` : result.error)
         return
       }
 

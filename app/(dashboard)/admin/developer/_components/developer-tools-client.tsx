@@ -43,6 +43,7 @@ import { ErrorFeed } from "./error-feed"
 import { ParishManager } from "./parish-manager"
 import { PendingRequests } from "./pending-requests"
 import { FeatureManager } from "./feature-manager"
+import { SignupDiagnostics } from "./signup-diagnostics"
 
 interface HealthData {
   status: "healthy" | "degraded" | "error"
@@ -167,6 +168,7 @@ export function DeveloperToolsClient({
           <Shield className="h-4 w-4" />
           <span className="hidden sm:inline">Features</span>
         </TabsTrigger>}
+        {!isAdminSetup && <TabsTrigger value="signup" className="flex items-center gap-1 text-xs sm:text-sm"><Shield className="h-4 w-4" /><span className="hidden sm:inline">Signup diagnostics</span></TabsTrigger>}
       </TabsList>
 
       {/* System Overview Tab */}
@@ -568,6 +570,7 @@ export function DeveloperToolsClient({
       <TabsContent value="features" className="space-y-4">
         <FeatureManager />
       </TabsContent>
+      <TabsContent value="signup" className="space-y-4"><SignupDiagnostics /></TabsContent>
     </Tabs>
   )
 }
