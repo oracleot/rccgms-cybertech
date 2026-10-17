@@ -16,19 +16,22 @@ import { emitEvent } from "@/lib/telemetry"
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
+  const tokenHash = searchParams.get("token_hash")
   // Canonical `next`, still accepting the legacy `redirectTo` spelling for
   // links already sitting in inboxes. Sanitized, because this value arrives
   // from an email link and would otherwise be an open redirect.
   const next = readNext(searchParams)
   const type = searchParams.get("type")
 
-  if (!code) {
+  if (!code && !tokenHash) {
     console.error("[auth/callback] No code parameter in callback URL")
     return NextResponse.redirect(`${origin}/login?error=auth_callback_error&reason=missing_code`)
   }
 
   const supabase = await createClient()
-  const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+  const { error, data } = tokenHash
+    ? await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type === "signup" ? "signup" : "email" })
+    : await supabase.auth.exchangeCodeForSession(code!)
 
   if (error) {
     console.error(
