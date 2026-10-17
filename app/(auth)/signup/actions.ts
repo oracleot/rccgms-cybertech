@@ -38,11 +38,16 @@ export async function signUp(data: SignupInput) {
   const admin = createAdminClient()
 
   // Check for existing profile with this email
-  const { data: existingProfile } = await admin
+  const { data: existingProfile, error: existingProfileError } = await admin
     .from("profiles")
     .select("id")
     .ilike("email", email)
     .maybeSingle()
+
+  if (existingProfileError) {
+    log("error", "profile_lookup", { reason: existingProfileError.message })
+    return { error: "We could not check your account yet. Please try again.", reference: correlationId }
+  }
 
   if (existingProfile) {
     log("error", "existing_profile", { reason: "profile_exists" })
@@ -50,12 +55,17 @@ export async function signUp(data: SignupInput) {
   }
 
   // Verify the parish exists and is active
-  const { data: parish } = await admin
+  const { data: parish, error: parishError } = await admin
     .from("parishes")
     .select("id, organisation_id")
     .eq("id", parishId)
     .eq("status", "active")
     .single()
+
+  if (parishError) {
+    log("error", "parish_lookup", { reason: parishError.message, parish_id: parishId })
+    return { error: "We could not verify that parish yet. Please try again.", reference: correlationId }
+  }
 
   if (!parish) {
     log("error", "parish_lookup", { reason: "not_found_or_inactive" })
@@ -97,11 +107,15 @@ export async function signUp(data: SignupInput) {
   //    and update it with any additional details. Do NOT insert a second profile.
   let profile: { id: string } | null = null
   for (let attempt = 0; attempt < 5; attempt++) {
-    const { data } = await admin
+    const { data, error: profileLookupError } = await admin
       .from("profiles")
       .select("id")
       .eq("auth_user_id", authData.user.id)
       .maybeSingle()
+    if (profileLookupError) {
+      log("error", "profile_trigger", { reason: profileLookupError.message })
+      return { error: "Account created but profile setup could not be checked. Please contact support.", reference: correlationId }
+    }
     if (data) { profile = data; break }
     await new Promise((r) => setTimeout(r, 200))
   }

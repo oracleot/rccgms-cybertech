@@ -124,6 +124,9 @@ function SignupContent() {
       parishId: "",
     },
   })
+  // Subscribe to form changes so the navigation button reflects the fields
+  // the user is currently filling in. getValues() alone does not re-render.
+  const watchedValues = form.watch()
 
   // Search organisations
   const searchOrgs = useCallback(async (q: string) => {
@@ -191,7 +194,7 @@ function SignupContent() {
 
   function canAdvance(): boolean {
     if (step === 0) {
-      const { firstName, lastName, email, password, confirmPassword } = form.getValues()
+      const { firstName, lastName, email, password, confirmPassword } = watchedValues
       return (
         firstName.length >= 1 &&
         lastName.length >= 1 &&

@@ -181,7 +181,7 @@ function LoginContent() {
           </div>
         </CardHeader>
 
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 pb-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <BlurFade delay={0.4} direction="up">
@@ -278,7 +278,7 @@ function LoginContent() {
           </Form>
 
           {!usePassword ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <ShimmerButton
                 type="button"
                 onClick={onMagicLinkSubmit}
