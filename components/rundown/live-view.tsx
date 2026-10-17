@@ -132,8 +132,17 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
   const [warned, setWarned] = useState(false)
   const [selectedSound, setSelectedSound] = useState<string>(ALERT_SOUNDS[0]?.id ?? "beep")
   const [isAlerting, setIsAlerting] = useState(false)
+  const [alertSoundEnabled, setAlertSoundEnabled] = useState(true)
 
   const audioHandle = useRef<{ ctx: AudioContext; intervalId?: number } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/settings/alert").then((response) => response.ok ? response.json() : null).then((data) => {
+      if (!cancelled && data) setAlertSoundEnabled(data.enabled !== false)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   const rundownPath = `/rundown/${rundownId}/live`
 
@@ -297,6 +306,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
+    if (!alertSoundEnabled) { stopAlert(); return }
     const item = orderedItems[currentIndex]
     if (!started || !item || !item.durationSeconds || item.durationSeconds <= 0) return
     const remaining = item.durationSeconds - elapsed
@@ -305,7 +315,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
       startAlertLoop(selectedSound)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- startAlertLoop is stable, including it causes infinite loop
-  }, [elapsed, started, currentIndex, orderedItems, warned, selectedSound])
+  }, [elapsed, started, currentIndex, orderedItems, warned, selectedSound, alertSoundEnabled])
 
   useEffect(() => () => stopAlert(), [])
 

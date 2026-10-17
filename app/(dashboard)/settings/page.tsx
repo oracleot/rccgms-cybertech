@@ -4,6 +4,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { ROUTES } from "@/lib/constants"
 import { DisplaySettings } from "./_components/display-settings"
+import { AlertSettings } from "./_components/alert-settings"
 import { NotificationPreferences } from "@/components/settings/notification-preferences"
 import { ChangePassword } from "@/components/settings/change-password"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -80,6 +81,11 @@ export default async function SettingsPage() {
           <CardContent>
             <DisplaySettings />
           </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Rundown alerts</CardTitle><CardDescription>Control the timeout sound for everyone in the active parish</CardDescription></CardHeader>
+          <CardContent><AlertSettings /></CardContent>
         </Card>
 
         {/* Notification Preferences Section */}
