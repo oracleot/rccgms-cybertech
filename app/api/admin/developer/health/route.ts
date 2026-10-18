@@ -28,16 +28,61 @@ export async function GET() {
 
     const adminClient = createAdminClient()
     const dbStart = Date.now()
-    const [{ error: dbError }, { data: failedNotifs }] = await Promise.all([
+    const [
+      { error: dbError },
+      { count: profileCount },
+      { count: departmentCount },
+      { count: equipmentCount },
+      { count: rotaCount },
+      { count: rundownCount },
+      { count: designCount },
+      { count: notificationCount },
+      { data: failedNotifs },
+      { count: broadcastRoomCount },
+      { count: lyricSetCount },
+    ] = await Promise.all([
       adminClient.from("profiles").select("id").limit(1),
+      adminClient.from("profiles").select("*", { count: "exact", head: true }),
+      adminClient.from("departments").select("*", { count: "exact", head: true }),
+      adminClient.from("equipment").select("*", { count: "exact", head: true }),
+      adminClient.from("rotas").select("*", { count: "exact", head: true }),
+      adminClient.from("rundowns").select("*", { count: "exact", head: true }),
+      adminClient.from("design_requests").select("*", { count: "exact", head: true }),
+      adminClient.from("notifications").select("*", { count: "exact", head: true }),
       adminClient
         .from("notifications")
         .select("id, type, status, created_at")
         .eq("status", "failed")
         .order("created_at", { ascending: false })
         .limit(5),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- This legacy table is not present in the generated Supabase types.
+      (adminClient as any).from("broadcast_controllers").select("*", { count: "exact", head: true }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- This legacy table is not present in the generated Supabase types.
+      (adminClient as any).from("worship_library").select("*", { count: "exact", head: true }),
     ])
     const dbLatency = Date.now() - dbStart
+
+    let eventSummary = null
+    try {
+      const since24h = new Date(Date.now() - 86_400_000).toISOString()
+      const since1h = new Date(Date.now() - 3_600_000).toISOString()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- This telemetry table is not present in the generated Supabase types.
+      const devEvents = (adminClient as any).from("developer_events")
+      const [events24h, events1h, errors24h, slowest] = await Promise.all([
+        devEvents.select("*", { count: "exact", head: true }).gte("timestamp", since24h),
+        devEvents.select("*", { count: "exact", head: true }).gte("timestamp", since1h),
+        devEvents.select("*", { count: "exact", head: true }).gte("timestamp", since24h).eq("severity", "error"),
+        devEvents.select("duration_ms").gte("timestamp", since1h).order("duration_ms", { ascending: false }).limit(1),
+      ])
+      eventSummary = {
+        events_24h: events24h.count ?? 0,
+        events_1h: events1h.count ?? 0,
+        errors_24h: errors24h.count ?? 0,
+        slowest_1h_ms: slowest.data?.[0]?.duration_ms ?? null,
+      }
+    } catch {
+      // Event telemetry is optional; the database health panel remains useful without it.
+    }
 
     const totalLatency = Date.now() - startTime
 
@@ -54,6 +99,18 @@ export async function GET() {
         connected: !dbError,
         error: dbError?.message || null,
       },
+      tables: {
+        profiles: profileCount ?? 0,
+        departments: departmentCount ?? 0,
+        equipment: equipmentCount ?? 0,
+        rotas: rotaCount ?? 0,
+        rundowns: rundownCount ?? 0,
+        design_requests: designCount ?? 0,
+        notifications: notificationCount ?? 0,
+      },
+      broadcastRooms: broadcastRoomCount ?? 0,
+      lyricSets: lyricSetCount ?? 0,
+      eventSummary,
       gitSha: process.env.VERCEL_GIT_COMMIT_SHA || null,
       recentFailedNotifications: failedNotifs ?? [],
       environment: {

@@ -137,7 +137,7 @@ export function SystemOverview() {
         <MetricCard
           icon={Users}
           label="Total users"
-          value={data?.tables.profiles != null ? String(data.tables.profiles) : "—"}
+          value={data?.tables?.profiles != null ? String(data.tables.profiles) : "—"}
         />
         <MetricCard
           icon={Zap}
