@@ -125,6 +125,8 @@ export function DockStyles() {
       .srow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
       .srow > span { color: #a6adc8; font-size: 11.5px; }
       .ctl { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+      .mode-option { display: inline-flex; align-items: center; gap: 3px; color: #a6adc8; font-size: 10.5px; white-space: nowrap; }
+      .range-hint { padding: 0 2px 3px; }
       input[type="color"] {
         -webkit-appearance: none; appearance: none;
         background: none; border: 1px solid #313244; border-radius: 4px;

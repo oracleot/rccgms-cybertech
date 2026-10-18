@@ -1,12 +1,23 @@
 "use client"
 
 import { TRANSLATIONS, type TranslationId } from "@/lib/bible/fetch-passage"
-import { SCENE_DEFAULTS, type SceneSettings } from "@/lib/bible/scene-settings"
+import { DISPLAY_MODES, SCENE_DEFAULTS, type DisplayMode, type SceneSettings } from "@/lib/bible/scene-settings"
 import type { Dock } from "./use-dock"
 
 export function SettingsPanel({ dock }: { dock: Dock }) {
   const { settings, updateSetting: update, pushSettings, translation, changeTranslation, uiMode, setUiMode } = dock
   const advanced = uiMode === "advanced"
+  const toggleDisplayMode = (mode: DisplayMode, enabled: boolean) => {
+    const enabledModes = enabled
+      ? DISPLAY_MODES.filter((item) => settings.enabledModes.includes(item) || item === mode)
+      : settings.enabledModes.filter((item) => item !== mode)
+    if (!enabledModes.length) return
+    dock.pushSettings({
+      ...settings,
+      enabledModes,
+      mode: enabledModes.includes(settings.mode) ? settings.mode : enabledModes[0],
+    })
+  }
 
   return (
     <div className="pane">
@@ -28,7 +39,7 @@ export function SettingsPanel({ dock }: { dock: Dock }) {
         <div className="hint">
           Simple keeps the dock to what a live service needs: reference, translation, Send/Clear, essential verse
           navigation and Lock. Advanced adds chapter/book navigation, the scripture browser, history, favourites,
-          the queue, audio tools, and the settings below. Nothing is disabled by switching — it only changes what's
+          the queue, audio tools, and the settings below. Nothing is disabled by switching — it only changes what&apos;s
           shown.
         </div>
 
@@ -69,11 +80,30 @@ export function SettingsPanel({ dock }: { dock: Dock }) {
             <div className="srow">
               <span>Display mode</span>
               <select className="compact" value={settings.mode} onChange={(e) => update("mode", e.target.value as SceneSettings["mode"])}>
-                <option value="auto">Auto</option>
-                <option value="single">Single verse</option>
-                <option value="multi">Multi-verse</option>
+                {DISPLAY_MODES.filter((mode) => settings.enabledModes.includes(mode)).map((mode) => (
+                  <option key={mode} value={mode}>
+                    {mode === "auto" ? "Auto" : mode === "single" ? "Single verse" : "Multi-verse"}
+                  </option>
+                ))}
               </select>
             </div>
+            <div className="srow">
+              <span>Available modes</span>
+              <div className="ctl">
+                {DISPLAY_MODES.map((mode) => (
+                  <label key={mode} className="mode-option">
+                    <input
+                      type="checkbox"
+                      checked={settings.enabledModes.includes(mode)}
+                      disabled={settings.enabledModes.length === 1 && settings.enabledModes.includes(mode)}
+                      onChange={(e) => toggleDisplayMode(mode, e.target.checked)}
+                    />
+                    {mode === "auto" ? "Auto" : mode === "single" ? "Single" : "Multi"}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="hint">Turn off modes you do not use. Keep at least one available.</div>
             <div className="hint">
               Auto keeps type comfortable and pages when needed. Multi-verse fits as many verses as it can before
               paging. Single shows one verse at a time.

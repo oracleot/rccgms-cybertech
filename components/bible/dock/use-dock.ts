@@ -10,8 +10,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { FetchedPassage, TranslationId } from "@/lib/bible/fetch-passage"
 import { loadPassage, prefetchTranslationsWhenIdle, PassageUnavailableError } from "@/lib/bible/passage-store"
-import { normalizeReference, verseId } from "@/lib/bible/format"
-import { toggleOrderedSelection } from "@/lib/bible/selection"
+import { normalizeReference, rangeReference, verseId } from "@/lib/bible/format"
+import { rangeOrderedSelection, singleVerseChapterRequest, toggleOrderedSelection } from "@/lib/bible/selection"
 import { obsChannelName } from "@/lib/bible/obs-channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/bible/obs-lock"
 import { SCENE_DEFAULTS, loadSettings, saveSettings, type SceneSettings } from "@/lib/bible/scene-settings"
@@ -45,6 +45,8 @@ export interface PassagePayload {
   translationName: string
   verseNumber?: number
   focusId?: string
+  /** Anchor used by Shift-click range selection in the dock. */
+  selectionAnchorId?: string
   verses?: Verse[]
   /** Full loaded chapter for the dock picker. OBS only receives/renders `verses`. */
   availableVerses?: Verse[]
@@ -120,11 +122,11 @@ export function withFocus(p: PassagePayload, id: string | undefined): PassagePay
   return { ...p, focusId: v ? id : undefined, verseNumber: v?.verse }
 }
 
-function toPayload(p: FetchedPassage, target?: Target): PassagePayload {
+function toPayload(p: FetchedPassage, target?: Target, selectedOverride?: Verse[]): PassagePayload {
   const chapterOnly = !!target && !target.reference.includes(":") && p.verses.length > 3
-  const selected = chapterOnly ? p.verses.slice(0, 3) : p.verses
+  const selected = selectedOverride ?? (chapterOnly ? p.verses.slice(0, 3) : p.verses)
   return {
-    reference: p.reference,
+    reference: selectedOverride ? rangeReference(selectedOverride) ?? target?.reference ?? p.reference : p.reference,
     text: selected.map((v) => v.text).join(" "),
     translation: p.translationId,
     translationName: p.translationName,
@@ -132,6 +134,7 @@ function toPayload(p: FetchedPassage, target?: Target): PassagePayload {
     // The full chapter is retained separately for the dock picker.
     verses: selected,
     availableVerses: p.verses,
+    selectionAnchorId: selected[0] ? verseId(selected[0]) : undefined,
   }
 }
 
@@ -171,6 +174,7 @@ export function useDock() {
   const translationRef = useRef<TranslationId>("kjv")
   const settingsRef = useRef(settings)
   const onScreenRef = useRef<PassagePayload | null>(null)
+  const selectionAnchorRef = useRef<string | null>(null)
   const shownRef = useRef<DisplayState | null>(null)
   // Tracked apart, so changing translation reloads the right one rather than
   // whichever happened to be fetched last.
@@ -236,11 +240,13 @@ export function useDock() {
       .on("broadcast", { event: "passage" }, ({ payload }: { payload: PassagePayload }) => {
         if (lockedRef.current && !payload.restore) return
         onScreenRef.current = payload
+        selectionAnchorRef.current = payload.selectionAnchorId ?? payload.focusId ?? (payload.verses?.[0] ? verseId(payload.verses[0]) : null)
         setOnScreen(payload)
       })
       .on("broadcast", { event: "clear" }, () => {
         if (lockedRef.current) return
         onScreenRef.current = null
+        selectionAnchorRef.current = null
         shownRef.current = null
         setOnScreen(null)
         setShown(null)
@@ -370,10 +376,16 @@ export function useDock() {
       setBusy(true)
       setError(null)
       try {
-        const passage = await loadPassage(target.apiPath, t, "high")
-        const single = passage.verses.length === 1 ? verseId(passage.verses[0]) : undefined
-        const payload = withFocus(toPayload(passage, target), opts?.focusId ?? single ?? (passage.verses[0] ? verseId(passage.verses[0]) : undefined))
-        const loaded = { apiPath: target.apiPath, reference: passage.reference }
+        const singleRequest = singleVerseChapterRequest(target.apiPath)
+        const passage = await loadPassage(singleRequest?.chapterPath ?? target.apiPath, t, "high")
+        const selectedVerse = singleRequest ? passage.verses.filter((verse) => verse.verse === singleRequest.verse) : undefined
+        if (singleRequest && selectedVerse?.length !== 1) throw new Error("Verse not found in its chapter")
+        const payload = withFocus(
+          toPayload(passage, target, selectedVerse),
+          opts?.focusId ?? (selectedVerse?.[0] ? verseId(selectedVerse[0]) : passage.verses[0] ? verseId(passage.verses[0]) : undefined)
+        )
+        payload.selectionAnchorId = payload.focusId
+        const loaded = { apiPath: target.apiPath, reference: payload.reference }
         prefetchTranslationsWhenIdle(target.apiPath, t, passage.verses.length)
         if (previewFirstRef.current && !opts?.live) {
           stagedTargetRef.current = loaded
@@ -461,15 +473,30 @@ export function useDock() {
   )
 
   const selectVerse = useCallback(
-    (v: Verse) => {
+    (v: Verse, extend = false) => {
       const cur = onScreenRef.current
       if (!cur || lockedRef.current) return
       const all = cur.availableVerses ?? cur.verses ?? []
       const selected = cur.verses ?? []
-      const next = toggleOrderedSelection(all, selected, v, verseId)
+      const anchorId = cur.selectionAnchorId ?? selectionAnchorRef.current
+      const anchor = extend && anchorId ? all.find((item) => verseId(item) === anchorId) : undefined
+      const next = (anchor && extend ? rangeOrderedSelection(all, anchor, v, verseId) : null) ?? toggleOrderedSelection(all, selected, v, verseId)
       if (!next) return
+      const nextAnchorId = extend && anchor ? anchorId ?? verseId(v) : verseId(v)
+      selectionAnchorRef.current = nextAnchorId
       const nextFocus = next.some((x) => verseId(x) === (cur.focusId ?? "")) ? cur.focusId : verseId(next[0])
-      broadcast(withFocus({ ...cur, verses: next, text: next.map((x) => x.text).join(" ") }, nextFocus))
+      const indices = next.map((item) => all.findIndex((candidate) => verseId(candidate) === verseId(item)))
+      const contiguous = indices.every((index, i) => index >= 0 && (i === 0 || index === indices[i - 1] + 1))
+      const reference = contiguous ? rangeReference(next) : null
+      if (reference) liveTargetRef.current = targetFromReference(reference)
+      else liveTargetRef.current = null
+      broadcast(withFocus({
+        ...cur,
+        ...(reference ? { reference } : {}),
+        verses: next,
+        text: next.map((x) => x.text).join(" "),
+        selectionAnchorId: nextAnchorId,
+      }, nextFocus))
     },
     [broadcast]
   )

@@ -8,9 +8,11 @@
  */
 
 export type DisplayMode = "single" | "multi" | "auto"
+export const DISPLAY_MODES: DisplayMode[] = ["auto", "single", "multi"]
 
 export interface SceneSettings {
   mode: DisplayMode
+  enabledModes: DisplayMode[]
   style: "text" | "card"
   bgColor: string
   bgOpacity: number
@@ -27,6 +29,7 @@ export interface SceneSettings {
 
 export const SCENE_DEFAULTS: SceneSettings = {
   mode: "auto",
+  enabledModes: DISPLAY_MODES,
   style: "text",
   bgColor: "#000000",
   bgOpacity: 0,
@@ -82,8 +85,14 @@ export function normalize(raw: unknown): SceneSettings {
   const p = (raw ?? {}) as Partial<SceneSettings>
   const scale = Number(p.scale)
   const opacity = Number(p.bgOpacity)
+  const requestedModes = Array.isArray(p.enabledModes)
+    ? DISPLAY_MODES.filter((mode) => p.enabledModes?.includes(mode))
+    : DISPLAY_MODES
+  const enabledModes = requestedModes.length ? requestedModes : DISPLAY_MODES
+  const mode = enabledModes.includes(p.mode as DisplayMode) ? p.mode as DisplayMode : enabledModes[0]
   return {
-    mode: p.mode === "single" || p.mode === "multi" ? p.mode : "auto",
+    mode,
+    enabledModes,
     style: p.style === "card" ? "card" : "text",
     bgColor: parseHex(p.bgColor ?? null, SCENE_DEFAULTS.bgColor),
     bgOpacity: Number.isFinite(opacity) ? Math.min(Math.max(opacity, 0), 1) : SCENE_DEFAULTS.bgOpacity,

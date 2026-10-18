@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
-import { toggleOrderedSelection } from "../lib/bible/selection.ts"
+import * as selection from "../lib/bible/selection.ts"
+const { toggleOrderedSelection } = selection
 import { paginateVerses } from "../lib/bible/paginate.ts"
 import { normalize } from "../lib/bible/scene-settings.ts"
 
@@ -25,6 +26,25 @@ const key = (verse) => `${verse.book}|${verse.chapter}|${verse.verse}`
 {
   assert.equal(toggleOrderedSelection(verses, [verses[0]], verses[0], key), null)
   console.log("PASS selection cannot become empty")
+}
+
+{
+  const chapter = Array.from({ length: 6 }, (_, index) => ({ book: "2 Kings", chapter: 12, verse: index + 1 }))
+  const range = selection.rangeOrderedSelection?.(chapter, chapter[1], chapter[3], key)
+  assert.deepEqual(range?.map((verse) => verse.verse), [2, 3, 4])
+  console.log("PASS Shift selection includes the anchor and every verse through the clicked verse")
+  assert.deepEqual(selection.singleVerseChapterRequest?.("2+kings+12:2"), { chapterPath: "2+kings+12", verse: 2 })
+  assert.equal(selection.singleVerseChapterRequest?.("2+kings+12:2-5"), null)
+  console.log("PASS a single-verse search resolves its chapter context without changing range requests")
+}
+
+{
+  const settings = normalize({ mode: "single", enabledModes: ["auto", "multi"] })
+  assert.deepEqual(settings.enabledModes, ["auto", "multi"])
+  assert.equal(settings.mode, "auto")
+  const lastMode = normalize({ mode: "single", enabledModes: [] })
+  assert.deepEqual(lastMode.enabledModes, ["auto", "single", "multi"])
+  console.log("PASS display modes can be hidden, with one available mode always retained")
 }
 
 {

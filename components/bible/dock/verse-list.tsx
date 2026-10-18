@@ -56,6 +56,9 @@ export function VerseList({ dock, advanced }: { dock: Dock; advanced: boolean })
           <span className="selection-legend"><i className="selection-check">✓</i> Included <i className="shown-marker" /> On screen</span>
         </div>
       )}
+      {onScreen && verses.length > 1 && (
+        <div className="hint range-hint">Click a verse, then Shift-click another to select the full range.</div>
+      )}
 
       {verses.length > 0 ? (
         <div className="verse-list">
@@ -67,7 +70,7 @@ export function VerseList({ dock, advanced }: { dock: Dock; advanced: boolean })
                 key={verseId(v)}
                 ref={active && i === firstShowingIdx ? activeRef : undefined}
                 className={`verse-item${active ? " active" : ""}${selected ? " selected" : ""}`}
-                onClick={() => selectVerse(v)}
+                onClick={(event) => selectVerse(v, event.shiftKey)}
                 disabled={locked}
                 aria-pressed={selected}
                 title={`${selected ? "Remove" : "Include"} ${verseLabel(v)} ${selected ? "from" : "in"} the displayed passage`}
