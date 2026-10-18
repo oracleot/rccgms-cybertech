@@ -98,6 +98,10 @@ export function DockStyles() {
       }
       .verse-list::-webkit-scrollbar, .settings::-webkit-scrollbar, .scroll::-webkit-scrollbar { width: 8px; }
       .verse-list::-webkit-scrollbar-thumb, .settings::-webkit-scrollbar-thumb, .scroll::-webkit-scrollbar-thumb { background: #313244; border-radius: 4px; }
+      .verse-selection-summary { display: flex; justify-content: space-between; align-items: center; gap: 6px; color: #8f8da9; font-size: 10px; line-height: 1.3; }
+      .selection-legend { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+      .selection-check { display: inline-grid; place-items: center; width: 12px; height: 12px; border: 1px solid #a98cff; border-radius: 3px; color: #cbb9ff; font-size: 9px; font-style: normal; }
+      .shown-marker { width: 7px; height: 7px; border-radius: 50%; background: #7c6af7; margin-left: 3px; }
       .verse-item {
         background: #1a1a28; border: 1px solid transparent; border-radius: 5px;
         color: #a6adc8; display: flex; gap: 8px; width: 100%;
@@ -105,6 +109,9 @@ export function DockStyles() {
         padding: 7px 8px; text-align: left;
         transition: background 0.1s, border-color 0.1s, color 0.1s;
       }
+      .verse-check { width: 12px; height: 12px; flex: 0 0 12px; margin-top: 2px; border: 1px solid #585878; border-radius: 3px; color: transparent; font-size: 9px; line-height: 10px; text-align: center; }
+      .verse-item.selected .verse-check { border-color: #a98cff; background: #39255d; color: #e8ddff; }
+      .verse-item.selected { border-color: #453763; }
       .verse-item:hover { background: #232336; border-color: #3d3d55; color: #cdd6f4; }
       .verse-item.active { background: #2a2040; border-color: #7c6af7; color: #eae4ff; }
       .verse-num { color: #7c6af7; flex-shrink: 0; font-family: monospace; font-size: 10.5px; font-weight: 700; padding-top: 1px; min-width: 26px; }

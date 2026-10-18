@@ -25,9 +25,10 @@ export interface WorshipLibrary {
   loading: boolean
   offline: boolean
   error: string | null
-  create: (set: LyricSet) => void
+  create: (set: LyricSet) => Promise<boolean>
   update: (id: string, mutate: (s: LyricSet) => LyricSet) => void
   remove: (id: string) => void
+  refresh: () => Promise<void>
 }
 
 export function useWorshipLibrary(parishId?: string): WorshipLibrary {
@@ -73,12 +74,29 @@ export function useWorshipLibrary(parishId?: string): WorshipLibrary {
   }, [])
 
   const create = useCallback(
-    (set: LyricSet) => {
-      if (offline || !parishId) return
-      const previous = setsRef.current
-      commit([set, ...previous], saveSet(set, parishId), previous, "Couldn't save — check your connection")
+    async (set: LyricSet) => {
+      if (!parishId) {
+        setError("Choose an organisation before adding worship items.")
+        return false
+      }
+      if (offline) {
+        setError("The library is offline. Reconnect before adding worship items.")
+        return false
+      }
+      try {
+        await saveSet(set, parishId)
+        const next = [set, ...setsRef.current.filter((existing) => existing.id !== set.id)]
+        setsRef.current = next
+        setSets(next)
+        setError(null)
+        return true
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : "Please check your connection and permissions."
+        setError(`Couldn't save “${set.title}”: ${detail}`)
+        return false
+      }
     },
-    [offline, commit, parishId]
+    [offline, parishId]
   )
 
   const update = useCallback(
@@ -102,10 +120,10 @@ export function useWorshipLibrary(parishId?: string): WorshipLibrary {
     (id: string) => {
       if (offline) return
       const previous = setsRef.current
-      commit(previous.filter((s) => s.id !== id), deleteRemote(id), previous, "Couldn't delete — check your connection")
+      commit(previous.filter((s) => s.id !== id), deleteRemote(id, parishId), previous, "Couldn't delete — check your connection")
     },
-    [offline, commit]
+    [offline, commit, parishId]
   )
 
-  return { sets, loading, offline, error, create, update, remove }
+  return { sets, loading, offline, error, create, update, remove, refresh }
 }

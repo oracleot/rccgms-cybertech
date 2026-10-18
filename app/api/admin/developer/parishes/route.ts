@@ -8,9 +8,8 @@ export const runtime = "nodejs"
  * GET /api/admin/developer/parishes
  *
  * Lists all organisations and parishes.
- * With ?parish_id=&include=members, includes members for a specific parish.
- *
- * Developer-only.
+ * Platform admins may read only the organisation/parish summary. Developers
+ * may additionally inspect parish memberships.
  */
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
@@ -29,11 +28,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const admin = createAdminClient()
+  const isPlatformDeveloper = ["lead_developer", "developer"].includes(profile.role)
   const parishId = request.nextUrl.searchParams.get("parish_id")
   const include = request.nextUrl.searchParams.get("include")
 
   if (parishId && include === "members") {
+    if (!isPlatformDeveloper) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+    const admin = createAdminClient()
     const { data: members, error } = await admin
       .from("parish_memberships")
       .select("id, parish_id, profile_id, role, status, profiles:profiles!parish_memberships_profile_id_fkey(name, email)")
@@ -45,6 +48,17 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ members: members ?? [] })
+  }
+
+  const admin = createAdminClient()
+  if (!isPlatformDeveloper) {
+    const [{ data: organisations, error: orgErr }, { data: parishes, error: parishErr }] = await Promise.all([
+      admin.from("organisations").select("id, name, short_name, slug, status").order("name"),
+      admin.from("parishes").select("id, organisation_id, name, slug, status").order("name"),
+    ])
+    if (orgErr) return NextResponse.json({ error: orgErr.message }, { status: 500 })
+    if (parishErr) return NextResponse.json({ error: parishErr.message }, { status: 500 })
+    return NextResponse.json({ organisations: organisations ?? [], parishes: parishes ?? [] })
   }
 
   const { data: organisations, error: orgErr } = await admin

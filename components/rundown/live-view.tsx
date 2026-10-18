@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight, ListOrdered, Music, Play, SkipForward, SkipB
 
 import { cn, formatDuration } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
+import type { TimedAlertRule } from "@/lib/rundown/alert-settings"
+import { useDisplaySync } from "@/hooks/use-display-sync"
 import { useRundownLive, getElapsedMs, type RundownLiveItem } from "@/hooks/use-rundown-live"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -129,20 +131,32 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     displayCounts,
   } = useRundownLive()
 
-  const [warned, setWarned] = useState(false)
+  const warnedItemIdRef = useRef<string | null>(null)
   const [selectedSound, setSelectedSound] = useState<string>(ALERT_SOUNDS[0]?.id ?? "beep")
   const [isAlerting, setIsAlerting] = useState(false)
   const [alertSoundEnabled, setAlertSoundEnabled] = useState(true)
+  const [alertRules, setAlertRules] = useState<TimedAlertRule[]>([])
+  const { sendMessage: sendDisplayMessage, displayCount: connectedDisplays } = useDisplaySync({ rundownId })
 
   const audioHandle = useRef<{ ctx: AudioContext; intervalId?: number } | null>(null)
 
   useEffect(() => {
     let cancelled = false
     fetch("/api/settings/alert").then((response) => response.ok ? response.json() : null).then((data) => {
-      if (!cancelled && data) setAlertSoundEnabled(data.enabled !== false)
+      if (!cancelled && data) {
+        setAlertSoundEnabled(data.enabled !== false)
+        setAlertRules(Array.isArray(data.rules) ? data.rules : [])
+      }
     }).catch(() => {})
     return () => { cancelled = true }
   }, [])
+
+  // Send parish rules once when a display connects or settings change; avoid
+  // adding this configuration to the 4 Hz timer heartbeat.
+  useEffect(() => {
+    if (connectedDisplays < 1) return
+    sendDisplayMessage({ type: "ALERT_SETTINGS_UPDATE", payload: { rundownId, rules: alertRules } })
+  }, [alertRules, connectedDisplays, rundownId, sendDisplayMessage])
 
   const rundownPath = `/rundown/${rundownId}/live`
 
@@ -256,7 +270,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
   }
 
   const handleStart = () => {
-    setWarned(false)
+    warnedItemIdRef.current = null
     stopAlert()
     startService(rundownId)
   }
@@ -275,7 +289,6 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
   const handleStartNextItem = useCallback(() => {
     stopAlert()
-    setWarned(false)
     startNextItem(rundownId)
   }, [rundownId, startNextItem])
 
@@ -286,23 +299,16 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
 
   const handleGoToPrevious = useCallback(() => {
     stopAlert()
-    setWarned(false)
     goToPrevious(rundownId)
   }, [rundownId, goToPrevious])
 
   const handleGoToItem = useCallback(
     (targetIndex: number) => {
       stopAlert()
-      setWarned(false)
       goToItem(rundownId, targetIndex)
     },
     [rundownId, goToItem]
   )
-
-  // Reset the "near end" audible warning whenever the current item changes
-  useEffect(() => {
-    setWarned(false)
-  }, [currentIndex])
 
   // Warn at ~1 minute remaining with audible alert
   useEffect(() => {
@@ -310,12 +316,12 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
     const item = orderedItems[currentIndex]
     if (!started || !item || !item.durationSeconds || item.durationSeconds <= 0) return
     const remaining = item.durationSeconds - elapsed
-    if (remaining <= 60 && remaining > 0 && !warned) {
-      setWarned(true)
+    if (remaining <= 60 && remaining > 0 && warnedItemIdRef.current !== item.id) {
+      warnedItemIdRef.current = item.id
       startAlertLoop(selectedSound)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- startAlertLoop is stable, including it causes infinite loop
-  }, [elapsed, started, currentIndex, orderedItems, warned, selectedSound, alertSoundEnabled])
+  }, [elapsed, started, currentIndex, orderedItems, selectedSound, alertSoundEnabled])
 
   useEffect(() => () => stopAlert(), [])
 
@@ -438,7 +444,7 @@ export function LiveView({ rundownId, items, serviceName, itemsWithSongs }: Live
                 size="lg"
                 onClick={() => {
                   stopAlert()
-                  setWarned(false)
+                  warnedItemIdRef.current = null
                   resetService(rundownId)
                 }}
                 className="px-8"

@@ -6,6 +6,7 @@ import confetti from "canvas-confetti"
 import { Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { parseLyrics } from "@/lib/rundown/lyrics-parser"
+import type { TimedAlertRule } from "@/lib/rundown/alert-settings"
 import { useDisplayReceiver } from "@/hooks/use-display-sync"
 import { LyricsDisplay } from "./lyrics-display"
 import type {
@@ -230,9 +231,12 @@ export function DisplayView({
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false)
   const [isTimeoutBlinkRed, setIsTimeoutBlinkRed] = useState(false)
   const [enableTimeoutFlash, setEnableTimeoutFlash] = useState(false)
+  const [alertRules, setAlertRules] = useState<TimedAlertRule[]>([])
+  const [activeTimedAlert, setActiveTimedAlert] = useState<string | null>(null)
   const [biblePassage, setBiblePassage] = useState<BiblePassagePayload | null>(null)
   const prevItemIdRef = useRef<string | null>(null)
   const hasFlashedRef = useRef(false)
+  const firedTimedRulesRef = useRef(new Set<string>())
   
   // Independent timer management (doesn't rely on control window)
   const timerStartTimeRef = useRef<number | null>(null)
@@ -260,7 +264,12 @@ export function DisplayView({
           setIsTransitioning(true)
           setTimeout(() => setIsTransitioning(false), 500)
         }
-        prevItemIdRef.current = message.payload.item?.id ?? null
+        const nextItemId = message.payload.item?.id ?? null
+        if (nextItemId !== prevItemIdRef.current) {
+          firedTimedRulesRef.current.clear()
+          setActiveTimedAlert(null)
+        }
+        prevItemIdRef.current = nextItemId
         setCurrentItem(message.payload.item)
         setNextItem(message.payload.nextItem)
         setCurrentVerseIndex(0) // Reset verse when item changes
@@ -310,6 +319,10 @@ export function DisplayView({
         }))
         break
 
+      case "ALERT_SETTINGS_UPDATE":
+        if (message.payload.rundownId === rundownId) setAlertRules(message.payload.rules)
+        break
+
       case "TRANSITION":
         // Show the transition screen between items
         setShowTransitionScreen(message.payload.isInTransition)
@@ -328,7 +341,7 @@ export function DisplayView({
         setBiblePassage(null)
         break
     }
-  }, [])
+  }, [rundownId])
 
   // Initialize display receiver
   useDisplayReceiver(rundownId, handleMessage)
@@ -349,6 +362,8 @@ export function DisplayView({
   useEffect(() => {
     if (typeof window === 'undefined') return
     const stored = localStorage.getItem('fusion_display_timeout_flash')
+    // Restore the persisted display preference before listening for changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialize from local storage
     if (stored !== null) setEnableTimeoutFlash(stored === 'true')
     const handler = (e: StorageEvent) => {
       if (e.key === 'fusion_display_timeout_flash') {
@@ -429,6 +444,32 @@ export function DisplayView({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
+  // Timed parish messages are evaluated using the display's own timer, so a
+  // backgrounded operator window cannot make the cue late.
+  useEffect(() => {
+    if (!timer.isRunning || !currentItem || currentItem.durationSeconds <= 0) return
+    for (const rule of alertRules) {
+      if (!rule.enabled || firedTimedRulesRef.current.has(rule.id)) continue
+      const shouldShow = rule.trigger === "midpoint"
+        ? timer.elapsed >= Math.ceil(currentItem.durationSeconds / 2)
+        : rule.trigger === "before_end"
+          ? timer.remaining <= (rule.secondsRemaining ?? 0) && timer.remaining > 0
+          : timer.remaining <= 0 && timer.elapsed > 0
+      if (shouldShow) {
+        firedTimedRulesRef.current.add(rule.id)
+        // Timer state is external to this effect; cue immediately at its threshold.
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- timer crossing threshold should render the cue immediately
+        setActiveTimedAlert((current) => current ? `${current}  •  ${rule.message}` : rule.message)
+      }
+    }
+  }, [alertRules, currentItem, timer.elapsed, timer.isRunning, timer.remaining])
+
+  useEffect(() => {
+    if (!activeTimedAlert) return
+    const timeout = window.setTimeout(() => setActiveTimedAlert(null), 7000)
+    return () => window.clearTimeout(timeout)
+  }, [activeTimedAlert])
+
   // Red flash effect when timer reaches zero — optional visual cue, controlled via settings
   useEffect(() => {
     if (
@@ -439,7 +480,6 @@ export function DisplayView({
       !hasFlashedRef.current
     ) {
       hasFlashedRef.current = true
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- immediate visual flash cue required when timer hits zero
       setIsRedFlash(true)
 
       // Flash 3 times: on  →  off  →  on  →  off  →  on  →  off
@@ -458,7 +498,8 @@ export function DisplayView({
   const hasNextItemInTransition = transitionData?.nextItem != null
   useEffect(() => {
     if (!showTransitionScreen || !hasNextItemInTransition) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset blink state when transition screen is dismissed
+      // Clear the projection-only blink when the transition cue ends.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- transition state controls the blink lifecycle
       setIsTimeoutBlinkRed(false)
       return
     }
@@ -516,6 +557,14 @@ export function DisplayView({
         )}
         style={{ backgroundColor: "#ff0000" }}
       />
+
+      {activeTimedAlert && (
+        <div className="absolute inset-x-0 top-8 z-[55] flex justify-center px-6" role="status" aria-live="polite">
+          <div className="max-w-[90vw] rounded-2xl border border-white/25 bg-black/85 px-8 py-5 text-center text-white shadow-2xl backdrop-blur-sm">
+            <p className="text-[clamp(1.5rem,4vw,4rem)] font-bold leading-tight">{activeTimedAlert}</p>
+          </div>
+        </div>
+      )}
 
       {/* Fullscreen prompt overlay — requires user gesture to enter fullscreen */}
       {showFullscreenPrompt && (

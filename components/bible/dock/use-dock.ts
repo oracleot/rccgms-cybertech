@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { FetchedPassage, TranslationId } from "@/lib/bible/fetch-passage"
 import { loadPassage, prefetchTranslationsWhenIdle, PassageUnavailableError } from "@/lib/bible/passage-store"
 import { normalizeReference, verseId } from "@/lib/bible/format"
+import { toggleOrderedSelection } from "@/lib/bible/selection"
 import { obsChannelName } from "@/lib/bible/obs-channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/bible/obs-lock"
 import { SCENE_DEFAULTS, loadSettings, saveSettings, type SceneSettings } from "@/lib/bible/scene-settings"
@@ -165,7 +166,7 @@ export function useDock() {
   const [staged, setStaged] = useState<PassagePayload | null>(null)
   const [uiMode, setUiModeState] = useState<UiMode>("simple")
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase Realtime's channel event payloads are not typed as a discriminated union in this client API.
   const channelRef = useRef<any>(null)
   const translationRef = useRef<TranslationId>("kjv")
   const settingsRef = useRef(settings)
@@ -184,6 +185,7 @@ export function useDock() {
   useEffect(() => {
     const stored = loadSettings()
     settingsRef.current = stored
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrate browser-persisted preferences after mount to avoid reading localStorage during server rendering.
     setSettings(stored)
     const prefs = loadPrefs()
     if (prefs.translation) {
@@ -233,15 +235,19 @@ export function useDock() {
       // otherwise the dock drifts away from the stream and restores the wrong thing.
       .on("broadcast", { event: "passage" }, ({ payload }: { payload: PassagePayload }) => {
         if (lockedRef.current && !payload.restore) return
+        onScreenRef.current = payload
         setOnScreen(payload)
       })
       .on("broadcast", { event: "clear" }, () => {
         if (lockedRef.current) return
+        onScreenRef.current = null
+        shownRef.current = null
         setOnScreen(null)
         setShown(null)
         setFocus(null)
       })
       .on("broadcast", { event: "display-state" }, ({ payload }: { payload: DisplayState }) => {
+        shownRef.current = payload
         setShown(payload)
       })
       // A display that loads later (OBS scene switch, restart) asks for what is
@@ -311,6 +317,11 @@ export function useDock() {
   const broadcast = useCallback(
     (payload: PassagePayload, opts?: { remember?: boolean }) => {
       if (opts?.remember !== false) remember()
+      // Keep the imperative action source in step immediately. Verse clicks can
+      // arrive before React runs the effect below; reading the previous passage
+      // there made a quick second selection overwrite the first one.
+      onScreenRef.current = payload
+      shownRef.current = null
       channelRef.current?.send({ type: "broadcast", event: "passage", payload })
       setOnScreen(payload)
       setShown(null)
@@ -323,6 +334,8 @@ export function useDock() {
     (opts?: { remember?: boolean }) => {
       if (lockedRef.current) return
       if (opts?.remember !== false) remember()
+      onScreenRef.current = null
+      shownRef.current = null
       channelRef.current?.send({ type: "broadcast", event: "clear", payload: {} })
       setOnScreen(null)
       setShown(null)
@@ -453,12 +466,8 @@ export function useDock() {
       if (!cur || lockedRef.current) return
       const all = cur.availableVerses ?? cur.verses ?? []
       const selected = cur.verses ?? []
-      const id = verseId(v)
-      const isSelected = selected.some((x) => verseId(x) === id)
-      if (isSelected && selected.length === 1) return
-      const next = isSelected
-        ? selected.filter((x) => verseId(x) !== id)
-        : all.filter((x) => selected.some((s) => verseId(s) === verseId(x)) || verseId(x) === id)
+      const next = toggleOrderedSelection(all, selected, v, verseId)
+      if (!next) return
       const nextFocus = next.some((x) => verseId(x) === (cur.focusId ?? "")) ? cur.focusId : verseId(next[0])
       broadcast(withFocus({ ...cur, verses: next, text: next.map((x) => x.text).join(" ") }, nextFocus))
     },
@@ -568,6 +577,7 @@ export function useDock() {
 
   const canPrev = !locked && verses.length > 1 && (shown ? shown.page > 0 : true)
   const canNext = !locked && verses.length > 1 && (shown ? shown.page < shown.pages - 1 : true)
+  // eslint-disable-next-line react-hooks/refs -- This is a read-only lookup for the current stream target; dock actions synchronize the ref when passages change.
   const current = currentTarget()
   /** Whether a send can start at all — locked still allows staging a preview. */
   const canSend = !locked || previewFirst

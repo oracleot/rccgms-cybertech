@@ -5,6 +5,7 @@
 import type { Tables, Enums } from "./database"
 import type { Profile } from "./auth"
 import type { Service } from "./rota"
+import type { TimedAlertRule } from "@/lib/rundown/alert-settings"
 
 // Base types from database
 export type Rundown = Tables<"rundowns">
@@ -111,6 +112,7 @@ export type DisplaySyncMessageType =
   | "TIMER_UPDATE"
   | "LYRIC_ADVANCE"
   | "SETTINGS_UPDATE"
+  | "ALERT_SETTINGS_UPDATE"
   | "TRANSITION"
   | "DISPLAY_READY"
   | "DISPLAY_CLOSED"
@@ -172,6 +174,12 @@ export interface SettingsUpdatePayload {
   transitionEffect: string
 }
 
+/** Parish-wide timed display messages sent to the projection window. */
+export interface AlertSettingsUpdatePayload {
+  rundownId: string
+  rules: TimedAlertRule[]
+}
+
 /**
  * Payload for TRANSITION messages - shown between items
  */
@@ -221,6 +229,7 @@ export type DisplaySyncMessage =
   | { type: "TIMER_UPDATE"; payload: TimerUpdatePayload }
   | { type: "LYRIC_ADVANCE"; payload: LyricAdvancePayload }
   | { type: "SETTINGS_UPDATE"; payload: SettingsUpdatePayload }
+  | { type: "ALERT_SETTINGS_UPDATE"; payload: AlertSettingsUpdatePayload }
   | { type: "TRANSITION"; payload: TransitionPayload }
   | { type: "DISPLAY_READY"; payload: { rundownId: string } }
   | { type: "DISPLAY_CLOSED"; payload: { rundownId: string } }

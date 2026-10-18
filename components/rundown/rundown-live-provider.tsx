@@ -156,6 +156,10 @@ export function RundownLiveProvider({ children }: { children: React.ReactNode })
   // keeps receiving updates while the operator browses other Fusion pages.
   const { sendMessage } = useDisplaySync({ rundownId: "*", onMessage: handleDisplayMessage })
 
+  // The provider is mounted for the whole dashboard shell. Avoid waking the
+  // entire shell four times a second until at least one live service starts.
+  const hasStartedSession = Object.values(sessions).some((session) => session.started)
+
   const updateSession = useCallback(
     (rundownId: string, updater: (session: RundownLiveSession) => RundownLiveSession) => {
       setSessions((prev) => {
@@ -374,6 +378,8 @@ export function RundownLiveProvider({ children }: { children: React.ReactNode })
   // has elapsed, and keeps the Display Screen in sync - independent of
   // whether the operator is currently looking at the Rundown page.
   useEffect(() => {
+    if (!hasStartedSession) return
+
     const interval = setInterval(() => {
       setTick((t) => t + 1)
 
@@ -416,7 +422,7 @@ export function RundownLiveProvider({ children }: { children: React.ReactNode })
     }, 250)
 
     return () => clearInterval(interval)
-  }, [updateSession, sendMessage])
+  }, [hasStartedSession, updateSession, sendMessage])
 
   const value = useMemo<RundownLiveContextValue>(
     () => ({

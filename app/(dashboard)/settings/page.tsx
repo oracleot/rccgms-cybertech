@@ -84,7 +84,7 @@ export default async function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Rundown alerts</CardTitle><CardDescription>Control the timeout sound for everyone in the active parish</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Rundown alerts</CardTitle><CardDescription>Set the shared timeout sound and custom timer messages for the active parish</CardDescription></CardHeader>
           <CardContent><AlertSettings /></CardContent>
         </Card>
 

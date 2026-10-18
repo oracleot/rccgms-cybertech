@@ -107,6 +107,7 @@ export function ParishManager({ canCreate = true }: { canCreate?: boolean }) {
   }
 
   const toggleParish = (parishId: string) => {
+    if (!canCreate) return
     if (expandedParish === parishId) {
       setExpandedParish(null)
     } else {
@@ -297,13 +298,15 @@ export function ParishManager({ canCreate = true }: { canCreate?: boolean }) {
                               <button
                                 className="w-full flex items-center justify-between p-2 pl-8 rounded-md hover:bg-accent/30 transition-colors text-left"
                                 onClick={() => toggleParish(parish.id)}
+                                disabled={!canCreate}
+                                aria-expanded={canCreate ? expandedParish === parish.id : undefined}
                               >
                                 <div className="flex items-center gap-2">
-                                  {expandedParish === parish.id ? (
+                                  {canCreate && expandedParish === parish.id ? (
                                     <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                                  ) : (
+                                  ) : canCreate ? (
                                     <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                                  )}
+                                  ) : null}
                                   <Church className="h-4 w-4 text-blue-500" />
                                   <div>
                                     <span className="text-sm font-medium">{parish.name}</span>
@@ -328,7 +331,7 @@ export function ParishManager({ canCreate = true }: { canCreate?: boolean }) {
                                 </div>
                               </button>
 
-                              {expandedParish === parish.id && (
+                              {canCreate && expandedParish === parish.id && (
                                 <div className="ml-14 mt-1 mb-2 rounded-md border bg-muted/30 p-3">
                                   <div className="text-xs text-muted-foreground space-y-1 mb-3">
                                     <div className="flex gap-2">

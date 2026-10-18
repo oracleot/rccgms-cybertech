@@ -6,7 +6,7 @@ import { emitEvent } from "@/lib/telemetry"
 /**
  * POST /api/admin/developer/query
  * Execute a read-only SQL query (SELECT only)
- * Access: admin, lead_developer, developer
+ * Access: lead_developer, developer
  *
  * Body: { sql: string }
  */
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       .eq("auth_user_id", user.id)
       .single()
 
-    if (!profile || !["admin", "lead_developer", "developer"].includes(profile.role)) {
+    if (!profile || !["lead_developer", "developer"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

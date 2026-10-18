@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 /**
  * GET /api/admin/developer/tables/[table]/schema
  * Returns column definitions for a specific table
- * Access: admin, lead_developer, developer
+ * Access: lead_developer, developer
  */
 export async function GET(
   _request: NextRequest,
@@ -27,7 +27,7 @@ export async function GET(
       .eq("auth_user_id", user.id)
       .single()
 
-    if (!profile || !["admin", "lead_developer", "developer"].includes(profile.role)) {
+    if (!profile || !["lead_developer", "developer"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

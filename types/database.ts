@@ -1758,6 +1758,8 @@ export type Database = {
           country: string | null
           slug: string
           status: string
+          stop_alert_sound_enabled: boolean
+          rundown_alert_rules: Json
           created_by: string | null
           created_at: string
           updated_at: string
@@ -1772,6 +1774,8 @@ export type Database = {
           country?: string | null
           slug: string
           status?: string
+          stop_alert_sound_enabled?: boolean
+          rundown_alert_rules?: Json
           created_by?: string | null
           created_at?: string
           updated_at?: string
@@ -1786,6 +1790,8 @@ export type Database = {
           country?: string | null
           slug?: string
           status?: string
+          stop_alert_sound_enabled?: boolean
+          rundown_alert_rules?: Json
           created_by?: string | null
           created_at?: string
           updated_at?: string

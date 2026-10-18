@@ -194,12 +194,15 @@ export async function saveSet(set: LyricSet, parishId: string): Promise<void> {
   }
   const { error } = await table(supabase).upsert(row)
   if (error) throw error
+  const cached = readCache(parishId)
+  writeCache([set, ...cached.filter((item) => item.id !== set.id)].sort((a, b) => b.updatedAt - a.updatedAt), parishId)
 }
 
-export async function deleteSet(id: string): Promise<void> {
+export async function deleteSet(id: string, parishId?: string): Promise<void> {
   const supabase = createClient()
   const { error } = await table(supabase).delete().eq("id", id)
   if (error) throw error
+  if (parishId) writeCache(readCache(parishId).filter((item) => item.id !== id), parishId)
 }
 
 /**

@@ -47,12 +47,13 @@ export function NewSetDialog({
   onCreate,
 }: {
   onClose: () => void
-  onCreate: (set: LyricSet) => void
+  onCreate: (set: LyricSet) => Promise<boolean>
 }) {
   const [type, setType] = useState<ContentType>("song")
   const [title, setTitle] = useState("")
   const [language, setLanguage] = useState("")
   const [raw, setRaw] = useState("")
+  const [saving, setSaving] = useState(false)
 
   const parsed = useMemo(() => {
     if (!raw.trim()) return null
@@ -67,9 +68,10 @@ export function NewSetDialog({
 
   const canSave = !!title.trim() && !!parsed?.count
 
-  const save = () => {
-    if (!parsed || !canSave) return
-    onCreate({
+  const save = async () => {
+    if (!parsed || !canSave || saving) return
+    setSaving(true)
+    await onCreate({
       id: newSetId(),
       type,
       title: title.trim(),
@@ -79,6 +81,7 @@ export function NewSetDialog({
       presentation: defaultPresentation(type),
       updatedAt: Date.now(),
     })
+    setSaving(false)
   }
 
   return (
@@ -186,11 +189,11 @@ export function NewSetDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={save} disabled={!canSave}>
-            Create
+          <Button onClick={() => void save()} disabled={!canSave || saving}>
+            {saving ? "Saving…" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

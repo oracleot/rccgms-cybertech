@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 /**
  * GET /api/admin/developer/tables/[table]/rows
  * Browse rows in a specific table with pagination, search, and sorting
- * Access: admin, lead_developer, developer
+ * Access: lead_developer, developer
  *
  * Query params:
  *   page (default: 1)
@@ -34,7 +34,7 @@ export async function GET(
       .eq("auth_user_id", user.id)
       .single()
 
-    if (!profile || !["admin", "lead_developer", "developer"].includes(profile.role)) {
+    if (!profile || !["lead_developer", "developer"].includes(profile.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

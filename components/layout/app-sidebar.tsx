@@ -81,7 +81,7 @@ const sharedAdminItems = [
 
 // Developer-exclusive items
 const developerOnlyItems = [
-  { title: "Dev Tools", href: ROUTES.ADMIN_DEVELOPER_TOOLS, icon: Code2 },
+  { title: "Control Center", href: ROUTES.ADMIN_DEVELOPER_TOOLS, icon: Code2 },
   { title: "ML Training", href: ROUTES.ADMIN_ML_TRAINING, icon: Brain },
 ]
 

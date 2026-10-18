@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, lazy, Suspense } from "react"
 import {
   Activity,
   Database,
@@ -20,11 +20,9 @@ import {
   Terminal,
   Globe,
   Zap,
-  Table2,
-  Code,
-  Mail,
   Church,
   Shield,
+  Workflow,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -44,6 +42,8 @@ import { ParishManager } from "./parish-manager"
 import { PendingRequests } from "./pending-requests"
 import { FeatureManager } from "./feature-manager"
 import { SignupDiagnostics } from "./signup-diagnostics"
+
+const ArchitectureMap = lazy(() => import("./architecture-map").then((module) => ({ default: module.ArchitectureMap })))
 
 interface HealthData {
   status: "healthy" | "degraded" | "error"
@@ -96,10 +96,12 @@ export function DeveloperToolsClient({
   totalUsers,
   departments,
 }: DeveloperToolsClientProps) {
+  const isAdminSetup = currentUserRole === "admin"
   const [health, setHealth] = useState<HealthData | null>(null)
   const [loading, setLoading] = useState(false)
   const [lastChecked, setLastChecked] = useState<Date | null>(null)
   const [autoRefresh, setAutoRefresh] = useState(false)
+  const [activeTab, setActiveTab] = useState(isAdminSetup ? "parishes" : "overview")
 
   const fetchHealth = useCallback(async () => {
     setLoading(true)
@@ -126,15 +128,10 @@ export function DeveloperToolsClient({
   }, [])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
-    fetchHealth()
-  }, [fetchHealth])
-
-  useEffect(() => {
-    if (!autoRefresh) return
+    if (!autoRefresh || isAdminSetup || activeTab !== "health") return
     const interval = setInterval(fetchHealth, 30000)
     return () => clearInterval(interval)
-  }, [autoRefresh, fetchHealth])
+  }, [activeTab, autoRefresh, fetchHealth, isAdminSetup])
 
   const statusColour = health?.status === "healthy"
     ? "text-green-600 dark:text-green-400"
@@ -147,33 +144,44 @@ export function DeveloperToolsClient({
     : health?.status === "degraded"
     ? AlertTriangle
     : XCircle
-  const isAdminSetup = currentUserRole === "admin"
-
   return (
-    <Tabs defaultValue={isAdminSetup ? "parishes" : "overview"} className="space-y-4">
-      <TabsList className="flex w-full overflow-x-auto">
-        {!isAdminSetup && <TabsTrigger value="overview" className="flex items-center gap-1 text-xs sm:text-sm">
+    <Tabs value={activeTab} onValueChange={(value) => {
+      setActiveTab(value)
+      if (value === "health") void fetchHealth()
+    }} className="space-y-5">
+      <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl border bg-muted/40 p-1.5">
+        {!isAdminSetup && <TabsTrigger value="overview" className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs data-[state=active]:shadow-sm sm:text-sm">
           <Globe className="h-4 w-4" />
-          <span className="hidden sm:inline">Overview</span>
+          <span>Overview</span>
         </TabsTrigger>}
-        {!isAdminSetup && <TabsTrigger value="health" className="flex items-center gap-1 text-xs sm:text-sm">
+        {!isAdminSetup && <TabsTrigger value="map" className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs data-[state=active]:shadow-sm sm:text-sm">
+          <Workflow className="h-4 w-4" />
+          <span>System map</span>
+        </TabsTrigger>}
+        {!isAdminSetup && <TabsTrigger value="health" className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs data-[state=active]:shadow-sm sm:text-sm">
           <Activity className="h-4 w-4" />
-          <span className="hidden sm:inline">Health</span>
+          <span>Health</span>
         </TabsTrigger>}
-        <TabsTrigger value="parishes" className="flex items-center gap-1 text-xs sm:text-sm">
+        <TabsTrigger value="parishes" className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs data-[state=active]:shadow-sm sm:text-sm">
           <Church className="h-4 w-4" />
-          <span className="hidden sm:inline">Organisations &amp; parishes</span>
+          <span>Organisations</span>
         </TabsTrigger>
-        {!isAdminSetup && <TabsTrigger value="features" className="flex items-center gap-1 text-xs sm:text-sm">
+        {!isAdminSetup && <TabsTrigger value="features" className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs data-[state=active]:shadow-sm sm:text-sm">
           <Shield className="h-4 w-4" />
-          <span className="hidden sm:inline">Features</span>
+          <span>Features</span>
         </TabsTrigger>}
-        {!isAdminSetup && <TabsTrigger value="signup" className="flex items-center gap-1 text-xs sm:text-sm"><Shield className="h-4 w-4" /><span className="hidden sm:inline">Signup diagnostics</span></TabsTrigger>}
+        {!isAdminSetup && <TabsTrigger value="signup" className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs data-[state=active]:shadow-sm sm:text-sm"><Shield className="h-4 w-4" /><span>Signup diagnostics</span></TabsTrigger>}
       </TabsList>
 
       {/* System Overview Tab */}
       <TabsContent value="overview" className="space-y-4">
         <SystemOverview />
+      </TabsContent>
+
+      <TabsContent value="map" className="space-y-4">
+        <Suspense fallback={<Card><CardContent className="p-6 text-sm text-muted-foreground">Loading Fusion system map…</CardContent></Card>}>
+          <ArchitectureMap />
+        </Suspense>
       </TabsContent>
 
       {/* Activity Feed Tab */}

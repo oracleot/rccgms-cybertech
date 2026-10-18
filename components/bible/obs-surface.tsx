@@ -15,6 +15,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { normalizeReference, rangeReference, verseId } from "@/lib/bible/format"
+import { paginateVerses } from "@/lib/bible/paginate"
 import { obsChannelName } from "@/lib/bible/obs-channel"
 import { loadLock, saveLock, type LockPayload } from "@/lib/bible/obs-lock"
 import {
@@ -139,25 +140,6 @@ function contentClass(s: SceneSettings): string {
     .join(" ")
 }
 
-/** Split verses into K runs of roughly equal text, so pages of one passage read alike. */
-function balancedSplit(all: Verse[], K: number): Verse[][] {
-  const weight = (v: Verse) => v.text.length + 8
-  const total = all.reduce((a, v) => a + weight(v), 0)
-  const groups: Verse[][] = []
-  let cur: Verse[] = []
-  let acc = 0
-  for (const v of all) {
-    if (cur.length && groups.length < K - 1 && acc + weight(v) > (total * (groups.length + 1)) / K) {
-      groups.push(cur)
-      cur = []
-    }
-    cur.push(v)
-    acc += weight(v)
-  }
-  groups.push(cur)
-  return groups
-}
-
 function computeLayout(
   passage: PassagePayload,
   focus: string | null,
@@ -211,43 +193,15 @@ function computeLayout(
   const key = [passage.reference, passage.translation, n, JSON.stringify(s), Math.round(W), Math.round(H)].join("|")
   let pager = cache.current
   if (!pager || pager.key !== key) {
-    let mode: "single" | "multi"
-    let pages: Verse[][]
-    const singlePages = () => all.map((v) => [v])
-
-    if (s.mode === "single" || n === 1) {
-      mode = "single"
-      pages = singlePages()
-    } else {
-      // Auto and Multi-verse both show the whole passage, paged only when it can't fit;
-      // they differ in the size they page at (PACK_AT). Single is the one mode that
-      // deliberately puts one verse per page.
-      mode = "multi"
-      // Greedy first: how many pages are needed when each holds as much as fits at PACK_AT.
-      const greedy: Verse[][] = []
-      let i = 0
-      while (i < n) {
-        let lo = 1
-        let hi = n - i
-        if (fits(htmlFor(all.slice(i, i + hi), true), PACK_AT)) {
-          greedy.push(all.slice(i))
-          break
-        }
-        while (lo < hi) {
-          const mid = Math.ceil((lo + hi) / 2)
-          if (fits(htmlFor(all.slice(i, i + mid), true), PACK_AT)) lo = mid
-          else hi = mid - 1
-        }
-        greedy.push(all.slice(i, i + lo))
-        i += lo
-      }
-      // Then even the pages out, as long as every balanced page still fits.
-      pages = greedy
-      if (greedy.length > 1) {
-        const balanced = balancedSplit(all, greedy.length)
-        if (balanced.every((p) => fits(htmlFor(p, true), PACK_AT))) pages = balanced
-      }
-    }
+    // Auto and Multi-verse use the same paging strategy at different fit sizes:
+    // Auto chooses a comfortable font, Multi packs down to the minimum readable font.
+    const paginated = paginateVerses(
+      all,
+      s.mode,
+      (page) => fits(htmlFor(page, true), PACK_AT),
+      (verse) => verse.text.length + 8
+    )
+    const { mode, pages } = paginated
 
     const commonFont =
       mode === "multi" && pages.length > 1 ? Math.min(...pages.map((p) => maxFont(htmlFor(p, true)))) : null

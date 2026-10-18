@@ -45,7 +45,19 @@ export async function getMyMemberships(): Promise<MembershipWithParish[]> {
   const profileId = await getProfileId()
   if (!profileId) return []
 
-  const supabase = await createClient()
+  return getMembershipsForProfile(profileId)
+}
+
+/**
+ * Loads memberships for a profile that has already been resolved by the
+ * caller. Keeping auth/profile resolution out of this helper avoids repeating
+ * those lookups when building a full Fusion context.
+ */
+async function getMembershipsForProfile(
+  profileId: string,
+  client?: Awaited<ReturnType<typeof createClient>>,
+): Promise<MembershipWithParish[]> {
+  const supabase = client ?? await createClient()
   const { data, error } = await supabase
     .from("parish_memberships")
     .select(`
@@ -182,7 +194,7 @@ export async function getFusionContext(
 
   if (!profile) return null
 
-  const memberships = await getMyMemberships()
+  const memberships = await getMembershipsForProfile(profile.id, supabase)
   const cookieId = memberships.length > 1 ? await readActiveParishCookie() : null
   const match = selectActiveMembership(memberships, requestedParishId, cookieId)
   const activeParish = match ? toParishContext(match) : null

@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { DocxImportPanel } from "@/components/lyrics/editor/docx-import"
 import { EwImportPanel } from "@/components/worship/ew-import-panel"
 import type { ContentType, LyricSet } from "@/lib/lyrics/types"
+import { lyricSearchScore } from "@/lib/lyrics/search"
 import { useWorshipLibrary } from "./use-library"
 import { LibraryRow } from "./library-row"
 import { NewSetDialog } from "./new-set-dialog"
@@ -60,17 +61,12 @@ export function WorshipLibrary({ parishId }: { parishId?: string }) {
   const editing = library.sets.find((s) => s.id === editingId) ?? null
 
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase()
     return library.sets
       .filter((s) => filter === "all" || s.type === filter)
-      .filter((s) => {
-        if (!q) return true
-        // Searching the cue text too, because an operator usually remembers a
-        // line from the song rather than exactly how the title was typed.
-        if (s.title.toLowerCase().includes(q)) return true
-        return s.groups.some((g) => g.primary.toLowerCase().includes(q))
-      })
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .map((set) => ({ set, score: lyricSearchScore(set, query) }))
+      .filter(({ score }) => !query.trim() || score > 0)
+      .sort((a, b) => b.score - a.score || a.set.title.localeCompare(b.set.title))
+      .map(({ set }) => set)
   }, [library.sets, filter, query])
 
   if (editing) {
@@ -156,7 +152,7 @@ export function WorshipLibrary({ parishId }: { parishId?: string }) {
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search worship library..."
+            placeholder="Search titles and lyrics..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-8"
@@ -220,17 +216,20 @@ export function WorshipLibrary({ parishId }: { parishId?: string }) {
       {creating && (
         <NewSetDialog
           onClose={() => setCreating(false)}
-          onCreate={(set) => {
-            library.create(set)
-            setCreating(false)
-            setEditingId(set.id)
+          onCreate={async (set) => {
+            const saved = await library.create(set)
+            if (saved) {
+              setCreating(false)
+              setEditingId(set.id)
+            }
+            return saved
           }}
         />
       )}
 
       {importMode === "docx" && (
         <div className="rounded-lg border p-4">
-          <DocxImportPanel onClose={() => setImportMode(null)} onImported={() => setImportMode(null)} parishId={parishId} />
+          <DocxImportPanel onClose={() => setImportMode(null)} onImported={() => { void library.refresh(); setImportMode(null) }} parishId={parishId} />
         </div>
       )}
 
@@ -239,7 +238,7 @@ export function WorshipLibrary({ parishId }: { parishId?: string }) {
           <EwImportPanel
             existingLibrary={library.sets}
             onClose={() => setImportMode(null)}
-            onImported={() => setImportMode(null)}
+            onImported={() => { void library.refresh(); setImportMode(null) }}
             parishId={parishId}
           />
         </div>
