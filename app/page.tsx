@@ -1,272 +1,126 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
-import { Particles } from "@/components/ui/particles"
-import { TextAnimate } from "@/components/ui/text-animate"
-import { BlurFade } from "@/components/ui/blur-fade"
-import { BorderBeam } from "@/components/ui/border-beam"
-import { ShimmerButton } from "@/components/ui/shimmer-button"
-import { OrbitingCircles } from "@/components/ui/orbiting-circles"
-import { AnimatedGradientText } from "@/components/ui/animated-gradient-text"
-import { Meteors } from "@/components/ui/meteors"
 import Image from "next/image"
-import {
-  MonitorPlay,
-  Calendar,
-  FileText,
-  Users,
-  Wifi,
-  Mic,
-  Camera,
-  Headphones,
-  Radio,
-  Music,
-  BookOpen
-} from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+
+import { FusionProductStory } from "@/components/landing/fusion-product-story"
+import { createClient } from "@/lib/supabase/client"
 
 export default function Home() {
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(true)
 
   useEffect(() => {
-    const handleAuthHash = async () => {
+    async function handleAuthHash() {
       const hash = window.location.hash
-      
-      if (hash && hash.includes("access_token")) {
+      if (hash.includes("access_token")) {
         const params = new URLSearchParams(hash.substring(1))
         const accessToken = params.get("access_token")
         const refreshToken = params.get("refresh_token")
         const type = params.get("type")
-        
-        console.log("Auth hash type:", type)
-        
+
         if (accessToken && refreshToken) {
           const supabase = createClient()
-          
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          })
-          
+          const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
           if (!error) {
             window.history.replaceState(null, "", "/")
-            
             if (type === "invite" || type === "signup" || type === "magiclink") {
               router.push("/accept-invite")
               return
-            } else if (type === "recovery") {
+            }
+            if (type === "recovery") {
               router.push("/reset-password")
               return
-            } else {
-              router.push("/dashboard")
-              return
             }
+            router.push("/dashboard")
+            return
           }
         }
       }
-      
+
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
-      
       if (session) {
         router.push("/dashboard")
         return
       }
-      
       setIsProcessing(false)
     }
-    
-    handleAuthHash()
+
+    void handleAuthHash()
   }, [router])
 
   if (isProcessing) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="relative h-16 w-16 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 animate-pulse" />
-            <div className="absolute inset-1 rounded-full bg-black flex items-center justify-center overflow-hidden">
-              <Image src="/icons/icon-192.png" alt="Fusion" width={56} height={56} className="object-cover" />
-            </div>
-          </div>
-          <TextAnimate animation="blurInUp" by="character" className="text-white/70 text-sm tracking-widest uppercase">
-            Initializing...
-          </TextAnimate>
+      <main className="grid min-h-screen place-items-center bg-[#070709] text-white">
+        <div className="flex items-center gap-3 text-sm text-white/60" role="status">
+          <Image src="/icons/icon-192.png" alt="" width={34} height={34} className="rounded-lg" priority />
+          Opening Fusion…
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-950/50 via-black to-indigo-950/50" />
-      
-      {/* Grid pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
-        }}
-      />
-      
-      {/* Meteors for dramatic effect */}
-      <Meteors number={15} />
-      
-      {/* Particles */}
-      <Particles
-        className="absolute inset-0"
-        quantity={80}
-        staticity={30}
-        ease={80}
-        size={0.6}
-        color="#8b5cf6"
-      />
-      
-      {/* Main content */}
-      <div className="relative z-10 flex min-h-screen">
-        {/* Left side - Hero content */}
-        <div className="flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24">
-          <BlurFade delay={0.1} direction="up">
-            <AnimatedGradientText className="mb-4 inline-flex">
-              <span className="text-xs md:text-sm font-medium tracking-widest uppercase">
-                ✨ Songs · Scripture · Together
-              </span>
-            </AnimatedGradientText>
-          </BlurFade>
-          
-          <BlurFade delay={0.2} direction="up">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6">
-              <span className="bg-gradient-to-r from-white via-violet-200 to-violet-400 bg-clip-text text-transparent">
-                Fusion
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-violet-400 via-indigo-400 to-indigo-600 bg-clip-text text-transparent">
-                Worship
-              </span>
-            </h1>
-          </BlurFade>
-          
-          <BlurFade delay={0.3} direction="up">
-            <p className="text-lg md:text-xl text-white/60 max-w-md mb-8 leading-relaxed">
-              Worship presentation, Bible broadcast, and church tech management.
-              <span className="text-violet-400"> Songs, scripture, scheduling</span> — all in one place.
-            </p>
-          </BlurFade>
-          
-          {/* Feature pills */}
-          <BlurFade delay={0.4} direction="up">
-            <div className="flex flex-wrap gap-3 mb-10">
-              {[
-                { icon: Music, label: "Worship Lyrics" },
-                { icon: BookOpen, label: "Bible Broadcast" },
-                { icon: Calendar, label: "Smart Scheduling" },
-                { icon: Radio, label: "Livestream" },
-              ].map((feature, i) => (
-                <div 
-                  key={feature.label}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                >
-                  <feature.icon className="h-4 w-4 text-violet-400" />
-                  <span className="text-sm text-white/70">{feature.label}</span>
-                </div>
-              ))}
-            </div>
-          </BlurFade>
-          
-          {/* CTA Buttons */}
-          <BlurFade delay={0.5} direction="up">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/login">
-                <ShimmerButton 
-                  className="h-14 px-8 text-lg font-semibold"
-                  shimmerColor="#ffffff"
-                  shimmerSize="0.15em"
-                  background="linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)"
-                >
-                  Get Started
-                  <span className="ml-2">→</span>
-                </ShimmerButton>
-              </Link>
-            </div>
-          </BlurFade>
-          
-          <BlurFade delay={0.6} direction="up">
-            <p className="mt-6 text-sm text-white/40">
-              Invite only • Contact your team leader for access
-            </p>
-          </BlurFade>
-        </div>
-        
-        {/* Right side - Animated visual */}
-        <div className="hidden lg:flex flex-1 items-center justify-center relative">
-          {/* Glowing orb in center */}
-          <div className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 blur-3xl opacity-60 animate-pulse" />
-          
-          {/* Central icon */}
-          <div className="relative z-10 flex items-center justify-center">
-            <div className="relative w-24 h-24 rounded-2xl overflow-hidden shadow-2xl shadow-violet-500/30">
-              <Image src="/icons/fusion-logo.webp" alt="Fusion Worship" width={96} height={96} className="object-cover" />
-              <BorderBeam 
-                size={100} 
-                duration={8} 
-                colorFrom="#c084fc" 
-                colorTo="#6366f1"
-                borderWidth={2}
-              />
-            </div>
-          </div>
-          
-          {/* Orbiting tech icons - inner ring */}
-          <OrbitingCircles 
-            radius={120} 
-            duration={25} 
-            path={false}
-            iconSize={40}
-          >
-            <div className="p-2 rounded-xl bg-violet-600/20 border border-violet-500/30 backdrop-blur-sm">
-              <Camera className="h-5 w-5 text-violet-300" />
-            </div>
-            <div className="p-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30 backdrop-blur-sm">
-              <Mic className="h-5 w-5 text-indigo-300" />
-            </div>
-            <div className="p-2 rounded-xl bg-purple-600/20 border border-purple-500/30 backdrop-blur-sm">
-              <Headphones className="h-5 w-5 text-purple-300" />
-            </div>
-          </OrbitingCircles>
-          
-          {/* Orbiting tech icons - outer ring */}
-          <OrbitingCircles 
-            radius={200} 
-            duration={35} 
-            reverse 
-            path={false}
-            iconSize={44}
-          >
-            <div className="p-2.5 rounded-xl bg-fuchsia-600/20 border border-fuchsia-500/30 backdrop-blur-sm">
-              <Wifi className="h-5 w-5 text-fuchsia-300" />
-            </div>
-            <div className="p-2.5 rounded-xl bg-cyan-600/20 border border-cyan-500/30 backdrop-blur-sm">
-              <Radio className="h-5 w-5 text-cyan-300" />
-            </div>
-            <div className="p-2.5 rounded-xl bg-pink-600/20 border border-pink-500/30 backdrop-blur-sm">
-              <Calendar className="h-5 w-5 text-pink-300" />
-            </div>
-            <div className="p-2.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 backdrop-blur-sm">
-              <FileText className="h-5 w-5 text-emerald-300" />
-            </div>
-          </OrbitingCircles>
-        </div>
+    <main className="min-h-screen overflow-hidden bg-[#070709] text-white selection:bg-violet-400/30">
+      <div className="pointer-events-none fixed inset-0" aria-hidden="true">
+        <div className="absolute left-1/2 top-[-22rem] h-[42rem] w-[60rem] -translate-x-1/2 rounded-full bg-violet-700/15 blur-[120px]" />
+        <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.08)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_72%)]" />
       </div>
-      
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent" />
-    </div>
+
+      <nav className="relative z-20 mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-5 sm:px-8 lg:px-12" aria-label="Primary navigation">
+        <Link href="/" className="flex items-center gap-3 rounded-lg outline-none ring-violet-400 focus-visible:ring-2">
+          <Image src="/icons/icon-192.png" alt="" width={38} height={38} className="rounded-xl" priority />
+          <span className="text-sm font-semibold tracking-[0.18em]">FUSION</span>
+        </Link>
+        <Link href="/login" className="rounded-full border border-white/15 bg-white/[0.06] px-5 py-2.5 text-sm font-medium text-white transition hover:border-white/30 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400">
+          Sign in
+        </Link>
+      </nav>
+
+      <section className="relative z-10 mx-auto grid w-full max-w-[1440px] gap-12 px-5 pb-16 pt-12 sm:px-8 md:pt-20 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:gap-16 lg:px-12 lg:pb-24 lg:pt-24">
+        <div className="max-w-xl">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-violet-300/15 bg-violet-400/[0.08] px-3 py-1.5 text-xs font-medium tracking-wide text-violet-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+            Built for the people behind the service
+          </div>
+          <h1 className="text-balance text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl xl:text-[5.5rem]">
+            Prepare once.
+            <span className="mt-2 block bg-gradient-to-r from-violet-300 via-white to-cyan-200 bg-clip-text text-transparent">Present with confidence.</span>
+          </h1>
+          <p className="mt-7 max-w-lg text-pretty text-base leading-7 text-white/70 sm:text-lg">
+            Fusion brings scripture, worship lyrics, service planning and team coordination into one dependable workspace—then carries what you prepare straight into OBS.
+          </p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/login" className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-black transition hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070709]">
+              Open Fusion <span className="ml-2" aria-hidden="true">→</span>
+            </Link>
+            <a href="#how-it-works" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 px-6 text-sm font-medium text-white/80 transition hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400">
+              See how it works
+            </a>
+          </div>
+          <p className="mt-5 text-xs leading-5 text-white/55">Invite-only access · Managed by your church team</p>
+        </div>
+        <FusionProductStory />
+      </section>
+
+      <section id="how-it-works" className="relative z-10 border-t border-white/[0.08] bg-white/[0.025]">
+        <div className="mx-auto grid max-w-[1440px] gap-8 px-5 py-14 sm:px-8 md:grid-cols-3 lg:px-12 lg:py-20">
+          {[
+            ["01", "Prepare", "Build the service with the Bible, worship library, rotas, meetings and rundowns in one place."],
+            ["02", "Preview", "See exactly what the congregation will see before anything goes live."],
+            ["03", "Present", "Send the selected content to a clean OBS surface while the operator stays in control."],
+          ].map(([number, title, copy]) => (
+            <article key={number} className="border-l border-white/10 pl-5">
+              <p className="font-mono text-xs text-violet-300/70">{number}</p>
+              <h2 className="mt-4 text-xl font-semibold tracking-tight">{title}</h2>
+              <p className="mt-3 text-sm leading-6 text-white/65">{copy}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
   )
 }

@@ -32,6 +32,7 @@ export interface SendResult {
   channel: "email" | "sms"
   messageId?: string
   error?: string
+  queuedForRetry?: boolean
 }
 
 interface NotificationRecord {
@@ -56,6 +57,16 @@ interface NotificationWithUser extends NotificationRecord {
 interface NotificationPreferenceRecord {
   email_enabled: boolean
   sms_enabled: boolean
+}
+
+function plainTextToHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+    .replace(/\n/g, "<br>")
 }
 
 /**
@@ -154,7 +165,7 @@ export async function sendNotificationNow(
       sendResult = await sendEmail({
         to: user.email,
         subject: payload.title,
-        html: `<p>${payload.body.replace(/\n/g, "<br>")}</p>`,
+        html: `<p>${plainTextToHtml(payload.body)}</p>`,
         text: payload.body,
       })
     } else if (channel === "sms") {
@@ -172,13 +183,15 @@ export async function sendNotificationNow(
       sendResult = { success: false, error: "Unknown channel" }
     }
 
-    // Update notification record
+    // Keep transient delivery failures pending so the scheduled processor can
+    // retry them. The record remains the single audit entry for this message.
     await supabase
       .from("notifications")
       .update({
-        status: sendResult.success ? "sent" : "failed",
+        status: sendResult.success ? "sent" : "pending",
         error_message: sendResult.error || null,
         sent_at: sendResult.success ? new Date().toISOString() : null,
+        retry_count: sendResult.success ? 0 : 1,
       } as Record<string, unknown>)
       .eq("id", notification.id)
 
@@ -187,6 +200,7 @@ export async function sendNotificationNow(
       channel,
       messageId: sendResult.messageId,
       error: sendResult.error,
+      queuedForRetry: !sendResult.success,
     })
   }
 
@@ -251,7 +265,7 @@ export async function processPendingNotifications(): Promise<{
       sendResult = await sendEmail({
         to: user.email,
         subject: notification.title,
-        html: `<p>${notification.body.replace(/\n/g, "<br>")}</p>`,
+        html: `<p>${plainTextToHtml(notification.body)}</p>`,
         text: notification.body,
       })
     } else if (notification.channel === "sms") {

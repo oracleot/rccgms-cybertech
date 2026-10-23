@@ -1,31 +1,28 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  BookOpen,
-  CalendarDays,
-  Clapperboard,
-  Home,
-  Settings,
-  GraduationCap,
-  Users,
-  Building2,
   Bell,
-  Shield,
-  Palette,
-  Code2,
+  BookOpen,
   Brain,
-  Radio,
-  Music2,
-  Video,
+  Building2,
+  CalendarDays,
   Church,
+  Clapperboard,
+  Code2,
+  GraduationCap,
+  Home,
+  Music2,
+  Palette,
+  Radio,
+  Settings,
+  Shield,
+  Users,
+  Video,
 } from "lucide-react"
 
-import { ROUTES } from "@/lib/constants"
-import { FEATURE_SLUGS } from "@/lib/features/types"
-import { cn } from "@/lib/utils"
 import {
   Sidebar,
   SidebarContent,
@@ -38,31 +35,39 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { ROUTES } from "@/lib/constants"
+import { FEATURE_SLUGS } from "@/lib/features/types"
+import { cn } from "@/lib/utils"
 
-interface NavItemDef {
+interface NavigationItem {
   title: string
   href: string
   icon: React.ElementType
   feature?: string
 }
 
-const coreItems: NavItemDef[] = [
+const overviewItems: NavigationItem[] = [
   { title: "Home", href: ROUTES.HOME, icon: Home, feature: FEATURE_SLUGS.DASHBOARD },
+]
+
+const planningItems: NavigationItem[] = [
   { title: "Rota", href: ROUTES.ROTA, icon: CalendarDays, feature: FEATURE_SLUGS.ROTA },
   { title: "Meetings", href: ROUTES.MEETINGS, icon: Video, feature: FEATURE_SLUGS.MEETINGS },
   { title: "Rundown", href: ROUTES.RUNDOWN, icon: Clapperboard, feature: FEATURE_SLUGS.RUNDOWN },
-  { title: "Bible", href: ROUTES.BIBLE, icon: BookOpen, feature: FEATURE_SLUGS.BIBLE },
 ]
 
-const contentItems: NavItemDef[] = [
-  { title: "Livestream", href: ROUTES.LIVESTREAM, icon: Radio, feature: FEATURE_SLUGS.LIVESTREAM },
+const productionItems: NavigationItem[] = [
+  { title: "Bible", href: ROUTES.BIBLE, icon: BookOpen, feature: FEATURE_SLUGS.BIBLE },
   { title: "Worship Library", href: ROUTES.WORSHIP_LIBRARY, icon: Music2, feature: FEATURE_SLUGS.WORSHIP_LIBRARY },
+  { title: "Livestream", href: ROUTES.LIVESTREAM, icon: Radio, feature: FEATURE_SLUGS.LIVESTREAM },
+]
+
+const growthItems: NavigationItem[] = [
   { title: "Designs", href: ROUTES.DESIGNS, icon: Palette, feature: FEATURE_SLUGS.DESIGNS },
   { title: "Training", href: ROUTES.TRAINING, icon: GraduationCap, feature: FEATURE_SLUGS.TRAINING },
 ]
 
-// Admin-only management items (NOT shown to developers)
-const adminOnlyItems = [
+const managementItems: NavigationItem[] = [
   { title: "Admin", href: ROUTES.ADMIN, icon: Shield },
   { title: "Users", href: ROUTES.ADMIN_USERS, icon: Users },
   { title: "Departments", href: ROUTES.ADMIN_DEPARTMENTS, icon: Building2 },
@@ -70,57 +75,68 @@ const adminOnlyItems = [
   { title: "Parish", href: ROUTES.ADMIN_PARISH, icon: Church },
 ]
 
-// Admin items also shown to developers (shared management)
-const sharedAdminItems = [
-  { title: "Admin", href: ROUTES.ADMIN, icon: Shield },
-  { title: "Users", href: ROUTES.ADMIN_USERS, icon: Users },
-  { title: "Departments", href: ROUTES.ADMIN_DEPARTMENTS, icon: Building2 },
-  { title: "Notifications", href: ROUTES.ADMIN_NOTIFICATIONS, icon: Bell },
-  { title: "Parish", href: ROUTES.ADMIN_PARISH, icon: Church },
-]
-
-// Developer-exclusive items
-const developerOnlyItems = [
+const developerItems: NavigationItem[] = [
   { title: "Control Center", href: ROUTES.ADMIN_DEVELOPER_TOOLS, icon: Code2 },
   { title: "ML Training", href: ROUTES.ADMIN_ML_TRAINING, icon: Brain },
 ]
 
-function NavItem({ item, active }: { item: { title: string; href: string; icon: React.ElementType }; active: boolean }) {
+const parishItems: NavigationItem[] = [
+  { title: "Parish", href: ROUTES.ADMIN_PARISH, icon: Church },
+]
+
+function routeIsActive(pathname: string, href: string) {
+  return href === ROUTES.HOME ? pathname === href : pathname.startsWith(href)
+}
+
+function NavigationItemRow({ item, pathname }: { item: NavigationItem; pathname: string }) {
+  const active = routeIsActive(pathname, item.href)
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
         isActive={active}
+        tooltip={item.title}
         className={cn(
-          "relative transition-all duration-200 ease-out",
-          "hover:bg-violet-50 dark:hover:bg-violet-900/20",
-          "hover:translate-x-0.5",
-          active && [
-            "bg-violet-100 dark:bg-violet-900/30",
-            "text-violet-700 dark:text-violet-300",
-            "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
-            "before:h-6 before:w-1 before:rounded-r-full",
-            "before:bg-gradient-to-b before:from-violet-500 before:to-indigo-600",
-            "before:shadow-sm before:shadow-violet-400/50",
-          ]
+          "relative h-9 rounded-lg px-3 transition-colors duration-150",
+          "hover:bg-violet-50 hover:text-violet-800 dark:hover:bg-violet-950/40 dark:hover:text-violet-200",
+          active &&
+            "bg-violet-100 font-medium text-violet-800 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-violet-600 dark:bg-violet-950/55 dark:text-violet-200"
         )}
       >
-        <Link href={item.href} className="group/link">
-          <item.icon
-            className={cn(
-              "h-4 w-4 transition-all duration-200",
-              "group-hover/link:scale-110",
-              active
-                ? "text-violet-600 dark:text-violet-400"
-                : "group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400"
-            )}
-          />
-          <span className={cn("transition-colors duration-200", active && "font-medium")}>
-            {item.title}
-          </span>
+        <Link href={item.href}>
+          <item.icon className={cn("size-4", active && "text-violet-600 dark:text-violet-300")} />
+          <span>{item.title}</span>
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
+  )
+}
+
+function NavigationGroup({
+  label,
+  items,
+  pathname,
+}: {
+  label: string
+  items: NavigationItem[]
+  pathname: string
+}) {
+  if (items.length === 0) return null
+
+  return (
+    <SidebarGroup className="py-2">
+      <SidebarGroupLabel className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
+        {label}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <NavigationItemRow key={item.href} item={item} pathname={pathname} />
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   )
 }
 
@@ -132,150 +148,52 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userRole = "member", parishRole, enabledFeatures = [] }: AppSidebarProps) {
   const pathname = usePathname()
-
-  const isActive = (href: string) => {
-    if (href === ROUTES.HOME) return pathname === href
-    return pathname.startsWith(href)
-  }
-
   const isDeveloper = userRole === "lead_developer" || userRole === "developer"
   const isAdmin = userRole === "admin" || userRole === "leader"
   const isParishAdmin = parishRole === "parish_admin"
-
   const featureSet = new Set(enabledFeatures)
-  const isFeatureEnabled = (item: NavItemDef) =>
-    !item.feature || featureSet.has(item.feature)
+  const enabled = (items: NavigationItem[]) => items.filter((item) => !item.feature || featureSet.has(item.feature))
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-4 group">
-          <div className="h-8 w-8 rounded-lg overflow-hidden shadow-md transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-violet-500/30">
-            <Image
-              src="/icons/icon-192.png"
-              alt="Fusion"
-              width={32}
-              height={32}
-              className="object-cover"
-            />
-          </div>
-          <span className="font-semibold transition-colors duration-200 group-hover:text-violet-600 dark:group-hover:text-violet-400">
-            Fusion
+    <Sidebar collapsible="icon" className="border-r border-border/70">
+      <SidebarHeader className="border-b border-border/70 p-3">
+        <Link
+          href={ROUTES.HOME}
+          className="flex min-h-10 items-center gap-3 rounded-lg px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+        >
+          <Image src="/icons/icon-192.png" alt="Fusion" width={36} height={36} className="size-9 shrink-0 rounded-xl" />
+          <span className="min-w-0 group-data-[collapsible=icon]:hidden">
+            <span className="block text-sm font-semibold leading-tight">Fusion</span>
+            <span className="block truncate text-xs text-muted-foreground">Service workspace</span>
           </span>
-        </div>
+        </Link>
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* My Space — everyone */}
-        <SidebarGroup>
-          <SidebarGroupLabel>My Space</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {coreItems.filter(isFeatureEnabled).map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Content & Media — everyone */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Content &amp; Media</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {contentItems.filter(isFeatureEnabled).map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Administration — admin and leader only (NOT developer) */}
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminOnlyItems.map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {/* Management (shared) — shown to developers too */}
-        {isDeveloper && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Management</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {sharedAdminItems.map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
-        {/* Parish Management — parish_admin who is NOT already seeing admin/developer sections */}
+      <SidebarContent className="py-2">
+        <NavigationGroup label="Overview" items={enabled(overviewItems)} pathname={pathname} />
+        <NavigationGroup label="Plan & coordinate" items={enabled(planningItems)} pathname={pathname} />
+        <NavigationGroup label="Present & broadcast" items={enabled(productionItems)} pathname={pathname} />
+        <NavigationGroup label="Grow & create" items={enabled(growthItems)} pathname={pathname} />
+        {(isAdmin || isDeveloper) && <NavigationGroup label="Manage" items={managementItems} pathname={pathname} />}
         {isParishAdmin && !isAdmin && !isDeveloper && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Parish</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <NavItem item={{ title: "Parish", href: ROUTES.ADMIN_PARISH, icon: Church }} active={isActive(ROUTES.ADMIN_PARISH)} />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          <NavigationGroup label="Parish" items={parishItems} pathname={pathname} />
         )}
-
-        {/* Developer — developers only, never shown to admin */}
-        {isDeveloper && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-violet-500 dark:text-violet-400">Developer</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {developerOnlyItems.map((item) => <NavItem key={item.href} item={item} active={isActive(item.href)} />)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        {isDeveloper && <NavigationGroup label="Developer" items={developerItems} pathname={pathname} />}
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-border/70 p-3">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={isActive(ROUTES.SETTINGS)}
-              className={cn(
-                "relative transition-all duration-200 ease-out",
-                "hover:bg-violet-50 dark:hover:bg-violet-900/20",
-                "hover:translate-x-0.5",
-                isActive(ROUTES.SETTINGS) && [
-                  "bg-violet-100 dark:bg-violet-900/30",
-                  "text-violet-700 dark:text-violet-300",
-                  "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
-                  "before:h-6 before:w-1 before:rounded-r-full",
-                  "before:bg-gradient-to-b before:from-violet-500 before:to-indigo-600",
-                ]
-              )}
-            >
-              <Link href={ROUTES.SETTINGS} className="group/link">
-                <Settings
-                  className={cn(
-                    "h-4 w-4 transition-all duration-200",
-                    "group-hover/link:scale-110",
-                    isActive(ROUTES.SETTINGS)
-                      ? "text-violet-600 dark:text-violet-400"
-                      : "group-hover/link:text-violet-600 dark:group-hover/link:text-violet-400"
-                  )}
-                />
-                <span className={cn("transition-colors duration-200", isActive(ROUTES.SETTINGS) && "font-medium")}>
-                  Settings
-                </span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <NavigationItemRow
+            item={{ title: "Settings", href: ROUTES.SETTINGS, icon: Settings }}
+            pathname={pathname}
+          />
         </SidebarMenu>
-        <div className="px-2 py-2" suppressHydrationWarning>
-          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
-            Fusion
-          </p>
-        </div>
+        <p
+          className="px-3 pt-2 text-[0.68rem] text-muted-foreground group-data-[collapsible=icon]:hidden"
+          suppressHydrationWarning
+        >
+          © {new Date().getFullYear()} RCCG Morning Star
+        </p>
       </SidebarFooter>
     </Sidebar>
   )

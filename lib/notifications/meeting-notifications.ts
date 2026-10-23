@@ -1,15 +1,21 @@
 /**
  * Meeting Notification Service
  *
- * Handles invite / update / cancel / reminder notifications for meetings.
- * Uses the admin client (service role) since this runs from server
- * actions and cron on behalf of multiple users, bypassing RLS by design.
+ * Handles invite, update, cancellation, and reminder emails for meetings.
+ * Uses the admin client because server actions and cron send on behalf of users.
  */
 
-import { createAdminClient } from "@/lib/supabase/admin"
 import { formatMeetingDate, formatMeetingTimeRange } from "@/lib/meetings/format"
 import { platformLabel } from "@/lib/meetings/platforms"
+import { sendNotificationNow } from "@/lib/notifications/notification-service"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { MeetingPlatform } from "@/types/meeting"
+
+export interface MeetingNotificationResult {
+  sent: number
+  queued: number
+  failed: number
+}
 
 interface MeetingForNotification {
   id: string
@@ -53,51 +59,43 @@ async function fetchMeeting(meetingId: string): Promise<MeetingForNotification |
   return data as MeetingForNotification
 }
 
-async function queueForUsers(
+async function sendToUsers(
   userIds: string[],
   type: "meeting_invited" | "meeting_updated" | "meeting_cancelled" | "meeting_reminder",
   title: string,
   body: string,
   data: Record<string, unknown>,
   parishId: string
-): Promise<{ queued: number; failed: number }> {
-  if (userIds.length === 0) return { queued: 0, failed: 0 }
+): Promise<MeetingNotificationResult> {
+  const summary: MeetingNotificationResult = { sent: 0, queued: 0, failed: 0 }
 
-  const supabase = createAdminClient()
-  const rows = userIds.map((userId) => ({
-    user_id: userId,
-    parish_id: parishId,
-    type,
-    channel: "email",
-    title,
-    body,
-    data,
-    status: "pending",
-  }))
+  for (const userId of userIds) {
+    const [result] = await sendNotificationNow({
+      userId,
+      parish_id: parishId,
+      type,
+      title,
+      body,
+      data,
+      channels: ["email"],
+    })
 
-  const { error } = await supabase.from("notifications").insert(rows)
-
-  if (error) {
-    console.error(`Failed to queue ${type} notifications:`, error)
-    return { queued: 0, failed: userIds.length }
+    if (result?.success) summary.sent++
+    else if (result?.queuedForRetry) summary.queued++
+    else summary.failed++
   }
 
-  return { queued: userIds.length, failed: 0 }
+  return summary
 }
 
-/**
- * Notify newly-added attendees that they've been invited to a meeting.
- * People already on the meeting who are just seeing an update to details
- * should go through `notifyMeetingUpdated` instead, not this.
- */
 export async function notifyMeetingInvited(
   meetingId: string,
   newAttendeeUserIds: string[]
-): Promise<{ queued: number; failed: number }> {
+): Promise<MeetingNotificationResult> {
   const meeting = await fetchMeeting(meetingId)
-  if (!meeting) return { queued: 0, failed: newAttendeeUserIds.length }
+  if (!meeting) return { sent: 0, queued: 0, failed: newAttendeeUserIds.length }
 
-  return queueForUsers(
+  return sendToUsers(
     newAttendeeUserIds,
     "meeting_invited",
     `You're invited: ${meeting.title}`,
@@ -107,18 +105,14 @@ export async function notifyMeetingInvited(
   )
 }
 
-/**
- * Notify existing attendees that a meeting's details changed (time,
- * platform, link, etc).
- */
 export async function notifyMeetingUpdated(
   meetingId: string,
   existingAttendeeUserIds: string[]
-): Promise<{ queued: number; failed: number }> {
+): Promise<MeetingNotificationResult> {
   const meeting = await fetchMeeting(meetingId)
-  if (!meeting) return { queued: 0, failed: existingAttendeeUserIds.length }
+  if (!meeting) return { sent: 0, queued: 0, failed: existingAttendeeUserIds.length }
 
-  return queueForUsers(
+  return sendToUsers(
     existingAttendeeUserIds,
     "meeting_updated",
     `Meeting updated: ${meeting.title}`,
@@ -128,17 +122,14 @@ export async function notifyMeetingUpdated(
   )
 }
 
-/**
- * Notify all attendees that a meeting was cancelled.
- */
 export async function notifyMeetingCancelled(
   meetingId: string,
   attendeeUserIds: string[]
-): Promise<{ queued: number; failed: number }> {
+): Promise<MeetingNotificationResult> {
   const meeting = await fetchMeeting(meetingId)
-  if (!meeting) return { queued: 0, failed: attendeeUserIds.length }
+  if (!meeting) return { sent: 0, queued: 0, failed: attendeeUserIds.length }
 
-  return queueForUsers(
+  return sendToUsers(
     attendeeUserIds,
     "meeting_cancelled",
     `Cancelled: ${meeting.title}`,
@@ -148,24 +139,10 @@ export async function notifyMeetingCancelled(
   )
 }
 
-/**
- * Sends reminders for meetings whose reminder lead time has arrived.
- * Called by the daily reminders cron.
- *
- * Idempotent via `reminder_sent_at`: a meeting is only ever reminded
- * once, regardless of how many times this runs or how late a cron catch-up
- * lands - rather than matching a time window against the cron's own
- * cadence, which would silently skip a meeting if a run was missed.
- * `updateMeeting` clears the marker when a meeting is rescheduled so a
- * fresh reminder goes out for the new time.
- */
 export async function sendDueMeetingReminders(): Promise<{ sent: number; failed: number }> {
   const supabase = createAdminClient()
   const result = { sent: 0, failed: 0 }
   const now = new Date()
-
-  // Bound the scan to meetings starting in the next 7 days - reminder
-  // lead times are configured in minutes/hours, never that far out.
   const horizon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
   const { data: candidates, error } = await supabase
@@ -190,9 +167,8 @@ export async function sendDueMeetingReminders(): Promise<{ sent: number; failed:
       .select("user_id")
       .eq("meeting_id", meeting.id)
 
-    const userIds = (attendees || []).map((a) => a.user_id as string)
-
-    const { failed } = await queueForUsers(
+    const userIds = (attendees || []).map((attendee) => attendee.user_id as string)
+    const delivery = await sendToUsers(
       userIds,
       "meeting_reminder",
       `Reminder: ${meeting.title} starts soon`,
@@ -201,9 +177,6 @@ export async function sendDueMeetingReminders(): Promise<{ sent: number; failed:
       meeting.parish_id
     )
 
-    // Mark as sent even if some individual queues failed - we don't want
-    // to spam attendees with duplicate reminders on the next cron pass
-    // just because one notification insert failed.
     const { error: markError } = await supabase
       .from("meetings")
       .update({ reminder_sent_at: now.toISOString() })
@@ -214,8 +187,8 @@ export async function sendDueMeetingReminders(): Promise<{ sent: number; failed:
       console.error(`Failed to mark reminder sent for meeting ${meeting.id}:`, markError)
     }
 
-    result.sent += userIds.length - failed
-    result.failed += failed
+    result.sent += delivery.sent
+    result.failed += delivery.failed + delivery.queued
   }
 
   return result

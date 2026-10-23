@@ -1,266 +1,161 @@
-import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  CalendarDays,
-  MonitorPlay,
-  Users,
-  Sparkles,
-  ArrowRight,
-} from "lucide-react"
-import { BlurFade } from "@/components/ui/blur-fade"
-import { NumberTicker } from "@/components/ui/number-ticker"
+import { ArrowRight, BookOpen, CalendarDays, CheckCircle2, Clapperboard, Clock3, MonitorPlay, Users, Video } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ROUTES } from "@/lib/constants"
+import { createClient } from "@/lib/supabase/server"
+
+type Assignment = {
+  id: string
+  positions?: { name: string } | null
+  rotas?: { date: string; services?: { name: string } | null } | null
+}
+
+const quickActions = [
+  { title: "Check the rota", description: "Review duties and availability", href: ROUTES.ROTA, icon: CalendarDays },
+  { title: "Prepare Bible output", description: "Select scripture for presentation", href: ROUTES.BIBLE, icon: BookOpen },
+  { title: "Build a rundown", description: "Order the service from start to finish", href: ROUTES.RUNDOWN, icon: Clapperboard },
+]
+
+function formatDate(value?: string) {
+  if (!value) return "Date to be confirmed"
+  return new Date(`${value}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Get user profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, name, role")
     .eq("auth_user_id", user?.id ?? "")
     .single() as { data: { id: string; name: string; role: string } | null }
 
-  // Get upcoming rota assignments
   const { data: upcomingAssignments } = await supabase
     .from("rota_assignments")
-    .select(`
-      id,
-      rotas (date, services (name)),
-      positions (name)
-    `)
+    .select(`id, rotas (date, services (name)), positions (name)`)
     .eq("user_id", profile?.id ?? "")
     .gte("rotas.date", new Date().toISOString().split("T")[0])
     .order("rotas(date)")
     .limit(3)
 
-  // Get stats for admin/leader
-  let stats = {
-    totalMembers: 0,
-    upcomingServices: 0,
-    pendingSwaps: 0,
-  }
+  const canManage = ["admin", "lead_developer", "developer", "leader"].includes(profile?.role ?? "")
+  const canManageMeetings = ["admin", "lead_developer", "leader"].includes(profile?.role ?? "")
+  let stats = { totalMembers: 0, upcomingServices: 0, pendingSwaps: 0 }
 
-  if (profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader") {
+  if (canManage) {
     const [members, services, swaps] = await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase
-        .from("rotas")
-        .select("id", { count: "exact", head: true })
-        .gte("date", new Date().toISOString().split("T")[0])
-        .eq("status", "published"),
-      supabase
-        .from("swap_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
+      supabase.from("rotas").select("id", { count: "exact", head: true }).gte("date", new Date().toISOString().split("T")[0]).eq("status", "published"),
+      supabase.from("swap_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
     ])
-
-    stats = {
-      totalMembers: members.count ?? 0,
-      upcomingServices: services.count ?? 0,
-      pendingSwaps: swaps.count ?? 0,
-    }
+    stats = { totalMembers: members.count ?? 0, upcomingServices: services.count ?? 0, pendingSwaps: swaps.count ?? 0 }
   }
 
+  const assignments = (upcomingAssignments ?? []) as Assignment[]
+  const nextAssignment = assignments[0]
   const firstName = profile?.name?.split(" ")[0] ?? "Member"
+  const dashboardActions = [
+    ...quickActions,
+    canManageMeetings
+      ? { title: "Arrange a meeting", description: "Create a meeting and email attendees", href: ROUTES.MEETINGS_NEW, icon: Video }
+      : { title: "View meetings", description: "Review invitations and respond", href: ROUTES.MEETINGS, icon: Video },
+  ]
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <BlurFade delay={0.1} inView>
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600/10 via-indigo-600/5 to-transparent border border-violet-500/10 p-6">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-violet-500/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-5 w-5 text-violet-500" />
-              <span className="text-sm font-medium text-violet-400">Dashboard</span>
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              Welcome back, {firstName}
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Here&apos;s what&apos;s happening with your tech team
-            </p>
-          </div>
+    <div className="mx-auto max-w-6xl space-y-6 pb-10">
+      <header className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-sm font-medium text-violet-600 dark:text-violet-300">Today in Fusion</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">Welcome back, {firstName}</h1>
+          <p className="mt-2 max-w-2xl text-muted-foreground">See what needs your attention and move the next service forward.</p>
         </div>
-      </BlurFade>
+        {profile?.role && <Badge variant="secondary" className="w-fit capitalize">{profile.role.replace("_", " ")}</Badge>}
+      </header>
 
-      {(profile?.role === "admin" || profile?.role === "lead_developer" || profile?.role === "developer" || profile?.role === "leader") && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <BlurFade delay={0.15} inView>
-            <Card className="relative overflow-hidden group hover:border-violet-500/30 transition-colors">
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Team Members
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-violet-500/10">
-                  <Users className="h-4 w-4 text-violet-500" />
+      <section className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
+        <Card className="overflow-hidden border-violet-200/70 shadow-sm dark:border-violet-900/70">
+          <CardHeader className="border-b bg-violet-50/60 dark:bg-violet-950/25">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <CardDescription className="font-medium text-violet-700 dark:text-violet-300">Your next service</CardDescription>
+                <CardTitle className="mt-1 text-2xl">{nextAssignment?.rotas?.services?.name ?? "You have no upcoming assignment"}</CardTitle>
+              </div>
+              <div className="rounded-xl border bg-background p-3 shadow-sm"><CalendarDays className="size-5 text-violet-600" /></div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {nextAssignment ? (
+              <>
+                <div className="grid gap-5 p-6 sm:grid-cols-2">
+                  <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">When</p><p className="mt-2 font-medium">{formatDate(nextAssignment.rotas?.date)}</p></div>
+                  <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your position</p><p className="mt-2 font-medium">{nextAssignment.positions?.name ?? "Position to be confirmed"}</p></div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  <NumberTicker value={stats.totalMembers} />
+                <div className="flex flex-col gap-3 border-t bg-muted/30 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground"><CheckCircle2 className="size-4 text-emerald-600" /> Assignment is on your rota</span>
+                  <Link href={ROUTES.ROTA} className="inline-flex min-h-10 items-center gap-2 font-medium text-violet-700 hover:text-violet-900 dark:text-violet-300">View full rota <ArrowRight className="size-4" /></Link>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Active members
-                </p>
-              </CardContent>
-            </Card>
-          </BlurFade>
-          <BlurFade delay={0.2} inView>
-            <Card className="relative overflow-hidden group hover:border-blue-500/30 transition-colors">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Upcoming Services
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <CalendarDays className="h-4 w-4 text-blue-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  <NumberTicker value={stats.upcomingServices} />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Scheduled rotas
-                </p>
-              </CardContent>
-            </Card>
-          </BlurFade>
-          <BlurFade delay={0.3} inView>
-            <Card className={`relative overflow-hidden group transition-colors ${
-              stats.pendingSwaps > 0 
-                ? "border-amber-500/30 hover:border-amber-500/50" 
-                : "hover:border-amber-500/30"
-            }`}>
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              {stats.pendingSwaps > 0 && (
-                <div className="absolute top-2 right-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                  </span>
-                </div>
-              )}
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Pending Swaps
-                </CardTitle>
-                <div className="p-2 rounded-lg bg-amber-500/10">
-                  <MonitorPlay className="h-4 w-4 text-amber-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  <NumberTicker value={stats.pendingSwaps} />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Awaiting approval
-                </p>
-              </CardContent>
-            </Card>
-          </BlurFade>
-        </div>
+              </>
+            ) : (
+              <div className="p-8">
+                <p className="text-muted-foreground">When you are assigned to a service, the date and your position will appear here.</p>
+                <Link href={ROUTES.ROTA} className="mt-5 inline-flex min-h-10 items-center gap-2 font-medium text-violet-700 dark:text-violet-300">Open the rota <ArrowRight className="size-4" /></Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader><CardTitle className="text-lg">Coming up</CardTitle><CardDescription>Your next three assignments</CardDescription></CardHeader>
+          <CardContent>
+            {assignments.length ? (
+              <ol className="space-y-1">
+                {assignments.map((assignment, index) => (
+                  <li key={assignment.id} className="flex gap-3 border-b py-3 last:border-0">
+                    <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">{index + 1}</span>
+                    <div className="min-w-0"><p className="truncate text-sm font-medium">{assignment.positions?.name ?? "Position pending"}</p><p className="mt-0.5 text-xs text-muted-foreground">{formatDate(assignment.rotas?.date)}</p></div>
+                  </li>
+                ))}
+              </ol>
+            ) : <p className="py-6 text-sm text-muted-foreground">Nothing is scheduled for you yet.</p>}
+          </CardContent>
+        </Card>
+      </section>
+
+      {canManage && (
+        <section aria-labelledby="attention-title">
+          <div className="mb-3 flex items-end justify-between gap-4">
+            <div><h2 id="attention-title" className="text-xl font-semibold">Team overview</h2><p className="text-sm text-muted-foreground">Live planning signals for leaders.</p></div>
+            <Link href={ROUTES.ADMIN} className="text-sm font-medium text-violet-700 dark:text-violet-300">Open admin</Link>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { label: "Team members", value: stats.totalMembers, helper: "people in Fusion", icon: Users },
+              { label: "Upcoming services", value: stats.upcomingServices, helper: "published rotas", icon: CalendarDays },
+              { label: "Pending swaps", value: stats.pendingSwaps, helper: stats.pendingSwaps ? "need a decision" : "nothing waiting", icon: MonitorPlay },
+            ].map((item) => (
+              <Card key={item.label} className="shadow-none"><CardContent className="flex items-center gap-4 p-5"><span className="rounded-xl bg-muted p-3"><item.icon className="size-5 text-violet-600" /></span><div><p className="text-2xl font-semibold tabular-nums">{item.value}</p><p className="text-sm font-medium">{item.label}</p><p className="text-xs text-muted-foreground">{item.helper}</p></div></CardContent></Card>
+            ))}
+          </div>
+        </section>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <BlurFade delay={0.35} inView>
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Your Upcoming Assignments</CardTitle>
-              <CardDescription>
-                Your next scheduled service duties
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {upcomingAssignments && upcomingAssignments.length > 0 ? (
-                <ul className="space-y-3">
-                  {upcomingAssignments.map((assignment: {
-                    id: string
-                    positions?: { name: string } | null
-                    rotas?: { date: string; services?: { name: string } | null } | null
-                  }, index: number) => (
-                    <BlurFade key={assignment.id} delay={0.4 + index * 0.05} inView>
-                      <li
-                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors group"
-                      >
-                        <div>
-                          <p className="font-medium group-hover:text-violet-500 transition-colors">
-                            {assignment.positions?.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {assignment.rotas?.services?.name}
-                          </p>
-                        </div>
-                        <p className="text-sm font-medium">
-                          {assignment.rotas?.date
-                            ? new Date(assignment.rotas.date).toLocaleDateString("en-GB", {
-                                weekday: "short",
-                                day: "numeric",
-                                month: "short"
-                              })
-                            : "TBD"}
-                        </p>
-                      </li>
-                    </BlurFade>
-                  ))}
-                </ul>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="p-3 rounded-full bg-muted mb-3">
-                    <CalendarDays className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    No upcoming assignments
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </BlurFade>
+      <section aria-labelledby="quick-actions-title">
+        <div className="mb-3"><h2 id="quick-actions-title" className="text-xl font-semibold">Start a task</h2><p className="text-sm text-muted-foreground">Go directly to the work you need to do.</p></div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {dashboardActions.map((action) => (
+            <Link key={action.href} href={action.href} className="group rounded-xl border bg-card p-5 shadow-sm transition-colors hover:border-violet-300 hover:bg-violet-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:hover:border-violet-800 dark:hover:bg-violet-950/30">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300"><action.icon className="size-5" /></span>
+              <h3 className="mt-5 font-semibold">{action.title}</h3><p className="mt-1 min-h-10 text-sm text-muted-foreground">{action.description}</p>
+              <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-violet-700 dark:text-violet-300">Open <ArrowRight className="size-4" /></span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-        <BlurFade delay={0.4} inView>
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>
-                Common tasks you might want to do
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2">
-                <Link
-                  href="/rota"
-                  className="flex items-center gap-3 rounded-lg border p-3 transition-all hover:bg-violet-500/5 hover:border-violet-500/30 group"
-                >
-                  <div className="p-2 rounded-lg bg-violet-500/10 group-hover:bg-violet-500/20 transition-colors">
-                    <CalendarDays className="h-5 w-5 text-violet-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium group-hover:text-violet-500 transition-colors">View Rota</p>
-                    <p className="text-sm text-muted-foreground">
-                      Check your schedule
-                    </p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-violet-500 group-hover:translate-x-1 transition-all" />
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        </BlurFade>
-      </div>
+      <p className="flex items-center gap-2 text-xs text-muted-foreground"><Clock3 className="size-3.5" /> Dashboard data refreshes when you open this page.</p>
     </div>
   )
 }

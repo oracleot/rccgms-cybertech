@@ -19,6 +19,7 @@ import {
   notifyMeetingInvited,
   notifyMeetingUpdated,
   notifyMeetingCancelled,
+  type MeetingNotificationResult,
 } from "@/lib/notifications/meeting-notifications"
 
 export type ActionResult<T = void> =
@@ -36,7 +37,7 @@ async function requireManager() {
 /**
  * Create a new meeting and invite its attendees.
  */
-export async function createMeeting(input: CreateMeetingInput): Promise<ActionResult<{ id: string }>> {
+export async function createMeeting(input: CreateMeetingInput): Promise<ActionResult<{ id: string; notifications: MeetingNotificationResult }>> {
   try {
     const parsed = createMeetingSchema.safeParse(input)
     if (!parsed.success) {
@@ -89,15 +90,16 @@ export async function createMeeting(input: CreateMeetingInput): Promise<ActionRe
       return { success: false, error: "Meeting created, but failed to invite attendees" }
     }
 
+    let notifications: MeetingNotificationResult = { sent: 0, queued: 0, failed: data.attendeeIds.length }
     try {
-      await notifyMeetingInvited(meetingRow.id, data.attendeeIds)
+      notifications = await notifyMeetingInvited(meetingRow.id, data.attendeeIds)
     } catch (error) {
       console.error("Failed to send invite notifications:", error)
     }
 
     revalidatePath("/meetings")
     revalidatePath("/dashboard")
-    return { success: true, data: { id: meetingRow.id } }
+    return { success: true, data: { id: meetingRow.id, notifications } }
   } catch (error) {
     console.error("Error in createMeeting:", error)
     return { success: false, error: "An unexpected error occurred" }
@@ -109,7 +111,7 @@ export async function createMeeting(input: CreateMeetingInput): Promise<ActionRe
  * wholesale, so existing RSVPs survive an edit that only changes, say,
  * the time.
  */
-export async function updateMeeting(input: UpdateMeetingInput): Promise<ActionResult> {
+export async function updateMeeting(input: UpdateMeetingInput): Promise<ActionResult<{ notifications: MeetingNotificationResult }>> {
   try {
     const parsed = updateMeetingSchema.safeParse(input)
     if (!parsed.success) {
@@ -212,9 +214,20 @@ export async function updateMeeting(input: UpdateMeetingInput): Promise<ActionRe
         .eq("user_id", userId)
     }
 
+    const notifications: MeetingNotificationResult = { sent: 0, queued: 0, failed: 0 }
     try {
-      if (toAdd.length > 0) await notifyMeetingInvited(data.id, toAdd)
-      if (toKeep.length > 0) await notifyMeetingUpdated(data.id, toKeep)
+      if (toAdd.length > 0) {
+        const invited = await notifyMeetingInvited(data.id, toAdd)
+        notifications.sent += invited.sent
+        notifications.queued += invited.queued
+        notifications.failed += invited.failed
+      }
+      if (toKeep.length > 0) {
+        const updated = await notifyMeetingUpdated(data.id, toKeep)
+        notifications.sent += updated.sent
+        notifications.queued += updated.queued
+        notifications.failed += updated.failed
+      }
     } catch (error) {
       console.error("Failed to send update notifications:", error)
     }
@@ -222,7 +235,7 @@ export async function updateMeeting(input: UpdateMeetingInput): Promise<ActionRe
     revalidatePath("/meetings")
     revalidatePath(`/meetings/${data.id}`)
     revalidatePath("/dashboard")
-    return { success: true, data: undefined }
+    return { success: true, data: { notifications } }
   } catch (error) {
     console.error("Error in updateMeeting:", error)
     return { success: false, error: "An unexpected error occurred" }

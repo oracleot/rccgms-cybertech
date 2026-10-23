@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { CalendarCheck, CalendarX, HelpCircle, Search, Sparkles, User } from "lucide-react"
+import { CalendarCheck, CalendarX, HelpCircle, Search, Sparkles, User, Users } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -107,9 +107,21 @@ export function AttendeeSelector({ selectedIds, requiredIds, onChange, date }: A
     onChange(merged, requiredIds)
   }
 
+  function toggleEveryone() {
+    const allIds = people.map((person) => person.id)
+    const everyoneSelected = allIds.length > 0 && allIds.every((id) => selectedIds.includes(id))
+    if (everyoneSelected) {
+      onChange([], [])
+      return
+    }
+    onChange(allIds, requiredIds.filter((id) => allIds.includes(id)))
+  }
+
+  const everyoneSelected = people.length > 0 && people.every((person) => selectedIds.includes(person.id))
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -119,12 +131,16 @@ export function AttendeeSelector({ selectedIds, requiredIds, onChange, date }: A
             className="h-8 pl-8 text-sm"
           />
         </div>
-        {date && (
-          <Button type="button" variant="outline" size="sm" onClick={selectAllFree} className="shrink-0">
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={toggleEveryone} className="shrink-0" disabled={isLoading || people.length === 0}>
+            <Users className="mr-1 h-3.5 w-3.5" />
+            {everyoneSelected ? "Clear everyone" : "Invite everyone"}
+          </Button>
+          {date && <Button type="button" variant="outline" size="sm" onClick={selectAllFree} className="shrink-0">
             <Sparkles className="mr-1 h-3.5 w-3.5" />
             Select all free
-          </Button>
-        )}
+          </Button>}
+        </div>
       </div>
 
       {selectedIds.length > 0 && (

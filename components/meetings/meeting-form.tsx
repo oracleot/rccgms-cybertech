@@ -184,8 +184,15 @@ export function MeetingForm({ initial, mode }: MeetingFormProps) {
         return
       }
 
-      toast.success(mode === "edit" ? "Meeting updated" : "Meeting created")
-      const id = mode === "edit" ? values.id! : (result.data as { id: string }).id
+      const delivery = result.data.notifications
+      if (delivery.failed > 0) {
+        toast.warning(`${mode === "edit" ? "Meeting updated" : "Meeting created"}. ${delivery.failed} email${delivery.failed === 1 ? "" : "s"} could not be prepared.`)
+      } else if (delivery.queued > 0) {
+        toast.info(`${mode === "edit" ? "Meeting updated" : "Meeting created"}. ${delivery.sent} sent now; ${delivery.queued} queued for retry.`)
+      } else {
+        toast.success(`${mode === "edit" ? "Meeting updated" : "Meeting created"}. ${delivery.sent} invitation email${delivery.sent === 1 ? "" : "s"} sent.`)
+      }
+      const id = "id" in result.data ? result.data.id : values.id!
       router.push(`/meetings/${id}`)
     })
   }
