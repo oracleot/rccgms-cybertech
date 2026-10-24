@@ -158,12 +158,12 @@ export default function ForgotPasswordPage() {
           </BlurFade>
           <CardTitle className="text-2xl font-bold text-white">
             <TextAnimate animation="blurInUp" by="character" delay={0.3}>
-              Forgot password?
+              Create or reset your password
             </TextAnimate>
           </CardTitle>
           <BlurFade delay={0.4} inView>
             <CardDescription className="text-zinc-400">
-              Enter your email and we&apos;ll send you a reset link
+              We&apos;ll email you a secure link to choose a password
             </CardDescription>
           </BlurFade>
         </CardHeader>
@@ -201,7 +201,7 @@ export default function ForgotPasswordPage() {
                   background="linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)"
                 >
                   <span className="text-sm font-medium text-white">
-                    {isLoading ? "Sending..." : "Send reset link"}
+                    {isLoading ? "Sending..." : "Email me a password link"}
                   </span>
                 </ShimmerButton>
               </BlurFade>

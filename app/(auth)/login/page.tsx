@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { LogIn, Eye, EyeOff, KeyRound, Mail } from "lucide-react"
+import { LogIn, Eye, EyeOff, KeyRound } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -45,8 +45,6 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false)
   const [obsCode, setObsCode] = useState("")
   const [obsLoading, setObsLoading] = useState(false)
-  const [magicLinkLoading, setMagicLinkLoading] = useState(false)
-  const [usePassword, setUsePassword] = useState(false)
 
   useEffect(() => {
     const error = searchParams.get("error")
@@ -116,34 +114,6 @@ function LoginContent() {
     }
   }
 
-  async function onMagicLinkSubmit() {
-    const email = form.getValues("email").trim()
-    if (!email) {
-      await form.trigger("email")
-      toast.error("Enter your email first")
-      return
-    }
-
-    setMagicLinkLoading(true)
-    try {
-      const response = await fetch("/api/auth/magic-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, next }),
-      })
-      const result = await response.json().catch(() => null)
-      if (!response.ok) {
-        toast.error(result?.message ?? "Unable to send a sign-in link")
-        return
-      }
-      toast.success("If that account exists, we sent a sign-in link to your email")
-    } catch {
-      toast.error("Unable to send a sign-in link. Please try again.")
-    } finally {
-      setMagicLinkLoading(false)
-    }
-  }
-
   return (
     <BlurFade delay={0.1} direction="up">
       <Card className="relative w-full overflow-hidden border-white/10 bg-black/40 backdrop-blur-xl">
@@ -183,7 +153,7 @@ function LoginContent() {
 
         <CardContent className="pt-4 pb-8">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <BlurFade delay={0.4} direction="up">
                 <FormField
                   control={form.control}
@@ -207,7 +177,7 @@ function LoginContent() {
                 />
               </BlurFade>
 
-              {usePassword && <BlurFade delay={0.45} direction="up">
+              <BlurFade delay={0.45} direction="up">
                 <FormField
                   control={form.control}
                   name="password"
@@ -250,9 +220,9 @@ function LoginContent() {
                     </FormItem>
                   )}
                 />
-              </BlurFade>}
+              </BlurFade>
 
-              {usePassword && <BlurFade delay={0.5} direction="up">
+              <BlurFade delay={0.5} direction="up" className="pt-1">
                 <ShimmerButton
                   type="submit"
                   className="w-full h-11 mt-2 font-medium"
@@ -273,46 +243,23 @@ function LoginContent() {
                     </span>
                   )}
                 </ShimmerButton>
-              </BlurFade>}
+              </BlurFade>
             </form>
           </Form>
 
-          {!usePassword ? (
-            <div className="space-y-4">
-              <ShimmerButton
-                type="button"
-                onClick={onMagicLinkSubmit}
-                disabled={isLoading || magicLinkLoading}
-                className="w-full h-11 font-medium"
-                shimmerColor="#ffffff"
-                shimmerSize="0.1em"
-                background="linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)"
-              >
-                <span className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  {magicLinkLoading ? "Sending sign-in link..." : "Email me a sign-in link"}
-                </span>
-              </ShimmerButton>
-              <p className="text-center text-xs text-white/40">
-                Use the email link you already know. No new password is needed.
+          <BlurFade delay={0.52} direction="up">
+            <div className="mt-5 rounded-xl border border-violet-400/15 bg-violet-500/[0.06] px-4 py-3 text-center">
+              <p className="text-xs leading-5 text-white/50">
+                Previously signed in with an email link?{" "}
+                <Link
+                  href={`${ROUTES.FORGOT_PASSWORD}?reason=magic_link_retired`}
+                  className="font-medium text-violet-300 transition-colors hover:text-violet-200"
+                >
+                  Create your password
+                </Link>
               </p>
-              <button
-                type="button"
-                onClick={() => setUsePassword(true)}
-                className="w-full text-xs text-violet-400 hover:text-violet-300 transition-colors"
-              >
-                Use a password instead
-              </button>
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setUsePassword(false)}
-              className="mt-4 w-full text-xs text-violet-400 hover:text-violet-300 transition-colors"
-            >
-              Use an email sign-in link instead
-            </button>
-          )}
+          </BlurFade>
 
           <BlurFade delay={0.55} direction="up">
             <p className="text-center text-sm text-white/40 mt-4">

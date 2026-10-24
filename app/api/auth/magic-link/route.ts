@@ -1,129 +1,13 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { magicLinkSchema } from "@/lib/validations/auth"
-import { getAppUrl } from "@/lib/constants"
-import { sanitizeNext } from "@/lib/auth/next-url"
-import { emitEvent } from "@/lib/telemetry"
-
-/**
- * Simple in-memory rate limiter for magic link requests
- * In production, consider using Redis or a database
- */
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
-
-function isRateLimited(email: string): boolean {
-  const now = Date.now()
-  const windowMs = 15 * 60 * 1000 // 15 minutes
-  const maxRequests = 3
-
-  const record = rateLimitMap.get(email)
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(email, { count: 1, resetTime: now + windowMs })
-    return false
-  }
-
-  if (record.count >= maxRequests) {
-    return true
-  }
-
-  record.count++
-  return false
-}
+import { NextResponse } from "next/server"
 
 /**
  * POST /api/auth/magic-link
- * Send a magic link to the user's email for passwordless login
+ * Passwordless login has been retired. Password recovery remains available
+ * through /forgot-password for members who previously used email links.
  */
-export async function POST(request: NextRequest) {
-  // Parse and validate request body
-  let body
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { error: "VALIDATION_ERROR", message: "Invalid JSON body" },
-      { status: 400 }
-    )
-  }
-
-  const parsed = magicLinkSchema.safeParse(body)
-
-  if (!parsed.success) {
-    const errors = parsed.error.flatten()
-    const details = Object.entries(errors.fieldErrors).map(([field, messages]) => ({
-      field,
-      message: messages?.[0] || "Invalid value",
-    }))
-    return NextResponse.json(
-      { error: "VALIDATION_ERROR", details },
-      { status: 400 }
-    )
-  }
-
-  const { email } = parsed.data
-  // Canonical `next`, accepting the legacy `redirectTo` body field. This
-  // route used to put `redirectTo` on the callback URL, which /auth/callback
-  // never read — so every link it sent landed on the dashboard.
-  const next = sanitizeNext(parsed.data.next ?? parsed.data.redirectTo)
-
-  // Check rate limit
-  if (isRateLimited(email.toLowerCase())) {
-    void emitEvent({ subsystem: "auth", action: "magic_link_sent", status: "rate_limited", severity: "warn" })
-    return NextResponse.json(
-      { error: "RATE_LIMITED", message: "Too many requests. Please try again later." },
-      { status: 429 }
-    )
-  }
-
-  // SECURITY: Verify user was invited before sending magic link
-  // Check the profiles table - profiles are only created when admins invite users
-  // via inviteUserByEmail (which creates auth.users entry, triggering profile creation)
-  const adminClient = createAdminClient()
-  const { data: existingProfile, error: profileError } = await adminClient
-    .from("profiles")
-    .select("id")
-    .ilike("email", email) // Case-insensitive email match
-    .maybeSingle()
-
-  // If no profile exists (user wasn't invited), don't send magic link
-  // But still return generic message to prevent email enumeration (FR-007)
-  if (profileError || !existingProfile) {
-    console.log("Magic link request for non-invited user:", email)
-    return NextResponse.json({
-      success: true,
-      message: "If an account exists, a magic link has been sent to your email.",
-    })
-  }
-
-  const supabase = await createClient()
-
-  // Send magic link using signInWithOtp
-  // SECURITY: shouldCreateUser: false ensures ONLY invited users can receive magic links (FR-001)
-  // - If email doesn't exist in Supabase auth → No email is sent (but we return generic message to prevent enumeration)
-  // - If email exists (was invited by admin via inviteUserByEmail) → Magic link email is sent
-  // This effectively makes the system invite-only - random users cannot get access
-  const appUrl = getAppUrl()
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: false,
-      emailRedirectTo: `${appUrl}/auth/callback?type=magiclink&next=${encodeURIComponent(next)}`,
-    },
-  })
-
-  // Log any errors but don't expose whether the email exists (FR-007)
-  if (error) {
-    console.error("Magic link error:", error.message)
-    // Note: We still return success to prevent email enumeration
-    // Only log the actual error for debugging
-  }
-
-  void emitEvent({ subsystem: "auth", action: "magic_link_sent", status: error ? "error" : "ok", severity: error ? "warn" : "info" })
-
+export async function POST() {
   return NextResponse.json({
-    success: true,
-    message: "If an account exists, a magic link has been sent to your email.",
-  })
+    error: "MAGIC_LINK_DISABLED",
+    message: "Email sign-in links have been retired. Create or reset your password to continue.",
+  }, { status: 410 })
 }

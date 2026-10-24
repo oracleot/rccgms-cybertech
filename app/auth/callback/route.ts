@@ -23,6 +23,10 @@ export async function GET(request: Request) {
   const next = readNext(searchParams)
   const type = searchParams.get("type")
 
+  if (type === "magiclink") {
+    return NextResponse.redirect(`${origin}/forgot-password?reason=magic_link_retired`)
+  }
+
   if (!code && !tokenHash) {
     console.error("[auth/callback] No code parameter in callback URL")
     return NextResponse.redirect(`${origin}/login?error=auth_callback_error&reason=missing_code`)
@@ -68,10 +72,6 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.redirect(`${origin}/dashboard`)
-  }
-
-  if (type === "magiclink") {
-    return NextResponse.redirect(new URL(next, origin))
   }
 
   if (type === "signup") {
