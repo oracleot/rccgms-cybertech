@@ -57,7 +57,7 @@ const planningItems: NavigationItem[] = [
 ]
 
 const productionItems: NavigationItem[] = [
-  { title: "Bible", href: ROUTES.BIBLE, icon: BookOpen, feature: FEATURE_SLUGS.BIBLE },
+  { title: "Bible Studio", href: ROUTES.BIBLE_STUDIO, icon: BookOpen, feature: FEATURE_SLUGS.BIBLE },
   { title: "Worship Library", href: ROUTES.WORSHIP_LIBRARY, icon: Music2, feature: FEATURE_SLUGS.WORSHIP_LIBRARY },
   { title: "Livestream", href: ROUTES.LIVESTREAM, icon: Radio, feature: FEATURE_SLUGS.LIVESTREAM },
 ]

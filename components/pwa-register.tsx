@@ -10,7 +10,6 @@ export function PWARegister() {
 
     const pathname = window.location.pathname
     const isObsRoute =
-      pathname === "/obs-access" ||
       pathname === "/bible/obs" ||
       pathname.startsWith("/bible/obs/") ||
       pathname === "/lyrics/obs" ||

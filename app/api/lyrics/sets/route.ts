@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { OBS_ACCESS_COOKIE, verifyObsSessionToken, getObsAccessSecret } from "@/lib/obs-access"
 import { getActiveParishId } from "@/lib/parish/context"
+import { isValidRoomId } from "@/lib/lyrics/room"
 
 export const runtime = "nodejs"
 
@@ -11,19 +11,19 @@ export const runtime = "nodejs"
  *
  * Returns lyric_sets scoped to a broadcast room's parish.
  *
- * Authentication required — one of:
- *  1. Valid Supabase session + membership in the room's parish
- *  2. Valid OBS access session cookie (fusion_obs_access)
- *
- * Anonymous internet callers without either credential get 401.
+ * A signed-in user must belong to the room's parish. An OBS surface may read
+ * an existing room without a login; the server derives parish_id from the
+ * room registry and never accepts it from the client.
  */
 export async function GET(request: NextRequest) {
   const roomId = request.nextUrl.searchParams.get("room")
 
   if (roomId) {
-    if (!/^[A-Z2-9]{8}$/.test(roomId)) {
+    if (!isValidRoomId(roomId)) {
       return NextResponse.json({ error: "Invalid room ID" }, { status: 400 })
     }
+
+    const admin = createAdminClient()
 
     // Try normal Supabase auth first
     const supabase = await createClient()
@@ -31,8 +31,6 @@ export async function GET(request: NextRequest) {
 
     if (user) {
       // Authenticated path: verify parish membership
-      const admin = createAdminClient()
-
       const { data: controller } = await admin
         .from("broadcast_controllers")
         .select("parish_id")
@@ -91,24 +89,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Not a member of this parish" }, { status: 403 })
     }
 
-    // No Supabase session — check OBS access cookie
-    const obsCookie = request.cookies.get(OBS_ACCESS_COOKIE)?.value
-    if (!obsCookie) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const secret = getObsAccessSecret()
-    if (!secret) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-    const valid = await verifyObsSessionToken(obsCookie, secret)
-    if (!valid) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // OBS session valid — return room-scoped data without parishId
-    const admin = createAdminClient()
-
+    // Anonymous OBS surface: the unguessable room ID is the access boundary.
+    // It may only read a room that an authenticated parish member established.
     const { data: controller } = await admin
       .from("broadcast_controllers")
       .select("parish_id")
@@ -125,7 +107,7 @@ export async function GET(request: NextRequest) {
       .eq("parish_id", controller.parish_id)
       .order("updated_at", { ascending: false })
 
-    return NextResponse.json({ sets: sets ?? [] })
+    return NextResponse.json({ sets: sets ?? [], parishId: controller.parish_id })
   }
 
   // No room param — require full Supabase auth + membership

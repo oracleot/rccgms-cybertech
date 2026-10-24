@@ -65,9 +65,19 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
   const presence = useRoomPresence(roomId, "dock")
   const dock = useLyricsDock(roomId, presence.isController)
   const parishId = useRoomParishId(roomId)
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null)
   const [view, setView] = useState<"main" | "settings" | "session">("main")
-  const advanced = dock.uiMode === "advanced"
+  const advanced = authenticated === true && dock.uiMode === "advanced"
   const standby = !presence.isController
+
+  useEffect(() => {
+    const supabase = createClient()
+    void supabase.auth.getUser().then(({ data }) => setAuthenticated(!!data.user))
+  }, [])
+
+  useEffect(() => {
+    if (!authenticated && dock.uiMode === "advanced") dock.setUiMode("simple")
+  }, [authenticated, dock])
 
   const { activeSet, onScreen, staged } = dock
 
@@ -179,7 +189,13 @@ function LyricsDock({ roomId, onLeave }: { roomId: string; onLeave: () => void }
         ) : view === "session" ? (
           <SessionPanel roomId={roomId} presence={presence} onLeave={onLeave} />
         ) : (
-          <LyricsSettingsPanel dock={dock} roomId={roomId} controllerId={presence.isController ? presence.participantId : null} parishId={parishId} />
+          <LyricsSettingsPanel
+            dock={dock}
+            roomId={roomId}
+            controllerId={presence.isController ? presence.participantId : null}
+            parishId={parishId}
+            allowAdvanced={authenticated === true}
+          />
         )}
 
         <div className="toolbar">

@@ -220,7 +220,7 @@ function computeLayout(
   return { html, font, page, pages, mode }
 }
 
-export function BibleObsSurface() {
+export function BibleObsSurface({ channelScope }: { channelScope: string }) {
   const [passage, setPassage] = useState<PassagePayload | null>(null)
   const [focus, setFocus] = useState<string | null>(null)
   const [visible, setVisible] = useState(false)
@@ -230,7 +230,7 @@ export function BibleObsSurface() {
 
   const surfaceRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase Realtime channel types do not expose the broadcast payload union used here.
   const channelRef = useRef<any>(null)
   const layoutRef = useRef<Layout | null>(null)
   const pagerRef = useRef<Pager | null>(null)
@@ -241,6 +241,7 @@ export function BibleObsSurface() {
     // Restored before the channel opens, so a source that restarts while locked
     // can't be changed in the gap before a dock tells it the lock state.
     lockedRef.current = loadLock()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- OBS query and browser storage settings are available only after mount.
     setSettings(normalize({ ...loadSettings(), ...settingsFromQuery(window.location.search) }))
     if (isPreview()) {
       setPassage(PREVIEW_PASSAGE)
@@ -252,7 +253,7 @@ export function BibleObsSurface() {
   useEffect(() => {
     if (isPreview()) return
     const supabase = createClient()
-    const channel = supabase.channel(obsChannelName(), {
+    const channel = supabase.channel(obsChannelName(channelScope), {
       config: { broadcast: { self: false } },
     })
     const announceLock = () =>
@@ -309,7 +310,7 @@ export function BibleObsSurface() {
     return () => {
       channel.unsubscribe()
     }
-  }, [])
+  }, [channelScope])
 
   // Any change to the source size in OBS re-fits the passage.
   useEffect(() => {

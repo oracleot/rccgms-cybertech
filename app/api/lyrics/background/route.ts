@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
+import { getActiveParishId } from "@/lib/parish/context"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { isValidRoomId } from "@/lib/lyrics/room"
 import { emitEvent } from "@/lib/telemetry"
@@ -7,17 +9,12 @@ import { emitEvent } from "@/lib/telemetry"
 /**
  * Background image upload for the Lyrics OBS dock.
  *
- * The dock is a public surface (no login), so it cannot write to Storage
- * directly — the bucket denies anonymous writes. This route writes with the
- * service role after validating the file AND verifying that the requester is
- * the registered controller for the given Broadcast Room.
+ * Advanced background uploads require a signed-in parish member. The route
+ * writes with the service role only after validating the file, resolving the
+ * active parish server-side, and verifying the room controller belongs to it.
  *
- * Controller verification: the dock upserts into `broadcast_controllers` when
- * it claims control. This route reads that table (service role, bypassing RLS)
- * and checks that the supplied controllerId matches the registered controller
- * and the claim is recent. An attacker must guess a valid 8-char room ID
- * (24^8 ≈ 110B possibilities) AND actively register as controller (which
- * disrupts the real session — visible to all participants).
+ * Public OBS clients can operate the basic dock for a room but cannot use this
+ * endpoint or mutate parish assets.
  *
  * Rate limiting uses the project's shared in-memory limiter. On Vercel
  * serverless each instance has its own Map, so the limit is per-instance and
@@ -61,6 +58,12 @@ export async function POST(request: NextRequest) {
     void emitEvent({ subsystem: "worship", action: "background_upload", status: "rate_limited", severity: "warn" })
     return err("RATE_LIMITED", 429)
   }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return err("UNAUTHORIZED", 401)
+  const parishId = await getActiveParishId()
+  if (!parishId) return err("PARISH_REQUIRED", 403)
 
   const contentLength = Number(request.headers.get("content-length") || 0)
   if (contentLength > MAX_BYTES + 1024 * 1024) return err("TOO_LARGE", 413)
@@ -117,7 +120,7 @@ export async function POST(request: NextRequest) {
   try {
     const { data: claim, error: claimError } = await admin
       .from("broadcast_controllers")
-      .select("controller_id, claimed_at")
+      .select("controller_id, claimed_at, parish_id")
       .eq("room_id", roomId)
       .single()
 
@@ -130,6 +133,10 @@ export async function POST(request: NextRequest) {
       console.error("[background upload] controllerId mismatch for room:", roomId)
       void emitEvent({ subsystem: "worship", action: "background_upload", status: "error", severity: "warn", metadata: { roomId, reason: "controller_mismatch" } })
       return err("NOT_CONTROLLER", 403)
+    }
+    if (claim.parish_id !== parishId) {
+      void emitEvent({ subsystem: "worship", action: "background_upload", status: "error", severity: "warn", metadata: { roomId, reason: "parish_mismatch" } })
+      return err("PARISH_MISMATCH", 403)
     }
     const age = Date.now() - new Date(claim.claimed_at).getTime()
     if (age > MAX_CLAIM_AGE_MS) {

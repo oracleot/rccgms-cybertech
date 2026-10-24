@@ -20,8 +20,8 @@ import { SettingsPanel } from "./settings-panel"
 import { Tip } from "./tip"
 import { useDock } from "./use-dock"
 
-export function BibleDock() {
-  const dock = useDock()
+export function BibleDock({ channelScope }: { channelScope: string }) {
+  const dock = useDock(channelScope)
   const [view, setView] = useState<"bible" | "settings">("bible")
   const advanced = dock.uiMode === "advanced"
 

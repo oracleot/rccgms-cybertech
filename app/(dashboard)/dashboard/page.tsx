@@ -14,7 +14,7 @@ type Assignment = {
 
 const quickActions = [
   { title: "Check the rota", description: "Review duties and availability", href: ROUTES.ROTA, icon: CalendarDays },
-  { title: "Prepare Bible output", description: "Select scripture for presentation", href: ROUTES.BIBLE, icon: BookOpen },
+  { title: "Prepare Bible output", description: "Select scripture for presentation", href: ROUTES.BIBLE_STUDIO, icon: BookOpen },
   { title: "Build a rundown", description: "Order the service from start to finish", href: ROUTES.RUNDOWN, icon: Clapperboard },
 ]
 

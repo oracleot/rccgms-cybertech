@@ -394,4 +394,5 @@ export const ROUTES = {
   ADMIN_PARISH: "/admin/parish",
   TRAINING_REQUEST: "/training/request",
   BIBLE: "/bible",
+  BIBLE_STUDIO: "/bible/studio",
 } as const

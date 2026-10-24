@@ -6,7 +6,11 @@
  */
 
 import { BibleDock } from "@/components/bible/dock/bible-dock"
+import { getActiveParishId } from "@/lib/parish/context"
+import { redirect } from "next/navigation"
 
-export default function BibleObsDockPage() {
-  return <BibleDock />
+export default async function BibleObsDockPage() {
+  const parishId = await getActiveParishId()
+  if (!parishId) redirect("/login?next=/bible/obs/dock")
+  return <BibleDock channelScope={parishId} />
 }

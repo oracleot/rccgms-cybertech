@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { OBS_ACCESS_COOKIE, verifyObsSessionToken, getObsAccessSecret } from "@/lib/obs-access"
 import { getActiveParishId } from "@/lib/parish/context"
-import { getBootstrapParishId } from "@/lib/parish/bootstrap"
+import { isValidRoomId } from "@/lib/lyrics/room"
 
 export const runtime = "nodejs"
 
@@ -15,10 +14,9 @@ export const runtime = "nodejs"
  *
  * Body: { roomId: string, controllerId: string }
  *
- * Authentication:
- *  - Supabase session: parish_id is resolved server-side from membership
- *  - OBS access cookie: controller claim is accepted but parish_id is preserved
- *    (not overwritten) so an earlier authenticated claim's parish binding stands
+ * A signed-in parish member creates/binds a room. An anonymous OBS surface may
+ * take control only of an existing parish-bound room, and can never choose or
+ * replace that parish_id.
  *
  * The client NEVER provides parish_id.
  */
@@ -35,7 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "roomId and controllerId required" }, { status: 400 })
   }
 
-  if (!/^[A-Z2-9]{8}$/.test(roomId)) {
+  if (!isValidRoomId(roomId)) {
     return NextResponse.json({ error: "Invalid room ID" }, { status: 400 })
   }
 
@@ -48,79 +46,64 @@ export async function POST(request: NextRequest) {
   if (user) {
     // Resolve parish from canonical context — never trust client-provided parish_id
     const parishId = await getActiveParishId()
-
-    await admin
-      .from("broadcast_controllers")
-      .upsert(
-        {
-          room_id: roomId,
-          controller_id: controllerId,
-          claimed_at: new Date().toISOString(),
-          ...(parishId ? { parish_id: parishId } : {}),
-        },
-        { onConflict: "room_id" },
-      )
-
-    return NextResponse.json({ ok: true })
-  }
-
-  // No Supabase session — check OBS access cookie
-  const obsCookie = request.cookies.get(OBS_ACCESS_COOKIE)?.value
-  if (!obsCookie) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  const secret = getObsAccessSecret()
-  if (!secret) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-  // Legacy v1 tokens have no parish claim: pin them to the bootstrap parish
-  // only (looked up lazily, so v2 tokens never pay for the query).
-  // TODO(v1-sunset): remove with v1 token support.
-  const isLegacyV1 = obsCookie.startsWith("v1.")
-  const bootstrapParishId = isLegacyV1 ? await getBootstrapParishId(admin) : null
-  const obsResult = await verifyObsSessionToken(obsCookie, secret, new Date(), bootstrapParishId)
-  if (!obsResult.valid) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  // A v1 token (pinned to the bootstrap parish) must never claim a room that
-  // is already bound to a different parish.
-  if (isLegacyV1 && obsResult.parishId) {
-    const { data: existing } = await admin
-      .from("broadcast_controllers")
-      .select("parish_id")
-      .eq("room_id", roomId)
-      .maybeSingle()
-    if (existing?.parish_id && existing.parish_id !== obsResult.parishId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!parishId) {
+      return NextResponse.json({ error: "Choose an active parish first" }, { status: 403 })
     }
-  }
 
-  // OBS session: use the parish_id embedded in the v2 token (or the bootstrap
-  // parish for v1) if available, otherwise preserve an existing parish
-  // binding on the room.
-  let parishId = obsResult.parishId ?? null
-  if (!parishId) {
-    const { data: existing } = await admin
+    const { data: existing, error: lookupError } = await admin
       .from("broadcast_controllers")
       .select("parish_id")
       .eq("room_id", roomId)
       .maybeSingle()
-    parishId = existing?.parish_id ?? null
+
+    if (lookupError) {
+      return NextResponse.json({ error: "Could not verify broadcast room" }, { status: 500 })
+    }
+    if (existing?.parish_id && existing.parish_id !== parishId) {
+      return NextResponse.json({ error: "That broadcast room belongs to another parish" }, { status: 403 })
+    }
+
+    const claim = {
+      controller_id: controllerId,
+      claimed_at: new Date().toISOString(),
+    }
+    const { error } = existing
+      ? await admin
+          .from("broadcast_controllers")
+          .update(claim)
+          .eq("room_id", roomId)
+          .eq("parish_id", parishId)
+      : await admin
+          .from("broadcast_controllers")
+          .insert({ room_id: roomId, parish_id: parishId, ...claim })
+
+    if (error) {
+      return NextResponse.json({ error: "Could not establish broadcast room" }, { status: 500 })
+    }
+
+    return NextResponse.json({ ok: true, parishId })
   }
 
-  await admin
+  // No login: join only a room already created by an authenticated parish
+  // member. UPDATE deliberately cannot create a new unscoped room.
+  const { data: existing } = await admin
     .from("broadcast_controllers")
-    .upsert(
-      {
-        room_id: roomId,
-        controller_id: controllerId,
-        claimed_at: new Date().toISOString(),
-        ...(parishId ? { parish_id: parishId } : {}),
-      },
-      { onConflict: "room_id" },
-    )
+    .select("parish_id")
+    .eq("room_id", roomId)
+    .maybeSingle()
+  if (!existing?.parish_id) {
+    return NextResponse.json({ error: "Room not found. Create it while signed in to Fusion first." }, { status: 404 })
+  }
 
-  return NextResponse.json({ ok: true })
+  const { error } = await admin
+    .from("broadcast_controllers")
+    .update({ controller_id: controllerId, claimed_at: new Date().toISOString() })
+    .eq("room_id", roomId)
+    .eq("parish_id", existing.parish_id)
+
+  if (error) {
+    return NextResponse.json({ error: "Could not join broadcast room" }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true, parishId: existing.parish_id })
 }

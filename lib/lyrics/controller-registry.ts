@@ -2,12 +2,11 @@
  * Controller registry — claims controller ownership for a broadcast room.
  *
  * All writes go through POST /api/lyrics/room/claim, which:
- *  - validates auth (Supabase session OR OBS access cookie)
- *  - resolves parish_id server-side from membership (never from client)
+ *  - binds new rooms to the signed-in user's active parish
+ *  - lets OBS take control only after that parish-bound room exists
  *  - upserts via service role (direct client writes are revoked)
  *
- * Fire-and-forget: a failed registration means the next upload is rejected,
- * and re-taking control retries.
+ * The client never provides parish_id.
  */
 
 export async function registerController(roomId: string, controllerId: string): Promise<void> {

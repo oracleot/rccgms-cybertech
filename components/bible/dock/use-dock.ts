@@ -154,7 +154,7 @@ export function verseTarget(book: BookInfo, chapter: number, verse: number, endV
   return { apiPath: `${book.canonical}+${chapter}:${verse}`, reference: `${book.name} ${chapter}:${verse}` }
 }
 
-export function useDock() {
+export function useDock(channelScope: string) {
   const [translation, setTranslationState] = useState<TranslationId>("kjv")
   const [onScreen, setOnScreen] = useState<PassagePayload | null>(null)
   const [shown, setShown] = useState<DisplayState | null>(null)
@@ -231,7 +231,7 @@ export function useDock() {
 
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase.channel(obsChannelName(), {
+    const channel = supabase.channel(obsChannelName(channelScope), {
       config: { broadcast: { self: true } },
     })
     channel
@@ -288,7 +288,7 @@ export function useDock() {
     return () => {
       channel.unsubscribe()
     }
-  }, [applyLock])
+  }, [applyLock, channelScope])
 
   const updateLists = useCallback((fn: (l: DockLists) => DockLists) => {
     setLists((prev) => {

@@ -161,9 +161,8 @@ export async function syncSets(parishId?: string): Promise<{ sets: LyricSet[]; s
 
 /**
  * Fetch lyric sets via the server API, scoped to a broadcast room's parish.
- * Used by the OBS dock when it has no authenticated Supabase session (OBS
- * access code users). The API uses the service role to bypass RLS and
- * returns only the room's parish data.
+ * Used by the OBS dock in every session. The API resolves the room's parish
+ * server-side and returns only that parish's data.
  */
 export async function syncSetsForRoom(roomId: string): Promise<{ sets: LyricSet[]; source: SetsSource; parishId: string | null }> {
   try {
@@ -198,11 +197,11 @@ export async function saveSet(set: LyricSet, parishId: string): Promise<void> {
   writeCache([set, ...cached.filter((item) => item.id !== set.id)].sort((a, b) => b.updatedAt - a.updatedAt), parishId)
 }
 
-export async function deleteSet(id: string, parishId?: string): Promise<void> {
+export async function deleteSet(id: string, parishId: string): Promise<void> {
   const supabase = createClient()
-  const { error } = await table(supabase).delete().eq("id", id)
+  const { error } = await table(supabase).delete().eq("id", id).eq("parish_id", parishId)
   if (error) throw error
-  if (parishId) writeCache(readCache(parishId).filter((item) => item.id !== id), parishId)
+  writeCache(readCache(parishId).filter((item) => item.id !== id), parishId)
 }
 
 /**

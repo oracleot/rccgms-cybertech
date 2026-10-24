@@ -31,7 +31,7 @@ export interface WorshipLibrary {
   refresh: () => Promise<void>
 }
 
-export function useWorshipLibrary(parishId?: string): WorshipLibrary {
+export function useWorshipLibrary(parishId: string): WorshipLibrary {
   const [sets, setSets] = useState<LyricSet[]>([])
   const [loading, setLoading] = useState(true)
   const [offline, setOffline] = useState(false)
@@ -75,10 +75,6 @@ export function useWorshipLibrary(parishId?: string): WorshipLibrary {
 
   const create = useCallback(
     async (set: LyricSet) => {
-      if (!parishId) {
-        setError("Choose an organisation before adding worship items.")
-        return false
-      }
       if (offline) {
         setError("The library is offline. Reconnect before adding worship items.")
         return false
@@ -101,7 +97,7 @@ export function useWorshipLibrary(parishId?: string): WorshipLibrary {
 
   const update = useCallback(
     (id: string, mutate: (s: LyricSet) => LyricSet) => {
-      if (offline || !parishId) return
+      if (offline) return
       const previous = setsRef.current
       const existing = previous.find((s) => s.id === id)
       if (!existing) return

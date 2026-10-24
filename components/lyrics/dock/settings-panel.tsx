@@ -4,9 +4,9 @@ import { LYRICS_DEFAULTS, applyPositionPreset, type PositionPreset, type Align, 
 import { BackgroundSettings } from "./background-settings"
 import type { LyricsDock } from "./use-dock"
 
-export function LyricsSettingsPanel({ dock, roomId, controllerId, parishId }: { dock: LyricsDock; roomId: string; controllerId: string | null; parishId?: string }) {
+export function LyricsSettingsPanel({ dock, roomId, controllerId, parishId, allowAdvanced }: { dock: LyricsDock; roomId: string; controllerId: string | null; parishId?: string; allowAdvanced: boolean }) {
   const { settings, updateSetting: update, pushSettings, uiMode, setUiMode, previewFirst, setPreviewFirst } = dock
-  const advanced = uiMode === "advanced"
+  const advanced = allowAdvanced && uiMode === "advanced"
 
   return (
     <div className="pane">
@@ -19,15 +19,17 @@ export function LyricsSettingsPanel({ dock, roomId, controllerId, parishId }: { 
             <button className={uiMode === "simple" ? "active" : ""} onClick={() => setUiMode("simple")}>
               Simple
             </button>
-            <button className={uiMode === "advanced" ? "active" : ""} onClick={() => setUiMode("advanced")}>
-              Advanced
-            </button>
+            {allowAdvanced && (
+              <button className={uiMode === "advanced" ? "active" : ""} onClick={() => setUiMode("advanced")}>
+                Advanced
+              </button>
+            )}
           </div>
         </div>
         <div className="hint">
-          Simple keeps the dock to what a live service needs: set/item picking, Prev/Next, Clear, Manual/Auto and
-          Lock. Advanced adds safe margins, typography, transitions, preview settings and set creation below.
-          Nothing is disabled by switching — it only changes what&apos;s shown.
+          {allowAdvanced
+            ? "Simple keeps the dock to what a live service needs. Advanced adds parish-authorised appearance and asset controls."
+            : "This public OBS dock provides the essential live-service controls. Sign in to Fusion for parish-authorised advanced tools."}
         </div>
 
         <div className="divider" />

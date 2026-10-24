@@ -37,7 +37,7 @@ const FILTERS: Array<{ value: Filter; label: string }> = [
   { value: "prayer", label: "Prayer Points" },
 ]
 
-export function WorshipLibrary({ parishId }: { parishId?: string }) {
+export function WorshipLibrary({ parishId }: { parishId: string }) {
   const library = useWorshipLibrary(parishId)
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState<Filter>("all")

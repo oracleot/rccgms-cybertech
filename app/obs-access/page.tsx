@@ -1,5 +1,4 @@
-import { sanitizeDockNext } from "@/lib/obs-access"
-import { ObsAccessGate } from "./obs-access-gate"
+import { redirect } from "next/navigation"
 
 export default async function ObsAccessPage({
   searchParams,
@@ -7,5 +6,8 @@ export default async function ObsAccessPage({
   searchParams: Promise<{ next?: string }>
 }) {
   const { next } = await searchParams
-  return <ObsAccessGate next={sanitizeDockNext(next) ?? "/lyrics/obs/dock"} />
+  const destination = next === "/bible/obs/dock" || next === "/lyrics/obs/dock" || next?.startsWith("/lyrics/obs/dock?")
+    ? next
+    : "/lyrics/obs/dock"
+  redirect(destination)
 }

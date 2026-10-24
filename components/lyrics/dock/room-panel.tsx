@@ -11,8 +11,9 @@
  * as small setup help, not a per-room thing to copy each time.
  */
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { generateRoomId, sanitizeRoomId } from "@/lib/lyrics/room"
+import { createClient } from "@/lib/supabase/client"
 
 function origin(): string {
   return typeof window === "undefined" ? "" : window.location.origin
@@ -31,6 +32,12 @@ export function permanentUrls() {
 export function RoomGate({ onJoin }: { onJoin: (roomId: string) => void }) {
   const [joinInput, setJoinInput] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [canCreate, setCanCreate] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    void supabase.auth.getUser().then(({ data }) => setCanCreate(Boolean(data.user)))
+  }, [])
 
   const join = () => {
     const id = sanitizeRoomId(joinInput)
@@ -45,12 +52,16 @@ export function RoomGate({ onJoin }: { onJoin: (roomId: string) => void }) {
     <div className="room-gate">
       <div className="room-gate-title">Broadcast room</div>
       <p className="hint">
-        The Broadcast ID keeps your session separate from everyone else&apos;s. Create a new one for this
-        service, then enter the same ID into your Display (and Monitor). Or join an existing room.
+        Each Broadcast ID is bound to the active parish that creates it. Create one while signed in,
+        then join that ID inside OBS without an access code.
       </p>
 
-      <button className="btn-primary wide" onClick={() => onJoin(generateRoomId())}>
-        Create new broadcast
+      <button
+        className="btn-primary wide"
+        disabled={canCreate !== true}
+        onClick={() => onJoin(generateRoomId())}
+      >
+        {canCreate === null ? "Checking parish access…" : canCreate ? "Create for my parish" : "Sign in to create a room"}
       </button>
 
       <div className="room-or">or join existing</div>

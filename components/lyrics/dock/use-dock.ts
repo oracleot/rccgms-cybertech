@@ -121,21 +121,17 @@ export function useLyricsDock(roomId: string, isController: boolean) {
    * comes back — the next successful fetch simply replaces the cache outright.
    */
   const refreshSets = useCallback(async () => {
-    // Try direct Supabase first (works for authenticated users).
-    // If that returns empty (RLS blocks anonymous), fall back to the
-    // room-scoped API (works for OBS access code sessions).
     let fresh: LyricSet[]
     let source: "remote" | "cache"
 
-    const direct = await syncSets()
-    if (direct.source === "remote" && direct.sets.length > 0) {
-      fresh = direct.sets
-      source = direct.source
-    } else if (roomId) {
+    // A dock always reads through its room so multi-parish users can never
+    // combine libraries from different memberships in one live session.
+    if (roomId) {
       const roomResult = await syncSetsForRoom(roomId)
       fresh = roomResult.sets
       source = roomResult.source
     } else {
+      const direct = await syncSets()
       fresh = direct.sets
       source = direct.source
     }

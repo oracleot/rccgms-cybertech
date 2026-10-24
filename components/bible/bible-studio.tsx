@@ -89,17 +89,17 @@ function saveMishearing(entry: MishearingEntry) {
   }
 }
 
-function useBibleBroadcast() {
+function useBibleBroadcast(channelScope: string) {
   const channelRef = useRef<BroadcastChannel | null>(null)
 
   useEffect(() => {
     if (typeof window === "undefined" || !("BroadcastChannel" in window)) return
-    channelRef.current = new BroadcastChannel(BROADCAST_CHANNEL)
+    channelRef.current = new BroadcastChannel(`${BROADCAST_CHANNEL}:${channelScope}`)
     return () => {
       channelRef.current?.close()
       channelRef.current = null
     }
-  }, [])
+  }, [channelScope])
 
   const sendPassage = useCallback((payload: BiblePassagePayload) => {
     const msg: DisplaySyncMessage = { type: "BIBLE_PASSAGE", payload }
@@ -114,7 +114,7 @@ function useBibleBroadcast() {
   return { sendPassage, clearPassage }
 }
 
-export default function BiblePage() {
+export function BibleStudio({ channelScope }: { channelScope: string }) {
   const [translation, setTranslation] = useState<TranslationId>("kjv")
   const [accent, setAccent] = useState<AccentId>("en-NG")
   const [manualInput, setManualInput] = useState("")
@@ -129,14 +129,14 @@ export default function BiblePage() {
   const listening = useListening(accent)
   const [liveLocked, setLiveLocked] = useState(false)
   const lockedRef = useRef(false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase Realtime channel types do not expose the broadcast payload union used here.
   const obsChannelRef = useRef<any>(null)
-  const { sendPassage, clearPassage } = useBibleBroadcast()
+  const { sendPassage, clearPassage } = useBibleBroadcast(channelScope)
 
   // Set up Supabase Realtime channel for OBS broadcast
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase.channel(obsChannelName(), {
+    const channel = supabase.channel(obsChannelName(channelScope), {
       config: { broadcast: { self: false } },
     })
     channel
@@ -160,10 +160,11 @@ export default function BiblePage() {
       channel.unsubscribe()
       obsChannelRef.current = null
     }
-  }, [])
+  }, [channelScope])
 
   // Load mishearing log from localStorage on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Browser-only history must hydrate after the client mounts.
     setMishearings(loadMishearings())
   }, [])
 

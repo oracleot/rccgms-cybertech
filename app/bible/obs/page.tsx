@@ -7,7 +7,11 @@
  */
 
 import { BibleObsSurface } from "@/components/bible/obs-surface"
+import { getActiveParishId } from "@/lib/parish/context"
+import { redirect } from "next/navigation"
 
-export default function BibleObsPage() {
-  return <BibleObsSurface />
+export default async function BibleObsPage() {
+  const parishId = await getActiveParishId()
+  if (!parishId) redirect("/login?next=/bible/obs")
+  return <BibleObsSurface channelScope={parishId} />
 }

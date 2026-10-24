@@ -1,14 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { currentPathWithQuery } from "@/lib/auth/next-url"
-import {
-  OBS_ACCESS_COOKIE,
-  buildObsAccessGateUrl,
-  getObsAccessSecret,
-  isObsDockPath,
-  sanitizeDockNext,
-  verifyObsSessionToken,
-} from "@/lib/obs-access"
 import { isMaintenanceMode, isMaintenanceExcluded } from "@/lib/maintenance"
 
 export async function middleware(request: NextRequest) {
@@ -70,57 +62,15 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/reset-password") ||
     request.nextUrl.pathname.startsWith("/auth/callback") ||
     request.nextUrl.pathname.startsWith("/accept-invite") ||
-    request.nextUrl.pathname.startsWith("/verify") ||
-    request.nextUrl.pathname === "/obs-access"
+    request.nextUrl.pathname.startsWith("/verify")
 
   const isPublicRoute = request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname.startsWith("/api/") || // API routes handle their own auth
     request.nextUrl.pathname.startsWith("/api/health") ||
     request.nextUrl.pathname.startsWith("/designs/request") || // Public design request form
     request.nextUrl.pathname.startsWith("/availability") || // Public availability form
-    request.nextUrl.pathname.startsWith("/bible/obs") || // OBS browser source overlay (no auth)
+    request.nextUrl.pathname === "/bible" || // Free public reader (advanced studio and OBS controls stay protected)
     request.nextUrl.pathname.startsWith("/lyrics/obs") // OBS browser source overlay (no auth)
-
-  // OBS control docks: the display overlays under /bible/obs and /lyrics/obs
-  // stay fully public (OBS browser sources render them with no session), but
-  // the EXACT dock paths (/bible/obs/dock, /lyrics/obs/dock) require either a
-  // Fusion login or a redeemed OBS access session (see lib/obs-access.ts).
-  // The OBS cookie is consulted here and nowhere else, so it can never grant
-  // access to any other route.
-  // Self-heal for OBS: an OBS code page left sitting at
-  // /obs-access?next=<dock> bounces straight back to the dock once a valid
-  // OBS session exists. The legacy /login destination is retained only for
-  // OBS panels that were opened before this dedicated gate existed.
-  if (!user && (request.nextUrl.pathname === "/obs-access" || request.nextUrl.pathname === "/login")) {
-    const dockNext = sanitizeDockNext(request.nextUrl.searchParams.get("next"))
-    if (dockNext) {
-      const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
-      const secret = getObsAccessSecret()
-      if (token && secret) {
-        const result = await verifyObsSessionToken(token, secret)
-        if (result.valid) {
-          return NextResponse.redirect(new URL(dockNext, request.url))
-        }
-      }
-    }
-  }
-
-  if (!user && isObsDockPath(request.nextUrl.pathname)) {
-    const token = request.cookies.get(OBS_ACCESS_COOKIE)?.value
-    const secret = getObsAccessSecret()
-    let hasObsSession = false
-    if (token && secret) {
-      const result = await verifyObsSessionToken(token, secret)
-      hasObsSession = result.valid
-    }
-    if (!hasObsSession) {
-      const destination = currentPathWithQuery(request.nextUrl)
-      const gateUrl = buildObsAccessGateUrl(destination)
-      // destination is an exact OBS dock path here, so this fallback is only
-      // defensive if the route list and sanitizer ever drift apart.
-      return NextResponse.redirect(new URL(gateUrl ?? "/obs-access", request.url))
-    }
-  }
 
   // If user is not logged in and trying to access protected route.
   // The whole path including its query is preserved, so "/lyrics?mode=edit"
