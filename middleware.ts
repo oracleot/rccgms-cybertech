@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { currentPathWithQuery } from "@/lib/auth/next-url"
 import { isMaintenanceMode, isMaintenanceExcluded } from "@/lib/maintenance"
+import { SUPABASE_COOKIE_OPTIONS } from "@/lib/supabase/cookie-options"
 
 export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname === "/maintenance") return NextResponse.next({ request })
@@ -22,6 +23,7 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: SUPABASE_COOKIE_OPTIONS,
       cookies: {
         getAll() {
           return request.cookies.getAll()

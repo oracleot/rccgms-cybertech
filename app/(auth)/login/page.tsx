@@ -41,6 +41,7 @@ function LoginContent() {
     searchParams.get("next") ?? searchParams.get("redirectTo"),
     ROUTES.DASHBOARD,
   )
+  const isObsDock = next === "/bible/obs/dock" || next === "/lyrics/obs/dock"
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -122,7 +123,7 @@ function LoginContent() {
               </TextAnimate>
             </CardTitle>
             <CardDescription className="text-white/50 mt-2">
-              Sign in to your Fusion account
+              {isObsDock ? "Sign in once to trust this OBS computer" : "Sign in to your Fusion account"}
             </CardDescription>
           </div>
         </CardHeader>
@@ -222,6 +223,12 @@ function LoginContent() {
               </BlurFade>
             </form>
           </Form>
+
+          {isObsDock && (
+            <p className="mt-4 text-center text-xs leading-5 text-white/45">
+              Fusion keeps this device signed in across services and restarts for up to 90 days, unless you sign out.
+            </p>
+          )}
 
           <BlurFade delay={0.52} direction="up">
             <div className="mt-5 rounded-xl border border-violet-400/15 bg-violet-500/[0.06] px-4 py-3 text-center">
