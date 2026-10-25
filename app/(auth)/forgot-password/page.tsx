@@ -27,7 +27,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { BorderBeam } from "@/components/ui/border-beam"
 import { BlurFade } from "@/components/ui/blur-fade"
-import { TextAnimate } from "@/components/ui/text-animate"
 import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { Ripple } from "@/components/ui/ripple"
 import { forgotPasswordSchema, type ForgotPasswordInput } from "@/lib/validations/auth"
@@ -67,7 +66,11 @@ export default function ForgotPasswordPage() {
   if (isSubmitted) {
     return (
       <BlurFade delay={0.1} inView>
-        <Card className="relative w-full overflow-hidden border-white/10 bg-zinc-950/80 backdrop-blur-xl">
+        <Card
+          className="relative w-full overflow-hidden border-white/10 bg-zinc-950/80 backdrop-blur-xl"
+          role="status"
+          aria-live="polite"
+        >
           <BorderBeam 
             size={250} 
             duration={12} 
@@ -89,14 +92,12 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
             </BlurFade>
-            <CardTitle className="text-2xl font-bold text-white">
-              <TextAnimate animation="blurInUp" by="character" delay={0.3}>
-                Check your email
-              </TextAnimate>
+            <CardTitle className="text-2xl font-bold tracking-tight text-white">
+              Check your inbox
             </CardTitle>
             <BlurFade delay={0.4} inView>
               <CardDescription className="text-zinc-400">
-                We&apos;ve sent you a password reset link. Please check your inbox.
+                If an account exists for that email, a secure password link is on its way.
               </CardDescription>
             </BlurFade>
           </CardHeader>
@@ -109,17 +110,20 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
             </BlurFade>
-            <BlurFade delay={0.55} inView>
-              <p className="text-center text-sm text-zinc-400">
-                Didn&apos;t receive an email? Check your spam folder or{" "}
-                <button
+            <BlurFade delay={0.55} inView className="w-full">
+              <div className="space-y-3 text-center">
+                <p className="text-sm leading-6 text-zinc-400">
+                  Delivery can take a minute. Check your spam folder if it does not appear.
+                </p>
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => setIsSubmitted(false)}
-                  className="font-medium text-violet-400 transition-colors hover:text-violet-300"
+                  className="w-full text-violet-300 hover:bg-violet-500/10 hover:text-violet-200"
                 >
-                  try again
-                </button>
-              </p>
+                  Use a different email address
+                </Button>
+              </div>
             </BlurFade>
           </CardContent>
           <CardFooter>
@@ -156,10 +160,8 @@ export default function ForgotPasswordPage() {
               <KeyRound className="h-7 w-7 text-white" />
             </div>
           </BlurFade>
-          <CardTitle className="text-2xl font-bold text-white">
-            <TextAnimate animation="blurInUp" by="character" delay={0.3}>
-              Create or reset your password
-            </TextAnimate>
+          <CardTitle className="text-2xl font-bold tracking-tight text-white">
+            Create or reset your password
           </CardTitle>
           <BlurFade delay={0.4} inView>
             <CardDescription className="text-zinc-400">
