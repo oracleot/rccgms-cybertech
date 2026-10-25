@@ -69,8 +69,10 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/api/health") ||
     request.nextUrl.pathname.startsWith("/designs/request") || // Public design request form
     request.nextUrl.pathname.startsWith("/availability") || // Public availability form
-    request.nextUrl.pathname === "/bible" || // Free public reader (advanced studio and OBS controls stay protected)
-    request.nextUrl.pathname.startsWith("/lyrics/obs") // OBS browser source overlay (no auth)
+    request.nextUrl.pathname === "/bible" || // Free public reader
+    request.nextUrl.pathname === "/bible/obs" || // Public read-only OBS display/preview
+    request.nextUrl.pathname === "/lyrics/obs" || // Public read-only OBS display/preview
+    request.nextUrl.pathname === "/lyrics/obs/monitor" // Public read-only monitor
 
   // If user is not logged in and trying to access protected route.
   // The whole path including its query is preserved, so "/lyrics?mode=edit"

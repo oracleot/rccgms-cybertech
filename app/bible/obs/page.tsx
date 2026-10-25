@@ -7,11 +7,21 @@
  */
 
 import { BibleObsSurface } from "@/components/bible/obs-surface"
-import { getActiveParishId } from "@/lib/parish/context"
-import { redirect } from "next/navigation"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { getBootstrapParishId } from "@/lib/parish/bootstrap"
 
-export default async function BibleObsPage() {
-  const parishId = await getActiveParishId()
-  if (!parishId) redirect("/login?next=/bible/obs")
-  return <BibleObsSurface channelScope={parishId} />
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+export default async function BibleObsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string }>
+}) {
+  const requestedScope = (await searchParams).scope
+  const fallbackScope = await getBootstrapParishId(createAdminClient())
+  const channelScope = requestedScope && UUID_RE.test(requestedScope)
+    ? requestedScope
+    : fallbackScope ?? "public"
+
+  return <BibleObsSurface channelScope={channelScope} />
 }

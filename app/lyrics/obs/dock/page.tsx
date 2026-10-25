@@ -11,7 +11,11 @@
  */
 
 import { LyricsDockApp } from "@/components/lyrics/dock/lyrics-dock"
+import { getActiveParishId } from "@/lib/parish/context"
+import { redirect } from "next/navigation"
 
-export default function LyricsObsDockPage() {
+export default async function LyricsObsDockPage() {
+  const parishId = await getActiveParishId()
+  if (!parishId) redirect("/login?next=/lyrics/obs/dock")
   return <LyricsDockApp />
 }

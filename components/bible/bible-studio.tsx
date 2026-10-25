@@ -303,7 +303,7 @@ export function BibleStudio({ channelScope }: { channelScope: string }) {
             size="sm"
             className="gap-2 text-xs hidden sm:flex"
             onClick={() => {
-              const url = `${window.location.origin}/bible/obs`
+              const url = `${window.location.origin}/bible/obs?scope=${encodeURIComponent(channelScope)}`
               navigator.clipboard.writeText(url).catch(() => {})
               window.open(url, "_blank", "noopener,noreferrer")
             }}
